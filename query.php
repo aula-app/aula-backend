@@ -11,6 +11,8 @@ require_once ($baseClassModelDir.'User.php'); // include user model class
 require_once ($baseClassModelDir.'Database.php');
 //load helper classes
 require_once ($baseHelperDir.'Crypt.php');
+//load Syslogger class
+require_once ($baseClassModelDir.'Systemlog.php');
 
 
 
@@ -19,6 +21,7 @@ require_once ($baseHelperDir.'Crypt.php');
 // Create a new Database object with the MySQL credentials
 $db = new Database();
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
+$syslog = new Systemlog ($db); // systemlog
 
 
 function out ($text, $form=false){ // lazy helper function
@@ -40,10 +43,13 @@ out ("EXAMPLES FOR USING THE MODELS (in this case...USER)",true);
 /* */
 
 
+out ("Writing something into the systemlog using model Systemlog...)",true);
+// write something into the system log:
+$syslog->addSystemEvent(0, "Example process started", 0, "", 1); // 0 = msg, 1= error (see databse description)
 // Create a new User object (params: db object, crypt class, user id of editor)
 out ("Adding user using User class...",true);
 
-$user = new User($db, $crypt);
+$user = new User($db, $crypt, $syslog);
 
 // create a random appendix to have different users....
 $testrand = rand (100,1000);
@@ -56,6 +62,9 @@ $appendix = microtime(true).$testrand;
 $inserted_user_id = $user->addUser('real_testuser'.$appendix, 'display_testuser'.$appendix, 'user_testuser'.$appendix, 'testuser'.$appendix.'.@aula.de', 'aula', 1);
 
 out ("Inserted user at id:".$inserted_user_id);
+// write to system log
+$syslog->addSystemEvent(0, "Added new user ".$inserted_user_id, 0, "", 1);
+
 
 /* */
 // Example for getting data for a single user....
