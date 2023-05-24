@@ -13,6 +13,9 @@ require_once ($baseClassModelDir.'Database.php');
 require_once ($baseHelperDir.'Crypt.php');
 //load Syslogger class
 require_once ($baseClassModelDir.'Systemlog.php');
+//load Groups class
+require_once ($baseClassModelDir.'Group.php');
+
 
 
 
@@ -22,6 +25,8 @@ require_once ($baseClassModelDir.'Systemlog.php');
 $db = new Database();
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog ($db); // systemlog
+$group = new Group ($db, $crypt, $syslog); // instanciate group model class
+
 
 
 function out ($text, $form=false){ // lazy helper function
@@ -186,13 +191,29 @@ if (!$userdata){
 
 $testhash = "0a7e5754727eabb648b058a6e0947034";
 $about ="I am an aula developer....";
-out ("Addding about text to a user using hash id of user instead of db id", true);
+out ("Adding about text to a user using hash id of user instead of db id", true);
 $userdata = $user->setUserAbout ($testhash,$about);
 if (!$userdata){
   out ("User not found!");
 } else {
-  out ("User reg status changed: No. of datasets affected: ".$userdata);
+  out ("User about text added status changed: No. of datasets affected: ".$userdata);
 }
+
+
+$description_public ="Public description of the group..";
+$description_internal ="Internal description of the group..";
+
+// create a random appendix to have different groups....
+$testrand = rand (100,1000);
+$appendix = microtime(true).$testrand;
+$group_name ="testgroup".$appendix;
+out ("Addding a new group", true);
+
+
+$inserted_group_id = $group->addGroup($group_name, $description_public, $description_internal, 'internal info', 1, 'aula', 1);
+
+out ("Inserted group at id:".$inserted_group_id);
+
 
 
 // Close the database connection
