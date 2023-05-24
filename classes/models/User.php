@@ -422,11 +422,11 @@ class User {
 
       if (is_int($userid))
       {
-        echo ("IS INT".$userid);
+
         return $userid;
       } else
       {
-        echo ("IS NOT INT".$userid);
+
         return $this->getUserIdByHashId ($userid);
       }
     } // end function
@@ -466,9 +466,9 @@ class User {
 
     public function deleteUser($userid, $updater_id=0) {
         /* deletes user and returns the number of rows (int) accepts user id or user hash id // */
-        echo ("delete before...".$userid);
+
         $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-        echo ("delete...".$userid);
+        
         $stmt = $this->db->query('DELETE FROM '.$this->au_users_basedata.' WHERE id = :id');
         $this->db->bind (':id', $userid);
         $err=false;
