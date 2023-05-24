@@ -8,13 +8,16 @@ if ($allowed_include==1){
   exit;
 }
 
+
 class User {
     private $db;
 
-    public function __construct($db, $crypt) {
+    public function __construct($db, $crypt, $syslog) {
         // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
         $this->db = $db;
         $this->crypt = $crypt;
+        $this->syslog = $syslog;
+
         $au_users_basedata = 'au_users_basedata';
         $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
     }// end function
@@ -84,13 +87,16 @@ class User {
             {
               return $user['id'];
             }else {
+
               return 0;
             }
           } // end if (strcmp....)
 
       } // end foreach
+        $this->syslog->addSystemEvent(1, "Credentials: username not in db: ".$username, 0, "", 1);
         return 0;
     }// end function
+
 
 
     public function checkUserExist($userid) {
@@ -163,10 +169,14 @@ class User {
             echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
             $err=true;
         }
+        $insertid = intval($this->db->lastInsertId());
         if (!$err)
         {
-          return $this->db->lastInsertId(); // return insert id to calling script
+          $this->syslog->addSystemEvent(0, "Added new user ".$insertid, 0, "", 1);
+          return $insertid; // return insert id to calling script
+
         } else {
+          $this->syslog->addSystemEvent(1, "Error adding user ", 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -200,8 +210,11 @@ class User {
         }
         if (!$err)
         {
+          $this->syslog->addSystemEvent(0, "Edited user ".$userid." by ".$updater_id, 0, "", 1);
           return $this->db->rowCount(); // return number of affected rows to calling script
+
         } else {
+          $this->syslog->addSystemEvent(1, "Error while editing user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -231,8 +244,10 @@ class User {
         }
         if (!$err)
         {
+          $this->syslog->addSystemEvent(0, "User status changed ".$userid." by ".$updater_id, 0, "", 1);
           return $this->db->rowCount(); // return number of affected rows to calling script
         } else {
+          $this->syslog->addSystemEvent(1, "Error changing status of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -262,8 +277,10 @@ class User {
         }
         if (!$err)
         {
+          $this->syslog->addSystemEvent(0, "User abouttext changed ".$userid." by ".$updater_id, 0, "", 1);
           return $this->db->rowCount(); // return number of affected rows to calling script
         } else {
+          $this->syslog->addSystemEvent(1, "Error changing abouttext of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -291,8 +308,10 @@ class User {
         }
         if (!$err)
         {
+          $this->syslog->addSystemEvent(0, "User real name changed ".$userid." by ".$updater_id, 0, "", 1);
           return $this->db->rowCount(); // return number of affected rows to calling script
         } else {
+          $this->syslog->addSystemEvent(1, "Error changing real name of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -321,8 +340,10 @@ class User {
         }
         if (!$err)
         {
+          $this->syslog->addSystemEvent(0, "User display name changed ".$userid." by ".$updater_id, 0, "", 1);
           return $this->db->rowCount(); // return number of affected rows to calling script
         } else {
+          $this->syslog->addSystemEvent(1, "Error changing display name of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -351,8 +372,10 @@ class User {
         }
         if (!$err)
         {
+          $this->syslog->addSystemEvent(0, "User email changed ".$userid." by ".$updater_id, 0, "", 1);
           return $this->db->rowCount(); // return number of affected rows to calling script
         } else {
+          $this->syslog->addSystemEvent(1, "Error changing email of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -384,8 +407,10 @@ class User {
         }
         if (!$err)
         {
+          $this->syslog->addSystemEvent(0, "User pw changed ".$userid." by ".$updater_id, 0, "", 1);
           return $this->db->rowCount(); // return number of affected rows to calling script
         } else {
+          $this->syslog->addSystemEvent(1, "Error changing pw of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -397,9 +422,11 @@ class User {
 
       if (is_int($userid))
       {
+        echo ("IS INT".$userid);
         return $userid;
       } else
       {
+        echo ("IS NOT INT".$userid);
         return $this->getUserIdByHashId ($userid);
       }
     } // end function
@@ -429,17 +456,19 @@ class User {
         }
         if (!$err)
         {
+          $this->syslog->addSystemEvent(0, "User reg status changed ".$userid." by ".$updater_id, 0, "", 1);
           return $this->db->rowCount(); // return number of affected rows to calling script
         } else {
+          $this->syslog->addSystemEvent(1, "Error changing reg status of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function deleteUser($userid) {
+    public function deleteUser($userid, $updater_id=0) {
         /* deletes user and returns the number of rows (int) accepts user id or user hash id // */
-
+        echo ("delete before...".$userid);
         $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-
+        echo ("delete...".$userid);
         $stmt = $this->db->query('DELETE FROM '.$this->au_users_basedata.' WHERE id = :id');
         $this->db->bind (':id', $userid);
         $err=false;
@@ -452,8 +481,10 @@ class User {
         }
         if (!$err)
         {
-          return $this->db->rowCount(); // return row count of deleted
+          $this->syslog->addSystemEvent(0, "User deleted with id ".$userid." by ".$updater_id, 0, "", 1);
+          return $this->db->rowCount(); // return number of affected rows to calling script
         } else {
+          $this->syslog->addSystemEvent(1, "Error deleting user with id ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
 
