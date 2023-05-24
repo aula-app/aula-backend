@@ -211,7 +211,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Edited user ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
 
         } else {
           $this->syslog->addSystemEvent(1, "Error while editing user ".$userid." by ".$updater_id, 0, "", 1);
@@ -245,7 +245,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User status changed ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
@@ -278,7 +278,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User abouttext changed ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing abouttext of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
@@ -309,7 +309,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User real name changed ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing real name of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
@@ -341,7 +341,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User display name changed ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing display name of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
@@ -373,7 +373,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User email changed ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing email of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
@@ -408,7 +408,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User pw changed ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing pw of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
@@ -457,7 +457,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User reg status changed ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing reg status of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
@@ -482,7 +482,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User deleted with id ".$userid." by ".$updater_id, 0, "", 1);
-          return $this->db->rowCount(); // return number of affected rows to calling script
+          return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error deleting user with id ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
