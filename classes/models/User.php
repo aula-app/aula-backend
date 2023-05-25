@@ -70,13 +70,30 @@ class User {
       pw is clear text
       */
 
-      $stmt = $this->db->query('SELECT id,username,pw,hash_id FROM '.$this->au_users_basedata);
+      // create temp blind index
+      $bi = md5(strtolower($username));
+
+      $stmt = $this->db->query('SELECT id,username,pw,hash_id FROM '.$this->au_users_basedata.' WHERE bi= :bi');
+      $this->db->bind(':bi', $bi); // bind blind index
       $users = $this->db->resultSet();
+
 
       if (count($users)<1){
         return 0;
       } // nothing found or empty database
-      foreach ($users as $user) {
+
+      // new
+      $dbpw = $users[0]['pw'];
+      // check PASSWORD
+      if (password_verify($pw, $dbpw))
+      {
+        return $users[0]['id'];
+      }else {
+
+        return 0;
+      }
+
+      /*foreach ($users as $user) {
           $decrypted_username = $this->crypt->decrypt ($user['username']);
           // check if match
           if (strcmp($decrypted_username,$username)==0)
@@ -92,7 +109,8 @@ class User {
             }
           } // end if (strcmp....)
 
-      } // end foreach
+      } // end foreach */
+
         $this->syslog->addSystemEvent(1, "Credentials: username not in db: ".$username, 0, "", 1);
         return 0;
     }// end function
@@ -177,14 +195,17 @@ class User {
 
         // generate hash password
         $hash = password_hash($password, PASSWORD_DEFAULT);
+        // generate blind index
+        $bi = md5 (strtolower ($username));
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_users_basedata.' (realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id) VALUES (:realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->au_users_basedata.' (realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi) VALUES (:realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi)');
         // bind all VALUES
         $this->db->bind(':username', $this->crypt->encrypt($username));
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
         $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
         $this->db->bind(':email', $this->crypt->encrypt($email));
         $this->db->bind(':password', $hash);
+        $this->db->bind(':bi', $bi);
         $this->db->bind(':status', $status);
         // generate unique hash for this user
         $testrand = rand (100,10000000);
