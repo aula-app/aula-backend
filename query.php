@@ -59,12 +59,13 @@ $user = new User($db, $crypt, $syslog);
 // create a random appendix to have different users....
 $testrand = rand (100,1000);
 $appendix = microtime(true).$testrand;
+$testusername = "username_".$appendix;
 
 // Add a user
 // Synthax realname, shown name, username, e-mail, pw clear, etc
 // public function addUser($realname, $displayname, $username, $email, $password, $status) $status-> 0=inactive, 1=active
 
-$inserted_user_id = $user->addUser('real_testuser'.$appendix, 'display_testuser'.$appendix, 'user_testuser'.$appendix, 'testuser'.$appendix.'.@aula.de', 'aula', 1);
+$inserted_user_id = $user->addUser('real_testuser'.$appendix, 'display_testuser'.$appendix, $testusername, 'testuser'.$appendix.'.@aula.de', 'aula', 1);
 
 out ("Inserted user at id:".$inserted_user_id);
 // write to system log
@@ -113,6 +114,7 @@ if (!$userdata){
 
 }
 
+/*
 // delete single dataset that was previously added....
 out ("Deleting the dataset (".$inserted_user_id.") that was just added...", true);
 
@@ -122,21 +124,21 @@ if (!$deleted_usersets){
 }else {
   out ($deleted_usersets." DATASET was deleted");
 }
+*/
 
-
-$user_id=15;
+$user_id=5;
 out ("Getting the hash id for an integer user id...".$user_id,true);
 $hash_id = $user->getUserHashId($user_id);
 out ("hash id for user ".$user_id." = ".$hash_id);
 
-$hash_id="bb2aa1d2ea71b7c6154a10e47a23299d";
+$hash_id="5790bd186ff18db1bed495b3f6411ba3";
 out ("Getting the database id for a hash id...".$hash_id,true);
 $user_id = $user->getUserIdByHashId($hash_id);
 out ("id for user with hash ".$hash_id." = ".$user_id);
 
-$user_id = 100;
+$user_id = 12;
 // check credentials for a user
-$username = $crypt->decrypt("SN0OQNPw2UhkLCUX9wf1D7vv20velbHWMOvC2C+B91JieI6fBGjhqaNLzpGAil/9s0o87GnEUauWz1Y=");
+$username = $crypt->decrypt("QOzPiMqW9IxM3Gb4hSBLXuJCA8xRDFAKxdZMNfrMSTeU/riZEMZ55p6f+5/727stKRWqtMb4vQ====");
 out ("checking credentials for user  ".$username." (DB ID: ".$user_id.") using standard pw aula ...", true);
 $userdata = $user->checkCredentials( $username,"aula"); // read base data from user id, aula is the standard pw i wrote into the db, $username is the username in clear text
 if (!$userdata){
@@ -145,7 +147,7 @@ if (!$userdata){
   out ("User is authorized! The user id returned from db is: ".$userdata);
 }
 
-$userid=100; // user that will be edited
+$userid=10; // user that will be edited
 
 out ("Change status of user#100 to inactive (0)",true);
 $userdata = $user->setUserStatus( $userid,0); // set status of user #100 to 0
@@ -180,7 +182,7 @@ if (!$userdata){
   out ("User email changed: No. of datasets affected: ".$userdata);
 }
 
-$testhash = "0720c0e3d7d4185737b6e6f1bbd4168c";
+$testhash = "eee26e36837a64181a9264754097553e";
 out ("Setting registration status of a user using hash id of user instead of db id", true);
 $userdata = $user->setUserRegStatus ($testhash,2);
 if (!$userdata){
@@ -189,7 +191,7 @@ if (!$userdata){
   out ("User reg status changed: No. of datasets affected: ".$userdata);
 }
 
-$testhash = "0a7e5754727eabb648b058a6e0947034";
+$testhash = "7754767dd4d9fc697cbd8b21fc9eb20a";
 $about ="I am an aula developer....";
 out ("Adding about text to a user using hash id of user instead of db id", true);
 $userdata = $user->setUserAbout ($testhash,$about);
@@ -199,7 +201,7 @@ if (!$userdata){
   out ("User about text added status changed: No. of datasets affected: ".$userdata);
 }
 
-
+/*
 $description_public ="Public description of the group..";
 $description_internal ="Internal description of the group..";
 
@@ -213,7 +215,7 @@ out ("Addding a new group", true);
 $inserted_group_id = $group->addGroup($group_name, $description_public, $description_internal, 'internal info', 1, 'aula', 1);
 
 out ("Inserted group at id:".$inserted_group_id);
-
+*/
 
 
 // Close the database connection
