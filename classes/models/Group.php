@@ -23,7 +23,7 @@ class Group {
     }// end function
 
     public function getGroupBaseData($group_id) {
-      /* returns user base data for a specified db id */
+      /* returns group base data for a specified db id or 0 if nothing is found */
       $group_id = $this->checkGroupId($group_id); // checks group_id id and converts group id to db group id if necessary (when group hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->au_groups.' WHERE id = :id');
@@ -67,7 +67,7 @@ class Group {
     public function checkAccesscode($group_id, $access_code) { // access_code = clear text
       /* checks access code and returns database group id (credentials correct) or 0 (credentials not correct)
       */
-      $stmt = $this->db->query('SELECT group_name, id,access_code,hash_id FROM '.$this->au_groups.' WHERE group_id= :group_id');
+      $stmt = $this->db->query('SELECT group_name, id,access_code,hash_id FROM '.$this->au_groups.' WHERE id= :id');
       $this->db->bind(':id', $group_id); // bind group id
 
       $groups = $this->db->resultSet();
@@ -77,7 +77,7 @@ class Group {
       } // nothing found or empty database
 
       foreach ($groups as $group) {
-          $db_access_code = $group['pw'];
+          $db_access_code = $group['access_code'];
           if (password_verify($access_code, $db_access_code))
           {
             return $group['id'];
@@ -95,7 +95,7 @@ class Group {
     public function checkGroupExist($group_id) {
       /* returns 0 if group does not exist, 1 if group exists, accepts databse id (int)
       */
-      $group_id = $this->checkGroupId($group_id); // checks group id and converts user id to db group id if necessary (when group hash id was passed)
+      $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
       $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE id = :id');
       $this->db->bind(':id', $group_id); // bind group id
@@ -103,17 +103,63 @@ class Group {
       if (count($groups)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return 1; // user found, return 1
+        return 1; // group found, return 1
       }
     } // end function
 
 
-    function getGroups($offset, $limit) {
-      /* returns grouplist (associative array) with start and limit provided
+    function getGroups($offset, $limit, $orderby, $asc, $status=1) {
+      /* returns group list (associative array) with start and limit provided
+      orderby is the field (int, see switch), defaults to last_update (3)
+      asc (smallint), is either ascending (1) or descending (0), defaults to descending
       */
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_groups.' LIMIT :offset , :limit');
-      $this->db->bind(':offset', $offset); // bind limit
-      $this->db->bind(':limit', $limit); // bind limit
+      // init vars
+      $orderby_field="";
+      $asc_field ="";
+
+      $limit_string=" LIMIT :offset , :limit ";
+      $limit_active=true;
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = "group_name";
+        break;
+        case 1:
+        $orderby_field = "order";
+        break;
+        case 2:
+        $orderby_field = "created";
+        break;
+        case 3:
+        $orderby_field = "last_update";
+        break;
+        case 4:
+        $orderby_field = "id";
+        break;
+
+        default:
+        $orderby_field = "last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_groups.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+
+      if ($limit){
+        // only bind if limit is set
+        $this->db->bind(':offset', $offset); // bind limit
+        $this->db->bind(':limit', $limit); // bind limit
+      }
+
       $err=false;
       try {
         $groups = $this->db->resultSet();
@@ -131,25 +177,51 @@ class Group {
       }
     }// end function
 
-    public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0) {
+    private function checkGroupExistsByName($group_name){
+      // checks if a group with this name is already in database
+      $group_name=trim ($group_name); // trim spaces
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE group_name = :group_name');
+      $this->db->bind(':group_name', $group_name); // bind room id
+      $groups = $this->db->resultSet();
+      if (count($groups)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1; // return 1 = exists
+      }
+    }
+
+    public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $group_order=10) {
         /* adds a new group and returns insert id (group id) if successful, accepts the above parameters
          description_public = actual description of the group, status = status of inserted group (0 = inactive, 1=active)
         */
+        //sanitize in vars
+        $group_order = intval ($group_order);
+        $updater_id = intval ($updater_id);
+        $status = intval($status);
 
-        $hash_access_code = password_hash($access_code, PASSWORD_DEFAULT); // hash access code
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_groups.' (group_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id) VALUES (:group_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id)');
+        // check if group name is still available
+        if ($this->checkGroupExistsByName($group_name)>0){
+          return "0,1"; // group exists, stop exectuing, return errorcode 1 = group exists
+        }
+
+
+        $hash_access_code = password_hash(trim ($access_code), PASSWORD_DEFAULT); // hash access code
+
+        $stmt = $this->db->query('INSERT INTO '.$this->au_groups.' (group_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, group_order) VALUES (:group_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :group_order)');
         // bind all VALUES
-        $this->db->bind(':group_name', $group_name);
-        $this->db->bind(':description_public', $description_public);
-        $this->db->bind(':description_internal', $description_internal);
-        $this->db->bind(':internal_info', $internal_info);
-        $this->db->bind(':access_code', $hash_access_code);
+        $this->db->bind(':group_name', trim ($group_name));
+        $this->db->bind(':description_public', trim ($description_public));
+        $this->db->bind(':description_internal', trim ($description_internal));
+        $this->db->bind(':internal_info', trim ($internal_info));
+        $this->db->bind(':access_code', trim ($hash_access_code));
         $this->db->bind(':status', $status);
-        // generate unique hash for this user
+        $this->db->bind(':group_order', intval($group_order));
+        // generate unique hash for this group
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
-        $hash_id = md5($group_name.$appendix); // create hash id for this user
+        $hash_id = md5($group_name.$appendix); // create hash id for this group
         $this->db->bind(':hash_id', $hash_id);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -180,7 +252,7 @@ class Group {
          status = status of inserted group (0 = inactive, 1=active)
          updater_id is the id of the group that commits the update (i.E. admin )
         */
-        $group_id = $this->checkGroupId($group_id); // checks group  id and converts user id to db user id if necessary (when user hash id was passed)
+        $group_id = $this->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -213,7 +285,7 @@ class Group {
          about (text) -> description of a group
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $group_id = $this->checkGroupId($group_id); // checks group id and converts user id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET description_public= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -246,7 +318,7 @@ class Group {
          about (text) -> description of a group
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $group_id = $this->checkGroupId($group_id); // checks group id and converts user id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET description_internal= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -269,16 +341,16 @@ class Group {
           $this->syslog->addSystemEvent(0, "Group description internal changed ".$group_id." by ".$updater_id, 0, "", 1);
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing description internal of user ".$group_id." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing description internal of group ".$group_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
     public function setGroupname($group_id, $group_name, $updater_id=0) {
-        /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
-         realname = actual name of the user
+        /* edits a group and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
+         group_name =  name of the group
         */
-        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db user id if necessary (when group hash id was passed)
+        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET group_name= :group_name, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -341,7 +413,7 @@ class Group {
     }// end function
 
     private function checkGroupId ($group_id) {
-      /* helper function that checks if a user id is a standard db id (int) or if a hash group id was passed
+      /* helper function that checks if a group id is a standard db id (int) or if a hash group id was passed
       if a hash was passed, function gets db group id and returns db id
       */
 

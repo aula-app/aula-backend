@@ -138,10 +138,43 @@ class User {
       }
     }// end function
 
+    private function checkUserExistsByUsername($user_name){
+      // checks if a group with this name is already in database
+      $user_name=trim ($user_name); // trim spaces
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE username = :user_name');
+      $this->db->bind(':user_name', $user_name); // bind room id
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1; // return 1 = exists
+      }
+    }
+
+
+
     public function addUser($realname, $displayname, $username, $email, $password, $status, $updater_id=0) {
         /* adds a user and returns insert id (userid) if successful, accepts the above parameters
          realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
         */
+
+        // sanitize vars
+        $realname = trim ($realname);
+        $displayname = trim ($displayname);
+        $username = trim ($username);
+        $email = trim ($email);
+        $password = trim ($password);
+        $updater_id = intval ($updater_id);
+        $status = intval($status);
+
+
+        // check if user name is still available
+        if ($this->checkUserExistsByUsername($username)>0){
+          return "0,1"; // user exists, stop exectuing, return errorcode 1 = user exists
+        }
+
+
         // generate hash password
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
@@ -468,7 +501,7 @@ class User {
         /* deletes user and returns the number of rows (int) accepts user id or user hash id // */
 
         $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-        
+
         $stmt = $this->db->query('DELETE FROM '.$this->au_users_basedata.' WHERE id = :id');
         $this->db->bind (':id', $userid);
         $err=false;

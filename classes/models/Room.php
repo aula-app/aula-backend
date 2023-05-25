@@ -36,6 +36,8 @@ class Room {
       }
     }// end function
 
+
+
     public function getRoomHashId($room_id) {
       /* returns hash_id of a room for a integer room id
       */
@@ -108,12 +110,67 @@ class Room {
     } // end function
 
 
-    function getRooms($offset, $limit) {
+    function getRooms($offset, $limit, $orderby=3, $asc=0, $status=1) {
       /* returns roomlist (associative array) with start and limit provided
+      if start and limit are set to 0, then the whole list is read (without limit)
+      orderby is the field (int, see switch), defaults to last_update (3)
+      asc (smallint), is either ascending (1) or descending (0), defaults to descending
+      $status (int) 0=inactive, 1=active, 2=susepended, 3=archived, defaults to active (1)
       */
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_rooms.' LIMIT :offset , :limit');
-      $this->db->bind(':offset', $offset); // bind limit
-      $this->db->bind(':limit', $limit); // bind limit
+
+      // init vars
+      $orderby_field="";
+      $asc_field ="";
+
+      $limit_string=" LIMIT :offset , :limit ";
+      $limit_active=true;
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+        $limit_active=false;
+      }
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = "room_name";
+        break;
+        case 1:
+        $orderby_field = "order";
+        break;
+        case 2:
+        $orderby_field = "created";
+        break;
+        case 3:
+        $orderby_field = "last_update";
+        break;
+        case 4:
+        $orderby_field = "id";
+        break;
+
+        default:
+        $orderby_field = "last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_rooms.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      if ($limit){
+        // only bind if limit is set
+        $this->db->bind(':offset', $offset); // bind limit
+        $this->db->bind(':limit', $limit); // bind limit
+      }
+      $this->db->bind(':status', $status); // bind status
+
       $err=false;
       try {
         $rooms = $this->db->resultSet();
@@ -131,27 +188,48 @@ class Room {
       }
     }// end function
 
-    public function addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $updater_id=0) {
+    private function checkRoomExistsByName($room_name){
+      // checks if a room with this name is already in database
+      $room_name=trim ($room_name); // trim spaces
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE room_name = :room_name');
+      $this->db->bind(':room_name', $room_name); // bind room id
+      $rooms = $this->db->resultSet();
+      if (count($rooms)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1; //  return 1 = exists
+      }
+    }
+
+    public function addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $room_order=10, $updater_id=0) {
         /* adds a new room and returns insert id (room id) if successful, accepts the above parameters
          description_public = actual description of the room, status = status of inserted room (0 = inactive, 1=active)
         */
 
-        $hash_access_code = password_hash($access_code, PASSWORD_DEFAULT); // hash access code
+        $hash_access_code = password_hash(trim ($access_code), PASSWORD_DEFAULT); // hash access code
         //sanitize in vars
         $restricted = intval($restricted);
         $updater_id = intval ($updater_id);
         $status = intval($status);
-
-        if ($restrcited>0){
+        $room_order = intval ($room_order);
+        $room_name = trim ($room_name);
+        if ($restricted>0){
           $restricted=1;
         }
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_rooms.' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted)');
+        // check if room name is still available
+        if ($this->checkRoomExistsByName($room_name)>0){
+          return "0,1"; // room exists, stop exectuing, return errorcode 1 = room exists
+        }
+
+        $stmt = $this->db->query('INSERT INTO '.$this->au_rooms.' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, roomorder) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
         // bind all VALUES
-        $this->db->bind(':room_name', $room_name);
-        $this->db->bind(':description_public', $description_public);
-        $this->db->bind(':description_internal', $description_internal);
-        $this->db->bind(':internal_info', $internal_info);
+
+        $this->db->bind(':room_name', trim ($room_name));
+        $this->db->bind(':description_public', trim ($description_public));
+        $this->db->bind(':description_internal', trim ($description_internal));
+        $this->db->bind(':internal_info', trim ($internal_info));
         $this->db->bind(':access_code', $hash_access_code);
         $this->db->bind(':status', $status);
         $this->db->bind(':restricted', $restricted);
@@ -160,6 +238,7 @@ class Room {
         $appendix = microtime(true).$testrand;
         $hash_id = md5($room_name.$appendix); // create hash id for this user
         $this->db->bind(':hash_id', $hash_id);
+        $this->db->bind(':roomorder', $room_order); // order parameter
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $err=false; // set error variable to false
@@ -179,7 +258,7 @@ class Room {
 
         } else {
           $this->syslog->addSystemEvent(1, "Error adding room ".$room_name, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
         }
     }// end function
 
@@ -210,10 +289,10 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Room status changed ".$room_id." by ".$updater_id, 0, "", 1);
-          return intval($this->db->rowCount()); // return number of affected rows to calling script
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of room ".$room_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
         }
     }// end function
 
@@ -363,9 +442,18 @@ class Room {
       }
     } // end function
 
-    public function deleteRoom($room_id, $action, $updater_id=0) {
+    private function sendMessage ($userid, $msg){
+      /* send a message to the dashboard of the user
+      yet to be written
+      */
+
+      $success = 0;
+      return $success;
+    }
+
+    public function deleteRoom($room_id, $mode=0, $msg="", $updater_id=0) {
         /* deletes room and returns the number of rows (int) accepts room id or room hash id //
-        $action defines what is done. 0=room is deleted
+        $mode defines what is to be done. 0=room is deleted only (including relations) 1=room is deleted and users of this room are notified
 
         */
         $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
@@ -383,6 +471,14 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Room deleted with id ".$room_id." by ".$updater_id, 0, "", 1);
+          //check for action
+          if ($mode==1)
+          {
+            // notify users that are in this room that room has been deleted
+            // get all members of this room, add message to msg stack (au_news)
+
+          }
+
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error deleting room with id ".$room_id." by ".$updater_id, 0, "", 1);
