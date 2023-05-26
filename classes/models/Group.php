@@ -18,8 +18,18 @@ class Group {
         $this->crypt = $crypt;
         $this->syslog = $syslog;
 
+        $au_rooms = 'au_rooms';
         $au_groups = 'au_groups';
+        $au_users_basedata = 'au_users_basedata';
+        $au_rel_rooms_users ='au_rel_rooms_users';
+        $au_rel_groups_users ='au_rel_groups_users';
+
+        $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
+        $this->$au_rooms = $au_rooms; // table name for rooms
         $this->$au_groups = $au_groups; // table name for groups
+        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
+        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
+
     }// end function
 
     public function getGroupBaseData($group_id) {
@@ -107,6 +117,31 @@ class Group {
       }
     } // end function
 
+    function getUsersInGroup($groupid, $status=1) {
+      /* returns users (associative array)
+      $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+      */
+
+      $stmt = $this->db->query('SELECT '.$this->au_users_basedata.'.realname, '.$this->au_users_basedata.'.displayname, '.$this->au_users_basedata.'.id, '.$this->au_users_basedata.'.username, '.$this->au_users_basedata.'.email FROM '.$this->au_rel_groups_users.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_rel_groups_users.'.user_id='.$this->au_users_basedata.'.id) WHERE '.$this->au_rel_groups_users.'.group_id= :groupid AND '.$this->au_users_basedata.'.status= :status' );
+      $this->db->bind(':groupid', $groupid); // bind group id
+      $this->db->bind(':status', $status); // bind status
+
+      $err=false;
+      try {
+        $groups = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while getting users in group: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return 0;
+      }
+
+      if (count($groups)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $groups; // return an array (associative) with all the data
+      }
+    }// end function
 
     function getGroups($offset, $limit, $orderby, $asc, $status=1) {
       /* returns group list (associative array) with start and limit provided
