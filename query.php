@@ -48,7 +48,7 @@ out ("EXAMPLES FOR USING THE MODELS (in this case...USER)",true);
 /* */
 
 
-out ("Writing something into the systemlog using model Systemlog...)",true);
+out ("Writing something into the systemlog using model Systemlog...",true);
 // write something into the system log:
 $syslog->addSystemEvent(0, "Example process started", 0, "", 1); // 0 = msg, 1= error (see databse description)
 // Create a new User object (params: db object, crypt class, user id of editor)
@@ -99,9 +99,9 @@ if (!$userdata){
 
 $offset = 10; // set start at dataset #10
 $limit = 5; // get 5 datasets
-out ("Reading multiple user datasets using User class with limit ".$offset.",".$limit."...",true);
+out ("Reading multiple users (only active, sorted by last update ASC) using User class with limit ".$offset.",".$limit."...limit 0,0 shows all datasets",true);
 
-$userdata = $user->getUsers($offset, $limit); // read base data from users
+$userdata = $user->getUsers($offset, $limit, 4, 1, 1); // read base data from users
 if (!$userdata){
   out ("nothing found!");
 }else {
@@ -127,7 +127,7 @@ if (!$deleted_usersets){
 */
 
 $user_id=5;
-out ("Getting the hash id for an integer user id...".$user_id,true);
+out ("Getting the hash id for user id ".$user_id,true);
 $hash_id = $user->getUserHashId($user_id);
 out ("hash id for user ".$user_id." = ".$hash_id);
 
@@ -156,6 +156,17 @@ if (!$userdata){
 } else {
   out ("User status changed: No. of datasets affected: ".$userdata);
 }
+
+$username="username_1685098107.2936873"; // username that will be checked
+
+out ("Checking if ".$username." exists in db and getting the user id ",true);
+$userdata = $user->checkUserExistsByUsername($username); // check if user exists
+if ($userdata==0){
+  out ("User not found!");
+} else {
+  out ("User ".$username." exists! User has user id ".$userdata);
+}
+
 
 out ("Change displayname of user#100 to EDGAR",true);
 $userdata = $user->setUserDisplayname( $userid,"EDGAR"); // set status of user #100 to 0
@@ -201,21 +212,19 @@ if (!$userdata){
   out ("User about text added status changed: No. of datasets affected: ".$userdata);
 }
 
-/*
-$description_public ="Public description of the group..";
-$description_internal ="Internal description of the group..";
 
-// create a random appendix to have different groups....
-$testrand = rand (100,1000);
-$appendix = microtime(true).$testrand;
-$group_name ="testgroup".$appendix;
-out ("Addding a new group", true);
+$roomid = 1;
+$userid = 1;
+out ("Adding User ".$userid." to Room ".$roomid, true);
+$userdata = $user->addToRoom ($userid, $roomid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
+out ("USER Class returned: ".$userdata);
 
+$groupid = 2;
+$userid = 3;
+out ("Adding User ".$userid." to Group ".$groupid, true);
+$userdata = $user->addToGroup ($userid,$groupid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
+out ("USER Class returned: ".$userdata);
 
-$inserted_group_id = $group->addGroup($group_name, $description_public, $description_internal, 'internal info', 1, 'aula', 1);
-
-out ("Inserted group at id:".$inserted_group_id);
-*/
 
 
 // Close the database connection
