@@ -224,6 +224,51 @@ class Room {
       }
     }// end function
 
+    function deleteUserFromRoom($roomid, $userid) {
+      /* deletes a user from a room
+      */
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE user_id = :userid AND room_id = :roomid' );
+      $this->db->bind(':roomid', $roomid); // bind room id
+      $this->db->bind(':userid', $userid); // bind user id
+
+      $err=false;
+      try {
+        $rooms = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while deleting user from room: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
+
+
+      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+
+    }// end function
+
+    function emptyRoom($roomid) {
+      /* deletes all users from a room
+      */
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE room_id = :roomid' );
+      $this->db->bind(':roomid', $roomid); // bind room id
+
+      $err=false;
+      try {
+        $rooms = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while emptying room: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
+
+
+      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+
+    }// end function
+
     private function checkRoomExistsByName($room_name){
       // checks if a room with this name is already in database
       $room_name=trim ($room_name); // trim spaces
