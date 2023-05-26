@@ -143,6 +143,53 @@ class Group {
       }
     }// end function
 
+    function deleteUserFromGroup($groupid, $userid) {
+      /* deletes a user from a group
+      */
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE user_id = :userid AND group_id = :groupid' );
+      $this->db->bind(':groupid', $groupid); // bind room id
+      $this->db->bind(':userid', $userid); // bind user id
+
+      $err=false;
+      try {
+        $groups = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while deleting user from group: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
+
+
+      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+
+    }// end function
+
+    function emptyGroup($groupid) {
+      /* deletes all users from a group
+      */
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE group_id = :groupid' );
+      $this->db->bind(':groupid', $groupid); // bind room id
+
+      $err=false;
+      try {
+        $groups = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while emptying group: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
+
+
+      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+
+    }// end function
+
+
+
     function getGroups($offset, $limit, $orderby, $asc, $status=1) {
       /* returns group list (associative array) with start and limit provided
       orderby is the field (int, see switch), defaults to last_update (3)
