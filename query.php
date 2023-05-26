@@ -223,6 +223,31 @@ out ("Adding User ".$userid." to Room ".$roomid, true);
 $userdata = $user->addToRoom ($userid, $roomid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
 out ("USER Class returned: ".$userdata);
 
+$roomid = 5;
+$userid = 1;
+out ("Deleting User ".$userid." from Room ".$roomid, true);
+$userdata = $room->deleteUserFromRoom ($roomid,$userid);
+out ("ROOM Class returned: ".$userdata);
+
+$roomid = 6;
+out ("Deleting (emptying) all users from Room ".$roomid, true);
+$userdata = $room->emptyRoom ($roomid,$userid);
+out ("ROOM Class returned: ".$userdata);
+
+
+$groupid = 9;
+$userid = 45;
+out ("Deleting User ".$userid." from group ".$groupid, true);
+$userdata = $group->deleteUserFromGroup ($groupid,$userid);
+out ("GROUP Class returned: ".$userdata);
+
+$groupid = 7;
+out ("Deleting (emptying) all users from group ".$groupid, true);
+$userdata = $group->emptyGroup ($groupid, $userid);
+out ("GROUP Class returned: ".$userdata);
+
+
+
 $groupid = 2;
 $userid = 3;
 out ("Adding User ".$userid." to Group ".$groupid, true);
