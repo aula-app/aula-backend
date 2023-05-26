@@ -15,6 +15,9 @@ require_once ($baseHelperDir.'Crypt.php');
 require_once ($baseClassModelDir.'Systemlog.php');
 //load Groups class
 require_once ($baseClassModelDir.'Group.php');
+//load Room class
+require_once ($baseClassModelDir.'Room.php');
+
 
 
 
@@ -26,6 +29,7 @@ $db = new Database();
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog ($db); // systemlog
 $group = new Group ($db, $crypt, $syslog); // instanciate group model class
+$room = new Room ($db, $crypt, $syslog); // instanciate room model class
 
 
 
@@ -224,6 +228,53 @@ $userid = 3;
 out ("Adding User ".$userid." to Group ".$groupid, true);
 $userdata = $user->addToGroup ($userid,$groupid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
 out ("USER Class returned: ".$userdata);
+
+$roomid = 1;
+$userid = 1;
+out ("Getting Userlist (only active users status = 1) from room ".$roomid, true);
+$userdata = $room->getUsersInRoom ($roomid, 1); // 1=active (could also be set to suspended or inactive)
+
+if (!$userdata){
+  out ("nothing found!");
+}else {
+  // Loop through the results and output them
+  $i=1;
+  foreach ($userdata as $result) {
+      out ("<b>User #".$i."</b>");
+      out ("ID: " . $result['id']);
+      out ("Real name: " . $crypt->decrypt ($result['realname']));
+      out ("Display name: " . $crypt->decrypt ($result['displayname']));
+      out ("User name: " . $crypt->decrypt ($result['username']));
+
+      out ("Email: " . $crypt->decrypt ($result['email']));
+      $i++;
+  }
+}
+
+
+$groupid = 3;
+$userid = 1;
+out ("Getting Userlist (only active users status = 1) from group ".$groupid, true);
+$userdata = $group->getUsersInGroup ($groupid, 1); // 1=active (could also be set to suspended or inactive)
+
+if (!$userdata){
+  out ("nothing found!");
+}else {
+  // Loop through the results and output them
+  $i=1;
+  foreach ($userdata as $result) {
+      out ("<b>User #".$i."</b>");
+      out ("ID: " . $result['id']);
+      out ("Real name: " . $crypt->decrypt ($result['realname']));
+      out ("Display name: " . $crypt->decrypt ($result['displayname']));
+      out ("User name: " . $crypt->decrypt ($result['username']));
+
+      out ("Email: " . $crypt->decrypt ($result['email']));
+      $i++;
+  }
+}
+
+
 
 
 
