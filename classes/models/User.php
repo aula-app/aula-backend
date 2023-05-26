@@ -19,12 +19,21 @@ class User {
         $this->syslog = $syslog;
 
         $au_users_basedata = 'au_users_basedata';
+        $au_rooms = 'au_rooms';
+        $au_groups = 'au_groups';
+        $au_rel_rooms_users ='au_rel_rooms_users';
+        $au_rel_groups_users ='au_rel_groups_users';
+
         $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
+        $this->$au_rooms = $au_rooms; // table name for rooms
+        $this->$au_groups = $au_groups; // table name for groups
+        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
+        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
     }// end function
 
     public function getUserBaseData($userid) {
       /* returns user base data for a specified db id */
-      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed) // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $userid); // bind userid
@@ -64,6 +73,137 @@ class User {
     }// end function
 
 
+    public function getRoomIdByHashId($hashid) {
+      /* Returns Database ID of room when only hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hashid); // bind userid
+      $rooms = $this->db->resultSet();
+      if (count($rooms)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $rooms[0]['id']; // return room db id
+      }
+    }// end function
+
+    public function getGroupIdByHashId($hashid) {
+      /* Returns Database ID of group when only hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hashid); // bind userid
+      $groups = $this->db->resultSet();
+      if (count($groups)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $groups[0]['id']; // return group db id
+      }
+    }// end function
+
+
+    public function addToRoom($userid, $roomid, $status, $updater_id) {
+      /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
+      returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
+      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $roomid = $this->checkRoomId($roomid); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      // check if user and room exist
+      $user_exist = $this->checkUserExist($userid);
+      $room_exist = $this->checkRoomExist($roomid);
+
+      if ($user_exist==1 && $room_exist==1) {
+        // everything ok, user and room exists
+        // add relation to database
+
+        $stmt = $this->db->query('INSERT INTO '.$this->au_rel_rooms_users.' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
+
+        // bind all VALUES
+        $this->db->bind(':room_id', $roomid);
+        $this->db->bind(':user_id', $userid);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added user ".$userid." to room ".$roomid, 0, "", 1);
+          return "1,1,1"; // return error code 1 = successful
+
+        } else {
+          $this->syslog->addSystemEvent(0, "Error while adding user ".$userid." to room ".$roomid, 0, "", 1);
+
+          return "0,1,1"; // return 0 to indicate that there was an error executing the statement
+        }
+
+      }else {
+        return "0,".$user_exist.",".$room_exist; // returns error and 0 or 1 for user and room (0=doesn't exist, 1=exists)
+      }
+
+      return "1,1,1"; // returns 1=ok/successful, user exists (1), room exists (1)
+
+    } // end function
+
+
+    public function addToGroup($userid, $groupid, $status, $updater_id) {
+      /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
+      returns 1,1 = ok, 0,1 = user id not in db 0,2 group id not in db 0,3 user id not in db group id not in db */
+      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $groupid = $this->checkGroupId($groupid); // checks group id and converts room id to db room id if necessary (when room hash id was passed)
+      // check if user and room exist
+      $user_exist = $this->checkUserExist($userid);
+      $group_exist = $this->checkGroupExist($groupid);
+
+      if ($user_exist==1 && $group_exist==1) {
+        // everything ok, user and room exists
+        // add relation to database
+
+        $stmt = $this->db->query('INSERT INTO '.$this->au_rel_groups_users.' (group_id, user_id, status, created, last_update, updater_id) VALUES (:group_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE group_id = :group_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
+
+        // bind all VALUES
+        $this->db->bind(':group_id', $groupid);
+        $this->db->bind(':user_id', $userid);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added user ".$userid." to group ".$groupid, 0, "", 1);
+          return "1,1,1"; // return error code 1 = successful
+
+        } else {
+          $this->syslog->addSystemEvent(0, "Error while adding user ".$userid." to group ".$groupid, 0, "", 1);
+
+          return "0,1,1"; // return 0 to indicate that there was an error executing the statement
+        }
+
+      }else {
+        return "0,".$user_exist.",".$group_exist; // returns error and 0 or 1 for user and group (0=doesn't exist, 1=exists)
+      }
+
+      return "1,1,1"; // returns 1=ok/successful, user exists (1), group exists (1)
+
+    } // end function
+
     public function checkCredentials($username, $pw) { // pw = clear text
       /* checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
       username is clear text
@@ -74,7 +214,7 @@ class User {
       $bi = md5(strtolower($username));
 
       $stmt = $this->db->query('SELECT id,username,pw,hash_id FROM '.$this->au_users_basedata.' WHERE bi= :bi');
-      $this->db->bind(':bi', $bi); // bind blind index
+      $this->db->bind(':bi', $bi); // blind index
       $users = $this->db->resultSet();
 
 
@@ -132,13 +272,100 @@ class User {
       }
     } // end function
 
+    private function checkRoomExist($roomid) {
+      /* returns 0 if room does not exist, 1 if room exists, accepts databse id (int)
+      */
+      $roomid = $this->checkRoomId($roomid); // checks room id and converts user id to db room id if necessary (when room hash id was passed)
 
-    function getUsers($offset, $limit) {
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_rooms.' WHERE id = :id');
+      $this->db->bind(':id', $roomid); // bind roomid
+      $rooms = $this->db->resultSet();
+      if (count($rooms)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1; // room found, return 1
+      }
+    } // end function
+
+    private function checkGroupExist($groupid) {
+      /* returns 0 if room does not exist, 1 if room exists, accepts databse id (int)
+      */
+      $groupid = $this->checkRoomId($groupid); // checks group id and converts user id to db group id if necessary (when room hash id was passed)
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_groups.' WHERE id = :id');
+      $this->db->bind(':id', $groupid); // bind groupid
+      $groups = $this->db->resultSet();
+      if (count($groups)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1; // room found, return 1
+      }
+    } // end function
+
+
+    function getUsers($offset, $limit, $orderby=3, $asc=0, $status=1) {
       /* returns userlist (associative array) with start and limit provided
       */
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LIMIT :offset , :limit');
-      $this->db->bind(':offset', $offset); // bind limit
-      $this->db->bind(':limit', $limit); // bind limit
+      // init vars
+      $orderby_field="";
+      $asc_field ="";
+
+      $limit_string=" LIMIT :offset , :limit ";
+      $limit_active=true;
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+        $limit_active=false;
+      }
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = "registration_status";
+        break;
+        case 1:
+        $orderby_field = "realname";
+        break;
+        case 2:
+        $orderby_field = "created";
+        break;
+        case 3:
+        $orderby_field = "last_update";
+        break;
+        case 4:
+        $orderby_field = "id";
+        break;
+        case 5:
+        $orderby_field = "username";
+        break;
+        case 6:
+        $orderby_field = "status";
+        break;
+
+        default:
+        $orderby_field = "last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+
+      if ($limit){
+        // only bind if limit is set
+        $this->db->bind(':offset', $offset); // bind limit
+        $this->db->bind(':limit', $limit); // bind limit
+      }
+      $this->db->bind(':status', $status); // bind status
+
       $err=false;
       try {
         $users = $this->db->resultSet();
@@ -156,17 +383,19 @@ class User {
       }
     }// end function
 
-    private function checkUserExistsByUsername($user_name){
+    public function checkUserExistsByUsername($username){
       // checks if a group with this name is already in database
-      $user_name=trim ($user_name); // trim spaces
+      // generate blind index
+      $bi = md5 (strtolower (trim ($username)));
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE username = :user_name');
-      $this->db->bind(':user_name', $user_name); // bind room id
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE bi = :bi');
+      $this->db->bind(':bi', $bi); // bind blind index
       $users = $this->db->resultSet();
       if (count($users)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return 1; // return 1 = exists
+        $userid = $users[0]['id']; // get user id from db
+        return $userid; // return user id
       }
     }
 
@@ -188,15 +417,16 @@ class User {
 
 
         // check if user name is still available
-        if ($this->checkUserExistsByUsername($username)>0){
-          return "0,1"; // user exists, stop exectuing, return errorcode 1 = user exists
+        $temp_user_id = $this->checkUserExistsByUsername($username);
+        if ($temp_user_id>0){
+          return "0,1,".$temp_user_id; // user exists, stop exectuing, return errorcode 1 = user exists, returning userid
         }
 
 
         // generate hash password
         $hash = password_hash($password, PASSWORD_DEFAULT);
         // generate blind index
-        $bi = md5 (strtolower ($username));
+        $bi = md5 (strtolower (trim ($username)));
 
         $stmt = $this->db->query('INSERT INTO '.$this->au_users_basedata.' (realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi) VALUES (:realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi)');
         // bind all VALUES
@@ -311,6 +541,8 @@ class User {
          about (text) -> description of a user
          updater_id is the id of the user that commits the update (i.E. admin )
         */
+        $about = $this->crypt->encrypt(trim ($about)); // sanitize and encrypt about text
+
         $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET about_me= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
@@ -335,6 +567,41 @@ class User {
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing abouttext of user ".$userid." by ".$updater_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+    }// end function
+
+    public function setUserPosition($userid, $userposition, $updater_id=0) {
+        /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         about (text) -> description of a user
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $about = $this->crypt->encrypt(trim ($userposition)); // sanitize and encrypt position text
+
+        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET position= :position, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        // bind all VALUES
+        $this->db->bind(':position', $userposition);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':userid', $userid); // user that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "User field position changed ".$userid." by ".$updater_id, 0, "", 1);
+          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing position of user ".$userid." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
@@ -482,6 +749,38 @@ class User {
       {
 
         return $this->getUserIdByHashId ($userid);
+      }
+    } // end function
+
+    private function checkRoomId ($roomid) {
+      /* helper function that checks if a room id is a standard db id (int) or if a hash roomid was passed
+      if a hash was passed, function gets db room id and returns db id
+      */
+
+      if (is_int($roomid))
+      {
+
+        return $roomid;
+      } else
+      {
+
+        return $this->getRoomIdByHashId ($roomid);
+      }
+    } // end function
+
+    private function checkGroupId ($groupid) {
+      /* helper function that checks if a group id is a standard db id (int) or if a hash group id was passed
+      if a hash was passed, function gets db group id and returns db id
+      */
+
+      if (is_int($groupid))
+      {
+
+        return $groupid;
+      } else
+      {
+
+        return $this->getGroupIdByHashId ($groupid);
       }
     } // end function
 
