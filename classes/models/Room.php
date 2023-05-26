@@ -19,7 +19,16 @@ class Room {
         $this->syslog = $syslog;
 
         $au_rooms = 'au_rooms';
+        $au_groups = 'au_groups';
+        $au_users_basedata = 'au_users_basedata';
+        $au_rel_rooms_users ='au_rel_rooms_users';
+        $au_rel_groups_users ='au_rel_groups_users';
+
+        $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
         $this->$au_rooms = $au_rooms; // table name for rooms
+        $this->$au_groups = $au_groups; // table name for groups
+        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
+        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
     }// end function
 
     public function getRoomBaseData($room_id) {
@@ -69,7 +78,7 @@ class Room {
     public function checkAccesscode($room_id, $access_code) { // access_code = clear text
       /* checks access code and returns database room id (credentials correct) or 0 (credentials not correct)
       */
-      $stmt = $this->db->query('SELECT room_name, id,access_code,hash_id FROM '.$this->au_rooms.' WHERE id= :id');
+      $stmt = $this->db->query('SELECT room_name, id, access_code, hash_id FROM '.$this->au_rooms.' WHERE id= :id');
       $this->db->bind(':id', $room_id); // bind room id
 
       $rooms = $this->db->resultSet();
@@ -177,6 +186,33 @@ class Room {
 
       } catch (Exception $e) {
           echo 'Error occured while getting rooms: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return 0;
+      }
+
+      if (count($rooms)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $rooms; // return an array (associative) with all the data
+      }
+    }// end function
+
+
+    function getUsersInRoom($roomid, $status=1) {
+      /* returns users (associative array)
+      $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+      */
+
+      $stmt = $this->db->query('SELECT '.$this->au_users_basedata.'.realname, '.$this->au_users_basedata.'.displayname, '.$this->au_users_basedata.'.id, '.$this->au_users_basedata.'.username, '.$this->au_users_basedata.'.email FROM '.$this->au_rel_rooms_users.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_rel_rooms_users.'.user_id='.$this->au_users_basedata.'.id) WHERE '.$this->au_rel_rooms_users.'.room_id= :roomid AND '.$this->au_users_basedata.'.status= :status' );
+      $this->db->bind(':roomid', $roomid); // bind room id
+      $this->db->bind(':status', $status); // bind status
+
+      $err=false;
+      try {
+        $rooms = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while getting users in room: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           return 0;
       }
@@ -361,6 +397,9 @@ class Room {
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
+
+
+
 
     public function setRoomname($room_id, $room_name, $updater_id=0) {
         /* edits a room and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
