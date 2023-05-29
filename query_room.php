@@ -1,24 +1,26 @@
 <?php
 require_once ('base_config.php'); // load base config with paths to classes etc.
 require_once ('error_msg.php');
+require_once ('error_msg.php');
+require ('functions.php'); // include Class autoloader (models)
 
 /* IMPORTANT! Every including script that wants to use the user.php, needs to set this variable ($allowed_include) to 1 */
 
-$allowed_include = 1; // set allow to 1 in order to include the user.php script
-
+/*
 require_once ($baseClassModelDir.'User.php'); // include user model class
 // Include the Database class model file
 require_once ($baseClassModelDir.'Database.php');
-//load helper classes
-require_once ($baseHelperDir.'Crypt.php');
+
 //load Syslogger class
 require_once ($baseClassModelDir.'Systemlog.php');
 //load Groups class
 require_once ($baseClassModelDir.'Group.php');
 //load Room class
 require_once ($baseClassModelDir.'Room.php');
+*/
 
-
+//load helper classes
+require_once ($baseHelperDir.'Crypt.php');
 
 
 
