@@ -1,9 +1,21 @@
-- name: Copy folder content recursively to remote
-  uses: garygrossgarten/github-action-scp@release
-  with:
-    local: .
-    remote: /var/www/playground
-    host: ${{ secrets.HOST }}
-    username: ${{ secrets.SSH_USER }}
-    password: ${{ secrets.PASSWORD }}
-    port: 4222
+name: scp copy files to remote development server
+
+on: 
+  push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      LOCAL: test
+    steps:
+      - name: Copy folder content recursively to remote
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: .
+          remote: /var/www/playground
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.PASSWORD }}
+          port: 4222
