@@ -258,11 +258,11 @@ class User {
 
 
     public function checkUserExist($userid) {
-      /* returns 0 if user does not exist, 1 if user exists, accepts databse id (int)
+      /* helper function to check if a user with a certain id exists, returns 0 if user does not exist, 1 if user exists, accepts database (int) or hash id (varchar)
       */
       $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $userid); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
@@ -401,9 +401,10 @@ class User {
 
 
 
-    public function addUser($realname, $displayname, $username, $email, $password, $status, $updater_id=0) {
+    public function addUser($realname, $displayname, $username, $email, $password, $status, $updater_id=0, $userlevel=10) {
         /* adds a user and returns insert id (userid) if successful, accepts the above parameters
          realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
+         userlevel = Rights level for the user 10=guest, 20 = standard, 30 =moderator 40 = super mod 50 = admin 60 = tech admin
         */
 
         // sanitize vars
@@ -414,6 +415,7 @@ class User {
         $password = trim ($password);
         $updater_id = intval ($updater_id);
         $status = intval($status);
+        $userlevel = intval ($userlevel);
 
 
         // check if user name is still available
@@ -428,7 +430,7 @@ class User {
         // generate blind index
         $bi = md5 (strtolower (trim ($username)));
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_users_basedata.' (realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi) VALUES (:realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi)');
+        $stmt = $this->db->query('INSERT INTO '.$this->au_users_basedata.' (realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
         // bind all VALUES
         $this->db->bind(':username', $this->crypt->encrypt($username));
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -436,6 +438,7 @@ class User {
         $this->db->bind(':email', $this->crypt->encrypt($email));
         $this->db->bind(':password', $hash);
         $this->db->bind(':bi', $bi);
+        $this->db->bind(':userlevel', $userlevel);
         $this->db->bind(':status', $status);
         // generate unique hash for this user
         $testrand = rand (100,10000000);
@@ -513,6 +516,40 @@ class User {
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':status', $status);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':userid', $userid); // user that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "User status changed ".$userid." by ".$updater_id, 0, "", 1);
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing status of user ".$userid." by ".$updater_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+    }// end function
+
+    public function setUserLevel($userid, $userlevel=10, $updater_id=0) {
+        /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         userlevel = level of the user (10 (guest)-50 (techadmin))
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $userlevel = intval (§userlevel);
+        
+        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET userlevel= :userlevel, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        // bind all VALUES
+        $this->db->bind(':userlevel', $userlevel);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $this->db->bind(':userid', $userid); // user that is updated
@@ -743,7 +780,6 @@ class User {
 
       if (is_int($userid))
       {
-
         return $userid;
       } else
       {
