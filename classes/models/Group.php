@@ -51,7 +51,7 @@ class Group {
       */
       $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_groups.' WHERE id = :id');
       $this->db->bind(':id', $group_id); // bind group id
-      $group_id = $this->db->resultSet();
+      $groups = $this->db->resultSet();
       if (count($groups)<1){
         return 0; // nothing found, return 0 code
       }else {

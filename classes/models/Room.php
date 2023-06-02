@@ -52,11 +52,11 @@ class Room {
       */
       $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_rooms.' WHERE id = :id');
       $this->db->bind(':id', $room_id); // bind room id
-      $room_id = $this->db->resultSet();
+      $rooms = $this->db->resultSet();
       if (count($rooms)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return $rooms[0]['hash_id']; // return an array (associative) with all the data for the room
+        return $rooms[0]['hash_id']; // return hash id for the room
       }
     }// end function
 
@@ -106,7 +106,7 @@ class Room {
     public function checkRoomExist($room_id) {
       /* returns 0 if room does not exist, 1 if room exists, accepts databse id (int)
       */
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts user id to db room id if necessary (when room hash id was passed)
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
       $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE id = :id');
       $this->db->bind(':id', $room_id); // bind room id
@@ -114,7 +114,7 @@ class Room {
       if (count($rooms)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return 1; // user found, return 1
+        return 1; // room found, return 1
       }
     } // end function
 
