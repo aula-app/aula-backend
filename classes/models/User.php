@@ -539,6 +539,28 @@ class User {
         }
     }// end function
 
+    public function suspendUser ($userid, $updater_id=0){
+      // set user status to 2 = suspended
+      return setUserStatus ($userid, 2, $updater_id);
+    }
+
+    public function activateUser ($userid, $updater_id=0){
+      // set user status to 1 = active
+      return setUserStatus ($userid, 1, $updater_id);
+    }
+
+    public function deactivateUser ($userid, $updater_id=0){
+      // set user status to 0 = inactive
+      return setUserStatus ($userid, 0, $updater_id);
+    }
+
+    public function archiveUser ($userid, $updater_id=0){
+      // set user status to 3 = archived
+      return setUserStatus ($userid, 3, $updater_id);
+    }
+
+
+
     public function setUserLevel($userid, $userlevel=10, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          userlevel = level of the user (10 (guest)-50 (techadmin))
@@ -546,7 +568,7 @@ class User {
         */
         $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $userlevel = intval (§userlevel);
-        
+
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET userlevel= :userlevel, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':userlevel', $userlevel);
