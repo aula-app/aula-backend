@@ -301,7 +301,7 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
+      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.created, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
       $join =  'INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
       $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_ideas.'.room_id= :room_id ';
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
@@ -383,7 +383,7 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
+      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.created, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
       $join =  'INNER JOIN '.$this->au_rel_groups_users.' ON ('.$this->au_rel_groups_users.'.user_id='.$this->au_ideas.'.user_id) INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
       $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_rel_groups_users.'.group_id= :group_id ';
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
