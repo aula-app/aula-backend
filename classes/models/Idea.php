@@ -21,6 +21,7 @@ class Idea {
         $au_rooms = 'au_rooms';
         $au_groups = 'au_groups';
         $au_ideas = 'au_ideas';
+        $au_reported = 'au_reported';
         $au_users_basedata = 'au_users_basedata';
         $au_rel_rooms_users ='au_rel_rooms_users';
         $au_rel_groups_users ='au_rel_groups_users';
@@ -30,6 +31,7 @@ class Idea {
         $this->$au_rooms = $au_rooms; // table name for rooms
         $this->$au_groups = $au_groups; // table name for groups
         $this->$au_ideas = $au_ideas; // table name for ideas
+        $this->$au_reported = $au_reported; // table name for reportings
 
         $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
         $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
@@ -93,15 +95,52 @@ class Idea {
       }
     }// end function
 
-    public function reportIdea ($idea_id, $user_id, $updater_id){
+    public function reportIdea ($idea_id, $user_id, $updater_id, $reason =""){
       /* sets the status of an idea to 3 = reported
       accepts db id and hash id of idea
       user_id is the id of the user that reported the idea
       updater_id is the id of the user that did the update
       */
-      return $this->setIdeaStatus($idea_id, 3, $updater_id=0);
+      // check if this user has already reported this idea
+      $stmt = $this->db->query('SELECT object_id FROM '.$this->au_reported.' WHERE user_id = :user_id AND type = 0 AND object_id = :idea_id');
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->bind(':idea_id', $idea_id); // bind user id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        //add this reporting to db
+        $stmt = $this->db->query('INSERT INTO '.$this->au_reported.' (reason, object_id, type, user_id, status, created, last_update) VALUES (:reason, :idea_id, 0, :user_id, 0, NOW(), NOW())');
+        // bind all VALUES
 
-    }
+        $this->db->bind(':idea_id', $idea_id);
+        $this->db->bind(':user_id', $user_id);
+        $this->db->bind(':reason', $reason);
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        $insertid = intval($this->db->lastInsertId());
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added new reporting (#".$insertid.") ".$content, 0, "", 1);
+          // set idea status to reported
+          $this->setIdeaStatus($idea_id, 3, $updater_id=0);
+          return '1,1'; // nothing found, return 0 code
+
+        } else {
+          $this->syslog->addSystemEvent(1, "Error reporting idea ".$content, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+      }else {
+        return '0,1'; // return error, user has already reported this idea
+      }
+
+    } // end function
 
     public function suspendIdea ($idea_id, $updater_id){
       /* sets the status of an idea to 3 = suspended
@@ -111,7 +150,7 @@ class Idea {
       */
       return $this->setIdeaStatus($idea_id, 3, $updater_id=0);
 
-    }
+    } // end function
 
     public function archiveIdea ($idea_id, $updater_id){
       /* sets the status of an idea to 4 = archived
