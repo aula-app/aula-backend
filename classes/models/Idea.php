@@ -110,7 +110,7 @@ class Idea {
         return $users[0]['id']; // return user id
       }
     }// end function
-    
+
     public function getIdeaIdByHashId($hashid) {
       /* Returns Database ID of idea when hash_id is provided
       */
@@ -132,7 +132,7 @@ class Idea {
       updater_id is the id of the user that did the update
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $userid = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // check if idea is existent
       $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE id = :idea_id');
@@ -545,7 +545,7 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
+      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.created, '.$this->au_ideas.'.last_update,  '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
       $join =  'INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
       $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_ideas.'.user_id= :user_id ';
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
