@@ -267,4 +267,13 @@ foreach ($ideadata as $result) {
 }
 
 
+// reporting feature
+$idea_id=3;
+$user_id=4;
+$updater_id=42;
+$reason = "this idea is scandalous";
+out ("Report an idea #".$idea_id." by the user #".$user_id." for the reason: ".$reason."<br>using Idea class",true);
+
+$retvalue = $idea->reportIdea ($idea_id, $user_id, $updater_id, $reason);
+out ("return code:".$retvalue);
 ?>
