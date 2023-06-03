@@ -81,6 +81,36 @@ class Idea {
       }
     }// end function
 
+    private function checkUserId ($userid) {
+      /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
+      if a hash was passed, function gets db user id and returns db id
+      */
+
+      if (is_int($userid))
+      {
+        return $userid;
+      } else
+      {
+
+        return $this->getUserIdByHashId ($userid);
+      }
+    } // end function
+
+
+    public function getUserIdByHashId($hashid) {
+      /* Returns Database ID of user when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hashid); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $users[0]['id']; // return user id
+      }
+    }// end function
+    
     public function getIdeaIdByHashId($hashid) {
       /* Returns Database ID of idea when hash_id is provided
       */
@@ -101,6 +131,16 @@ class Idea {
       user_id is the id of the user that reported the idea
       updater_id is the id of the user that did the update
       */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      // check if idea is existent
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE id = :idea_id');
+      $this->db->bind(':idea_id', $idea_id); // bind user id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return ('0,3'); // idea does not exist
+      } // else continue processing
       // check if this user has already reported this idea
       $stmt = $this->db->query('SELECT object_id FROM '.$this->au_reported.' WHERE user_id = :user_id AND type = 0 AND object_id = :idea_id');
       $this->db->bind(':user_id', $user_id); // bind user id
