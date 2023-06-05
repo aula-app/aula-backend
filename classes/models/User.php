@@ -113,10 +113,10 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User deleted with id ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User deleted with id ".$user_id." by ".$updater_id, 0, "", 1);
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error deleting user with id ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error deleting user with id ".$user_id." by ".$updater_id, 0, "", 1);
           return "0,0"; // return 0 to indicate that there was an error executing the statement
         }
 
