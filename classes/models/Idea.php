@@ -22,6 +22,7 @@ class Idea {
         $au_groups = 'au_groups';
         $au_ideas = 'au_ideas';
         $au_votes = 'au_votes';
+        $au_delegation = 'au_delegation';
         $au_reported = 'au_reported';
         $au_users_basedata = 'au_users_basedata';
         $au_rel_rooms_users ='au_rel_rooms_users';
@@ -30,6 +31,7 @@ class Idea {
 
         $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
         $this->$au_rooms = $au_rooms; // table name for rooms
+        $this->$au_delegation = $au_delegation; // table name for delegation
         $this->$au_groups = $au_groups; // table name for groups
         $this->$au_ideas = $au_ideas; // table name for ideas
         $this->$au_votes = $au_votes; // table name for votes
@@ -239,14 +241,34 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT status FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT status, room_id FROM '.$this->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return $ideas[0]['status']; // idea found, return status
+        return $ideas[0]; // idea found, return status
       }
+    } // end function
+
+    protected function getDelegations($user_id, $room_id, $idea_id, $updater_id) {
+      /* returns number of delegated votes to this user (user_id), accepts database id (int)
+      */
+      $stmt = $this->db->query('SELECT status, user_id_original FROM '.$this->au_delegation.' WHERE user_id_target = :user_id AND room_id = :room_id');
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->bind(':room_id', $room_id); // bind room id
+      $delegations = $this->db->resultSet();
+      $count_delegations = count ($delegations);
+
+      // save delegated votes of original user into votes table of db
+      foreach ($delegations as $result) {
+          $original_user = $result['user_id_original'];
+          $this->addVoteUser($original_user, $idea_id, 0 , $updater_id, $original_user);
+      }
+
+
+      return $count_delegations;
+
     } // end function
 
 
@@ -817,14 +839,14 @@ class Idea {
         $userid = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         // check if idea und user exist
-        $status_idea = $this->checkIdeaExist ($idea_id);
+        $idea_exists = $this->checkIdeaExist ($idea_id);
+        $status_idea = $idea_exists['status'];
+        $room_id = $idea_exists['room_id'];
 
         if ($status_idea == 0 || $status_idea >1) {
           // idea does not exist or status >1 (suspended or archived)
           return ("0,1"); // return error (0) idea does not exist or is suspended /archived / in review (1)
         } // else continue processing
-
-
 
         // check if user has already used up his votes
         if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
@@ -832,6 +854,18 @@ class Idea {
           return ("0,2"); // all votes used already, return error
         } // else continue processing
 
+        // check if this user has delegated votes
+        $vote_factor = $this->getDelegations ($user_id, $room_id, $idea_id, $updater_id);
+        // calculate vote factor based on delegations
+        if ($vote_factor <1) {
+          // no delegations were made, keep standard value
+          $vote_factor = 1;
+        }
+
+        // record used votes for original user
+
+
+        $vote_value = intval (intval ($vote_factor)*intval ($vote_value)+$vote_value);
         // add user vote to db
         $this->addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $user_id);
 
@@ -873,8 +907,10 @@ class Idea {
         $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
         $userid = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        // check if idea und user exist
-        $status_idea = $this->checkIdeaExist ($idea_id);
+        //check if idea exists
+        $idea_exists = $this->checkIdeaExist ($idea_id);
+        $status_idea = $idea_exists['status'];
+        $room_id = $idea_exists['room_id'];
 
         if ($status_idea == 0 || $status_idea >1) {
           // idea does not exist or status >1 (suspended or archived)
