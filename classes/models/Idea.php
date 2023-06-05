@@ -816,6 +816,20 @@ class Idea {
       }
     }
 
+    protected function userHasDelegated($user_id, $room_id) {
+      // checks if the user with user id has already delegated his votes
+      $stmt = $this->db->query('SELECT user_id_target FROM '.$this->au_delegation.' WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id');
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->bind(':room_id', $room_id); // bind room id
+      echo ("delegation check: ".$user_id);
+      $has_delegated = $this->db->resultSet();
+
+      if (count ($has_delegated)>0) {
+        echo ("<br>delegation found.");
+        return 1;
+      }
+      return 0;
+    }
 
     public function voteForIdea($idea_id, $vote_value, $user_id, $updater_id=0) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
@@ -843,10 +857,16 @@ class Idea {
         $status_idea = $idea_exists['status'];
         $room_id = $idea_exists['room_id'];
 
+
         if ($status_idea == 0 || $status_idea >1) {
           // idea does not exist or status >1 (suspended or archived)
           return ("0,1"); // return error (0) idea does not exist or is suspended /archived / in review (1)
         } // else continue processing
+
+        // check if user has delegated his votes to another user
+        if ($this->userHasDelegated($user_id, $room_id)==1){
+          return "0,3"; // user has delegated his votes, return errorcode
+        }
 
         // check if user has already used up his votes
         if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
@@ -862,10 +882,8 @@ class Idea {
           $vote_factor = 1;
         }
 
-        // record used votes for original user
-
-
         $vote_value = intval (intval ($vote_factor)*intval ($vote_value)+$vote_value);
+
         // add user vote to db
         $this->addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $user_id);
 
