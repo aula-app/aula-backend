@@ -268,7 +268,7 @@ foreach ($ideadata as $result) {
 
 
 // reporting feature
-$idea_id=3;
+$idea_id=5;
 $user_id=4;
 $updater_id=42;
 $reason = "this idea is scandalous";
@@ -276,4 +276,17 @@ out ("Report an idea #".$idea_id." by the user #".$user_id." for the reason: ".$
 
 $retvalue = $idea->reportIdea ($idea_id, $user_id, $updater_id, $reason);
 out ("return code:".$retvalue);
+
+// add a vote to an idea
+$idea_id=7;
+$user_id=4;
+$updater_id=43;
+$vote_value=1;
+out ("Vote for an idea #".$idea_id." by the user #".$user_id." vote value: ".$vote_value."<br>using Idea class",true);
+// voteForIdea($idea_id, $vote_value, $user_id, $updater_id=0)
+$retvalue = $idea->voteForIdea ($idea_id, $vote_value, $user_id, $updater_id);
+out ("return code:".$retvalue);
+
+
+
 ?>
