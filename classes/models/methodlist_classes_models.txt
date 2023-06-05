@@ -1,6 +1,5 @@
 Aula model functions list
 
-
 Database.php:function __construct
 Database.php:function query
 Database.php:function bind
@@ -18,6 +17,8 @@ Idea.php:function __construct
 Idea.php:function getIdeaBaseData
 Idea.php:function getIdeaContent
 Idea.php:function getIdeaHashId
+Idea.php:function checkUserId
+Idea.php:function getUserIdByHashId
 Idea.php:function getIdeaIdByHashId
 Idea.php:function reportIdea
 Idea.php:function suspendIdea
@@ -26,6 +27,7 @@ Idea.php:function activateIdea
 Idea.php:function deactivateIdea
 Idea.php:function setIdeatoReview
 Idea.php:function checkIdeaExist
+Idea.php:function getDelegations
 Idea.php:function getIdeas
 Idea.php:function getIdeasByRoom
 Idea.php:function getIdeasByGroup
@@ -33,6 +35,12 @@ Idea.php:function getIdeasByUser
 Idea.php:function addIdea
 Idea.php:function setIdeaStatus
 Idea.php:function setContent
+Idea.php:function checkAvailableVotesUser
+Idea.php:function addVoteUser
+Idea.php:function revokeVoteUser
+Idea.php:function userHasDelegated
+Idea.php:function voteForIdea
+Idea.php:function RevokeVoteFromIdea
 Idea.php:function setIdeaInfo
 Idea.php:function checkIdeaId
 Idea.php:function sendMessage
@@ -45,13 +53,14 @@ User.php:function __construct
 User.php:function getUserBaseData
 User.php:function getUserHashId
 User.php:function getUserIdByHashId
+User.php:function revokeVoteRight
+User.php:function delegateVoteRight
 User.php:function getRoomIdByHashId
 User.php:function getGroupIdByHashId
 User.php:function addToRoom
 User.php:function addToGroup
 User.php:function checkCredentials
 User.php:function checkUserExist
-User.php:function to
 User.php:function checkRoomExist
 User.php:function checkGroupExist
 User.php:function getUsers
