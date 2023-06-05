@@ -21,6 +21,7 @@ class Idea {
         $au_rooms = 'au_rooms';
         $au_groups = 'au_groups';
         $au_ideas = 'au_ideas';
+        $au_votes = 'au_votes';
         $au_reported = 'au_reported';
         $au_users_basedata = 'au_users_basedata';
         $au_rel_rooms_users ='au_rel_rooms_users';
@@ -31,6 +32,7 @@ class Idea {
         $this->$au_rooms = $au_rooms; // table name for rooms
         $this->$au_groups = $au_groups; // table name for groups
         $this->$au_ideas = $au_ideas; // table name for ideas
+        $this->$au_votes = $au_votes; // table name for votes
         $this->$au_reported = $au_reported; // table name for reportings
 
         $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
@@ -62,7 +64,7 @@ class Idea {
       if (count($ideas)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return  $ideas[0]; // return content for the idea
+        return $ideas[0]; // return content for the idea
       }
     }// end function
 
@@ -237,13 +239,13 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT status FROM '.$this->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return 1; // idea found, return 1
+        return $ideas[0]['status']; // idea found, return status
       }
     } // end function
 
@@ -600,7 +602,7 @@ class Idea {
         $this->db->bind(':room_id', $room_id);
         $this->db->bind(':user_id', $user_id);
         $this->db->bind(':votes_available_per_user', $votes_available_per_user);
-        // generate unique hash for this user
+        // generate unique hash for this idea
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
         $hash_id = md5($content.$appendix); // create hash id for this idea
@@ -627,8 +629,53 @@ class Idea {
           $this->syslog->addSystemEvent(1, "Error adding idea ".$content, 0, "", 1);
           return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
         }
+
+
     }// end function
 
+    protected function createVotesAvailableForRoomUsers ($room_id, $idea_id) {
+      // distributes votes available to all users within the room with room_id for a certain idea with idea_id
+      //sanitize in vars
+      $user_id = intval($user_id);
+      $room_id = intval($room_id);
+
+      $stmt = $this->db->query('INSERT INTO '.$this->au_ideas.' (info, votes_available_per_user, sum_votes, sum_likes, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:info, :votes_available_per_user, 0, 0, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+      // bind all VALUES
+
+      $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
+      $this->db->bind(':status', $status);
+      $this->db->bind(':info', $info);
+      $this->db->bind(':room_id', $room_id);
+      $this->db->bind(':user_id', $user_id);
+      $this->db->bind(':votes_available_per_user', $votes_available_per_user);
+      // generate unique hash for this user
+      $testrand = rand (100,10000000);
+      $appendix = microtime(true).$testrand;
+      $hash_id = md5($content.$appendix); // create hash id for this idea
+      $this->db->bind(':hash_id', $hash_id);
+      $this->db->bind(':order_importance', $order_importance); // order parameter
+      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      $insertid = intval($this->db->lastInsertId());
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "Added new idea (#".$insertid.") ".$content, 0, "", 1);
+        return $insertid; // return insert id to calling script
+
+      } else {
+        $this->syslog->addSystemEvent(1, "Error adding idea ".$content, 0, "", 1);
+        return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+      }
+    }
 
     public function setIdeaStatus($idea_id, $status, $updater_id=0) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
@@ -695,6 +742,137 @@ class Idea {
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
+
+    protected function checkAvailableVotesUser ($user_id, $idea_id){
+      // returns how many votes are still available for a certain idea
+// get available votes for idea_id
+      $stmt = $this->db->query('SELECT votes_available_per_user FROM '.$this->au_ideas.' WHERE id = :idea_id');
+      $this->db->bind(':idea_id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      $votes_available = $ideas[0]['votes_available_per_user'];
+
+      // check if user has delegated votes
+      // check if vote is delegated
+      $original_user_id = $user_id;
+
+
+      $stmt = $this->db->query('SELECT user_id FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $this->db->bind(':idea_id', $idea_id); // bind idea id
+      $this->db->bind(':user_id', $user_id); // bind user id
+
+      $votes = $this->db->resultSet();
+
+      $actual_votes_available = intval (intval ($votes_available)-intval (count($votes))); // return number of total votes for this idea by this user
+
+      return $actual_votes_available;
+    }
+
+    protected function addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $original_user_id) {
+      // add a vote into vote table for a certain user and idea
+
+      $stmt = $this->db->query('INSERT INTO '.$this->au_votes.' (status, vote_value, user_id, idea_id, last_update, created, updater_id, hash_id, original_user_id) VALUES (1, :vote_value, :user_id, :idea_id, NOW(), NOW(), :updater_id, :hash_id, :original_user_id)');
+      // bind all VALUES
+      $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+
+      $this->db->bind(':idea_id', $idea_id); // idea id
+      $this->db->bind(':user_id', $user_id); // user id
+      $this->db->bind(':original_user_id', $original_user_id); // original user id
+      $this->db->bind(':updater_id', $updater_id); // updater id
+      $this->db->bind(':vote_value', $vote_value); // vote value1
+      // generate unique hash for this vote
+      $testrand = rand (100,10000000);
+      $appendix = microtime(true).$testrand;
+      $hash_id = md5($user_id.$idea_id.$appendix); // create hash id for this vote
+      $this->db->bind(':hash_id', $hash_id); // hash id
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      if (!$err)
+      {
+        return 1;
+      } else {
+        return 0; // return 0 to indicate that there was an error executing the statement
+      }
+    }
+
+
+    public function voteForIdea($idea_id, $vote_value, $user_id, $updater_id=0) {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         idea_id is obvious...accepts db id or hash id
+         vote_value is -1, 0 , +1 (depending on positive or negative)
+         user_id is the id of the user voting for the idea
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+
+        // sanitize vote value
+        $vote_value = intval ($vote_value);
+        // set maximum boundaries for vote value
+        if ($vote_value>1) {
+          $vote_value = 1;
+        }
+        if ($vote_value<-1) {
+          $vote_value = -1;
+        }
+
+        $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $userid = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+        // check if idea und user exist
+        $status_idea = $this->checkIdeaExist ($idea_id);
+        echo ("status of idea #".$idea_id." is ".$status_idea);
+
+        if ($status_idea == 0 || $status_idea >1) {
+          // idea does not exist or status >1 (suspended or archived)
+          return ("0,1"); // return error (0) idea does not exist or is suspended /archived / in review (1)
+        } // else continue processing
+
+
+
+        // check if user has already used up his votes
+        if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
+          // votes are not available, user has used all votes
+          return ("0,2"); // all votes used already, return error
+        } // else continue processing
+
+        // add user vote to db
+        $this->addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $user_id);
+
+        // update sum of votes
+        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = sum_votes +'.$vote_value.', last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        // bind all VALUES
+        $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+
+        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") added Vote - value: ".$vote_value." by ".$updater_id, 0, "", 1);
+          return ("1,1");
+        } else {
+          $this->syslog->addSystemEvent(1, "Error adding vote idea (#".$idea_id.") value:  ".$vote_value." by ".$updater_id, 0, "", 1);
+          return ("0,0"); // return 0 to indicate that there was an error executing the statement
+        }
+        // add vote to database
+
+    }// end function
+
+
 
     public function setIdeaInfo($idea_id, $content, $updater_id=0) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
