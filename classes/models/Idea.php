@@ -821,11 +821,9 @@ class Idea {
       $stmt = $this->db->query('SELECT user_id_target FROM '.$this->au_delegation.' WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':room_id', $room_id); // bind room id
-      echo ("delegation check: ".$user_id);
       $has_delegated = $this->db->resultSet();
 
       if (count ($has_delegated)>0) {
-        echo ("<br>delegation found.");
         return 1;
       }
       return 0;
