@@ -280,6 +280,9 @@ out ("return code:".$retvalue);
 // add a vote to an idea
 $idea_id=7;
 $user_id=4;
+$user_id_target=9;
+$room_id =4;
+
 $updater_id=43;
 $vote_value=1;
 out ("Vote for an idea #".$idea_id." by the user #".$user_id." vote value: ".$vote_value."<br>using Idea class",true);
@@ -287,6 +290,25 @@ out ("Vote for an idea #".$idea_id." by the user #".$user_id." vote value: ".$vo
 $retvalue = $idea->voteForIdea ($idea_id, $vote_value, $user_id, $updater_id);
 out ("return code:".$retvalue);
 
+// revoking vote
+out ("Revoke Vote from an idea #".$idea_id." by the user #".$user_id."<br>using Idea class",true);
+$retvalue = $idea->RevokeVoteFromIdea($idea_id, $user_id, $updater_id=0);
+out ("return code:".$retvalue);
 
+// delegating vote
+out ("Delegating voting right from user #".$user_id." to ".$user_id_target."<br to >using User class",true);
+$retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $updater_id=0);
+out ("return code:".$retvalue);
+
+// delegating vote
+out ("Revoking delegation right from user #".$user_id_target." back to ".$user_id."<br>using User class",true);
+$retvalue = $user->revokeVoteRight($user_id, $user_id_target, $room_id, $updater_id=0);
+out ("return code:".$retvalue);
+
+$user_id_target = 15;
+// delegating vote
+out ("Delegating voting right from user #".$user_id." to ".$user_id_target."<br to >using User class",true);
+$retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $updater_id=0);
+out ("return code:".$retvalue);
 
 ?>
