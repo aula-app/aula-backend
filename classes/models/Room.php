@@ -248,7 +248,7 @@ class Room {
       // remove delegations for this user
       $this->deleteRoomUserDelegations ($room_id, $user_id);
 
-      return "1,".$rowCount; // return number of affected rows to calling script
+      return "1,".$rowcount; // return number of affected rows to calling script
 
     }// end function
 
