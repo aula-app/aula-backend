@@ -117,7 +117,7 @@ class Group {
       }
     } // end function
 
-    function getUsersInGroup($group_id, $status=1) {
+    public function getUsersInGroup($group_id, $status=1) {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
@@ -166,7 +166,7 @@ class Group {
 
     }// end function
 
-    function emptyGroup($group_id) {
+    public function emptyGroup($group_id) {
       /* deletes all users from a group
       */
 
@@ -190,7 +190,7 @@ class Group {
 
 
 
-    function getGroups($offset, $limit, $orderby, $asc, $status=1) {
+    public function getGroups($offset, $limit, $orderby, $asc, $status=1) {
       /* returns group list (associative array) with start and limit provided
       orderby is the field (int, see switch), defaults to last_update (3)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending

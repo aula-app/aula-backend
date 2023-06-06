@@ -290,7 +290,7 @@ class Idea {
     } // end function
 
 
-    function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
+    public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -375,7 +375,7 @@ class Idea {
       }
     }// end function
 
-    function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id) {
+    public function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -457,7 +457,7 @@ class Idea {
       }
     }// end function
 
-    function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status=1, $group_id) {
+    public function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status=1, $group_id) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -540,7 +540,7 @@ class Idea {
       }
     }// end function
 
-    function getIdeasByUser ($offset, $limit, $orderby=3, $asc=0, $status=1, $user_id) {
+    public function getIdeasByUser ($offset, $limit, $orderby=3, $asc=0, $status=1, $user_id) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)

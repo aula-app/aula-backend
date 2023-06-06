@@ -122,7 +122,7 @@ class Room {
     } // end function
 
 
-    function getRooms($offset, $limit, $orderby=3, $asc=0, $status=1) {
+    public function getRooms($offset, $limit, $orderby=3, $asc=0, $status=1) {
       /* returns roomlist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
