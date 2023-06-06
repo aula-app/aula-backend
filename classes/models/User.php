@@ -928,6 +928,78 @@ class User {
         }
     }// end function
 
+    public function grantInfiniteVotesToUser ($user_id){
+      return $this->setUserInfiniteVote ($user_id, 1);
+    }
+
+    public function revokeInfiniteVotesFromUser ($user_id){
+      return $this->setUserInfiniteVote ($user_id, 0);
+    }
+
+    public function getUserInfiniteVotesStatus($user_id) {
+      /* returns hash_id of a user for a integer user id
+      */
+      $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->au_users_basedata.' WHERE id = :id');
+      $this->db->bind(':id', $user_id); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $users[0]['infinite_votes']; // return an array (associative) with all the data for the user
+      }
+    }// end function
+
+
+
+    public function setUserInfiniteVote($user_id, $infinite, $updater_id=0) {
+        /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         sets the specified user to infinite vote capability
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        // sanitize
+        $infinite = intval ($infinite);
+        if ($infinite>1){
+          $infinite = 1;
+        }
+        if ($infinite<0){
+          $infinite = 0;
+        }
+
+        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET infinite_votes = :infinite, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        // bind all VALUES
+        $this->db->bind(':infinite', $infinite);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':userid', $user_id); // user that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "User infinite status of ".$user_id." changed to ".$infinite." by ".$updater_id, 0, "", 1);
+
+          // set delegations for this user to suspended (delegated voting right and received votign right)
+          if ($infinite==1){
+            // remove all delegations from this user since he has infinite votes....
+            $this->removeUserDelegations ($user_id, 0, 0);
+            $this->removeUserDelegations ($user_id, 0, 1);
+          }
+
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing infinite status of user ".$user_id." to ".$infinite." by ".$updater_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+    }// end function
+
     public function suspendUser ($user_id, $updater_id=0){
       // set user status to 2 = suspended
 
