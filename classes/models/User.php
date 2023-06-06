@@ -432,6 +432,30 @@ class User {
 
     } // end function
 
+    public function followUser ($user_id, $user_id_target) {
+      return $this->relateUser ($user_id, $user_id_target, 1, 0, 1);
+    }
+
+    public function friendUser ($user_id, $user_id_target) {
+      return $this->relateUser ($user_id, $user_id_target, 1, 0, 2);
+    }
+
+    public function blockUser ($user_id, $user_id_target) {
+      return $this->relateUser ($user_id, $user_id_target, 1, 0, 0);
+    }
+
+    public function unfriendUser ($user_id, $user_id_target) {
+      return $this->removeUserRelation ($user_id, $user_id_target);
+    }
+
+    public function unblockUser ($user_id, $user_id_target) {
+      return $this->removeUserRelation ($user_id, $user_id_target);
+    }
+
+    public function unfollowUser ($user_id, $user_id_target) {
+      return $this->removeUserRelation ($user_id, $user_id_target);
+    }
+
     public function relateUser($user_id, $user_id_target, $status=1, $updater_id=0, $type=1) {
       /*
       user A (user_id) follows user B (user_id_target), type = 1 => follow /  type = 2 => friend / type = 0 => blocked
@@ -442,8 +466,6 @@ class User {
       // check if user and room exist
       $user_exist = $this->checkUserExist($user_id);
       $user_exist_target = $this->checkUserExist($user_id_target);
-
-      echo ("<br>follow: ".$user_exist_target. " user1 exist: ".$user_exist);
 
       if ($user_exist==1 && $user_exist_target==1) {
         // everything ok, both users exist
