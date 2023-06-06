@@ -243,6 +243,19 @@ out ("Deleting User ".$userid." from group ".$groupid, true);
 $userdata = $group->deleteUserFromGroup ($groupid,$userid);
 out ("GROUP Class returned: ".$userdata);
 
+
+
+$groupid = 9;
+$userid = 42;
+out ("Granting infinite votes to User ".$userid, true);
+$userdata = $user->grantInfiniteVotesToUser ($userid);
+out ("USER Class returned: ".$userdata);
+
+$userid = 42;
+out ("Getting infinite votes status from User ".$userid, true);
+$userdata = $user->getUserInfiniteVotesStatus ($userid);
+out ("USER Class returned: ".$userdata);
+
 $groupid = 7;
 out ("Deleting (emptying) all users from group ".$groupid, true);
 $userdata = $group->emptyGroup ($groupid, $userid);
