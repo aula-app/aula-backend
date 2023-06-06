@@ -1,6 +1,6 @@
 Aula model functions list
 
-Database.php:function __construct
+DDatabase.php:function __construct
 Database.php:function query
 Database.php:function bind
 Database.php:function execute
@@ -16,6 +16,7 @@ Database.php:function debugDumpParams
 Idea.php:function __construct
 Idea.php:function getIdeaBaseData
 Idea.php:function getIdeaContent
+Idea.php:function getPersonalVoteStatus
 Idea.php:function getIdeaHashId
 Idea.php:function checkUserId
 Idea.php:function getUserIdByHashId
@@ -57,7 +58,16 @@ User.php:function revokeVoteRight
 User.php:function delegateVoteRight
 User.php:function getRoomIdByHashId
 User.php:function getGroupIdByHashId
+User.php:function setDelegationStatus
+User.php:function getReceivedDelegations
+User.php:function getGivenDelegations
+User.php:function giveBackAllDelegations
+User.php:function giveBackDelegation
+User.php:function removeSpecificDelegation
+User.php:function removeUserDelegations
 User.php:function addToRoom
+User.php:function relateUser
+User.php:function removeUserRelation
 User.php:function addToGroup
 User.php:function checkCredentials
 User.php:function checkUserExist
@@ -121,6 +131,11 @@ Room.php:function checkRoomExist
 Room.php:function getRooms
 Room.php:function getUsersInRoom
 Room.php:function deleteUserFromRoom
+Room.php:function deleteRoomDelegations
+Room.php:function checkUserId
+Room.php:function getUserIdByHashId
+Room.php:function deleteRoomUserDelegations
+Room.php:function checkRoomId
 Room.php:function emptyRoom
 Room.php:function checkRoomExistsByName
 Room.php:function addRoom
@@ -129,6 +144,5 @@ Room.php:function setRoomDescriptionPublic
 Room.php:function setRoomDescriptionInternal
 Room.php:function setRoomname
 Room.php:function setRoomAccesscode
-Room.php:function checkRoomId
 Room.php:function sendMessage
 Room.php:function deleteRoom
