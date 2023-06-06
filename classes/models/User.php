@@ -26,6 +26,7 @@ class User {
 
         $au_rel_rooms_users ='au_rel_rooms_users';
         $au_rel_groups_users ='au_rel_groups_users';
+        $au_rel_user_user ='au_rel_user_user';
 
         $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
         $this->$au_rooms = $au_rooms; // table name for rooms
@@ -34,6 +35,7 @@ class User {
         $this->$au_delegation = $au_delegation; // table name for delegation
         $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
         $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
+        $this->$au_rel_user_user = $au_rel_user_user;
     }// end function
 
     public function getUserBaseData($user_id) {
@@ -113,10 +115,10 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User deleted with id ".$user_id." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Delegation deleted for user id ".$user_id." by ".$updater_id, 0, "", 1);
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error deleting user with id ".$user_id." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error deleting dlegation for user with id ".$user_id." by ".$updater_id, 0, "", 1);
           return "0,0"; // return 0 to indicate that there was an error executing the statement
         }
 
@@ -230,7 +232,7 @@ class User {
           $target_user = "user_id_target";
         }
 
-        $stmt = $this->db->query('UPDATE '.$this->au_delegation.' SET status = :status, last_update= NOW() WHERE '.$target_user.' = :user_id'.$room_clause);
+        $stmt = $this->db->query('UPDATE '.$this->au_delegation.' SET status = :status, last_update = NOW() WHERE '.$target_user.' = :user_id'.$room_clause);
         // bind all VALUES
         $this->db->bind(':status', $status);
 
@@ -255,11 +257,91 @@ class User {
         }
     }// end function
 
+    public function getReceivedDelegations ($user_id, $room_id) {
+      /* returns received delegations for a specific user (user_id) in the room
+      */
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_original) WHERE '.$this->au_delegation.'.user_id_target = :id');
+      $this->db->bind(':id', $user_id); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $users; // return an array (associative) with all the data for the user
+      }
+    } // end function
+
+
+    public function getGivenDelegations ($user_id, $room_id) {
+      /* returns received delegations for a specific user (user_id) in the room
+      */
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_target) WHERE '.$this->au_delegation.'.user_id_original = :id');
+      $this->db->bind(':id', $user_id); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $users; // return an array (associative) with all the data for the user
+      }
+    } // end function
+
+
+    public function giveBackAllDelegations ($user_id, $room_id = 0){
+      // give back all delegations for a) a certain room (room id>0) or all delegations (room_id=0)
+      return $this->removeUserDelegations ($user_id, $room_id, 1); // 1 at the end indicates that target user is meant
+    }
+
+    public function giveBackDelegation ($my_user_id, $user_id_original, $room_id = 0){
+      // give back delegations from a certain user ($user_id_original) for a) a certain room (room id>0) or all delegations (room_id=0)
+      return $this->removeSpecificDelegation ($my_user_id, $user_id_original, $room_id); // 1 at the end indicates that target user is meant
+    }
+
+    public function removeSpecificDelegation ($user_id_target, $user_id_original, $room_id = 0){
+      /* remove delegation from a specific user A (user_id_original) to a specific user B (user_id_target) for
+      a) a certain room (room id>0) or all delegations (room_id=0), defaults to all rooms
+      */
+      $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id_original = $this->checkUserId($user_id_original); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
+      $room_clause = "";
+
+      if ($room_id > 0){
+        // room id is set to >0 -> delete only delegations for this user in the specified room
+        $room_clause = " AND room_id = ".$room_id;
+      }
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE user_id_target = :user_id_target AND user_id_original = :user_id_original'.$room_clause);
+      $this->db->bind (':user_id_target', $user_id_original);
+      $this->db->bind (':user_id_original', $user_id_target);
+
+      $err=false;
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for room ".$room_id, 0, "", 1);
+        return ("1,".intval ($this->db->rowCount())); // return number of affected rows to calling script
+      } else {
+        $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for room ".$room_id, 0, "", 1);
+        return "0,0"; // return 0 to indicate that there was an error executing the statement
+      }
+
+    }
+
     public function removeUserDelegations ($user_id, $room_id = 0, $target = 0)
     {
       /* removes all delegations of a specified user (user id) for a specified room, accepts db id or hash id
        if room_id = 0 all delegations of the user are deleted
-       target specifies if original or target users are adressed 0 = remove delegations of delegating user (original owner->default) 1= remove delegation to target
+       target specifies if original or target users are adressed 0 = remove delegations of delegating user (original owner->default) 1= remove delegation of target
       */
 
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -290,10 +372,10 @@ class User {
       if (!$err)
       {
         $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for room ".$room_id, 0, "", 1);
-        return intval ($this->db->rowCount()); // return number of affected rows to calling script
+        return "1,".intval ($this->db->rowCount()); // return number of affected rows to calling script
       } else {
         $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for room ".$room_id, 0, "", 1);
-        return 0; // return 0 to indicate that there was an error executing the statement
+        return "0,0"; // return 0 to indicate that there was an error executing the statement
       }
 
     } // end function
@@ -349,6 +431,89 @@ class User {
       return "1,1,1"; // returns 1=ok/successful, user exists (1), room exists (1)
 
     } // end function
+
+    public function relateUser($user_id, $user_id_target, $status=1, $updater_id=0, $type=1) {
+      /*
+      user A (user_id) follows user B (user_id_target), type = 1 => follow /  type = 2 => friend / type = 0 => blocked
+       */
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      // check if user and room exist
+      $user_exist = $this->checkUserExist($user_id);
+      $user_exist_target = $this->checkUserExist($user_id_target);
+
+      echo ("<br>follow: ".$user_exist_target. " user1 exist: ".$user_exist);
+
+      if ($user_exist==1 && $user_exist_target==1) {
+        // everything ok, both users exist
+        // add relation to database
+
+        $stmt = $this->db->query('INSERT INTO '.$this->au_rel_user_user.' (user_id1, user_id2, type, status, created, last_update, updater_id) VALUES (:user_id1, :user_id2, :type, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE user_id1 = :user_id1, user_id2 = :user_id2, type = :type, status = :status, last_update = NOW(), updater_id = :updater_id');
+
+        // bind all VALUES
+        $this->db->bind(':user_id1', $user_id);
+        $this->db->bind(':user_id2', $user_id_target);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':type', $type);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added user relation (follow) ".$user_id."-".$user_id_target, 0, "", 1);
+          return "1,1,1"; // return error code 1 = successful
+
+        } else {
+          $this->syslog->addSystemEvent(0, "Error while adding user relation (follow) ".$user_id, 0, "", 1);
+
+          return "0,1,1"; // return 0 to indicate that there was an error executing the statement
+        }
+
+      }else {
+        return "0,".$user_exist.",".$user_exist_target; // returns error and 0 or 1 for user and room (0=doesn't exist, 1=exists)
+      }
+
+      return "1,1,1"; // returns 1=ok/successful, user exists (1), room exists (1)
+
+    } // end function
+
+    public function removeUserRelation($user_id, $user_id_target) {
+      /* deletes a user relation form the db
+      */
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_user_user.' WHERE user_id1 = :user_id1 AND user_id2 = :user_id2' );
+      $this->db->bind(':user_id1', $user_id); // bind user id
+      $this->db->bind(':user_id2', $user_id_target); // bind user id
+
+      $err=false;
+      try {
+        $users = $this->db->execute();
+        $rowcount = $this->db->rowCount();
+
+      } catch (Exception $e) {
+          echo 'Error occured while removing relation between user '.$user_id.' and user '.$user_id_target,  $e->getMessage(), "\n"; // display error
+          $this->syslog->addSystemEvent(0, "Error while removing user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
+          $err=true;
+          return "0,0";
+      }
+      $this->syslog->addSystemEvent(0, "Removed user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
+      return "1,".$rowcount; // return number of affected rows to calling script
+
+    }// end function
+
 
 
     public function addToGroup($user_id, $group_id, $status, $updater_id) {
@@ -500,7 +665,7 @@ class User {
     } // end function
 
 
-    function getUsers($offset, $limit, $orderby=3, $asc=0, $status=1) {
+    public function getUsers($offset, $limit, $orderby=3, $asc=0, $status=1) {
       /* returns userlist (associative array) with start and limit provided
       */
       // init vars
