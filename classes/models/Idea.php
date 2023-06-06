@@ -514,7 +514,6 @@ class Idea {
       $join =  'INNER JOIN '.$this->au_rel_groups_users.' ON ('.$this->au_rel_groups_users.'.user_id='.$this->au_ideas.'.user_id) INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
       $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_rel_groups_users.'.group_id= :group_id ';
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      echo ('QUERY: '.$select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
@@ -834,6 +833,19 @@ class Idea {
       }
     }
 
+    public function getUserInfiniteVotesStatus($user_id) {
+      /* returns hash_id of a user for a integer user id
+      */
+      $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->au_users_basedata.' WHERE id = :id');
+      $this->db->bind(':id', $user_id); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $users[0]['infinite_votes']; // return an array (associative) with all the data for the user
+      }
+    }// end function
+
     protected function userHasDelegated($user_id, $room_id) {
       // checks if the user with user id has already delegated his votes
       $stmt = $this->db->query('SELECT user_id_target FROM '.$this->au_delegation.' WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id AND status = 1');
@@ -879,24 +891,34 @@ class Idea {
           return ("0,1"); // return error (0) idea does not exist or is suspended /archived / in review (1)
         } // else continue processing
 
-        // check if user has delegated his votes to another user
-        if ($this->userHasDelegated($user_id, $room_id)==1){
-          return "0,3"; // user has delegated his votes, return errorcode
+        // check if user has infinite votes, if yes - disable everything
+        if ($this->getUserInfiniteVotesStatus=0){
+          // user does not have infinite votes
+          // check if user has delegated his votes to another user
+          if ($this->userHasDelegated($user_id, $room_id)==1){
+            return "0,3"; // user has delegated his votes, return errorcode
+          }
+
+          // check if user has already used up his votes
+          if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
+            // votes are not available, user has used all votes
+            return ("0,2"); // all votes used already, return error
+          } // else continue processing
+
+          // check if this user has delegated votes
+          $vote_factor = $this->getDelegations ($user_id, $room_id, $idea_id);
+          // calculate vote factor based on delegations
+          if ($vote_factor <1) {
+            // no delegations were made, keep standard value
+            $vote_factor = 1;
+          }
+
+        } else {
+          // user has infinite votes
+          $vote_factor=1;
         }
 
-        // check if user has already used up his votes
-        if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
-          // votes are not available, user has used all votes
-          return ("0,2"); // all votes used already, return error
-        } // else continue processing
 
-        // check if this user has delegated votes
-        $vote_factor = $this->getDelegations ($user_id, $room_id, $idea_id);
-        // calculate vote factor based on delegations
-        if ($vote_factor <1) {
-          // no delegations were made, keep standard value
-          $vote_factor = 1;
-        }
 
         $vote_value = intval (intval ($vote_factor)*intval ($vote_value)+$vote_value);
 
