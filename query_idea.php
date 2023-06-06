@@ -324,4 +324,47 @@ out ("Delegating voting right from user #".$user_id." to ".$user_id_target."<br 
 $retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $updater_id=0);
 out ("return code:".$retvalue);
 
+// getting delegtaions
+out ("Getting received delegations user #".$user_id_target." for room ".$room_id."<br to >using User class",true);
+
+$users = $user->getReceivedDelegations ($user_id_target, $room_id);
+foreach ($users as $result) {
+    out ("ID: " . $result['id']);
+    out ("Name: " . $crypt->decrypt ($result['displayname']));
+    out ("email: " . $crypt->decrypt ($result['email']));
+    out ("Last Update: " . $result['last_update']);
+    out ("created: " . $result['created']);
+}
+// print_r ($users);
+
+// getting delegtaions
+out ("Getting given delegations user #".$user_id." for room ".$room_id."<br to >using User class",true);
+
+$users = $user->getGivenDelegations ($user_id, $room_id);
+foreach ($users as $result) {
+    out ("ID: " . $result['id']);
+    out ("Name: " . $crypt->decrypt ($result['displayname']));
+    out ("Email: " . $crypt->decrypt ($result['email']));
+    out ("Last Update: " . $result['last_update']);
+    out ("created: " . $result['created']);
+}
+//print_r ($users);
+
+out ("User #".$user_id." follows ".$user_id_target."<br to >using User class",true);
+$retvalue = $user->relateUser($user_id, $user_id_target, 1, 42, 1);
+out ("return code:".$retvalue);
+
+
+$user_id = 4;
+out ("User #".$user_id." blocks ".$user_id_target."<br to >using User class",true);
+$retvalue = $user->relateUser($user_id, $user_id_target, 1, 42, 3);
+out ("return code:".$retvalue);
+
+$user_id=3;
+out ("Relation between User #".$user_id." and ".$user_id_target." is removed<br to >using User class",true);
+$retvalue = $user->removeUserRelation($user_id, $user_id_target);
+out ("return code:".$retvalue);
+
+
+
 ?>

@@ -1,7 +1,6 @@
 <?php
 require_once ('base_config.php'); // load base config with paths to classes etc.
 require_once ('error_msg.php');
-require_once ('error_msg.php');
 require ('functions.php'); // include Class autoloader (models)
 
 /* IMPORTANT! Every including script that wants to use the user.php, needs to set this variable ($allowed_include) to 1 */
