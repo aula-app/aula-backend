@@ -59,12 +59,12 @@ class Group {
       }
     }// end function
 
-    public function getGroupIdByHashId($hashid) {
+    public function getGroupIdByHashId($hash_id) {
       /* Returns Database ID of group when hash_id is provided
       */
 
       $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hashid); // bind hash id
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
         return 0; // nothing found, return 0 code
@@ -117,13 +117,13 @@ class Group {
       }
     } // end function
 
-    function getUsersInGroup($groupid, $status=1) {
+    function getUsersInGroup($group_id, $status=1) {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
 
       $stmt = $this->db->query('SELECT '.$this->au_users_basedata.'.realname, '.$this->au_users_basedata.'.displayname, '.$this->au_users_basedata.'.id, '.$this->au_users_basedata.'.username, '.$this->au_users_basedata.'.email FROM '.$this->au_rel_groups_users.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_rel_groups_users.'.user_id='.$this->au_users_basedata.'.id) WHERE '.$this->au_rel_groups_users.'.group_id= :groupid AND '.$this->au_users_basedata.'.status= :status' );
-      $this->db->bind(':groupid', $groupid); // bind group id
+      $this->db->bind(':groupid', $group_id); // bind group id
       $this->db->bind(':status', $status); // bind status
 
       $err=false;
@@ -143,13 +143,13 @@ class Group {
       }
     }// end function
 
-    function deleteUserFromGroup($groupid, $userid) {
+    function deleteUserFromGroup($group_id, $user_id) {
       /* deletes a user from a group
       */
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE user_id = :userid AND group_id = :groupid' );
-      $this->db->bind(':groupid', $groupid); // bind room id
-      $this->db->bind(':userid', $userid); // bind user id
+      $this->db->bind(':groupid', $group_id); // bind room id
+      $this->db->bind(':userid', $user_id); // bind user id
 
       $err=false;
       try {
@@ -166,12 +166,12 @@ class Group {
 
     }// end function
 
-    function emptyGroup($groupid) {
+    function emptyGroup($group_id) {
       /* deletes all users from a group
       */
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE group_id = :groupid' );
-      $this->db->bind(':groupid', $groupid); // bind room id
+      $this->db->bind(':groupid', $group_id); // bind room id
 
       $err=false;
       try {

@@ -20,13 +20,16 @@ class Room {
 
         $au_rooms = 'au_rooms';
         $au_groups = 'au_groups';
+        $au_delegation = 'au_delegation';
         $au_users_basedata = 'au_users_basedata';
         $au_rel_rooms_users ='au_rel_rooms_users';
         $au_rel_groups_users ='au_rel_groups_users';
 
+
         $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
         $this->$au_rooms = $au_rooms; // table name for rooms
         $this->$au_groups = $au_groups; // table name for groups
+        $this->$au_delegation = $au_delegation; // table name for delegations
         $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
         $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
     }// end function
@@ -60,12 +63,12 @@ class Room {
       }
     }// end function
 
-    public function getRoomIdByHashId($hashid) {
+    public function getRoomIdByHashId($hash_id) {
       /* Returns Database ID of room when hash_id is provided
       */
 
       $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hashid); // bind hash id
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
         return 0; // nothing found, return 0 code
@@ -198,13 +201,13 @@ class Room {
     }// end function
 
 
-    function getUsersInRoom($roomid, $status=1) {
+    public function getUsersInRoom($room_id, $status=1) {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
 
       $stmt = $this->db->query('SELECT '.$this->au_users_basedata.'.realname, '.$this->au_users_basedata.'.displayname, '.$this->au_users_basedata.'.id, '.$this->au_users_basedata.'.username, '.$this->au_users_basedata.'.email FROM '.$this->au_rel_rooms_users.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_rel_rooms_users.'.user_id='.$this->au_users_basedata.'.id) WHERE '.$this->au_rel_rooms_users.'.room_id= :roomid AND '.$this->au_users_basedata.'.status= :status' );
-      $this->db->bind(':roomid', $roomid); // bind room id
+      $this->db->bind(':roomid', $room_id); // bind room id
       $this->db->bind(':status', $status); // bind status
 
       $err=false;
@@ -224,39 +227,135 @@ class Room {
       }
     }// end function
 
-    function deleteUserFromRoom($roomid, $userid) {
+    public function deleteUserFromRoom($room_id, $user_id) {
       /* deletes a user from a room
       */
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE user_id = :userid AND room_id = :roomid' );
-      $this->db->bind(':roomid', $roomid); // bind room id
-      $this->db->bind(':userid', $userid); // bind user id
+      $this->db->bind(':roomid', $room_id); // bind room id
+      $this->db->bind(':userid', $user_id); // bind user id
 
       $err=false;
       try {
         $rooms = $this->db->resultSet();
+        $rowcount = $this->db->rowCount();
 
       } catch (Exception $e) {
-          echo 'Error occured while deleting user from room: ',  $e->getMessage(), "\n"; // display error
+          echo 'Error occured while deleting user '.$user_id.' from room: '.$room_id,  $e->getMessage(), "\n"; // display error
           $err=true;
           return "0,0";
       }
+      // remove delegations for this user
+      $this->deleteRoomUserDelegations ($room_id, $user_id);
 
-
-      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+      return "1,".$rowCount; // return number of affected rows to calling script
 
     }// end function
 
-    function emptyRoom($roomid) {
-      /* deletes all users from a room
+    public function deleteRoomDelegations ($room_id){
+      // dleetes all delegations in a specified room
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE room_id = :room_id' );
+      $this->db->bind(':room_id', $room_id); // bind room id
+
+      $err=false;
+      try {
+        $delegations = $this->db->resultSet();
+        $delegations_count = $this->db->rowCount();
+
+      } catch (Exception $e) {
+          echo 'Error occured while deleting delegations in room: '.$room_id,  $e->getMessage(), "\n"; // display error
+          $this->syslog->addSystemEvent("Error occured while deleting delegations in room: ".$room_id, 0, "", 1);
+          $err=true;
+          return "0,0";
+      }
+      return "1,".$delegations_count;
+
+    } // end function
+
+    private function checkUserId ($user_id) {
+      /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
+      if a hash was passed, function gets db user id and returns db id
       */
 
+      if (is_int($user_id))
+      {
+        return $user_id;
+      } else
+      {
+
+        return $this->getUserIdByHashId ($user_id);
+      }
+    } // end function
+
+    public function getUserIdByHashId($hash_id) {
+      /* Returns Database ID of user when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $users[0]['id']; // return user id
+      }
+    }// end function
+
+    public function deleteRoomUserDelegations ($room_id, $user_id){
+      // dleetes all delegations in a specified room
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $user_id = $this->checkUserId($user_id); // checks room id and converts user id to db user id if necessary (when user hash id was passed)
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE room_id = :room_id AND (user_id_original = :user_id OR user_id_target = :user_id) ' );
+      $this->db->bind(':room_id', $room_id); // bind room id
+      $this->db->bind(':user_id', $user_id); // bind user id
+
+      $err=false;
+      try {
+        $delegations = $this->db->resultSet();
+        $delegations_count = $this->db->rowCount();
+
+      } catch (Exception $e) {
+          echo 'Error occured while deleting delegations in room: '.$room_id,  $e->getMessage(), "\n"; // display error
+          $this->syslog->addSystemEvent("Error occured while deleting delegations for user ".$user_id." in room: ".$room_id, 0, "", 1);
+          $err=true;
+          return "0,0";
+      }
+      return "1,".$delegations_count;
+
+    } // end function
+
+
+    private function checkRoomId ($room_id) {
+      /* helper function that checks if a room id is a standard db id (int) or if a hash room id was passed
+      if a hash was passed, function gets db room id and returns db id
+      */
+
+      if (is_int($room_id))
+      {
+        return $room_id;
+      } else
+      {
+
+        return $this->getRoomIdByHashId ($room_id);
+      }
+    } // end function
+
+    public function emptyRoom($room_id) {
+      /* deletes all users from a room
+      */
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
+
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE room_id = :roomid' );
-      $this->db->bind(':roomid', $roomid); // bind room id
+      $this->db->bind(':roomid', $room_id); // bind room id
 
       $err=false;
       try {
         $rooms = $this->db->resultSet();
+        $room_content_count = $this->db->rowCount();
 
       } catch (Exception $e) {
           echo 'Error occured while emptying room: ',  $e->getMessage(), "\n"; // display error
@@ -264,8 +363,9 @@ class Room {
           return "0,0";
       }
 
-
-      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+      // remove all delegations in this room
+      $this->deleteRoomDelegations ($room_id);
+      return "1,".$room_content_count; // return number of affected rows to calling script
 
     }// end function
 
@@ -512,21 +612,8 @@ class Room {
         }
     }// end function
 
-    private function checkRoomId ($room_id) {
-      /* helper function that checks if a user id is a standard db id (int) or if a hash room id was passed
-      if a hash was passed, function gets db room id and returns db id
-      */
 
-      if (is_int($room_id))
-      {
-        return $room_id;
-      } else
-      {
-        return $this->getRoomIdByHashId ($room_id);
-      }
-    } // end function
-
-    private function sendMessage ($userid, $msg){
+    private function sendMessage ($user_id, $msg){
       /* send a message to the dashboard of the user
       yet to be written
       */
@@ -547,6 +634,7 @@ class Room {
         $err=false;
         try {
           $action = $this->db->execute(); // do the query
+          $rowcount =  intval ($this->db->rowCount());
 
         } catch (Exception $e) {
             echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
@@ -562,8 +650,10 @@ class Room {
             // get all members of this room, add message to msg stack (au_news)
 
           }
+          // remove all delegations in this room
+          $this->deleteRoomDelegations ($room_id);
 
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          return $rowcount; // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error deleting room with id ".$room_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement

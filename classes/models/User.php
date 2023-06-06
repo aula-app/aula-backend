@@ -36,12 +36,12 @@ class User {
         $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
     }// end function
 
-    public function getUserBaseData($userid) {
+    public function getUserBaseData($user_id) {
       /* returns user base data for a specified db id */
-      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' WHERE id = :id');
-      $this->db->bind(':id', $userid); // bind userid
+      $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
         return 0; // nothing found, return 0 code
@@ -50,11 +50,11 @@ class User {
       }
     }// end function
 
-    public function getUserHashId($userid) {
+    public function getUserHashId($user_id) {
       /* returns hash_id of a user for a integer user id
       */
       $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_users_basedata.' WHERE id = :id');
-      $this->db->bind(':id', $userid); // bind userid
+      $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
         return 0; // nothing found, return 0 code
@@ -63,12 +63,12 @@ class User {
       }
     }// end function
 
-    public function getUserIdByHashId($hashid) {
+    public function getUserIdByHashId($hash_id) {
       /* Returns Database ID of user when hash_id is provided
       */
 
       $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hashid); // bind userid
+      $this->db->bind(':hash_id', $hash_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
         return 0; // nothing found, return 0 code
@@ -179,12 +179,12 @@ class User {
     } // end function
 
 
-    public function getRoomIdByHashId($hashid) {
+    public function getRoomIdByHashId($hash_id) {
       /* Returns Database ID of room when only hash_id is provided
       */
 
       $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hashid); // bind userid
+      $this->db->bind(':hash_id', $hash_id); // bind userid
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
         return 0; // nothing found, return 0 code
@@ -193,12 +193,12 @@ class User {
       }
     }// end function
 
-    public function getGroupIdByHashId($hashid) {
+    public function getGroupIdByHashId($hash_id) {
       /* Returns Database ID of group when only hash_id is provided
       */
 
       $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hashid); // bind userid
+      $this->db->bind(':hash_id', $hash_id); // bind userid
       $groups = $this->db->resultSet();
       if (count($groups)<1){
         return 0; // nothing found, return 0 code
@@ -207,15 +207,106 @@ class User {
       }
     }// end function
 
+    public function setDelegationStatus ($user_id, $status, $room_id = 0, $target = 0) {
+        /* edits the status of a delegation and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         status = status for delegation (0 = inactive, 1=active, 2 = suspended, 4 = archived)
+         if room_id = 0 all delegations of the user are deleted
+         target specifies if original or target users are adressed 0 = remove delegations of delegating user (original owner->default) 1= remove delegation of target user
+        */
 
-    public function addToRoom($userid, $roomid, $status, $updater_id) {
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+        $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
+        $room_clause = "";
+
+        if ($room_id > 0){
+          // room id is set to >0 -> delete only delegations for this user in the specified room
+          $room_clause = " AND room_id = ".$room_id;
+        }
+
+        $target_user = "user_id_original";
+        if ($target>0) {
+          $target_user = "user_id_target";
+        }
+
+        $stmt = $this->db->query('UPDATE '.$this->au_delegation.' SET status = :status, last_update= NOW() WHERE '.$target_user.' = :user_id'.$room_clause);
+        // bind all VALUES
+        $this->db->bind(':status', $status);
+
+        $this->db->bind(':user_id', $user_id); // user original id that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Delegation status changed ".$user_id, 0, "", 1);
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing delegation status of user ".$user_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+    }// end function
+
+    public function removeUserDelegations ($user_id, $room_id = 0, $target = 0)
+    {
+      /* removes all delegations of a specified user (user id) for a specified room, accepts db id or hash id
+       if room_id = 0 all delegations of the user are deleted
+       target specifies if original or target users are adressed 0 = remove delegations of delegating user (original owner->default) 1= remove delegation to target
+      */
+
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
+      $room_clause = "";
+
+      if ($room_id > 0){
+        // room id is set to >0 -> delete only delegations for this user in the specified room
+        $room_clause = " AND room_id = ".$room_id;
+      }
+
+      $target_user = "user_id_original";
+      if ($target>0) {
+        $target_user = "user_id_target";
+      }
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE '.$target_user.' = :id'.$room_clause);
+      $this->db->bind (':id', $user_id);
+      $err=false;
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for room ".$room_id, 0, "", 1);
+        return intval ($this->db->rowCount()); // return number of affected rows to calling script
+      } else {
+        $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for room ".$room_id, 0, "", 1);
+        return 0; // return 0 to indicate that there was an error executing the statement
+      }
+
+    } // end function
+
+
+    public function addToRoom($user_id, $room_id, $status, $updater_id) {
       /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
-      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $roomid = $this->checkRoomId($roomid); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
       // check if user and room exist
-      $user_exist = $this->checkUserExist($userid);
-      $room_exist = $this->checkRoomExist($roomid);
+      $user_exist = $this->checkUserExist($user_id);
+      $room_exist = $this->checkRoomExist($room_id);
 
       if ($user_exist==1 && $room_exist==1) {
         // everything ok, user and room exists
@@ -224,8 +315,8 @@ class User {
         $stmt = $this->db->query('INSERT INTO '.$this->au_rel_rooms_users.' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
-        $this->db->bind(':room_id', $roomid);
-        $this->db->bind(':user_id', $userid);
+        $this->db->bind(':room_id', $room_id);
+        $this->db->bind(':user_id', $user_id);
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -242,11 +333,11 @@ class User {
 
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "Added user ".$userid." to room ".$roomid, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Added user ".$user_id." to room ".$room_id, 0, "", 1);
           return "1,1,1"; // return error code 1 = successful
 
         } else {
-          $this->syslog->addSystemEvent(0, "Error while adding user ".$userid." to room ".$roomid, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Error while adding user ".$user_id." to room ".$room_id, 0, "", 1);
 
           return "0,1,1"; // return 0 to indicate that there was an error executing the statement
         }
@@ -260,14 +351,14 @@ class User {
     } // end function
 
 
-    public function addToGroup($userid, $groupid, $status, $updater_id) {
+    public function addToGroup($user_id, $group_id, $status, $updater_id) {
       /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 group id not in db 0,3 user id not in db group id not in db */
-      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $groupid = $this->checkGroupId($groupid); // checks group id and converts room id to db room id if necessary (when room hash id was passed)
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $group_id = $this->checkGroupId($group_id); // checks group id and converts room id to db room id if necessary (when room hash id was passed)
       // check if user and room exist
-      $user_exist = $this->checkUserExist($userid);
-      $group_exist = $this->checkGroupExist($groupid);
+      $user_exist = $this->checkUserExist($user_id);
+      $group_exist = $this->checkGroupExist($group_id);
 
       if ($user_exist==1 && $group_exist==1) {
         // everything ok, user and room exists
@@ -276,8 +367,8 @@ class User {
         $stmt = $this->db->query('INSERT INTO '.$this->au_rel_groups_users.' (group_id, user_id, status, created, last_update, updater_id) VALUES (:group_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE group_id = :group_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
-        $this->db->bind(':group_id', $groupid);
-        $this->db->bind(':user_id', $userid);
+        $this->db->bind(':group_id', $group_id);
+        $this->db->bind(':user_id', $user_id);
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -293,11 +384,11 @@ class User {
 
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "Added user ".$userid." to group ".$groupid, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Added user ".$user_id." to group ".$group_id, 0, "", 1);
           return "1,1,1"; // return error code 1 = successful
 
         } else {
-          $this->syslog->addSystemEvent(0, "Error while adding user ".$userid." to group ".$groupid, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Error while adding user ".$user_id." to group ".$group_id, 0, "", 1);
 
           return "0,1,1"; // return 0 to indicate that there was an error executing the statement
         }
@@ -363,13 +454,13 @@ class User {
 
 
 
-    public function checkUserExist($userid) {
+    public function checkUserExist($user_id) {
       /* helper function to check if a user with a certain id exists, returns 0 if user does not exist, 1 if user exists, accepts database (int) or hash id (varchar)
       */
-      $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE id = :id');
-      $this->db->bind(':id', $userid); // bind userid
+      $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
         return 0; // nothing found, return 0 code
@@ -378,13 +469,13 @@ class User {
       }
     } // end function
 
-    private function checkRoomExist($roomid) {
+    private function checkRoomExist($room_id) {
       /* returns 0 if room does not exist, 1 if room exists, accepts databse id (int)
       */
-      $roomid = $this->checkRoomId($roomid); // checks room id and converts user id to db room id if necessary (when room hash id was passed)
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts user id to db room id if necessary (when room hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->au_rooms.' WHERE id = :id');
-      $this->db->bind(':id', $roomid); // bind roomid
+      $this->db->bind(':id', $room_id); // bind roomid
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
         return 0; // nothing found, return 0 code
@@ -393,13 +484,13 @@ class User {
       }
     } // end function
 
-    private function checkGroupExist($groupid) {
+    private function checkGroupExist($group_id) {
       /* returns 0 if room does not exist, 1 if room exists, accepts databse id (int)
       */
-      $groupid = $this->checkRoomId($groupid); // checks group id and converts user id to db group id if necessary (when room hash id was passed)
+      $group_id = $this->checkRoomId($group_id); // checks group id and converts user id to db group id if necessary (when room hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->au_groups.' WHERE id = :id');
-      $this->db->bind(':id', $groupid); // bind groupid
+      $this->db->bind(':id', $group_id); // bind groupid
       $groups = $this->db->resultSet();
       if (count($groups)<1){
         return 0; // nothing found, return 0 code
@@ -500,8 +591,8 @@ class User {
       if (count($users)<1){
         return 0; // nothing found, return 0 code
       }else {
-        $userid = $users[0]['id']; // get user id from db
-        return $userid; // return user id
+        $user_id = $users[0]['id']; // get user id from db
+        return $user_id; // return user id
       }
     }
 
@@ -574,12 +665,12 @@ class User {
         }
     }// end function
 
-    public function editUserData($userid, $realname, $displayname, $username, $email, $status, $updater_id=0) {
+    public function editUserData($user_id, $realname, $displayname, $username, $email, $status, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
         */
         // query('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET realname = :realname , displayname= :displayname, username= :username, email = :email, status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
@@ -590,7 +681,7 @@ class User {
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
 
         $err=false; // set error variable to false
 
@@ -603,28 +694,28 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "Edited user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Edited user ".$user_id." by ".$updater_id, 0, "", 1);
           return intval($this->db->rowCount()); // return number of affected rows to calling script
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error while editing user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error while editing user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function setUserStatus($userid, $status, $updater_id=0) {
+    public function setUserStatus($user_id, $status, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          status = status of inserted user (0 = inactive, 1=active)
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
 
         $err=false; // set error variable to false
 
@@ -637,42 +728,57 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User status changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User status of ".$user_id." changed to ".$status." by ".$updater_id, 0, "", 1);
+
+          // set delegations for this user to suspended (delegated voting right and received votign right)
+          $this->setDelegationStatus ($user_id, $status, 0, 0);
+          $this->setDelegationStatus ($user_id, $status, 0, 1);
+
           return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing status of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing status of user ".$user_id." to ".$status." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function suspendUser ($userid, $updater_id=0){
+    public function suspendUser ($user_id, $updater_id=0){
       // set user status to 2 = suspended
-      return setUserStatus ($userid, 2, $updater_id);
+
+      // set delegations for this user to suspended (delegated voting right and received votign right)
+
+      return setUserStatus ($user_id, 2, $updater_id);
     }
 
-    public function activateUser ($userid, $updater_id=0){
+    public function activateUser ($user_id, $updater_id=0){
       // set user status to 1 = active
-      return setUserStatus ($userid, 1, $updater_id);
+      // set delegations for this user to suspended (delegated voting right and received votign right)
+
+      return setUserStatus ($user_id, 1, $updater_id);
     }
 
-    public function deactivateUser ($userid, $updater_id=0){
+    public function deactivateUser ($user_id, $updater_id=0){
       // set user status to 0 = inactive
-      return setUserStatus ($userid, 0, $updater_id);
+
+      // set delegations for this user to suspended (delegated voting right and received votign right)
+
+      return setUserStatus ($user_id, 0, $updater_id);
     }
 
-    public function archiveUser ($userid, $updater_id=0){
+    public function archiveUser ($user_id, $updater_id=0){
       // set user status to 3 = archived
-      return setUserStatus ($userid, 3, $updater_id);
+      // set delegations for this user to suspended (delegated voting right and received votign right)
+
+      return setUserStatus ($user_id, 3, $updater_id);
     }
 
 
 
-    public function setUserLevel($userid, $userlevel=10, $updater_id=0) {
+    public function setUserLevel($user_id, $userlevel=10, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          userlevel = level of the user (10 (guest)-50 (techadmin))
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $userlevel = intval (§userlevel);
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET userlevel= :userlevel, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
@@ -680,7 +786,7 @@ class User {
         $this->db->bind(':userlevel', $userlevel);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
 
         $err=false; // set error variable to false
 
@@ -693,29 +799,29 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User status changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User status changed ".$user_id." by ".$updater_id, 0, "", 1);
           return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing status of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing status of user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function setUserAbout($userid, $about, $updater_id=0) {
+    public function setUserAbout($user_id, $about, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          about (text) -> description of a user
          updater_id is the id of the user that commits the update (i.E. admin )
         */
         $about = $this->crypt->encrypt(trim ($about)); // sanitize and encrypt about text
 
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET about_me= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':about', $about);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
 
         $err=false; // set error variable to false
 
@@ -728,29 +834,29 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User abouttext changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User abouttext changed ".$user_id." by ".$updater_id, 0, "", 1);
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing abouttext of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing abouttext of user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function setUserPosition($userid, $userposition, $updater_id=0) {
+    public function setUserPosition($user_id, $userposition, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          about (text) -> description of a user
          updater_id is the id of the user that commits the update (i.E. admin )
         */
         $about = $this->crypt->encrypt(trim ($userposition)); // sanitize and encrypt position text
 
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET position= :position, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':position', $userposition);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
 
         $err=false; // set error variable to false
 
@@ -763,24 +869,24 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User field position changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User field position changed ".$user_id." by ".$updater_id, 0, "", 1);
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing position of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing position of user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function setUserRealname($userid, $realname, $updater_id=0) {
+    public function setUserRealname($user_id, $realname, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          realname = actual name of the user
         */
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET realname= :realname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $err=false; // set error variable to false
@@ -794,24 +900,24 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User real name changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User real name changed ".$user_id." by ".$updater_id, 0, "", 1);
           return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing real name of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing real name of user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function setUserDisplayname($userid, $displayname, $updater_id=0) {
+    public function setUserDisplayname($user_id, $displayname, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          displayname = shown name of the user in the system
         */
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET displayname= :displayname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
 
@@ -826,24 +932,24 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User display name changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User display name changed ".$user_id." by ".$updater_id, 0, "", 1);
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing display name of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing display name of user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function setUserEmail($userid, $email, $updater_id=0) {
+    public function setUserEmail($user_id, $email, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          email = email address of the user
         */
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET email= :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':email', $this->crypt->encrypt($email));
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
 
@@ -858,19 +964,19 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User email changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User email changed ".$user_id." by ".$updater_id, 0, "", 1);
           return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing email of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing email of user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function setUserPW($userid, $pw, $updater_id=0) {
+    public function setUserPW($user_id, $pw, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          pw = pw in clear text
         */
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET pw= :pw, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
 
@@ -878,7 +984,7 @@ class User {
         $hash = password_hash($pw, PASSWORD_DEFAULT);
         // bind all VALUES
         $this->db->bind(':pw', $hash);
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
 
@@ -893,72 +999,72 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User pw changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User pw changed ".$user_id." by ".$updater_id, 0, "", 1);
           return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing pw of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing pw of user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    private function checkUserId ($userid) {
+    private function checkUserId ($user_id) {
       /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
       if a hash was passed, function gets db user id and returns db id
       */
 
-      if (is_int($userid))
+      if (is_int($user_id))
       {
-        return $userid;
+        return $user_id;
       } else
       {
 
-        return $this->getUserIdByHashId ($userid);
+        return $this->getUserIdByHashId ($user_id);
       }
     } // end function
 
-    private function checkRoomId ($roomid) {
+    private function checkRoomId ($room_id) {
       /* helper function that checks if a room id is a standard db id (int) or if a hash roomid was passed
       if a hash was passed, function gets db room id and returns db id
       */
 
-      if (is_int($roomid))
+      if (is_int($room_id))
       {
 
-        return $roomid;
+        return $room_id;
       } else
       {
 
-        return $this->getRoomIdByHashId ($roomid);
+        return $this->getRoomIdByHashId ($room_id);
       }
     } // end function
 
-    private function checkGroupId ($groupid) {
+    private function checkGroupId ($group_id) {
       /* helper function that checks if a group id is a standard db id (int) or if a hash group id was passed
       if a hash was passed, function gets db group id and returns db id
       */
 
-      if (is_int($groupid))
+      if (is_int($group_id))
       {
 
-        return $groupid;
+        return $group_id;
       } else
       {
 
-        return $this->getGroupIdByHashId ($groupid);
+        return $this->getGroupIdByHashId ($group_id);
       }
     } // end function
 
-    public function setUserRegStatus($userid, $regstatus, $updater_id=0) {
+    public function setUserRegStatus($user_id, $regstatus, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          regstatus (int) sets user registration status
         */
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET registration_status= :regstatus, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
 
         // bind all VALUES
         $this->db->bind(':regstatus', $regstatus);
-        $this->db->bind(':userid', $userid); // user that is updated
+        $this->db->bind(':userid', $user_id); // user that is updated
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
 
@@ -973,24 +1079,25 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User reg status changed ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "User reg status changed ".$user_id." by ".$updater_id, 0, "", 1);
           return intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing reg status of user ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error changing reg status of user ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
 
-    public function deleteUser($userid, $updater_id=0) {
+    public function deleteUser($user_id, $updater_id=0) {
         /* deletes user and returns the number of rows (int) accepts user id or user hash id // */
 
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('DELETE FROM '.$this->au_users_basedata.' WHERE id = :id');
-        $this->db->bind (':id', $userid);
+        $this->db->bind (':id', $user_id);
         $err=false;
         try {
           $action = $this->db->execute(); // do the query
+          $rows_affected = intval ($this->db->rowCount());
 
         } catch (Exception $e) {
             echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
@@ -998,10 +1105,14 @@ class User {
         }
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "User deleted with id ".$userid." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          // remove all delegations for this user
+          $this->removeUserDelegations ($user_id, 0, 0); // active delegations (original user)
+          $this->removeUserDelegations ($user_id, 0, 1); // passive delegations (target user)
+
+          $this->syslog->addSystemEvent(0, "User deleted with id ".$user_id." by ".$updater_id, 0, "", 1);
+          return $rows_affected; // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error deleting user with id ".$userid." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error deleting user with id ".$user_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
 
