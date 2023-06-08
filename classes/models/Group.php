@@ -143,28 +143,7 @@ class Group {
       }
     }// end function
 
-    function deleteUserFromGroup($group_id, $user_id) {
-      /* deletes a user from a group
-      */
-
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE user_id = :userid AND group_id = :groupid' );
-      $this->db->bind(':groupid', $group_id); // bind room id
-      $this->db->bind(':userid', $user_id); // bind user id
-
-      $err=false;
-      try {
-        $groups = $this->db->resultSet();
-
-      } catch (Exception $e) {
-          echo 'Error occured while deleting user from group: ',  $e->getMessage(), "\n"; // display error
-          $err=true;
-          return "0,0";
-      }
-
-
-      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
-
-    }// end function
+    
 
     public function emptyGroup($group_id) {
       /* deletes all users from a group

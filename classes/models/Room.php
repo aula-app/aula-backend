@@ -227,30 +227,6 @@ class Room {
       }
     }// end function
 
-    public function deleteUserFromRoom($room_id, $user_id) {
-      /* deletes a user from a room
-      */
-
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE user_id = :userid AND room_id = :roomid' );
-      $this->db->bind(':roomid', $room_id); // bind room id
-      $this->db->bind(':userid', $user_id); // bind user id
-
-      $err=false;
-      try {
-        $rooms = $this->db->resultSet();
-        $rowcount = $this->db->rowCount();
-
-      } catch (Exception $e) {
-          echo 'Error occured while deleting user '.$user_id.' from room: '.$room_id,  $e->getMessage(), "\n"; // display error
-          $err=true;
-          return "0,0";
-      }
-      // remove delegations for this user
-      $this->deleteRoomUserDelegations ($room_id, $user_id);
-
-      return "1,".$rowcount; // return number of affected rows to calling script
-
-    }// end function
 
     public function deleteRoomDelegations ($room_id){
       // dleetes all delegations in a specified room

@@ -381,7 +381,7 @@ class User {
     } // end function
 
 
-    public function addToRoom($user_id, $room_id, $status, $updater_id) {
+    public function addUserToRoom($user_id, $room_id, $status, $updater_id) {
       /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -431,6 +431,31 @@ class User {
       return "1,1,1"; // returns 1=ok/successful, user exists (1), room exists (1)
 
     } // end function
+
+    public function removeUserFromRoom($room_id, $user_id) {
+      /* deletes a user from a room
+      */
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE user_id = :userid AND room_id = :roomid' );
+      $this->db->bind(':roomid', $room_id); // bind room id
+      $this->db->bind(':userid', $user_id); // bind user id
+
+      $err=false;
+      try {
+        $rooms = $this->db->resultSet();
+        $rowcount = $this->db->rowCount();
+
+      } catch (Exception $e) {
+          echo 'Error occured while deleting user '.$user_id.' from room: '.$room_id,  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
+      // remove delegations for this user
+      $this->deleteRoomUserDelegations ($room_id, $user_id);
+
+      return "1,".$rowcount; // return number of affected rows to calling script
+
+    }// end function
 
     public function followUser ($user_id, $user_id_target) {
       return $this->relateUser ($user_id, $user_id_target, 1, 0, 1);
@@ -536,9 +561,30 @@ class User {
 
     }// end function
 
+    function removeUserFromGroup($group_id, $user_id) {
+      /* deletes a user from a group
+      */
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE user_id = :userid AND group_id = :groupid' );
+      $this->db->bind(':groupid', $group_id); // bind room id
+      $this->db->bind(':userid', $user_id); // bind user id
+
+      $err=false;
+      try {
+        $groups = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while removing user from group: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
 
 
-    public function addToGroup($user_id, $group_id, $status, $updater_id) {
+      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+
+    }// end function
+
+    public function addUserToGroup($user_id, $group_id, $status, $updater_id) {
       /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 group id not in db 0,3 user id not in db group id not in db */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
