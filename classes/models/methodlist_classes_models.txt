@@ -1,148 +1,198 @@
-Aula model functions list
+Aula model methods list
 
-DDatabase.php:function __construct
-Database.php:function query
-Database.php:function bind
-Database.php:function execute
-Database.php:function resultSet
-Database.php:function single
-Database.php:function rowCount
-Database.php:function lastInsertId
-Database.php:function beginTransaction
-Database.php:function endTransaction
-Database.php:function cancelTransaction
-Database.php:function debugDumpParams
+Database
+query
+bind
+execute
+resultSet
+single
+rowCount
+lastInsertId
+beginTransaction
+endTransaction
+cancelTransaction
+debugDumpParams
 
-Idea.php:function __construct
-Idea.php:function getIdeaBaseData
-Idea.php:function getIdeaContent
-Idea.php:function getPersonalVoteStatus
-Idea.php:function getIdeaHashId
-Idea.php:function checkUserId
-Idea.php:function getUserIdByHashId
-Idea.php:function getIdeaIdByHashId
-Idea.php:function reportIdea
-Idea.php:function suspendIdea
-Idea.php:function archiveIdea
-Idea.php:function activateIdea
-Idea.php:function deactivateIdea
-Idea.php:function setIdeatoReview
-Idea.php:function checkIdeaExist
-Idea.php:function getDelegations
-Idea.php:function getIdeas
-Idea.php:function getIdeasByRoom
-Idea.php:function getIdeasByGroup
-Idea.php:function getIdeasByUser
-Idea.php:function addIdea
-Idea.php:function setIdeaStatus
-Idea.php:function setContent
-Idea.php:function checkAvailableVotesUser
-Idea.php:function addVoteUser
-Idea.php:function revokeVoteUser
-Idea.php:function userHasDelegated
-Idea.php:function voteForIdea
-Idea.php:function RevokeVoteFromIdea
-Idea.php:function setIdeaInfo
-Idea.php:function checkIdeaId
-Idea.php:function sendMessage
-Idea.php:function deleteIdea
+Idea
+getIdeaBaseData
+getIdeaContent
+getPersonalVoteStatus
+getIdeaHashId
+checkUserId
+getUserIdByHashId
+getIdeaIdByHashId
+getTopicIdByHashId
+reportIdea
+suspendIdea
+archiveIdea
+activateIdea
+deactivateIdea
+setIdeatoReview
+checkIdeaExist
+checkTopicExist
+addIdeaToTopic
+removeIdeaFromTopic
+getIdeasByTopic
+getDelegations
+getIdeas
+getTopics
+getIdeasByRoom
+getIdeasByGroup
+getIdeasByUser
+addIdea
+setIdeaStatus
+setContent
+checkAvailableVotesUser
+addVoteUser
+revokeVoteUser
+getUserInfiniteVotesStatus
+userHasDelegated
+voteForIdea
+RevokeVoteFromIdea
+setIdeaInfo
+checkIdeaId
+checkTopicId
+sendMessage
+deleteIdea
 
-MessageHandler.php:function __construct
-MessageHandler.php:function sendMessage
+MessageHandler
+MessageHandler: sendMessage
 
-User.php:function __construct
-User.php:function getUserBaseData
-User.php:function getUserHashId
-User.php:function getUserIdByHashId
-User.php:function revokeVoteRight
-User.php:function delegateVoteRight
-User.php:function getRoomIdByHashId
-User.php:function getGroupIdByHashId
-User.php:function setDelegationStatus
-User.php:function getReceivedDelegations
-User.php:function getGivenDelegations
-User.php:function giveBackAllDelegations
-User.php:function giveBackDelegation
-User.php:function removeSpecificDelegation
-User.php:function removeUserDelegations
-User.php:function addToRoom
-User.php:function relateUser
-User.php:function removeUserRelation
-User.php:function addToGroup
-User.php:function checkCredentials
-User.php:function checkUserExist
-User.php:function checkRoomExist
-User.php:function checkGroupExist
-User.php:function getUsers
-User.php:function checkUserExistsByUsername
-User.php:function addUser
-User.php:function editUserData
-User.php:function setUserStatus
-User.php:function suspendUser
-User.php:function activateUser
-User.php:function deactivateUser
-User.php:function archiveUser
-User.php:function setUserLevel
-User.php:function setUserAbout
-User.php:function setUserPosition
-User.php:function setUserRealname
-User.php:function setUserDisplayname
-User.php:function setUserEmail
-User.php:function setUserPW
-User.php:function checkUserId
-User.php:function checkRoomId
-User.php:function checkGroupId
-User.php:function setUserRegStatus
-User.php:function deleteUser
+Vote
+getIdeaBaseData
+getVoteContent
+getIdeaHashId
+checkUserId
+getUserIdByHashId
+getIdeaIdByHashId
+suspendVoteUser
+archiveVoteUser
+activateVoteUser
+deactivateVoteUser
+suspendVoteIdea
+archiveVoteIdea
+activateVoteIdea
+deactivateVoteIdea
+checkIdeaExist
+getVotesByIdea
+getIdeasByRoom
+getIdeasByGroup
+getIdeasByUser
+addIdea
+setVoteStatusUser
+setVoteStatusIdea
+setContent
+checkAvailableVotesUser
+addVoteUser
+voteForIdea
+setIdeaInfo
+checkIdeaId
+sendMessage
+deleteIdea
 
-Group.php:function __construct
-Group.php:function getGroupBaseData
-Group.php:function getGroupHashId
-Group.php:function getGroupIdByHashId
-Group.php:function checkAccesscode
-Group.php:function checkGroupExist
-Group.php:function getUsersInGroup
-Group.php:function deleteUserFromGroup
-Group.php:function emptyGroup
-Group.php:function getGroups
-Group.php:function checkGroupExistsByName
-Group.php:function addGroup
-Group.php:function setGroupStatus
-Group.php:function setGroupDescriptionPublic
-Group.php:function setGroupDescriptionInternal
-Group.php:function setGroupname
-Group.php:function setGroupAccesscode
-Group.php:function checkGroupId
-Group.php:function deleteGroup
+User
+getUserBaseData
+getUserHashId
+getUserIdByHashId
+revokeVoteRight
+delegateVoteRight
+getRoomIdByHashId
+getGroupIdByHashId
+setDelegationStatus
+getReceivedDelegations
+getGivenDelegations
+giveBackAllDelegations
+giveBackDelegation
+removeSpecificDelegation
+removeUserDelegations
+addUserToRoom
+removeUserFromRoom
+followUser
+friendUser
+blockUser
+unfriendUser
+unblockUser
+unfollowUser
+relateUser
+removeUserRelation
+removeUserFromGroup
+addUserToGroup
+checkCredentials
+checkUserExist
+checkRoomExist
+checkGroupExist
+getUsers
+checkUserExistsByUsername
+addUser
+editUserData
+setUserStatus
+grantInfiniteVotesToUser
+revokeInfiniteVotesFromUser
+getUserInfiniteVotesStatus
+setUserInfiniteVote
+suspendUser
+activateUser
+deactivateUser
+archiveUser
+setUserLevel
+setUserAbout
+setUserPosition
+setUserRealname
+setUserDisplayname
+setUserEmail
+setUserPW
+checkUserId
+checkRoomId
+checkGroupId
+setUserRegStatus
+deleteUser
 
-Systemlog.php:function __construct
-Systemlog.php:function getGroupId
-Systemlog.php:function addSystemEvent
-Systemlog.php:function getSystemlog
-Systemlog.php:function checkUserId
-Systemlog.php:function deleteSyslogEntry
+Group
+getGroupBaseData
+getGroupHashId
+getGroupIdByHashId
+checkAccesscode
+checkGroupExist
+getUsersInGroup
+emptyGroup
+getGroups
+checkGroupExistsByName
+addGroup
+setGroupStatus
+setGroupDescriptionPublic
+setGroupDescriptionInternal
+setGroupname
+setGroupAccesscode
+checkGroupId
+deleteGroup
 
-Room.php:function __construct
-Room.php:function getRoomBaseData
-Room.php:function getRoomHashId
-Room.php:function getRoomIdByHashId
-Room.php:function checkAccesscode
-Room.php:function checkRoomExist
-Room.php:function getRooms
-Room.php:function getUsersInRoom
-Room.php:function deleteUserFromRoom
-Room.php:function deleteRoomDelegations
-Room.php:function checkUserId
-Room.php:function getUserIdByHashId
-Room.php:function deleteRoomUserDelegations
-Room.php:function checkRoomId
-Room.php:function emptyRoom
-Room.php:function checkRoomExistsByName
-Room.php:function addRoom
-Room.php:function setRoomStatus
-Room.php:function setRoomDescriptionPublic
-Room.php:function setRoomDescriptionInternal
-Room.php:function setRoomname
-Room.php:function setRoomAccesscode
-Room.php:function sendMessage
-Room.php:function deleteRoom
+Systemlog
+getGroupId
+addSystemEvent
+getSystemlog
+checkUserId
+deleteSyslogEntry
+
+Room
+Room: getRoomBaseData
+Room: getRoomHashId
+Room: getRoomIdByHashId
+Room: checkAccesscode
+Room: checkRoomExist
+Room: getRooms
+Room: getUsersInRoom
+Room: deleteRoomDelegations
+Room: checkUserId
+Room: getUserIdByHashId
+Room: deleteRoomUserDelegations
+Room: checkRoomId
+Room: emptyRoom
+Room: checkRoomExistsByName
+Room: addRoom
+Room: setRoomStatus
+Room: setRoomDescriptionPublic
+Room: setRoomDescriptionInternal
+Room: setRoomname
+Room: setRoomAccesscode
+Room: sendMessage
+Room: deleteRoom
