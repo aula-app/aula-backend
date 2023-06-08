@@ -22,23 +22,26 @@ class Idea {
         $au_groups = 'au_groups';
         $au_ideas = 'au_ideas';
         $au_votes = 'au_votes';
+        $au_topics = 'au_topics';
         $au_delegation = 'au_delegation';
         $au_reported = 'au_reported';
         $au_users_basedata = 'au_users_basedata';
         $au_rel_rooms_users ='au_rel_rooms_users';
         $au_rel_groups_users ='au_rel_groups_users';
-        $au_rel_groups_users ='au_rel_groups_users';
+        $au_rel_topics_ideas ='au_rel_topics_ideas';
 
         $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
         $this->$au_rooms = $au_rooms; // table name for rooms
         $this->$au_delegation = $au_delegation; // table name for delegation
         $this->$au_groups = $au_groups; // table name for groups
+        $this->$au_topics = $au_topics; // table name for topics
         $this->$au_ideas = $au_ideas; // table name for ideas
         $this->$au_votes = $au_votes; // table name for votes
         $this->$au_reported = $au_reported; // table name for reportings
 
         $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
         $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
+        $this->$au_rel_topics_ideas = $au_rel_topics_ideas; // table name for relations topics - ideas
     }// end function
 
     public function getIdeaBaseData($idea_id) {
@@ -144,6 +147,20 @@ class Idea {
         return 0; // nothing found, return 0 code
       }else {
         return $ideas[0]['id']; // return idea id
+      }
+    }// end function
+
+    public function getTopicIdByHashId($hash_id) {
+      /* Returns Database ID of idea when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $topics = $this->db->resultSet();
+      if (count($topics)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $topics[0]['id']; // return idea id
       }
     }// end function
 
@@ -269,6 +286,178 @@ class Idea {
       }
     } // end function
 
+
+      public function checkTopicExist($topic_id) {
+        /* returns 0 if topic does not exist, 1 if topic exists, accepts database id (int)
+        */
+        $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+        $stmt = $this->db->query('SELECT status, room_id FROM '.$this->au_topics.' WHERE id = :id');
+        $this->db->bind(':id', $topic_id); // bind topic id
+        $topic_id = $this->db->resultSet();
+        if (count($topic_id)<1){
+          return 0; // nothing found, return 0 code
+        }else {
+          return $topic_id[0]; // idea found, return status
+        }
+      } // end function
+
+    public function addIdeaToTopic ($idea_id, $topic_id, $updater_id){
+      // adds an idea (idea_id) to a specified topic (topic_id)
+
+      //
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+      $idea_exist = $this->checkIdeaExist($idea_id);
+      $topic_exist = $this->checkTopicExist($topic_id);
+
+      if ($idea_exist==1 && $topic_exist==1) {
+        // everything ok, user and room exists
+        // add relation to database
+
+        $stmt = $this->db->query('INSERT INTO '.$this->au_rel_topics_ideas.' (idea_id, topic_id, status, created, last_update, updater_id) VALUES (:idea_id, :topic_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
+
+        // bind all VALUES
+        $this->db->bind(':idea_id', $idea_id);
+        $this->db->bind(':topic_id', $topic_id);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added idea ".$idea_id." to topic ".$topic_id, 0, "", 1);
+          return "1,1,1"; // return error code 1 = successful
+
+        } else {
+          $this->syslog->addSystemEvent(0, "Error while adding idea ".$idea_id." to room ".$topic_id, 0, "", 1);
+
+          return "0,1,1"; // return 0 to indicate that there was an error executing the statement
+        }
+
+      }else {
+        return "0,".$idea_exist.",".$topic_exist; // returns error and 0 or 1 for user and room (0=doesn't exist, 1=exists)
+      }
+
+      return "1,1,1"; // returns 1=ok/successful, user exists (1), room exists (1)
+
+    }
+
+    function removeIdeaFromTopic($topic_id, $idea_id) {
+      /* deletes a user from a group
+      */
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE idea_id = :idea_id AND topic_id = :topic_id' );
+      $this->db->bind(':topic_id', $topic_id); // bind topic id
+      $this->db->bind(':idea_id', $idea_id); // bind idea id
+
+      $err=false;
+      try {
+        $topics = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while deleting idea from topic: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
+
+
+      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+
+    }// end function
+
+    public function getIdeasByTopic ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id) {
+      /* returns idealist (associative array) with start and limit provided
+      if start and limit are set to 0, then the whole list is read (without limit)
+      orderby is the field (int, see switch), defaults to last_update (3)
+      asc (smallint), is either ascending (1) or descending (0), defaults to descending
+      $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+      $room_id is the id of the room
+      */
+
+      // init vars
+      $orderby_field="";
+      $asc_field ="";
+
+      $limit_string=" LIMIT :offset , :limit ";
+      $limit_active=true;
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+        $limit_active=false;
+      }
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = $this->au_ideas."status";
+        break;
+        case 1:
+        $orderby_field = $this->au_ideas."order_importance";
+        break;
+        case 2:
+        $orderby_field = $this->au_ideas."created";
+        break;
+        case 3:
+        $orderby_field = $this->au_ideas."last_update";
+        break;
+        case 4:
+        $orderby_field = $this->au_ideas."id";
+        break;
+
+        default:
+        $orderby_field = $this->au_ideas."last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.created, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
+      $join =  'INNER JOIN '.$this->au_rel_topics_ideas.' ON ('.$this->au_rel_topics_ideas.'.idea_id='.$this->au_ideas.'.id) INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
+      $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_rel_topics_ideas.'.topic_id= :topic_id ';
+      $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      if ($limit){
+        // only bind if limit is set
+        $this->db->bind(':offset', $offset); // bind limit
+        $this->db->bind(':limit', $limit); // bind limit
+      }
+      $this->db->bind(':status', $status); // bind status
+      $this->db->bind(':group_id', $group_id); // bind group id
+
+      $err=false;
+      try {
+        $ideas = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return 0;
+      }
+
+      if (count($ideas)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $ideas; // return an array (associative) with all the data
+      }
+    }// end function
+
     protected function getDelegations($user_id, $room_id, $idea_id) {
       /* returns number of delegated votes to this user (user_id), accepts database id (int)
       */
@@ -372,6 +561,85 @@ class Idea {
         return 0; // nothing found, return 0 code
       }else {
         return $ideas; // return an array (associative) with all the data
+      }
+    }// end function
+
+    public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
+      /* returns idealist (associative array) with start and limit provided
+      if start and limit are set to 0, then the whole list is read (without limit)
+      orderby is the field (int, see switch), defaults to last_update (3)
+      asc (smallint), is either ascending (1) or descending (0), defaults to descending
+      $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+      extra_where = extra parameters for where clause, synthax " AND XY=4"
+      */
+
+      // init vars
+      $orderby_field="";
+      $asc_field ="";
+
+      $limit_string=" LIMIT :offset , :limit ";
+      $limit_active=true;
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+        $limit_active=false;
+      }
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = "status";
+        break;
+        case 1:
+        $orderby_field = "name";
+        break;
+        case 2:
+        $orderby_field = "created";
+        break;
+        case 3:
+        $orderby_field = "last_update";
+        break;
+        case 4:
+        $orderby_field = "id";
+        break;
+
+        default:
+        $orderby_field = "last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+
+      $stmt = $this->db->query('SELECT '.$this->au_topics.'.content, '.$this->au_topics.'.hash_id, '.$this->au_topics.'.id, '.$this->au_topics.'.sum_likes, '.$this->au_topics.'.sum_votes, '.$this->au_topics.'.last_update, '.$this->au_topics.'.created FROM '.$this->au_topics.' WHERE '.$this->au_ideas.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      if ($limit){
+        // only bind if limit is set
+        $this->db->bind(':offset', $offset); // bind limit
+        $this->db->bind(':limit', $limit); // bind limit
+      }
+      $this->db->bind(':status', $status); // bind status
+
+      $err=false;
+      try {
+        $topics = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while getting topics: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return 0;
+      }
+
+      if (count($topics)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $topics; // return an array (associative) with all the data
       }
     }// end function
 
@@ -892,7 +1160,7 @@ class Idea {
         } // else continue processing
 
         // check if user has infinite votes, if yes - disable everything
-        if ($this->getUserInfiniteVotesStatus=0){
+        if ($this->getUserInfiniteVotesStatus==0){
           // user does not have infinite votes
           // check if user has delegated his votes to another user
           if ($this->userHasDelegated($user_id, $room_id)==1){
@@ -1002,7 +1270,7 @@ class Idea {
           $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") revoked Vote by ".$updater_id, 0, "", 1);
           return ("1,1");
         } else {
-          $this->syslog->addSystemEvent(1, "Error revoking vote idea (#".$idea_id.") by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(1, "Error revoking vote for idea (#".$idea_id.") by ".$updater_id, 0, "", 1);
           return ("0,0"); // return 0 to indicate that there was an error executing the statement
         }
         // add vote to database
@@ -1056,6 +1324,22 @@ class Idea {
         return $this->getIdeaIdByHashId ($idea_id);
       }
     } // end function
+
+    private function checkTopicId ($topic_id) {
+      /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
+      if a hash was passed, function gets db topic id and returns db id
+      */
+
+      if (is_int($topic_id))
+      {
+        return $topic_id;
+      } else
+      {
+        return $this->getTopicIdByHashId ($topic_id);
+      }
+    } // end function
+
+
 
     private function sendMessage ($user_id, $msg){
       /* send a message to the dashboard of the user
