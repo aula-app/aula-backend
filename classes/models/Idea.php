@@ -74,7 +74,42 @@ class Idea {
     }// end function
 
 
-    public function getPersonalVoteStatus ($user_id, $idea_id, $room_id) {
+    public function getIdeaVotes ($idea_id) {
+      /* returns sum of votes of an idea for a integer idea id
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+      $stmt = $this->db->query('SELECT sum_votes FROM '.$this->au_ideas.' WHERE d = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return "0,0"; // nothing found, return 0,0 code
+      }else {
+        return "1,".$ideas[0]['sum_votes']; // return sum of the votes for the idea
+      }
+    }// end function
+
+    protected function buildCacheHash ($key) {
+      return md5 ($key);
+    }
+
+    public function getIdeaLikes ($idea_id) {
+      /* returns sum of likes of an idea for a integer idea id
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+      $stmt = $this->db->query('SELECT sum_likes FROM '.$this->au_ideas.' WHERE id = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return "0,0"; // nothing found, return 0,0 code
+      }else {
+        return "1,".$ideas[0]['sum_likes']; // return sum of the likes for the idea
+      }
+    }// end function
+
+
+  public function getPersonalVoteStatus ($user_id, $idea_id, $room_id) {
       /* returns content, sum votes, sum likes, create, last_update, hash id and the user displayname of an idea for a integer idea id
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
@@ -100,9 +135,9 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        return "0,0"; // nothing found, return 0 code
       }else {
-        return $ideas[0]['hash_id']; // return hash id for the idea
+        return "1,".$ideas[0]['hash_id']; // return hash id for the idea
       }
     }// end function
 
@@ -298,7 +333,7 @@ class Idea {
         if (count($topic_id)<1){
           return 0; // nothing found, return 0 code
         }else {
-          return $topic_id[0]; // idea found, return status
+          return $topic_id[0]; // topic found, return status
         }
       } // end function
 
