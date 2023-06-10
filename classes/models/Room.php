@@ -63,6 +63,21 @@ class Room {
       }
     }// end function
 
+    public function getRoomPhase ($room_id) {
+      /* returns hash_id of a room for a integer room id
+      */
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
+      $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_rooms.' WHERE id = :id');
+      $this->db->bind(':id', $room_id); // bind room id
+      $rooms = $this->db->resultSet();
+      if (count($rooms)<1){
+        return "0,0"; // nothing found, return 0,0 code
+      }else {
+        return "1,".$rooms[0]['hash_id']; // return room phase (int) for the room
+      }
+    }// end function
+
     public function getRoomIdByHashId($hash_id) {
       /* Returns Database ID of room when hash_id is provided
       */
@@ -81,6 +96,8 @@ class Room {
     public function checkAccesscode($room_id, $access_code) { // access_code = clear text
       /* checks access code and returns database room id (credentials correct) or 0 (credentials not correct)
       */
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
       $stmt = $this->db->query('SELECT room_name, id, access_code, hash_id FROM '.$this->au_rooms.' WHERE id= :id');
       $this->db->bind(':id', $room_id); // bind room id
 
@@ -359,7 +376,7 @@ class Room {
       }
     }
 
-    public function addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $room_order=10, $updater_id=0) {
+    public function addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $room_order=10, $updater_id=0, $room_phase=0) {
         /* adds a new room and returns insert id (room id) if successful, accepts the above parameters
          description_public = actual description of the room, status = status of inserted room (0 = inactive, 1=active)
         */
@@ -380,7 +397,7 @@ class Room {
           return "0,1"; // room exists, stop exectuing, return errorcode 1 = room exists
         }
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_rooms.' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, roomorder) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
+        $stmt = $this->db->query('INSERT INTO '.$this->au_rooms.' (phase, room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, roomorder) VALUES (:room_phase, :room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
         // bind all VALUES
 
         $this->db->bind(':room_name', trim ($room_name));
@@ -388,6 +405,7 @@ class Room {
         $this->db->bind(':description_internal', trim ($description_internal));
         $this->db->bind(':internal_info', trim ($internal_info));
         $this->db->bind(':access_code', $hash_access_code);
+        $this->db->bind(':room_phase', $room_phase);
         $this->db->bind(':status', $status);
         $this->db->bind(':restricted', $restricted);
         // generate unique hash for this user
@@ -430,6 +448,39 @@ class Room {
         $stmt = $this->db->query('UPDATE '.$this->au_rooms.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
         // bind all VALUES
         $this->db->bind(':status', $status);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':room_id', $room_id); // room that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Room status changed ".$room_id." by ".$updater_id, 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing status of room ".$room_id." by ".$updater_id, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
+    public function setRoomPhase($room_id, $phase, $updater_id=0) {
+        /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         status = status of inserted room (0 = inactive, 1=active)
+         updater_id is the id of the room that commits the update (i.E. admin )
+        */
+        $room_id = $this->checkRoomId($room_id); // checks room  id and converts user id to db user id if necessary (when user hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->au_rooms.' SET phase= :phase, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        // bind all VALUES
+        $this->db->bind(':phase', $phase);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $this->db->bind(':room_id', $room_id); // room that is updated
