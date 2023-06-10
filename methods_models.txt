@@ -16,7 +16,8 @@ public function deactivateIdea ($idea_id, $updater_id){
 public function setIdeatoReview ($idea_id, $updater_id){
 public function checkIdeaExist($idea_id)
 public function checkTopicExist($topic_id)
-public function addIdeaToTopic ($idea_id, $topic_id, $updater_id){
+public function addIdeaToTopic ($idea_id, $topic_id, $updater_id)
+public function removeIdeaFromTopic($topic_id, $idea_id)
 public function getIdeasByTopic ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id)
 public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="")
 public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="")
@@ -33,7 +34,6 @@ public function setIdeaInfo($idea_id, $content, $updater_id=0)
 public function deleteIdea($idea_id, $updater_id=0)
 
 MODEL User
-
 
 public function __construct($db, $crypt, $syslog)
    public function getUserBaseData($user_id)
