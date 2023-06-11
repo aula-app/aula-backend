@@ -308,20 +308,22 @@ out ("Revoke Vote from an idea #".$idea_id." by the user #".$user_id."<br>using 
 //$retvalue = $idea->RevokeVoteFromIdea($idea_id, $user_id, $updater_id=0);
 out ("return code:".$retvalue);
 
+$topic_id = 4;
 // delegating vote
 out ("Delegating voting right from user #".$user_id." to ".$user_id_target."<br to >using User class",true);
-$retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $updater_id=0);
+$retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $topic_id, $updater_id=0);
 out ("return code:".$retvalue);
 
 // delegating vote
 out ("Revoking delegation right from user #".$user_id_target." back to ".$user_id."<br>using User class",true);
-$retvalue = $user->revokeVoteRight($user_id, $user_id_target, $room_id, $updater_id=0);
+$retvalue = $user->revokeVoteRight($user_id, $user_id_target, $room_id, $topic_id, $updater_id=0);
 out ("return code:".$retvalue);
 
 $user_id_target = 15;
+$topic_id = 4;
 // delegating vote
 out ("Delegating voting right from user #".$user_id." to ".$user_id_target."<br to >using User class",true);
-$retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $updater_id=0);
+$retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $topic_id, $updater_id=0);
 out ("return code:".$retvalue);
 
 // getting delegtaions
@@ -351,20 +353,19 @@ foreach ($users as $result) {
 //print_r ($users);
 
 out ("User #".$user_id." follows ".$user_id_target."<br to >using User class",true);
-$retvalue = $user->relateUser($user_id, $user_id_target, 1, 42, 1);
+$retvalue = $user->followUser($user_id, $user_id_target);
 out ("return code:".$retvalue);
 
 
 $user_id = 4;
 out ("User #".$user_id." blocks ".$user_id_target."<br to >using User class",true);
-$retvalue = $user->relateUser($user_id, $user_id_target, 1, 42, 3);
+$retvalue = $user->blockUser($user_id, $user_id_target, 1, 42, 3);
 out ("return code:".$retvalue);
 
-$user_id=3;
-out ("Relation between User #".$user_id." and ".$user_id_target." is removed<br to >using User class",true);
-$retvalue = $user->removeUserRelation($user_id, $user_id_target);
+$user_id = 3;
+out ("User #".$user_id." unfollows ".$user_id_target." <br to >using User class",true);
+$retvalue = $user->unfollowUser($user_id, $user_id_target);
 out ("return code:".$retvalue);
-
 
 
 ?>
