@@ -22,6 +22,7 @@ class User {
         $au_rooms = 'au_rooms';
         $au_groups = 'au_groups';
         $au_votes = 'au_votes';
+        $au_topics = 'au_topics';
         $au_delegation = 'au_delegation';
 
         $au_rel_rooms_users ='au_rel_rooms_users';
@@ -32,6 +33,7 @@ class User {
         $this->$au_rooms = $au_rooms; // table name for rooms
         $this->$au_groups = $au_groups; // table name for groups
         $this->$au_votes = $au_votes; // table name for votes
+        $this->$au_topics = $au_topics; // table name for topics
         $this->$au_delegation = $au_delegation; // table name for delegation
         $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
         $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
@@ -79,19 +81,21 @@ class User {
       }
     }// end function
 
-    public function revokeVoteRight($user_id, $user_id_target, $room_id, $updater_id) {
+    public function revokeVoteRight($user_id, $user_id_target, $room_id, $topic_id, $updater_id) {
       /* Returns Database ID of user when hash_id is provided
       */
       //sanitize variables
       $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
       $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
 
-      $stmt = $this->db->query('SELECT room_id FROM '.$this->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target');
+      $stmt = $this->db->query('SELECT room_id FROM '.$this->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
       // bind all VALUES
       $this->db->bind(':room_id', $room_id);
       $this->db->bind(':user_id', $user_id); // gives the voting right
+      $this->db->bind(':topic_id', $topic_id); // id of the topic
       $this->db->bind(':user_id_target', $user_id_target); // receives the voting right
 
       $users = $this->db->resultSet();
@@ -99,10 +103,11 @@ class User {
         return "0,1"; // nothing found (no delegation), return 0,1 code
       }else {
         // remove delegation from db table
-        $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target');
+        $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
         // bind all VALUES
         $this->db->bind(':room_id', $room_id);
         $this->db->bind(':user_id', $user_id); // gives the voting right
+        $this->db->bind(':topic_id', $topic_id); // id of the topic
         $this->db->bind(':user_id_target', $user_id_target); // receives the voting right
 
         $err=false;
@@ -126,13 +131,44 @@ class User {
       }
     }// end function
 
+    private function checkTopicId ($topic_id) {
+      /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
+      if a hash was passed, function gets db topic id and returns db id
+      */
 
-    public function delegateVoteRight ($user_id, $user_id_target, $room_id, $updater_id) {
-      /* delegates voting rights from one user to another within a room, accepts user_id (by hash or id) and room id (by hash or id)
+      if (is_int($topic_id))
+      {
+        return $topic_id;
+      } else
+      {
+        return $this->getTopicIdByHashId ($topic_id);
+      }
+    } // end function
+
+    protected function getTopicIdByHashId($hash_id) {
+      /* Returns Database ID of idea when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $topics = $this->db->resultSet();
+      if (count($topics)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $topics[0]['id']; // return idea id
+      }
+    }// end function
+
+
+
+    public function delegateVoteRight ($user_id, $user_id_target, $room_id, $topic_id, $updater_id) {
+      /* delegates voting rights from one user to another within a room for a certain topic, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $topic_id = $this->checkRoomId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
       // check if user and room exist
       $user_exist = $this->checkUserExist($user_id);
       $user_exist_target = $this->checkUserExist($user_id_target);
@@ -142,10 +178,11 @@ class User {
         // everything ok, users and room exists
         // add relation to database (delegation)
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_delegation.' (room_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->au_delegation.' (topic_id, room_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :room_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
         $this->db->bind(':room_id', $room_id);
+        $this->db->bind(':topic_id', $topic_id);
         $this->db->bind(':user_id', $user_id); // gives the voting right
         $this->db->bind(':user_id_target', $user_id_target); // receives the voting right
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -518,11 +555,11 @@ class User {
 
         if (!$err)
         {
-          $this->syslog->addSystemEvent(0, "Added user relation (follow) ".$user_id."-".$user_id_target, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Added user relation (type:".$type.") ".$user_id."-".$user_id_target, 0, "", 1);
           return "1,1,1"; // return error code 1 = successful
 
         } else {
-          $this->syslog->addSystemEvent(0, "Error while adding user relation (follow) ".$user_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Error while adding user relation (type:".$type.") ".$user_id, 0, "", 1);
 
           return "0,1,1"; // return 0 to indicate that there was an error executing the statement
         }
@@ -975,16 +1012,22 @@ class User {
     }// end function
 
     public function grantInfiniteVotesToUser ($user_id){
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      
       return $this->setUserInfiniteVote ($user_id, 1);
     }
 
     public function revokeInfiniteVotesFromUser ($user_id){
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
       return $this->setUserInfiniteVote ($user_id, 0);
     }
 
     public function getUserInfiniteVotesStatus($user_id) {
       /* returns hash_id of a user for a integer user id
       */
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
       $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
