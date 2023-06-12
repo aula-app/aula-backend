@@ -1007,64 +1007,6 @@ class Idea {
 
     }// end function
 
-    public function addTopic ($name, $description_internal, $description_public, $status, $order_importance=10, $updater_id=0, $room_id=0) {
-        /* adds a new topic and returns insert id (idea id) if successful, accepts the above parameters
-         name = name of the topic, description_internal = shown only to admins for internal use
-         desciption_public = shown in frontend, order_importance = order bias for sorting in the frontend
-         status = status of inserted topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
-
-        */
-
-        //sanitize the vars
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-        $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-        $status = intval($status);
-        $room_id = intval($room_id);
-        $order_importance = intval ($order_importance);
-        $description_internal = trim ($description_internal);
-        $description_public = trim ($description_public);
-
-
-        $stmt = $this->db->query('INSERT INTO '.$this->au_ideas.' (name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
-        // bind all VALUES
-
-        $this->db->bind(':name', $name);
-        $this->db->bind(':status', $status);
-        $this->db->bind(':description_public', $description_public);
-        $this->db->bind(':description_internal', $description_internal);
-        $this->db->bind(':room_id', $room_id);
-        // generate unique hash for this idea
-        $testrand = rand (100,10000000);
-        $appendix = microtime(true).$testrand;
-        $hash_id = md5($content.$appendix); // create hash id for this idea
-        $this->db->bind(':hash_id', $hash_id);
-        $this->db->bind(':order_importance', $order_importance); // order parameter
-        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-        $err=false; // set error variable to false
-
-        try {
-          $action = $this->db->execute(); // do the query
-
-        } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
-            $err=true;
-        }
-        $insertid = intval($this->db->lastInsertId());
-        if (!$err)
-        {
-          $this->syslog->addSystemEvent(0, "Added new topic (#".$insertid.") ".$name, 0, "", 1);
-          return $insertid; // return insert id to calling script
-
-        } else {
-          $this->syslog->addSystemEvent(1, "Error adding topic ".$name, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
-        }
-
-
-    }// end function
-
-
     public function setIdeaStatus($idea_id, $status, $updater_id=0) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          status = status of idea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
