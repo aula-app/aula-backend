@@ -107,6 +107,21 @@ class Idea {
       }
     }// end function
 
+    public function getIdeaRoom ($idea_id) {
+      /* returns the topic for a specificc idea integer idea id
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+      $stmt = $this->db->query('SELECT room_id FROM '.$this->au_ideas.' WHERE id = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return 0; // nothing found, return 0,0 code
+      }else {
+        return $ideas[0]['room_id']; // return room id for the idea
+      }
+    }// end function
+
   protected function buildCacheHash ($key) {
       return md5 ($key);
     }
@@ -123,6 +138,21 @@ class Idea {
         return 0; // nothing found, return 0,0 code
       }else {
         return $ideas[0]['sum_likes']; // return sum of the likes for the idea
+      }
+    }// end function
+
+    public function getIdeaStatus ($idea_id) {
+      /* returns the status of an idea for a integer idea id
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+      $stmt = $this->db->query('SELECT status FROM '.$this->au_ideas.' WHERE id = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return 0; // nothing found, return 0,0 code
+      }else {
+        return $ideas[0]['status']; // return status of the idea
       }
     }// end function
 
@@ -1374,8 +1404,8 @@ class Idea {
 
         // check if idea und user exist
         $idea_exists = $this->checkIdeaExist ($idea_id);
-        $status_idea = $idea_exists['status'];
-        $room_id = $idea_exists['room_id'];
+        $status_idea = $this->getIdeaStatus ($idea_id);
+        $room_id = $this->getIdeaRoom ($idea_id);
 
 
         if ($status_idea == 0 || $status_idea >1) {
