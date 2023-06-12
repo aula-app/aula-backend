@@ -500,7 +500,7 @@ class Idea {
 
         $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET name= :name, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
         // bind all VALUES
-        $this->db->bind(':name', $name;
+        $this->db->bind(':name', $name);
         $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
 
         $this->db->bind(':topic_id', $idea_id); // idea that is updated
@@ -635,6 +635,7 @@ class Idea {
 
 
     public function removeDelegationsTopic ($topic_id){
+      // removes all delegations for a certain topic (topic_id)
       $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE topic_id = :id');
