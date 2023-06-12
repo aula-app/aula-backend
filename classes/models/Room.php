@@ -49,6 +49,37 @@ class Room {
     }// end function
 
 
+    public function getNumberOfUsers($room_id) {
+      /* returns number of users in this room (room_id ) */
+      $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+
+      $stmt = $this->db->query('SELECT user_id FROM '.$this->au_rel_rooms_users.' WHERE room_id = :room_id');
+      $this->db->bind(':room_id', $room_id); // bind room id
+      $rooms = $this->db->resultSet();
+      return count($rooms);
+    }// end function
+
+    public function getNumberOfTopics($room_id) {
+      /* returns number of topics in this room (room_id ) */
+      $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE room_id = :room_id');
+      $this->db->bind(':room_id', $room_id); // bind room id
+      $rooms = $this->db->resultSet();
+      return count($rooms);
+    }// end function
+
+    public function getNumberOfIdeas($room_id) {
+      /* returns number of ideas in this room (room_id ) */
+      $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE room_id = :room_id');
+      $this->db->bind(':room_id', $room_id); // bind room id
+      $rooms = $this->db->resultSet();
+      return count($rooms);
+    }// end function
+
+
 
     public function getRoomHashId($room_id) {
       /* returns hash_id of a room for a integer room id
