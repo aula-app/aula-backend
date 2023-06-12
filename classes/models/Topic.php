@@ -10,7 +10,7 @@ if ($allowed_include==1){
 
 
 
-class Idea {
+class Topic {
     private $db;
 
 
@@ -543,7 +543,7 @@ class Idea {
 
         $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET description'.$description_appendix.' = :description, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
         // bind all VALUES
-        $this->db->bind(':description', $description;
+        $this->db->bind(':description', $description);
         $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
 
         $this->db->bind(':topic_id', $idea_id); // idea that is updated
