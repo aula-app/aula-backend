@@ -9,13 +9,16 @@ if ($allowed_include==1){
 }
 
 
+
 class Idea {
     private $db;
+
 
     public function __construct($db, $crypt, $syslog) {
         // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
         $this->db = $db;
         $this->crypt = $crypt;
+        //$this->syslog = new Systemlog ($db);
         $this->syslog = $syslog;
 
         $au_rooms = 'au_rooms';
@@ -90,7 +93,7 @@ class Idea {
     }// end function
 
     public function getIdeaTopic ($idea_id) {
-      /* returns sum of votes of an idea for a integer idea id
+      /* returns the topic for a specificc idea integer idea id
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
@@ -210,7 +213,23 @@ class Idea {
       if (count($topics)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return $topics[0]['id']; // return idea id
+        return $topics[0]['id']; // return topic id
+      }
+    }// end function
+
+    public function getTopicsByRoom($room_id) {
+      /* Returns all topics including the topic information as associative array for a certain room (room_id, int)
+      */
+      $room_id = $this->checkRoomId($room_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_topics.' WHERE room_id = :room_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $topics = $this->db->resultSet();
+      if (count($topics)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $topics; // return topics as associatvie array
       }
     }// end function
 
@@ -1625,6 +1644,21 @@ class Idea {
       }
     } // end function
 
+    private function checkRoomId ($room_id) {
+      /* helper function that checks if a room id is a standard db id (int) or if a hash room id was passed
+      if a hash was passed, function gets db room id and returns db id
+      */
+
+      if (is_int($room_id))
+      {
+        return $room_id;
+      } else
+      {
+
+        return $this->getRoomIdByHashId ($room_id);
+      }
+    } // end function
+
     private function checkTopicId ($topic_id) {
       /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
       if a hash was passed, function gets db topic id and returns db id
@@ -1639,7 +1673,19 @@ class Idea {
       }
     } // end function
 
+    public function getRoomIdByHashId($hash_id) {
+      /* Returns Database ID of room when hash_id is provided
+      */
 
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $rooms = $this->db->resultSet();
+      if (count($rooms)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $rooms[0]['id']; // return room id
+      }
+    }// end function
 
     private function sendMessage ($user_id, $msg){
       /* send a message to the dashboard of the user
