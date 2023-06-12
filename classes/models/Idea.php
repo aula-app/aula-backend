@@ -217,21 +217,6 @@ class Idea {
       }
     }// end function
 
-    public function getTopicsByRoom($room_id) {
-      /* Returns all topics including the topic information as associative array for a certain room (room_id, int)
-      */
-      $room_id = $this->checkRoomId($room_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-
-
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_topics.' WHERE room_id = :room_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $topics = $this->db->resultSet();
-      if (count($topics)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $topics; // return topics as associatvie array
-      }
-    }// end function
 
     public function reportIdea ($idea_id, $user_id, $updater_id, $reason =""){
       /* sets the status of an idea to 3 = reported
@@ -351,10 +336,9 @@ class Idea {
       if (count($ideas)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return $ideas[0]; // idea found, return status
+        return 1; // idea found, return 1
       }
     } // end function
-
 
       public function checkTopicExist($topic_id) {
         /* returns 0 if topic does not exist, 1 if topic exists, accepts database id (int)
@@ -367,7 +351,7 @@ class Idea {
         if (count($topic_id)<1){
           return 0; // nothing found, return 0 code
         }else {
-          return $topic_id[0]; // topic found, return status
+          return 1; // topic found, return 1
         }
       } // end function
 
@@ -429,6 +413,8 @@ class Idea {
     public function removeIdeaFromTopic($topic_id, $idea_id) {
       /* removes an idea from a topic
       */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_topics_ideas.' WHERE idea_id = :idea_id AND topic_id = :topic_id' );
       $this->db->bind(':topic_id', $topic_id); // bind topic id
@@ -453,6 +439,7 @@ class Idea {
     public function removeAllIdeasFromTopic ($topic_id) {
       /* removes all associations of ideas from a topic
       */
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_topics_ideas.' WHERE topic_id = :topic_id' );
       $this->db->bind(':topic_id', $topic_id); // bind topic id
@@ -685,86 +672,6 @@ class Idea {
       }
     }// end function
 
-
-
-    public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
-      /* returns idealist (associative array) with start and limit provided
-      if start and limit are set to 0, then the whole list is read (without limit)
-      orderby is the field (int, see switch), defaults to last_update (3)
-      asc (smallint), is either ascending (1) or descending (0), defaults to descending
-      $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-      extra_where = extra parameters for where clause, synthax " AND XY=4"
-      */
-
-      // init vars
-      $orderby_field="";
-      $asc_field ="";
-
-      $limit_string=" LIMIT :offset , :limit ";
-      $limit_active=true;
-
-      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
-      if ($offset==0 && $limit==0){
-        $limit_string="";
-        $limit_active=false;
-      }
-
-      switch (intval ($orderby)){
-        case 0:
-        $orderby_field = "status";
-        break;
-        case 1:
-        $orderby_field = "name";
-        break;
-        case 2:
-        $orderby_field = "created";
-        break;
-        case 3:
-        $orderby_field = "last_update";
-        break;
-        case 4:
-        $orderby_field = "id";
-        break;
-
-        default:
-        $orderby_field = "last_update";
-      }
-
-      switch (intval ($asc)){
-        case 0:
-        $asc_field = "DESC";
-        break;
-        case 1:
-        $asc_field = "ASC";
-        break;
-        default:
-        $asc_field = "DESC";
-      }
-
-      $stmt = $this->db->query('SELECT '.$this->au_topics.'.content, '.$this->au_topics.'.hash_id, '.$this->au_topics.'.id, '.$this->au_topics.'.sum_likes, '.$this->au_topics.'.sum_votes, '.$this->au_topics.'.last_update, '.$this->au_topics.'.created FROM '.$this->au_topics.' WHERE '.$this->au_ideas.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      if ($limit){
-        // only bind if limit is set
-        $this->db->bind(':offset', $offset); // bind limit
-        $this->db->bind(':limit', $limit); // bind limit
-      }
-      $this->db->bind(':status', $status); // bind status
-
-      $err=false;
-      try {
-        $topics = $this->db->resultSet();
-
-      } catch (Exception $e) {
-          echo 'Error occured while getting topics: ',  $e->getMessage(), "\n"; // display error
-          $err=true;
-          return 0;
-      }
-
-      if (count($topics)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $topics; // return an array (associative) with all the data
-      }
-    }// end function
 
     public function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id) {
       /* returns idealist (associative array) with start and limit provided
@@ -1726,63 +1633,6 @@ class Idea {
 
     }// end function
 
-    public function removeDelegationsTopic ($topic_id){
-      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
-
-      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE topic_id = :id');
-      $this->db->bind (':id', $idea_id);
-      $err=false;
-      try {
-        $action = $this->db->execute(); // do the query
-
-      } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
-          $err=true;
-      }
-      if (!$err)
-      {
-        $this->syslog->addSystemEvent(0, "Delegations for topic deleted, id=".$topic_id."", 0, "", 1);
-        //check for action
-        // remove delegations and remove associations with this topic
-
-        return intval ($this->db->rowCount()); // return number of affected rows to calling script
-      } else {
-        $this->syslog->addSystemEvent(1, "Error deleting delegations for topic with id ".$topic_id, 0, "", 1);
-        return 0; // return 0 to indicate that there was an error executing the statement
-      }
-    }
-
-    public function deleteTopic($topic_id, $updater_id=0) {
-        /* deletes topic, cleans up and returns the number of rows (int) accepts idea id or idea hash id //
-
-        */
-        $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
-
-        $stmt = $this->db->query('DELETE FROM '.$this->au_topics.' WHERE id = :id');
-        $this->db->bind (':id', $idea_id);
-        $err=false;
-        try {
-          $action = $this->db->execute(); // do the query
-
-        } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
-            $err=true;
-        }
-        if (!$err)
-        {
-          $this->syslog->addSystemEvent(0, "Topic deleted, id=".$topic_id." by ".$updater_id, 0, "", 1);
-
-          // remove delegations and remove associations with this topic
-          $this->removeAllIdeasFromTopic ($topic_id);
-          $this->removeDelegationsTopic ($topic_id);
-
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
-        } else {
-          $this->syslog->addSystemEvent(1, "Error deleting topic with id ".$topic_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
-        }
-
-    }// end function
 
 } // end class
 ?>
