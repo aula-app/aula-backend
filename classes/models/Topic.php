@@ -1,0 +1,696 @@
+<?php
+// only process script if variable $allowed_include is set to 1, otherwise exit
+// this prevents direct call of this script
+
+if ($allowed_include==1){
+
+}else {
+  exit;
+}
+
+
+
+class Idea {
+    private $db;
+
+
+    public function __construct($db, $crypt, $syslog) {
+        // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
+        $this->db = $db;
+        $this->crypt = $crypt;
+        //$this->syslog = new Systemlog ($db);
+        $this->syslog = $syslog;
+
+        $au_rooms = 'au_rooms';
+        $au_groups = 'au_groups';
+        $au_ideas = 'au_ideas';
+        $au_votes = 'au_votes';
+        $au_topics = 'au_topics';
+        $au_delegation = 'au_delegation';
+        $au_reported = 'au_reported';
+        $au_users_basedata = 'au_users_basedata';
+        $au_rel_rooms_users ='au_rel_rooms_users';
+        $au_rel_groups_users ='au_rel_groups_users';
+        $au_rel_topics_ideas ='au_rel_topics_ideas';
+
+        $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
+        $this->$au_rooms = $au_rooms; // table name for rooms
+        $this->$au_delegation = $au_delegation; // table name for delegation
+        $this->$au_groups = $au_groups; // table name for groups
+        $this->$au_topics = $au_topics; // table name for topics
+        $this->$au_ideas = $au_ideas; // table name for ideas
+        $this->$au_votes = $au_votes; // table name for votes
+        $this->$au_reported = $au_reported; // table name for reportings
+
+        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
+        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
+        $this->$au_rel_topics_ideas = $au_rel_topics_ideas; // table name for relations topics - ideas
+    }// end function
+
+    public function getIdeaTopic ($idea_id) {
+      /* returns the topic for a specificc idea integer idea id
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+      $stmt = $this->db->query('SELECT topic_id FROM '.$this->au_rel_topics_ideas.' WHERE idea_id = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return 0; // nothing found, return 0,0 code
+      }else {
+        return $ideas[0]['topic_id']; // return topic id for the idea
+      }
+    }// end function
+
+    protected function buildCacheHash ($key) {
+        return md5 ($key);
+      }
+
+
+    public function getIdeaHashId($idea_id) {
+      /* returns hash_id of an idea for a integer idea id
+      */
+      $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_ideas.' WHERE id = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return "0,0"; // nothing found, return 0 code
+      }else {
+        return "1,".$ideas[0]['hash_id']; // return hash id for the idea
+      }
+    }// end function
+
+    private function checkUserId ($user_id) {
+      /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
+      if a hash was passed, function gets db user id and returns db id
+      */
+
+      if (is_int($user_id))
+      {
+        return $user_id;
+      } else
+      {
+
+        return $this->getUserIdByHashId ($user_id);
+      }
+    } // end function
+
+
+    public function getUserIdByHashId($hash_id) {
+      /* Returns Database ID of user when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $users[0]['id']; // return user id
+      }
+    }// end function
+
+    public function getIdeaIdByHashId($hash_id) {
+      /* Returns Database ID of idea when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $ideas[0]['id']; // return idea id
+      }
+    }// end function
+
+    public function getTopicIdByHashId($hash_id) {
+      /* Returns Database ID of idea when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $topics = $this->db->resultSet();
+      if (count($topics)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $topics[0]['id']; // return topic id
+      }
+    }// end function
+
+    public function getTopicsByRoom($room_id) {
+      /* Returns all topics including the topic information as associative array for a certain room (room_id, int)
+      */
+      $room_id = $this->checkRoomId($room_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_topics.' WHERE room_id = :room_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $topics = $this->db->resultSet();
+      if (count($topics)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $topics; // return topics as associatvie array
+      }
+    }// end function
+
+    public function reportTopic ($topic_id, $user_id, $updater_id, $reason =""){
+      /* sets the status of an topic to 3 = reported, adds entry to reported table
+      accepts db id and hash id of topic
+      user_id is the id of the user that reported the topic
+      updater_id is the id of the user that did the update
+      */
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      // check if idea is existent
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE id = :topic_id');
+      $this->db->bind(':topic_id', $topic_id); // bind user id
+      $topics = $this->db->resultSet();
+      if (count($topics)<1){
+        return ('0,3'); // topic does not exist
+      } // else continue processing
+      // check if this user has already reported this topic
+      $stmt = $this->db->query('SELECT object_id FROM '.$this->au_reported.' WHERE user_id = :user_id AND type = 1 AND object_id = :topic_id');
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->bind(':topic_id', $topic_id); // bind topic id
+      $topics = $this->db->resultSet();
+      if (count($topics)<1){
+        //add this reporting to db
+        $stmt = $this->db->query('INSERT INTO '.$this->au_reported.' (reason, object_id, type, user_id, status, created, last_update) VALUES (:reason, :topic_id, 1, :user_id, 0, NOW(), NOW())');
+        // bind all VALUES
+
+        $this->db->bind(':topic_id', $topic_id);
+        $this->db->bind(':user_id', $user_id);
+        $this->db->bind(':reason', $reason);
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        $insertid = intval($this->db->lastInsertId());
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added new reporting topic (#".$insertid.") ".$content, 0, "", 1);
+          // set idea status to reported
+          $this->setIdeaStatus($idea_id, 3, $updater_id=0);
+          return '1,1'; // nothing found, return 0 code
+
+        } else {
+          $this->syslog->addSystemEvent(1, "Error reporting topic ".$content, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+      }else {
+        return '0,1'; // return error, user has already reported this idea
+      }
+
+    } // end function
+
+
+    public function archiveTopic ($topic_id, $updater_id){
+      /* sets the status of an topic to 4 = archived
+      accepts db id and hash id of topic
+      updater_id is the id of the user that did the update
+      */
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+      return $this->setIdeaStatus($topic_id, 4, $updater_id=0);
+
+    }
+
+    public function activateTopic ($topic_id, $updater_id){
+      /* sets the status of a topic  to 1 = active
+      accepts db id and hash id of topic
+      updater_id is the id of the user that did the update
+      */
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      return $this->setTopicStatus($topic_id, 1, $updater_id=0);
+
+    }
+
+    public function deactivateTopic ($topic_id, $updater_id){
+      /* sets the status of a topic to 0 = inactive
+      accepts db id and hash id of topic
+      updater_id is the id of the user that did the update
+      */
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      return $this->setTopicStatus($topic_id, 0, $updater_id=0);
+    }
+
+    public function setTopictoReview ($topic_id, $updater_id){
+      /* sets the status of a topic to 5 = in review
+      accepts db id and hash id of topic
+
+      updater_id is the id of the user that did the update
+      */
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      return $this->setTopicStatus($topic_id, 5, $updater_id=0);
+
+    }
+
+
+    public function checkIdeaExist($idea_id) {
+      /* returns 0 if idea does not exist, 1 if idea exists, accepts database id (int)
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+      $stmt = $this->db->query('SELECT status, room_id FROM '.$this->au_ideas.' WHERE id = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1;
+      }
+    } // end function
+
+
+      public function checkTopicExist($topic_id) {
+        /* returns 0 if topic does not exist, 1 if topic exists, accepts database id (int)
+        */
+        $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+        $stmt = $this->db->query('SELECT status, room_id FROM '.$this->au_topics.' WHERE id = :id');
+        $this->db->bind(':id', $topic_id); // bind topic id
+        $topic_id = $this->db->resultSet();
+        if (count($topic_id)<1){
+          return 0; // nothing found, return 0 code
+        }else {
+          return 1;
+        }
+      } // end function
+
+    public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
+      /* returns idealist (associative array) with start and limit provided
+      if start and limit are set to 0, then the whole list is read (without limit)
+      orderby is the field (int, see switch), defaults to last_update (3)
+      asc (smallint), is either ascending (1) or descending (0), defaults to descending
+      $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+      extra_where = extra parameters for where clause, synthax " AND XY=4"
+      */
+
+      // init vars
+      $orderby_field="";
+      $asc_field ="";
+
+      $limit_string=" LIMIT :offset , :limit ";
+      $limit_active=true;
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+        $limit_active=false;
+      }
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = "status";
+        break;
+        case 1:
+        $orderby_field = "name";
+        break;
+        case 2:
+        $orderby_field = "created";
+        break;
+        case 3:
+        $orderby_field = "last_update";
+        break;
+        case 4:
+        $orderby_field = "id";
+        break;
+
+        default:
+        $orderby_field = "last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+
+      $stmt = $this->db->query('SELECT '.$this->au_topics.'.content, '.$this->au_topics.'.hash_id, '.$this->au_topics.'.id, '.$this->au_topics.'.sum_likes, '.$this->au_topics.'.sum_votes, '.$this->au_topics.'.last_update, '.$this->au_topics.'.created FROM '.$this->au_topics.' WHERE '.$this->au_ideas.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      if ($limit){
+        // only bind if limit is set
+        $this->db->bind(':offset', $offset); // bind limit
+        $this->db->bind(':limit', $limit); // bind limit
+      }
+      $this->db->bind(':status', $status); // bind status
+
+      $err=false;
+      try {
+        $topics = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while getting topics: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return 0;
+      }
+
+      if (count($topics)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $topics; // return an array (associative) with all the data
+      }
+    }// end function
+
+    public function addTopic ($name, $description_internal, $description_public, $status, $order_importance=10, $updater_id=0, $room_id=0) {
+        /* adds a new topic and returns insert id (idea id) if successful, accepts the above parameters
+         name = name of the topic, description_internal = shown only to admins for internal use
+         desciption_public = shown in frontend, order_importance = order bias for sorting in the frontend
+         status = status of inserted topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+
+        */
+
+        //sanitize the vars
+        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $status = intval($status);
+        $room_id = intval($room_id);
+        $order_importance = intval ($order_importance);
+        $description_internal = trim ($description_internal);
+        $description_public = trim ($description_public);
+
+
+        $stmt = $this->db->query('INSERT INTO '.$this->au_ideas.' (name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+        // bind all VALUES
+
+        $this->db->bind(':name', $name);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':description_public', $description_public);
+        $this->db->bind(':description_internal', $description_internal);
+        $this->db->bind(':room_id', $room_id);
+        // generate unique hash for this idea
+        $testrand = rand (100,10000000);
+        $appendix = microtime(true).$testrand;
+        $hash_id = md5($content.$appendix); // create hash id for this idea
+        $this->db->bind(':hash_id', $hash_id);
+        $this->db->bind(':order_importance', $order_importance); // order parameter
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        $insertid = intval($this->db->lastInsertId());
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added new topic (#".$insertid.") ".$name, 0, "", 1);
+          return $insertid; // return insert id to calling script
+
+        } else {
+          $this->syslog->addSystemEvent(1, "Error adding topic ".$name, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+
+
+    }// end function
+
+
+    public function setTopicStatus($topic_id, $status, $updater_id = 0) {
+        /* edits a topic and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         status = status of idea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+         updater_id is the id of the idea that commits the update (i.E. admin )
+        */
+        $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        // bind all VALUES
+        $this->db->bind(':status', $status);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':topic_id', $topic_id); // topic that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Topic status changed ".$topic_id." by ".$updater_id, 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing status of topic ".$topic_id." by ".$updater_id, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
+    public function setTopicOrder($topic_id, $order_importance = 10, $updater_id = 0) {
+        /* edits a topic and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         status = status of idea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+         updater_id is the id of the idea that commits the update (i.E. admin )
+        */
+        $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET order_importance = :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        // bind all VALUES
+        $this->db->bind(':order_importance', $order_importance);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':topic_id', $topic_id); // topic that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Topic order changed ".$topic_id." by ".$updater_id, 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing order of topic ".$topic_id." by ".$updater_id, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
+    public function setTopicName($topic_id, $name, $updater_id=0) {
+        /* edits a topic and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         content = content of the idea
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $idea_id = $this->checkIdeaId($topic_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+        // sanitize
+        $name = trim ($name);
+
+        $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET name= :name, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        // bind all VALUES
+        $this->db->bind(':name', $name;
+        $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+
+        $this->db->bind(':topic_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Topic name changed ".$topic_id." by ".$updater_id, 0, "", 1);
+          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing topic name ".$topic_id." by ".$updater_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+    }// end function
+
+
+    public function setTopicDescription($topic_id, $description, $type = 0, $updater_id = 0) {
+        /* Chenges the descirption of a topic and returns number of rows if successful, accepts the above parameters
+         description = description of the idea
+         type = 0 = desciption_public
+         type = 1 = description internal
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $idea_id = $this->checkIdeaId($topic_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        if ($type == 0) {
+          $description_appendix = "_public";
+        } else {
+          $description_appendix = "_internal";
+        }
+        // sanitize
+        $description = trim ($description);
+
+        $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET description'.$description_appendix.' = :description, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        // bind all VALUES
+        $this->db->bind(':description', $description;
+        $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+
+        $this->db->bind(':topic_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Topic description changed ".$topic_id." by ".$updater_id, 0, "", 1);
+          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing topic description ".$topic_id." by ".$updater_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+    }// end function
+
+    private function checkIdeaId ($idea_id) {
+      /* helper function that checks if a idea id is a standard db id (int) or if a hash idea id was passed
+      if a hash was passed, function gets db idea id and returns db id
+      */
+
+      if (is_int($idea_id))
+      {
+        return $idea_id;
+      } else
+      {
+        return $this->getIdeaIdByHashId ($idea_id);
+      }
+    } // end function
+
+    private function checkRoomId ($room_id) {
+      /* helper function that checks if a room id is a standard db id (int) or if a hash room id was passed
+      if a hash was passed, function gets db room id and returns db id
+      */
+
+      if (is_int($room_id))
+      {
+        return $room_id;
+      } else
+      {
+
+        return $this->getRoomIdByHashId ($room_id);
+      }
+    } // end function
+
+    private function checkTopicId ($topic_id) {
+      /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
+      if a hash was passed, function gets db topic id and returns db id
+      */
+
+      if (is_int($topic_id))
+      {
+        return $topic_id;
+      } else
+      {
+        return $this->getTopicIdByHashId ($topic_id);
+      }
+    } // end function
+
+    public function getRoomIdByHashId($hash_id) {
+      /* Returns Database ID of room when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $rooms = $this->db->resultSet();
+      if (count($rooms)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $rooms[0]['id']; // return room id
+      }
+    }// end function
+
+    private function sendMessage ($user_id, $msg){
+      /* send a message to the dashboard of the user
+      yet to be written
+      */
+
+      $success = 0;
+      return $success;
+    }
+
+
+    public function removeDelegationsTopic ($topic_id){
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE topic_id = :id');
+      $this->db->bind (':id', $idea_id);
+      $err=false;
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "Delegations for topic deleted, id=".$topic_id."", 0, "", 1);
+        //check for action
+        // remove delegations and remove associations with this topic
+
+        return intval ($this->db->rowCount()); // return number of affected rows to calling script
+      } else {
+        $this->syslog->addSystemEvent(1, "Error deleting delegations for topic with id ".$topic_id, 0, "", 1);
+        return 0; // return 0 to indicate that there was an error executing the statement
+      }
+    }
+
+    public function deleteTopic($topic_id, $updater_id=0) {
+        /* deletes topic, cleans up and returns the number of rows (int) accepts idea id or idea hash id //
+
+        */
+        $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+        $stmt = $this->db->query('DELETE FROM '.$this->au_topics.' WHERE id = :id');
+        $this->db->bind (':id', $idea_id);
+        $err=false;
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Topic deleted, id=".$topic_id." by ".$updater_id, 0, "", 1);
+
+          // remove delegations and remove associations with this topic
+          $this->removeAllIdeasFromTopic ($topic_id);
+          $this->removeDelegationsTopic ($topic_id);
+
+          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error deleting topic with id ".$topic_id." by ".$updater_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+
+    }// end function
+
+} // end class
+?>
