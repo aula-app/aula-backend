@@ -1172,7 +1172,7 @@ class Idea {
 
     public function IdeaSetVotes ($idea_id, $votes) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-         approves an idea (usually by school administration)
+         sets sum_votes of a specific idea to a specific value (votes)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
@@ -1202,6 +1202,33 @@ class Idea {
         }
     }// end function
 
+    public function resetVotes () {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         resets all votes for ideas in the database (vote_sum)
+
+        */
+        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = 0, last_update= NOW()');
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Resetting all votes", 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error resetting votes", 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
 
 
     public function setContent($idea_id, $content, $updater_id=0) {
