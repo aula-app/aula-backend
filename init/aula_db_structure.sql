@@ -7,7 +7,7 @@
 #
 # Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-12 11:30:12 +0000
+# Verarbeitungszeit: 2023-06-13 13:05:09 +0000
 # ************************************************************
 
 
@@ -140,6 +140,7 @@ CREATE TABLE `au_groups` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the group',
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set then access code is needed to join group',
   `group_order` int(11) DEFAULT NULL COMMENT 'order htat groups are shown (used for display)',
+  `votes_per_user` int(11) DEFAULT NULL COMMENT 'votes available per user in this group',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -402,23 +403,6 @@ CREATE TABLE `au_rel_rooms_media` (
   `last_update` datetime DEFAULT NULL,
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`room_id`,`media_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
-
-
-# Tabellen-Dump au_rel_rooms_topics
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_rel_rooms_topics`;
-
-CREATE TABLE `au_rel_rooms_topics` (
-  `room_id` int(11) NOT NULL COMMENT 'id of the room',
-  `topic_id` int(11) NOT NULL COMMENT 'id of the topic',
-  `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active 2=suspended',
-  `create` datetime DEFAULT NULL COMMENT 'create date',
-  `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'updater_id',
-  PRIMARY KEY (`room_id`,`topic_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 
@@ -873,9 +857,7 @@ CREATE TABLE `au_votes` (
   `status` int(11) DEFAULT NULL COMMENT '0=inactive, 1=active, 2= temporarily suspended',
   `created` datetime DEFAULT NULL COMMENT 'time of first creation',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update on this dataset',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the vote',
-  `original_user_id` int(11) DEFAULT NULL COMMENT 'id of original owner of the vote',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
