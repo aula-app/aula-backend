@@ -50,31 +50,31 @@ class Idea {
     public function getIdeaBaseData($idea_id) {
       /* returns idea base data for a specified db id */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-
       $stmt = $this->db->query('SELECT * FROM '.$this->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $ideas['id'] = 0;
+        return $ideas['id']; // nothing found, return 0 code
       }else {
         return $ideas[0]; // return an array (associative) with all the data for the idea
       }
     }// end function
 
-    public function getIdeaContent ($idea_id) {
-      /* returns content, sum votes, sum likes, create, last_update, hash id and the user displayname of an idea for a integer idea id
-      */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        public function getIdeaContent ($idea_id) {
+          /* returns content, sum votes, sum likes, create, last_update, hash id and the user displayname of an idea for a integer idea id
+          */
+          $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT '.$this->au_ideas.'.content, '.$this->au_ideas.'.hash_id, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.created, '.$this->au_users_basedata.'.displayname FROM '.$this->au_ideas.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.id='.$this->au_users_basedata.'.id) WHERE '.$this->au_ideas.'.id = :id');
-      $this->db->bind(':id', $idea_id); // bind idea id
-      $ideas = $this->db->resultSet();
-      if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $ideas[0]; // return content for the idea
-      }
-    }// end function
+          $stmt = $this->db->query('SELECT '.$this->au_ideas.'.content, '.$this->au_ideas.'.hash_id, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.created, '.$this->au_users_basedata.'.displayname FROM '.$this->au_ideas.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.id='.$this->au_users_basedata.'.id) WHERE '.$this->au_ideas.'.id = :id');
+          $this->db->bind(':id', $idea_id); // bind idea id
+          $ideas = $this->db->resultSet();
+          if (count($ideas)<1){
+            return 0; // nothing found, return 0 code
+          }else {
+            return $ideas[0]; // return content for the idea
+          }
+        }// end function
 
 
     public function getIdeaVotes ($idea_id) {
@@ -168,7 +168,7 @@ class Idea {
       $available_votes = $this->checkAvailableVotesUser ($user_id, $idea_id);
 
       // check for delegations
-      $vote_factor = $this->getDelegations ($user_id, $room_id, $idea_id);
+      $vote_factor = $this->getVoteBiasDelegations ($user_id, $room_id, $idea_id);
 
       $has_delegated = $this->userHasDelegated($user_id, $room_id);
       return $has_delegated.",".$vote_factor.",".$available_votes; // returns status of the voting for a specific user idea and room
@@ -575,7 +575,7 @@ class Idea {
 
     protected function checkIfVoteWasMade ($user_id, $idea_id){
       // checks if there already is a vote by this user (user_id) for this idea (idea_id)
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_votes.' WHERE user_id_original = :user_id AND idea_id = :idea_id AND status = 1');
+      $stmt = $this->db->query('SELECT vote_value FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id AND status = 1 AND (vote_value > 0 OR vote_value < 0)');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
       $votes = $this->db->resultSet();
@@ -587,33 +587,33 @@ class Idea {
       }
     }
 
-    protected function getDelegations($user_id, $room_id, $idea_id) {
+    protected function getVoteBiasDelegations ($user_id, $topic_id, $idea_id) {
       /* returns number of delegated votes to this user (user_id), accepts database id (int)
       */
-      $stmt = $this->db->query('SELECT '.$this->au_delegation.'.status, '.$this->au_delegation.'.user_id_original, '.$this->au_rel_topics_ideas.'.topic_id FROM '.$this->au_delegation.' INNER JOIN '.$this->au_rel_topics_ideas.' ON ('.$this->au_delegation.'.idea_id = '.$this->au_rel_topics_ideas.'.idea_id) WHERE user_id_target = :user_id AND room_id = :room_id AND status = 1');
+      $stmt = $this->db->query('SELECT status, user_id_original FROM '.$this->au_delegation.' WHERE user_id_target = :user_id AND topic_id = :topic_id AND status = 1');
       $this->db->bind(':user_id', $user_id); // bind user id
-      $this->db->bind(':room_id', $room_id); // bind room id
+      $this->db->bind(':topic_id', $topic_id); // bind topic id
       $delegations = $this->db->resultSet();
       $count_delegations = count ($delegations);
 
       // save delegated votes of original user into votes table of db
+      $vote_bias = 1; // init vote bias
       foreach ($delegations as $result) {
           // check if original owner has already voted - if yes then reduce the count for vote bias by 1
+          //echo ("<br>FOUND DELEGATION from ...".$result['user_id_original']);
           $user_original = $result['user_id_original'];
-          if ($this->checkIfVoteWasMade($user_original, $idea_id)==1)
+          if ($this->checkIfVoteWasMade($user_original, $idea_id)==0)
           {
-            // original owner of the delegated vote has already voted (although he delegated)
-            $count_delegations = $count_delegations - 1; // reduce the bias for the vote by 1
-            // safety
-            if ($count_delegations<0){
-              $count_delegations = 0;
-            }
+            // original owner of the delegated vote has not voted yet (although he delegated)
+            // echo ("<br>Original owner has not voted yet...".$vote_bias);
+            $vote_bias++; // increase the bias for the vote by 1
+
           }
           $original_user = $result['user_id_original'];
-          $this->addVoteUser($original_user, $idea_id, 0 , $original_user);
+
       } // end foreach
 
-      return $count_delegations;
+      return $vote_bias;
 
     } // end function
 
@@ -1170,6 +1170,38 @@ class Idea {
         }
     }// end function
 
+    public function IdeaSetVotes ($idea_id, $votes) {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         approves an idea (usually by school administration)
+         updater_id is the id of the idea that commits the update (i.E. admin )
+        */
+        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = :votes, last_update= NOW() WHERE id= :idea_id');
+        // bind all VALUES
+        $this->db->bind(':votes', $votes); // vote value
+
+        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." votes set to ".$votes, 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error setting votes from idea ".$idea_id." to ".$votes, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
 
 
     public function setContent($idea_id, $content, $updater_id=0) {
@@ -1208,38 +1240,32 @@ class Idea {
     protected function checkAvailableVotesUser ($user_id, $idea_id){
       // returns how many votes are still available for a certain idea
 // get available votes for idea_id
-      $stmt = $this->db->query('SELECT votes_available_per_user FROM '.$this->au_ideas.' WHERE id = :idea_id');
-      $this->db->bind(':idea_id', $idea_id); // bind idea id
-      $ideas = $this->db->resultSet();
-      $votes_available = $ideas[0]['votes_available_per_user'];
-
       // check if user has delegated votes
-      // check if vote is delegated
-      $original_user_id = $user_id;
 
-
-      $stmt = $this->db->query('SELECT user_id FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $stmt = $this->db->query('SELECT user_id FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id AND (vote_value > 0 OR vote_value < 0)');
       $this->db->bind(':idea_id', $idea_id); // bind idea id
       $this->db->bind(':user_id', $user_id); // bind user id
 
       $votes = $this->db->resultSet();
 
-      $actual_votes_available = intval (intval ($votes_available)-intval (count($votes))); // return number of total votes for this idea by this user
+      $actual_votes_available = intval (1-intval (count($votes))); // return number of total votes for this idea by this user
+
+      if ($actual_votes_available < 0 || $actual_votes_available == 0){
+        $actual_votes_available = 0;
+      } else {
+        $actual_votes_available = 1;
+      }
 
       return $actual_votes_available;
     }
 
-    protected function addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $original_user_id) {
+    protected function addVoteUser ($user_id, $idea_id, $vote_value) {
       // add a vote into vote table for a certain user and idea
 
-      $stmt = $this->db->query('INSERT INTO '.$this->au_votes.' (status, vote_value, user_id, idea_id, last_update, created, updater_id, hash_id, original_user_id) VALUES (1, :vote_value, :user_id, :idea_id, NOW(), NOW(), :updater_id, :hash_id, :original_user_id)');
+      $stmt = $this->db->query('INSERT INTO '.$this->au_votes.' (status, vote_value, user_id, idea_id, last_update, created, hash_id) VALUES (1, :vote_value, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
       // bind all VALUES
-      $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
-
       $this->db->bind(':idea_id', $idea_id); // idea id
       $this->db->bind(':user_id', $user_id); // user id
-      $this->db->bind(':original_user_id', $original_user_id); // original user id
-      $this->db->bind(':updater_id', $updater_id); // updater id
       $this->db->bind(':vote_value', $vote_value); // vote value1
       // generate unique hash for this vote
       $testrand = rand (100,10000000);
@@ -1264,7 +1290,35 @@ class Idea {
       }
     }
 
-    protected function revokeVoteUser ($user_id, $idea_id, $updater_id) {
+    public function setVoteUser ($user_id, $idea_id, $vote_value) {
+
+      // update sum of votes
+      $stmt = $this->db->query('UPDATE '.$this->au_votes.' SET vote_value = :vote_value, last_update= NOW() WHERE user_id = :user_id AND idea_id = :idea_id');
+      // bind all VALUES
+      $this->db->bind(':user_id', $user_id); // id of the user
+
+      $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") setting Vote - value: ".$vote_value." by ".$user_id, 0, "", 1);
+        return ("1,1");
+      } else {
+        $this->syslog->addSystemEvent(1, "Error setting vote value:  ".$vote_value." by ".$user_id." for idea #".$idea_id, 0, "", 1);
+        return ("0,0"); // return 0 to indicate that there was an error executing the statement
+      }
+    }
+
+    protected function revokeVoteUser ($user_id, $idea_id) {
       // add a vote into vote table for a certain user and idea
 
       // get vote value for this user on this idea
@@ -1320,12 +1374,12 @@ class Idea {
       $has_delegated = $this->db->resultSet();
 
       if (count ($has_delegated)>0) {
-        return 1;
+        return $has_delegated ['user_id_target'];
       }
       return 0;
     }
 
-    public function voteForIdea($idea_id, $vote_value, $user_id, $updater_id=0) {
+    public function voteForIdea($idea_id, $vote_value, $user_id) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          idea_id is obvious...accepts db id or hash id
          vote_value is -1, 0 , +1 (depending on positive or negative)
@@ -1334,90 +1388,127 @@ class Idea {
         */
 
         // sanitize vote value
-        $vote_value = intval ($vote_value);
-        // set maximum boundaries for vote value
-        if ($vote_value>1) {
-          $vote_value = 1;
-        }
-        if ($vote_value<-1) {
-          $vote_value = -1;
-        }
+      $vote_value = intval ($vote_value);
+      // set maximum boundaries for vote value
+      if ($vote_value>1) {
+        $vote_value = 1;
+      }
+      if ($vote_value<-1) {
+        $vote_value = -1;
+      }
 
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        // check if idea und user exist
-        $idea_exists = $this->checkIdeaExist ($idea_id);
-        $status_idea = $this->getIdeaStatus ($idea_id);
-        $room_id = $this->getIdeaRoom ($idea_id);
+      // check if idea und user exist
 
+      $idea_basedata = $this->getIdeaBaseData ($idea_id);
+      if ($idea_basedata['id'] == 0){
+        // idea does not exist
+        return ("0,0,0"); // return error code - idea non existant
+      }
+      $status_idea = $idea_basedata['status'];
+      $topic_id = $this->getIdeaTopic ($idea_id);
+      $room_id = $idea_basedata['room_id'];
 
-        if ($status_idea == 0 || $status_idea >1) {
-          // idea does not exist or status >1 (suspended or archived)
-          return ("0,1"); // return error (0) idea does not exist or is suspended /archived / in review (1)
+      if ($status_idea == 0 || $status_idea >1) {
+        // idea does not exist or status >1 (suspended or archived)
+        return ("0,1,0"); // return error (0) idea is inactive / suspended /archived / in review (1)
+      } // else continue processing
+
+      $sum_votes_correction = 0; // init correction value for vote_sum in idea table
+
+      $only_voting_once_allowed = 0; // 1 = user can only vote once, 0 = user can change vote any time
+
+      // check if user has infinite votes, if yes - disable everything
+      if ($this->getUserInfiniteVotesStatus($user_id)==0){
+        // user does not have infinite votes
+        // check if user has already used up his votes
+        if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
+          // votes are not available, user has used all votes
+          if ($only_voting_once_allowed==1) {
+
+            // voting is only allowed once
+            return ("0,2,0"); // all votes used already, return error
+          } else {
+            $vote_value_original = $this->getVoteValue ($user_id, $idea_id); // returns 0 if user has not yet voted
+            // user can vote (change his mind) as often as he wishes
+            $this->revokeVoteUser ($user_id, $idea_id); // remove votes from user
+            // correct sum votes for the idea
+            $current_sum = $this->getIdeaVotes ($idea_id);
+            // echo ("<br>current sum: ".$current_sum." vote value original: ".$vote_value_original);
+            $new_vote_value = intval (intval ($current_sum)-intval ($vote_value_original));
+            $this->IdeaSetVotes ($idea_id, $new_vote_value);
+
+          }
         } // else continue processing
 
-        // check if user has infinite votes, if yes - disable everything
-        if ($this->getUserInfiniteVotesStatus($user_id)==0){
-          // user does not have infinite votes
-          // check if user has delegated his votes to another user
-          if ($this->userHasDelegated($user_id, $room_id)==1){
-            // user has delegated his votes, check if the user that has received the votes already voted for the idea
-            // if yes, then remove the vote from the delegee and add a vote from the original owner of the vote
-            return "0,3"; // user has delegated his votes, return errorcode
-          }
+        // check if user has delegated his votes to another user
+        $delegated_user = $this->userHasDelegated($user_id, $topic_id);
+        if ($delegated_user==0){
+          // user has not delegated his votes, get vote bias by delegations to this user from other users
+          $votes_bias = $this->getVoteBiasDelegations ($user_id, $topic_id, $idea_id);
 
-          // check if user has already used up his votes
-          if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
-            // votes are not available, user has used all votes
-            return ("0,2"); // all votes used already, return error
-          } // else continue processing
+          // echo ("<br>getting votes bias: ".$votes_bias);
 
-          // check if this user has delegated votes
-          $vote_factor = $this->getDelegations ($user_id, $room_id, $idea_id);
-          // calculate vote factor based on delegations
-          if ($vote_factor <1) {
-            // no delegations were made, keep standard value
-            $vote_factor = 1;
-          }
+          // add total votes to db
+          // sum up votes
+          $vote_value_final = intval (intval ($votes_bias) * intval ($vote_value));
+          // addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $original_user_id)
+          $this->addVoteUser ($user_id, $idea_id, $vote_value_final);
+          $sum_votes_correction = $vote_value_final;
+          //echo ("<br>user has not delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
         } else {
-          // user has infinite votes
-          $vote_factor=1;
-        }
+          // user has delegated his votes, check if the user that has received the votes already voted for the idea
+          // reduce vote of the target user vote and add one vote
+          $vote_value_delegated = getVoteValue ($delegated_user, $idea_id); // returns 0 if user has not yet voted
+          $delegation_correction_sum = 0; // correction factor for sum_votes in idea table
+
+          if ($vote_value_delegated > 0 ){
+            $vote_value_delegated--; // decrement vote value for the vote of the user that it was delegated to
+            $delegation_correction_sum = -1; // correction for sum_votes in idea table
+          }
+          if ($vote_value_delegated < 0 ){
+            $vote_value_delegated++; // increment vote value for the vote of the user that it was delegated to
+            $delegation_correction_sum = 1; // correction for sum_votes in idea table
+          }
+          // add one vote to db for this user
+          $this->addVoteUser ($user_id, $idea_id, $vote_value);
+          // echo ("<br>user has delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
 
+          $sum_votes_correction = intval (intval ($vote_value) + intval ($delegation_correction_sum));
+          // correct vote of the delegated user and update in db
+          $this->setVoteUser ($delegated_user, $idea_id, $vote_value_delegated);
 
-        $vote_value = intval (intval ($vote_factor)*intval ($vote_value)+$vote_value);
+        } // end else
+      } // end if infintievotes check
 
-        // add user vote to db
-        $this->addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $user_id);
+      // update sum of votes in idea
+      $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = sum_votes +'.intval ($sum_votes_correction).', last_update= NOW() WHERE id= :idea_id');
+      // bind all VALUES
+      $this->db->bind(':idea_id', $idea_id); // idea that is updated
 
-        // update sum of votes
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = sum_votes +'.$vote_value.', last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
-        // bind all VALUES
-        $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+      $err=false; // set error variable to false
 
-        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+      try {
+        $action = $this->db->execute(); // do the query
 
-        $err=false; // set error variable to false
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") added Vote - value: ".$vote_value." by ".$user_id, 0, "", 1);
+        return ("1,1,".$sum_votes_correction);
 
-        try {
-          $action = $this->db->execute(); // do the query
-
-        } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
-            $err=true;
-        }
-        if (!$err)
-        {
-          $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") added Vote - value: ".$vote_value." by ".$updater_id, 0, "", 1);
-          return ("1,1");
-        } else {
-          $this->syslog->addSystemEvent(1, "Error adding vote idea (#".$idea_id.") value:  ".$vote_value." by ".$updater_id, 0, "", 1);
-          return ("0,0"); // return 0 to indicate that there was an error executing the statement
-        }
-        // add vote to database
+      } else {
+        $this->syslog->addSystemEvent(1, "Error adding vote idea (#".$idea_id.") value:  ".$vote_value." by ".$user_id, 0, "", 1);
+        return ("0,0,0"); // return 0 to indicate that there was an error executing the statement
+      }
+      // add vote to database
 
     }// end function
 
@@ -1515,7 +1606,6 @@ class Idea {
       /* helper function that checks if a idea id is a standard db id (int) or if a hash idea id was passed
       if a hash was passed, function gets db idea id and returns db id
       */
-
       if (is_int($idea_id))
       {
         return $idea_id;
@@ -1565,6 +1655,22 @@ class Idea {
         return 0; // nothing found, return 0 code
       }else {
         return $rooms[0]['id']; // return room id
+      }
+    }// end function
+
+    public function getVoteValue ($user_id, $idea_id) {
+      /* Returns vote value for a specified user and idea
+      */
+
+      $stmt = $this->db->query('SELECT vote_value FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->bind(':idea_id', $idea_id); // bind idea id
+
+      $rooms = $this->db->resultSet();
+      if (count($rooms)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return intval ($rooms[0]['vote_value']); // return vote value for this idea and user
       }
     }// end function
 
