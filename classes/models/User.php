@@ -299,8 +299,9 @@ class User {
       */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_original) WHERE '.$this->au_delegation.'.user_id_target = :id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_original) WHERE '.$this->au_delegation.'.user_id_target = :id AND '.$this->au_delegation.'.topic_id = :topic_id');
       $this->db->bind(':id', $user_id); // bind userid
+      $this->db->bind(':topic_id', $topic_id); // bind topic id
       $users = $this->db->resultSet();
       if (count($users)<1){
         return 0; // nothing found, return 0 code
@@ -315,8 +316,9 @@ class User {
       */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_target) WHERE '.$this->au_delegation.'.user_id_original = :id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_target) WHERE '.$this->au_delegation.'.user_id_original = :id AND '.$this->au_delegation.'.topic_id = :topic_id');
       $this->db->bind(':id', $user_id); // bind userid
+      $this->db->bind(':topic_id', $topic_id); // bind topic id
       $users = $this->db->resultSet();
       if (count($users)<1){
         return 0; // nothing found, return 0 code
@@ -326,32 +328,32 @@ class User {
     } // end function
 
 
-    public function giveBackAllDelegations ($user_id, $room_id = 0){
+    public function giveBackAllDelegations ($user_id, $topic_id = 0){
       // give back all delegations for a) a certain room (room id>0) or all delegations (room_id=0)
-      return $this->removeUserDelegations ($user_id, $room_id, 1); // 1 at the end indicates that target user is meant
+      return $this->removeUserDelegations ($user_id, $topic, 1); // 1 at the end indicates that target user is meant
     }
 
-    public function giveBackDelegation ($my_user_id, $user_id_original, $room_id = 0){
+    public function giveBackDelegation ($my_user_id, $user_id_original, $topic_id = 0){
       // give back delegations from a certain user ($user_id_original) for a) a certain room (room id>0) or all delegations (room_id=0)
-      return $this->removeSpecificDelegation ($my_user_id, $user_id_original, $room_id); // 1 at the end indicates that target user is meant
+      return $this->removeSpecificDelegation ($my_user_id, $user_id_original, $topic_id); // 1 at the end indicates that target user is meant
     }
 
-    public function removeSpecificDelegation ($user_id_target, $user_id_original, $room_id = 0){
+    public function removeSpecificDelegation ($user_id_target, $user_id_original, $topic_id = 0){
       /* remove delegation from a specific user A (user_id_original) to a specific user B (user_id_target) for
       a) a certain room (room id>0) or all delegations (room_id=0), defaults to all rooms
       */
       $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $user_id_original = $this->checkUserId($user_id_original); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $topic_id = $this->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $room_clause = "";
+      $topic_clause = "";
 
-      if ($room_id > 0){
+      if ($topic_id > 0){
         // room id is set to >0 -> delete only delegations for this user in the specified room
-        $room_clause = " AND room_id = ".$room_id;
+        $topic_clause = " AND topic_id = ".$topic_id;
       }
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE user_id_target = :user_id_target AND user_id_original = :user_id_original'.$room_clause);
+      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE user_id_target = :user_id_target AND user_id_original = :user_id_original'.$topic_clause);
       $this->db->bind (':user_id_target', $user_id_original);
       $this->db->bind (':user_id_original', $user_id_target);
 
@@ -365,16 +367,16 @@ class User {
       }
       if (!$err)
       {
-        $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for room ".$room_id, 0, "", 1);
+        $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for topic ".$topic_id, 0, "", 1);
         return ("1,".intval ($this->db->rowCount())); // return number of affected rows to calling script
       } else {
-        $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for room ".$room_id, 0, "", 1);
+        $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for topic ".$topicid, 0, "", 1);
         return "0,0"; // return 0 to indicate that there was an error executing the statement
       }
 
     }
 
-    public function removeUserDelegations ($user_id, $room_id = 0, $target = 0)
+    public function removeUserDelegations ($user_id, $topic_id = 0, $target = 0)
     {
       /* removes all delegations of a specified user (user id) for a specified room, accepts db id or hash id
        if room_id = 0 all delegations of the user are deleted
@@ -382,13 +384,13 @@ class User {
       */
 
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $topic_id = $this->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $room_clause = "";
+      $topic_clause = "";
 
-      if ($room_id > 0){
+      if ($topic_id > 0){
         // room id is set to >0 -> delete only delegations for this user in the specified room
-        $room_clause = " AND room_id = ".$room_id;
+        $topic_clause = " AND topic_id = ".$topic_id;
       }
 
       $target_user = "user_id_original";
@@ -396,7 +398,7 @@ class User {
         $target_user = "user_id_target";
       }
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE '.$target_user.' = :id'.$room_clause);
+      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE '.$target_user.' = :id'.$topic_clause);
       $this->db->bind (':id', $user_id);
       $err=false;
       try {
@@ -408,10 +410,10 @@ class User {
       }
       if (!$err)
       {
-        $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for room ".$room_id, 0, "", 1);
+        $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for topic ".$topic_id, 0, "", 1);
         return "1,".intval ($this->db->rowCount()); // return number of affected rows to calling script
       } else {
-        $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for room ".$room_id, 0, "", 1);
+        $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for topic ".$topic_id, 0, "", 1);
         return "0,0"; // return 0 to indicate that there was an error executing the statement
       }
 
