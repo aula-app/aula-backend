@@ -25,6 +25,7 @@ class Idea {
         $au_groups = 'au_groups';
         $au_ideas = 'au_ideas';
         $au_votes = 'au_votes';
+        $au_likes = 'au_likes';
         $au_topics = 'au_topics';
         $au_delegation = 'au_delegation';
         $au_reported = 'au_reported';
@@ -40,6 +41,7 @@ class Idea {
         $this->$au_topics = $au_topics; // table name for topics
         $this->$au_ideas = $au_ideas; // table name for ideas
         $this->$au_votes = $au_votes; // table name for votes
+        $this->$au_likes = $au_likes; // table name for likes
         $this->$au_reported = $au_reported; // table name for reportings
 
         $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
@@ -1202,6 +1204,117 @@ class Idea {
         }
     }// end function
 
+    public function IdeaSetLikes ($idea_id, $likes) {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         sets sum_likes of a specific idea to a specific value (likes)
+         updater_id is the id of the idea that commits the update (i.E. admin )
+        */
+        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_likes = :likes, last_update= NOW() WHERE id= :idea_id');
+        // bind all VALUES
+        $this->db->bind(':likes', $likes); // like value
+
+        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." likes set to ".$likes, 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error setting likes from idea ".$idea_id." to ".$likes, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
+    public function IdeaAddLike ($idea_id, $user_id) {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         Adds a like to an idea, increments sum_likes of a specific idea to a specific value (likes)
+         updater_id is the id of the idea that commits the update (i.E. admin )
+        */
+        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $user_id = $this->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        // Check if user liked already
+        if ($this->getLikeStatus($user_id, $idea_id)==1){
+          // user has already liked, return without incrementing vote
+          return "0,1";
+        }
+        else {
+          // add like to db
+          addLikeUser ($user_id, $idea_id);
+        }
+        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_likes = sum_likes + 1, last_update= NOW() WHERE id= :idea_id');
+        // bind all VALUES
+        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." incremented likes", 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error incrementing likes from idea ".$idea_id, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
+    public function IdeaRemoveLike ($idea_id, $user_id) {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         Adds a like to an idea, increments sum_likes of a specific idea to a specific value (likes)
+         updater_id is the id of the idea that commits the update (i.E. admin )
+        */
+        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+        if ($this->getLikeStatus($user_id, $idea_id)==0){
+          // user has already liked, return without incrementing vote
+          return "0,1";
+        }
+        else {
+          // add like to db
+          removeLikeUser ($user_id, $idea_id);
+        }
+
+        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_likes = sum_likes - 1, last_update= NOW() WHERE id= :idea_id');
+        // bind all VALUES
+        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." decrementing likes", 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error decrementing likes from idea ".$idea_id, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
     public function resetVotes () {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          resets all votes for ideas in the database (vote_sum)
@@ -1264,7 +1377,7 @@ class Idea {
         }
     }// end function
 
-    protected function checkAvailableVotesUser ($user_id, $idea_id){
+    public function checkAvailableVotesUser ($user_id, $idea_id){
       // returns how many votes are still available for a certain idea
 // get available votes for idea_id
       // check if user has delegated votes
@@ -1317,6 +1430,37 @@ class Idea {
       }
     }
 
+    protected function addLikeUser ($user_id, $idea_id) {
+      // add a like into like table for a certain user and idea
+
+      $stmt = $this->db->query('INSERT INTO '.$this->au_likes.' (status, user_id, idea_id, last_update, created, hash_id) VALUES (1, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
+      // bind all VALUES
+      $this->db->bind(':idea_id', $idea_id); // idea id
+      $this->db->bind(':user_id', $user_id); // user id
+      // generate unique hash for this vote
+      $testrand = rand (100,10000000);
+      $appendix = microtime(true).$testrand;
+      $hash_id = md5($user_id.$idea_id.$appendix); // create hash id for this vote
+      $this->db->bind(':hash_id', $hash_id); // hash id
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      if (!$err)
+      {
+        return 1;
+      } else {
+        return 0; // return 0 to indicate that there was an error executing the statement
+      }
+    }
+
+
     public function setVoteUser ($user_id, $idea_id, $vote_value) {
 
       // update sum of votes
@@ -1351,6 +1495,35 @@ class Idea {
       // get vote value for this user on this idea
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      // bind all VALUES
+
+      $this->db->bind(':idea_id', $idea_id); // idea id
+      $this->db->bind(':user_id', $user_id); // user id
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+        $rows = intval($this->db->rowCount());
+
+      } catch (Exception $e) {
+          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+      }
+      if (!$err)
+      {
+        return $rows;
+      } else {
+        return 0; // return 0 to indicate that there was an error executing the statement
+      }
+    }
+
+    public function removeLikeUser ($user_id, $idea_id) {
+      // add a vote into vote table for a certain user and idea
+
+      // get vote value for this user on this idea
+
+      $stmt = $this->db->query('DELETE FROM '.$this->au_likes.' WHERE user_id = :user_id AND idea_id = :idea_id');
       // bind all VALUES
 
       $this->db->bind(':idea_id', $idea_id); // idea id
@@ -1693,11 +1866,28 @@ class Idea {
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
 
-      $rooms = $this->db->resultSet();
-      if (count($rooms)<1){
+      $votes = $this->db->resultSet();
+      if (count($votes)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return intval ($rooms[0]['vote_value']); // return vote value for this idea and user
+        return intval ($votes[0]['vote_value']); // return vote value for this idea and user
+      }
+    }// end function
+
+    public function getLikeStatus ($user_id, $idea_id) {
+      /* Checks if user (user_id) has already liked a specific idea (idea_id)
+      returns 0 if not, returns 1 if yes
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->au_likes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->bind(':idea_id', $idea_id); // bind idea id
+
+      $likes = $this->db->resultSet();
+      if (count($likes)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1; // return user has already liked
       }
     }// end function
 
