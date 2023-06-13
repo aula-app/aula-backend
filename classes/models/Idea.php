@@ -1251,7 +1251,7 @@ class Idea {
         }
         else {
           // add like to db
-          addLikeUser ($user_id, $idea_id);
+          $this->addLikeUser ($user_id, $idea_id);
         }
         $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_likes = sum_likes + 1, last_update= NOW() WHERE id= :idea_id');
         // bind all VALUES
@@ -1289,7 +1289,7 @@ class Idea {
         }
         else {
           // add like to db
-          removeLikeUser ($user_id, $idea_id);
+          $this->removeLikeUser ($user_id, $idea_id);
         }
 
         $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_likes = sum_likes - 1, last_update= NOW() WHERE id= :idea_id');
