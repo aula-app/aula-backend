@@ -47,21 +47,6 @@ class Topic {
         $this->$au_rel_topics_ideas = $au_rel_topics_ideas; // table name for relations topics - ideas
     }// end function
 
-    public function getIdeaTopic ($idea_id) {
-      /* returns the topic for a specificc idea integer idea id
-      */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-
-      $stmt = $this->db->query('SELECT topic_id FROM '.$this->au_rel_topics_ideas.' WHERE idea_id = :id');
-      $this->db->bind(':id', $idea_id); // bind idea id
-      $ideas = $this->db->resultSet();
-      if (count($ideas)<1){
-        return 0; // nothing found, return 0,0 code
-      }else {
-        return $ideas[0]['topic_id']; // return topic id for the idea
-      }
-    }// end function
-
     protected function buildCacheHash ($key) {
         return md5 ($key);
       }
@@ -138,21 +123,86 @@ class Topic {
       }
     }// end function
 
-    public function getTopicsByRoom($room_id) {
-      /* Returns all topics including the topic information as associative array for a certain room (room_id, int)
+    public function getTopicsByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id) {
+      /* returns topiclist (associative array) with start and limit provided
+      if start and limit are set to 0, then the whole list is read (without limit)
+      orderby is the field (int, see switch), defaults to last_update (3)
+      asc (smallint), is either ascending (1) or descending (0), defaults to descending
+      $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+      $room_id is the id of the room
       */
-      $room_id = $this->checkRoomId($room_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
+      // init vars
+      $orderby_field="";
+      $asc_field ="";
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_topics.' WHERE room_id = :room_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $topics = $this->db->resultSet();
+      $limit_string=" LIMIT :offset , :limit ";
+      $limit_active=true;
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+        $limit_active=false;
+      }
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = "status";
+        break;
+        case 1:
+        $orderby_field = "order_importance";
+        break;
+        case 2:
+        $orderby_field = "created";
+        break;
+        case 3:
+        $orderby_field = "last_update";
+        break;
+        case 4:
+        $orderby_field = "id";
+        break;
+
+        default:
+        $orderby_field = "last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+      $where = ' WHERE '.$this->au_topics.'.status= :status AND '.$this->au_topics.'.room_id= :room_id ';
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_topics.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      if ($limit){
+        // only bind if limit is set
+        $this->db->bind(':offset', $offset); // bind limit
+        $this->db->bind(':limit', $limit); // bind limit
+      }
+      $this->db->bind(':status', $status); // bind status
+      $this->db->bind(':room_id', $room_id); // bind room id
+
+      $err=false;
+      try {
+        $topics = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while getting topics for room '.$room_id,  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return 0;
+      }
+
       if (count($topics)<1){
         return 0; // nothing found, return 0 code
       }else {
-        return $topics; // return topics as associatvie array
+        return $topics; // return an array (associative) with all the data
       }
     }// end function
+
 
     public function reportTopic ($topic_id, $user_id, $updater_id, $reason =""){
       /* sets the status of an topic to 3 = reported, adds entry to reported table
@@ -269,21 +319,34 @@ class Topic {
       }
     } // end function
 
+    public function getTopicBaseData ($topic_id) {
+      /* returns topic base data for a specified db id */
+      $topic_id = $this->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      public function checkTopicExist($topic_id) {
-        /* returns 0 if topic does not exist, 1 if topic exists, accepts database id (int)
-        */
-        $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      $stmt = $this->db->query('SELECT * FROM '.$this->au_topics.' WHERE id = :id');
+      $this->db->bind(':id', $topic_id); // bind idea id
+      $topics = $this->db->resultSet();
+      if (count($topics)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $topics[0]; // return an array (associative) with all the data for the topic
+      }
+    }// end function
 
-        $stmt = $this->db->query('SELECT status, room_id FROM '.$this->au_topics.' WHERE id = :id');
-        $this->db->bind(':id', $topic_id); // bind topic id
-        $topic_id = $this->db->resultSet();
-        if (count($topic_id)<1){
-          return 0; // nothing found, return 0 code
-        }else {
-          return 1;
-        }
-      } // end function
+    public function checkTopicExist($topic_id) {
+      /* returns 0 if topic does not exist, 1 if topic exists, accepts database id (int)
+      */
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+      $stmt = $this->db->query('SELECT status, room_id FROM '.$this->au_topics.' WHERE id = :id');
+      $this->db->bind(':id', $topic_id); // bind topic id
+      $topic_id = $this->db->resultSet();
+      if (count($topic_id)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1;
+      }
+    } // end function
 
     public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
       /* returns idealist (associative array) with start and limit provided
@@ -339,7 +402,7 @@ class Topic {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT '.$this->au_topics.'.content, '.$this->au_topics.'.hash_id, '.$this->au_topics.'.id, '.$this->au_topics.'.sum_likes, '.$this->au_topics.'.sum_votes, '.$this->au_topics.'.last_update, '.$this->au_topics.'.created FROM '.$this->au_topics.' WHERE '.$this->au_ideas.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT '.$this->au_topics.'.name, '.$this->au_topics.'.hash_id, '.$this->au_topics.'.id, '.$this->au_topics.'.description_internal, '.$this->au_topics.'.description_public, '.$this->au_topics.'.last_update, '.$this->au_topics.'.created FROM '.$this->au_topics.' WHERE '.$this->au_topics.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
@@ -371,9 +434,7 @@ class Topic {
          status = status of inserted topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
 
         */
-
-        //sanitize the vars
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+//sanitize the vars
         $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $status = intval($status);
         $room_id = intval($room_id);
@@ -382,18 +443,18 @@ class Topic {
         $description_public = trim ($description_public);
 
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_ideas.' (name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->au_topics.' (name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
         // bind all VALUES
 
-        $this->db->bind(':name', $name);
+        $this->db->bind(':name', $this->crypt->encrypt($name));
         $this->db->bind(':status', $status);
-        $this->db->bind(':description_public', $description_public);
-        $this->db->bind(':description_internal', $description_internal);
+        $this->db->bind(':description_public', $this->crypt->encrypt($description_public));
+        $this->db->bind(':description_internal', $this->crypt->encrypt($description_internal));
         $this->db->bind(':room_id', $room_id);
         // generate unique hash for this idea
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
-        $hash_id = md5($content.$appendix); // create hash id for this idea
+        $hash_id = md5($name.$appendix); // create hash id for this idea
         $this->db->bind(':hash_id', $hash_id);
         $this->db->bind(':order_importance', $order_importance); // order parameter
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
