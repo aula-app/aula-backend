@@ -47,6 +47,12 @@ if (isset ($_REQUEST['votevalue']))
   $vote_value = intval ($_REQUEST['votevalue']);
 }
 
+$like_value = 1;
+if (isset ($_REQUEST['likevalue']))
+{
+  $like_value = intval ($_REQUEST['likevalue']);
+}
+
 $idea_id = 0;
 
 if (isset ($_REQUEST['vote']))
@@ -55,6 +61,21 @@ if (isset ($_REQUEST['vote']))
   // voteForIdea($idea_id, $vote_value, $user_id)
   echo ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$vote_value);
   $return_value = $idea->voteForIdea ($idea_id, $vote_value, $_SESSION ['user_id']);
+  echo ("Returning value: ".$return_value);
+} // end if
+
+if (isset ($_REQUEST['like']))
+{
+  $idea_id = intval ($_REQUEST['like']);
+  // voteForIdea($idea_id, $vote_value, $user_id)
+  echo ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$like_value);
+  if ($like_value==0) {
+    //unlike
+    $return_value = $idea->IdeaRemoveLike ($idea_id, $_SESSION ['user_id']);
+
+  } else {
+    $return_value = $idea->IdeaAddLike ($idea_id, $_SESSION ['user_id']);
+  }
   echo ("Returning value: ".$return_value);
 } // end if
 
@@ -81,6 +102,8 @@ foreach ($ideadata as $result) {
     out ("Sum Votes: " . ($result['sum_votes']).", Sum Likes: " . ($result['sum_likes']));
     out ("Last Update: " . $result['last_update']);
     out ("created: " . $result['created']."<br><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='1'><br><button type=submit name='submitter'>VOTE +1</button></form><form method ='_POST'><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='-1'><button type=submit name='submitter'>VOTE -1</button></form>");
+    echo ('<form action="" method ="_POST">');
+    out ("<input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='1'><button type=submit name='submitter'>LIKE</button></form><form method ='_POST'><input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='0'><button type=submit name='submitter'>UNLIKE</button></form>");
     // User id <input type='text' name='user' value='". $user_id."'>
     echo ("</form>");
 }
