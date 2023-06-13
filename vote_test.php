@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once ('base_config.php'); // load base config with paths to classes etc.
 require_once ('error_msg.php');
 
@@ -30,10 +31,14 @@ function out ($text, $form=false){ // lazy helper function
 }
 
 
-$user_id = 6;
+$user_id = 5;
+if (!isset ($_SESSION ['user_id'])){
+  $_SESSION ['user_id'] = $user_id;
+}
 if (isset ($_REQUEST['user']))
 {
-  $user_id = intval ($_REQUEST['user']);
+  echo ("<br>USER ID is set to ".intval ($_REQUEST['user']));
+  $_SESSION ['user_id'] = intval ($_REQUEST['user']);
 }
 
 $vote_value = 1;
@@ -48,8 +53,8 @@ if (isset ($_REQUEST['vote']))
 {
   $idea_id = intval ($_REQUEST['vote']);
   // voteForIdea($idea_id, $vote_value, $user_id)
-  echo ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$user_id." value:".$vote_value);
-  $return_value = $idea->voteForIdea ($idea_id, $vote_value, $user_id);
+  echo ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$vote_value);
+  $return_value = $idea->voteForIdea ($idea_id, $vote_value, $_SESSION ['user_id']);
   echo ("Returning value: ".$return_value);
 } // end if
 
@@ -62,7 +67,10 @@ if (isset ($_REQUEST['vote']))
 $offset = 0; // set start at dataset #10
 $limit = 5; // get 10 datasets
 out ("Reading idea datasets (only active, status = 1) <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
-out ("User 6 has a delegation from user 15", true);
+echo ("<br>(User 6 has a delegation from user 15 = double vote weight for user 6)");
+?>
+<br><br>User id <form method ="_POST"><input type='text' name='user' value='<?php echo $_SESSION ['user_id'] ?>'><button type=submit name='submitter'>SET USER</button></form>
+<?php
 $ideadata = $idea->getIdeas($offset, $limit, 4, 1, 1);
 // idea list:
 foreach ($ideadata as $result) {
