@@ -101,7 +101,7 @@ foreach ($ideadata as $result) {
     out ("Idea: " . $crypt->decrypt ($result['content']));
     out ("Sum Votes: " . ($result['sum_votes']).", Sum Likes: " . ($result['sum_likes']));
     out ("Last Update: " . $result['last_update']);
-    out ("created: " . $result['created']."<br><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='1'><br><button type=submit name='submitter'>VOTE +1</button></form><form method ='_POST'><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='-1'><button type=submit name='submitter'>VOTE -1</button></form>");
+    out ("created: " . $result['created']."<br><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='1'><br><button type=submit name='submitter'>VOTE for</button></form><form method ='_POST'><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='-1'><button type=submit name='submitter'>VOTE against</button></form>");
     echo ('<form action="" method ="_POST">');
     out ("<input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='1'><button type=submit name='submitter'>LIKE</button></form><form method ='_POST'><input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='0'><button type=submit name='submitter'>UNLIKE</button></form>");
     // User id <input type='text' name='user' value='". $user_id."'>
