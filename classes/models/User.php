@@ -294,7 +294,7 @@ class User {
         }
     }// end function
 
-    public function getReceivedDelegations ($user_id, $room_id) {
+    public function getReceivedDelegations ($user_id, $topic_id) {
       /* returns received delegations for a specific user (user_id) in the room
       */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -310,7 +310,7 @@ class User {
     } // end function
 
 
-    public function getGivenDelegations ($user_id, $room_id) {
+    public function getGivenDelegations ($user_id, $topic_id) {
       /* returns received delegations for a specific user (user_id) in the room
       */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -472,6 +472,8 @@ class User {
     public function removeUserFromRoom($room_id, $user_id) {
       /* deletes a user from a room
       */
+      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE user_id = :userid AND room_id = :roomid' );
       $this->db->bind(':roomid', $room_id); // bind room id
@@ -1013,7 +1015,7 @@ class User {
 
     public function grantInfiniteVotesToUser ($user_id){
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      
+
       return $this->setUserInfiniteVote ($user_id, 1);
     }
 

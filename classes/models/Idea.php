@@ -162,6 +162,7 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
       // check if this user still has votes available
       $available_votes = $this->checkAvailableVotesUser ($user_id, $idea_id);
@@ -711,6 +712,7 @@ class Idea {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $room_id is the id of the room
       */
+      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
       // init vars
       $orderby_field="";
@@ -791,7 +793,7 @@ class Idea {
       orderby is the field (int, see switch), defaults to last_update (3)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-      $room_id is the id of the room
+      $$group_id is the id of the group
       */
 
       // init vars
@@ -873,7 +875,7 @@ class Idea {
       orderby is the field (int, see switch), defaults to last_update (3)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-      $room_id is the id of the room
+      $$user_id is the id of the user
       */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -962,7 +964,7 @@ class Idea {
         $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $status = intval($status);
-        $room_id = intval($room_id);
+        $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
         $order_importance = intval ($order_importance);
         $content = trim ($content);
         $info = trim ($info);
@@ -1306,15 +1308,15 @@ class Idea {
       }
     }// end function
 
-    public function userHasDelegated($user_id, $room_id) {
+    public function userHasDelegated($user_id, $topic_id) {
       // checks if the user with user id has already delegated his votes for this idea (topic this idea belongs to)
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      //$idea_id = $this->checkIdeaId($idea_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $topic_id = $this->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $stmt = $this->db->query('SELECT user_id_target FROM '.$this->au_delegation.' WHERE user_id_original = :user_id AND room_id = :room_id AND status = 1');
+      $stmt = $this->db->query('SELECT user_id_target FROM '.$this->au_delegation.' WHERE user_id_original = :user_id AND topic_id = :topic_id AND status = 1');
       //$stmt = $this->db->query('SELECT user_id_target FROM '.$this->au_delegation.' INNER JOIN '.$this->au_rel_topics_ideas.' ON ('.$this->au_rel_topics_ideas.'.idea_id = WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id AND status = 1');
       $this->db->bind(':user_id', $user_id); // bind user id
-      $this->db->bind(':room_id', $room_id); // bind room id
+      $this->db->bind(':topic_id', $topic_id); // bind topic id
       $has_delegated = $this->db->resultSet();
 
       if (count ($has_delegated)>0) {

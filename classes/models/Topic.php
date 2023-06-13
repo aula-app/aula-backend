@@ -131,6 +131,7 @@ class Topic {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $room_id is the id of the room
       */
+      $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
       // init vars
       $orderby_field="";
@@ -437,7 +438,8 @@ class Topic {
 //sanitize the vars
         $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $status = intval($status);
-        $room_id = intval($room_id);
+        $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+
         $order_importance = intval ($order_importance);
         $description_internal = trim ($description_internal);
         $description_public = trim ($description_public);
