@@ -74,6 +74,7 @@ public function IdeaAddLike ($idea_id, $user_id)
 public function IdeaRemoveLike ($idea_id, $user_id)
 public function resetVotes ()
 public function setContent($idea_id, $content, $updater_id=0)
+public function setCategory($idea_id, $category_id, $updater_id=0)
 public function checkAvailableVotesUser ($user_id, $idea_id){
 public function setVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations=0)
 public function removeLikeUser ($user_id, $idea_id)
@@ -86,7 +87,6 @@ public function getRoomIdByHashId($hash_id)
 public function getVoteValue ($user_id, $idea_id)
 public function getLikeStatus ($user_id, $idea_id)
 public function deleteIdea($idea_id, $updater_id=0)
-
 
 
 MODEL User
