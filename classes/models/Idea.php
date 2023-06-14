@@ -20,10 +20,10 @@ class Idea {
         $this->crypt = $crypt;
         //$this->syslog = new Systemlog ($db);
         $this->syslog = $syslog;
+        $this->group = new Group ($db, $crypt, $syslog); // init group class
 
         $au_rooms = 'au_rooms';
         $au_groups = 'au_groups';
-        $au_ideas = 'au_ideas';
         $au_votes = 'au_votes';
         $au_likes = 'au_likes';
         $au_topics = 'au_topics';
@@ -39,7 +39,6 @@ class Idea {
         $this->$au_delegation = $au_delegation; // table name for delegation
         $this->$au_groups = $au_groups; // table name for groups
         $this->$au_topics = $au_topics; // table name for topics
-        $this->$au_ideas = $au_ideas; // table name for ideas
         $this->$au_votes = $au_votes; // table name for votes
         $this->$au_likes = $au_likes; // table name for likes
         $this->$au_reported = $au_reported; // table name for reportings
@@ -52,7 +51,7 @@ class Idea {
     public function getIdeaBaseData($idea_id) {
       /* returns idea base data for a specified db id */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -63,20 +62,35 @@ class Idea {
       }
     }// end function
 
-        public function getIdeaContent ($idea_id) {
-          /* returns content, sum votes, sum likes, create, last_update, hash id and the user displayname of an idea for a integer idea id
-          */
-          $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    public function getIdeaContent ($idea_id) {
+      /* returns content, sum votes, sum likes, number of votes, create, last_update, hash id and the user displayname of an idea for a integer idea id
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-          $stmt = $this->db->query('SELECT '.$this->au_ideas.'.content, '.$this->au_ideas.'.hash_id, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.created, '.$this->au_users_basedata.'.displayname FROM '.$this->au_ideas.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.id='.$this->au_users_basedata.'.id) WHERE '.$this->au_ideas.'.id = :id');
-          $this->db->bind(':id', $idea_id); // bind idea id
-          $ideas = $this->db->resultSet();
-          if (count($ideas)<1){
-            return 0; // nothing found, return 0 code
-          }else {
-            return $ideas[0]; // return content for the idea
-          }
-        }// end function
+      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $ideas[0]; // return content for the idea
+      }
+    }// end function
+
+    public function getIdeaNumberVotes ($idea_id) {
+      /* returns the calculated number of given votes for this idea
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+      $stmt = $this->db->query('SELECT SUM(vote_weight) AS totalvotes FROM '.$this->db->au_votes.' WHERE idea_id = :id');
+      $this->db->bind(':id', $idea_id); // bind idea id
+      $ideas = $this->db->resultSet();
+      if (count($ideas)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return intval ($ideas[0]['totalvotes']); // return total made votes for the idea
+      }
+    }// end function
 
 
     public function getIdeaVotes ($idea_id) {
@@ -84,7 +98,7 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT sum_votes FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT sum_votes FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -99,7 +113,7 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT topic_id FROM '.$this->au_rel_topics_ideas.' WHERE idea_id = :id');
+      $stmt = $this->db->query('SELECT topic_id FROM '.$this->db->au_rel_topics_ideas.' WHERE idea_id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -114,7 +128,7 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT room_id FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT room_id FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -133,7 +147,7 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT sum_likes FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT sum_likes FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -148,7 +162,7 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT status FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT status FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -182,7 +196,7 @@ class Idea {
     public function getIdeaHashId($idea_id) {
       /* returns hash_id of an idea for a integer idea id
       */
-      $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT hash_id FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -212,7 +226,7 @@ class Idea {
       /* Returns Database ID of user when hash_id is provided
       */
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE hash_id = :hash_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_users_basedata.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
@@ -226,7 +240,7 @@ class Idea {
       /* Returns Database ID of idea when hash_id is provided
       */
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE hash_id = :hash_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_ideas.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -240,7 +254,7 @@ class Idea {
       /* Returns Database ID of idea when hash_id is provided
       */
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE hash_id = :hash_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
@@ -261,20 +275,20 @@ class Idea {
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // check if idea is existent
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE id = :idea_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_ideas.' WHERE id = :idea_id');
       $this->db->bind(':idea_id', $idea_id); // bind user id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
         return ('0,3'); // idea does not exist
       } // else continue processing
       // check if this user has already reported this idea
-      $stmt = $this->db->query('SELECT object_id FROM '.$this->au_reported.' WHERE user_id = :user_id AND type = 0 AND object_id = :idea_id');
+      $stmt = $this->db->query('SELECT object_id FROM '.$this->db->au_reported.' WHERE user_id = :user_id AND type = 0 AND object_id = :idea_id');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':idea_id', $idea_id); // bind user id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
         //add this reporting to db
-        $stmt = $this->db->query('INSERT INTO '.$this->au_reported.' (reason, object_id, type, user_id, status, created, last_update) VALUES (:reason, :idea_id, 0, :user_id, 0, NOW(), NOW())');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_reported.' (reason, object_id, type, user_id, status, created, last_update) VALUES (:reason, :idea_id, 0, :user_id, 0, NOW(), NOW())');
         // bind all VALUES
 
         $this->db->bind(':idea_id', $idea_id);
@@ -363,7 +377,7 @@ class Idea {
       */
       $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT status, room_id FROM '.$this->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT status, room_id FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -378,7 +392,7 @@ class Idea {
         */
         $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-        $stmt = $this->db->query('SELECT status, room_id FROM '.$this->au_topics.' WHERE id = :id');
+        $stmt = $this->db->query('SELECT status, room_id FROM '.$this->db->au_topics.' WHERE id = :id');
         $this->db->bind(':id', $topic_id); // bind topic id
         $topic_id = $this->db->resultSet();
         if (count($topic_id)<1){
@@ -404,7 +418,7 @@ class Idea {
         // everything ok, user and room exists
         // add relation to database
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_rel_topics_ideas.' (idea_id, topic_id, status, created, last_update, updater_id) VALUES (:idea_id, :topic_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rel_topics_ideas.' (idea_id, topic_id, status, created, last_update, updater_id) VALUES (:idea_id, :topic_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
         $this->db->bind(':idea_id', $idea_id);
@@ -449,7 +463,7 @@ class Idea {
       $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
       $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_topics_ideas.' WHERE idea_id = :idea_id AND topic_id = :topic_id' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_topics_ideas.' WHERE idea_id = :idea_id AND topic_id = :topic_id' );
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
 
@@ -474,7 +488,7 @@ class Idea {
       */
       $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_topics_ideas.' WHERE topic_id = :topic_id' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_topics_ideas.' WHERE topic_id = :topic_id' );
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
 
@@ -517,23 +531,23 @@ class Idea {
 
       switch (intval ($orderby)){
         case 0:
-        $orderby_field = $this->au_ideas."status";
+        $orderby_field = $this->db->au_ideas."status";
         break;
         case 1:
-        $orderby_field = $this->au_ideas."order_importance";
+        $orderby_field = $this->db->au_ideas."order_importance";
         break;
         case 2:
-        $orderby_field = $this->au_ideas."created";
+        $orderby_field = $this->db->au_ideas."created";
         break;
         case 3:
-        $orderby_field = $this->au_ideas."last_update";
+        $orderby_field = $this->db->au_ideas."last_update";
         break;
         case 4:
-        $orderby_field = $this->au_ideas."id";
+        $orderby_field = $this->db->au_ideas."id";
         break;
 
         default:
-        $orderby_field = $this->au_ideas."last_update";
+        $orderby_field = $this->db->au_ideas."last_update";
       }
 
       switch (intval ($asc)){
@@ -546,9 +560,9 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.created, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
-      $join =  'INNER JOIN '.$this->au_rel_topics_ideas.' ON ('.$this->au_rel_topics_ideas.'.idea_id='.$this->au_ideas.'.id) INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
-      $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_rel_topics_ideas.'.topic_id= :topic_id ';
+      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+      $join =  'INNER JOIN '.$this->db->au_rel_topics_ideas.' ON ('.$this->db->au_rel_topics_ideas.'.idea_id='.$this->db->au_ideas.'.id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
+      $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_rel_topics_ideas.'.topic_id= :topic_id ';
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
@@ -577,7 +591,7 @@ class Idea {
 
     protected function checkIfVoteWasMade ($user_id, $idea_id){
       // checks if there already is a vote by this user (user_id) for this idea (idea_id)
-      $stmt = $this->db->query('SELECT vote_value FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id AND status = 1 AND (vote_value > 0 OR vote_value < 0)');
+      $stmt = $this->db->query('SELECT vote_value FROM '.$this->db->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id AND status = 1 AND (vote_value > 0 OR vote_value < 0)');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
       $votes = $this->db->resultSet();
@@ -592,12 +606,12 @@ class Idea {
     protected function getVoteBiasDelegations ($user_id, $topic_id, $idea_id) {
       /* returns number of delegated votes to this user (user_id), accepts database id (int)
       */
-      $stmt = $this->db->query('SELECT status, user_id_original FROM '.$this->au_delegation.' WHERE user_id_target = :user_id AND topic_id = :topic_id AND status = 1');
+      $stmt = $this->db->query('SELECT status, user_id_original FROM '.$this->db->au_delegation.' WHERE user_id_target = :user_id AND topic_id = :topic_id AND status = 1');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $delegations = $this->db->resultSet();
       $count_delegations = count ($delegations);
-
+      //echo ("getVoteBiasDelegations for user ".$user_id." running with topic ".$topic_id.":".$count_delegations);
       // save delegated votes of original user into votes table of db
       $vote_bias = 1; // init vote bias
       foreach ($delegations as $result) {
@@ -607,7 +621,7 @@ class Idea {
           if ($this->checkIfVoteWasMade($user_original, $idea_id)==0)
           {
             // original owner of the delegated vote has not voted yet (although he delegated)
-            // echo ("<br>Original owner has not voted yet...".$vote_bias);
+            //echo ("<br>Original owner (".$user_original.") has not voted yet...".$vote_bias);
             $vote_bias++; // increase the bias for the vote by 1
 
           }
@@ -680,7 +694,7 @@ class Idea {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT '.$this->au_ideas.'.content, '.$this->au_ideas.'.hash_id, '.$this->au_ideas.'.id, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.created, '.$this->au_users_basedata.'.displayname FROM '.$this->au_ideas.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.id='.$this->au_users_basedata.'.id) WHERE '.$this->au_ideas.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
@@ -760,9 +774,9 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.created, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
-      $join =  'INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
-      $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_ideas.'.room_id= :room_id ';
+      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+      $join =  'INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
+      $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_ideas.'.room_id= :room_id ';
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
@@ -842,9 +856,9 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.created, '.$this->au_ideas.'.last_update, '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
-      $join =  'INNER JOIN '.$this->au_rel_groups_users.' ON ('.$this->au_rel_groups_users.'.user_id='.$this->au_ideas.'.user_id) INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
-      $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_rel_groups_users.'.group_id= :group_id ';
+      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+      $join =  'INNER JOIN '.$this->db->au_rel_groups_users.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_ideas.'.user_id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
+      $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_rel_groups_users.'.group_id= :group_id ';
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
@@ -925,9 +939,9 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->au_users_basedata.'.displayname, '.$this->au_ideas.'.room_id, '.$this->au_ideas.'.created, '.$this->au_ideas.'.last_update,  '.$this->au_ideas.'.id, '.$this->au_ideas.'.content, '.$this->au_ideas.'.sum_likes, '.$this->au_ideas.'.sum_votes FROM '.$this->au_ideas;
-      $join =  'INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_ideas.'.user_id='.$this->au_users_basedata.'.id)';
-      $where = ' WHERE '.$this->au_ideas.'.status= :status AND '.$this->au_ideas.'.user_id= :user_id ';
+      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update,  '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+      $join =  'INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
+      $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_ideas.'.user_id= :user_id ';
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
@@ -971,7 +985,7 @@ class Idea {
         $content = trim ($content);
         $info = trim ($info);
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_ideas.' (is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (0, 0, :info, :votes_available_per_user, 0, 0, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_ideas.' (is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, votes_given, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (0, 0, :info, :votes_available_per_user, 0, 0, 0, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
         // bind all VALUES
 
         $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
@@ -1018,7 +1032,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -1051,7 +1065,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET approved = 1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET approved = 1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -1083,7 +1097,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET approved = 0, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET approved = 0, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -1115,7 +1129,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET is_winner = 1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET is_winner = 1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -1147,7 +1161,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET is_winner = 0, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET is_winner = 0, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -1179,7 +1193,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = :votes, last_update= NOW() WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_votes = :votes, last_update= NOW() WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':votes', $votes); // vote value
 
@@ -1204,6 +1218,38 @@ class Idea {
         }
     }// end function
 
+    public function IdeaSetNumberOfVotesGiven ($idea_id, $votes) {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         sets number of votes given to an idea to a specific value (votes)
+         updater_id is the id of the idea that commits the update (i.E. admin )
+        */
+        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET number_of_votes = :votes, last_update= NOW() WHERE id= :idea_id');
+        // bind all VALUES
+        $this->db->bind(':votes', $votes); // vote value
+
+        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." number of votes given set to ".$votes, 0, "", 1);
+          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error setting number of votes given for idea ".$idea_id." to ".$votes, 0, "", 1);
+          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
     public function IdeaSetLikes ($idea_id, $likes) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          sets sum_likes of a specific idea to a specific value (likes)
@@ -1211,7 +1257,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_likes = :likes, last_update= NOW() WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_likes = :likes, last_update= NOW() WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':likes', $likes); // like value
 
@@ -1253,7 +1299,7 @@ class Idea {
           // add like to db
           $this->addLikeUser ($user_id, $idea_id);
         }
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_likes = sum_likes + 1, last_update= NOW() WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_likes = sum_likes + 1, last_update= NOW() WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':idea_id', $idea_id); // idea that is updated
 
@@ -1292,7 +1338,7 @@ class Idea {
           $this->removeLikeUser ($user_id, $idea_id);
         }
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_likes = sum_likes - 1, last_update= NOW() WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_likes = sum_likes - 1, last_update= NOW() WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':idea_id', $idea_id); // idea that is updated
 
@@ -1320,9 +1366,8 @@ class Idea {
          resets all votes for ideas in the database (vote_sum)
 
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = 0, last_update= NOW()');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_votes = 0, sum_likes = 0, last_update= NOW()');
 
         $err=false; // set error variable to false
 
@@ -1335,6 +1380,29 @@ class Idea {
         }
         if (!$err)
         {
+          $stmt = $this->db->query('DELETE FROM '.$this->db->au_votes);
+
+          $err=false; // set error variable to false
+
+          try {
+            $action = $this->db->execute(); // do the query
+
+          } catch (Exception $e) {
+              echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+              $err=true;
+          }
+          $stmt = $this->db->query('DELETE FROM '.$this->db->au_likes);
+
+          $err=false; // set error variable to false
+
+          try {
+            $action = $this->db->execute(); // do the query
+
+          } catch (Exception $e) {
+              echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+              $err=true;
+          }
+
           $this->syslog->addSystemEvent(0, "Resetting all votes", 0, "", 1);
           return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
         } else {
@@ -1351,7 +1419,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET content= :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET content= :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':content', $this->crypt->encrypt($content));
         $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
@@ -1382,7 +1450,7 @@ class Idea {
 // get available votes for idea_id
       // check if user has delegated votes
 
-      $stmt = $this->db->query('SELECT user_id FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id AND (vote_value > 0 OR vote_value < 0)');
+      $stmt = $this->db->query('SELECT user_id FROM '.$this->db->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
       $this->db->bind(':idea_id', $idea_id); // bind idea id
       $this->db->bind(':user_id', $user_id); // bind user id
 
@@ -1399,14 +1467,26 @@ class Idea {
       return $actual_votes_available;
     }
 
-    protected function addVoteUser ($user_id, $idea_id, $vote_value) {
+    protected function addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations) {
       // add a vote into vote table for a certain user and idea
+      //sanitize
+      $idea_id = intval ($idea_id);
+      $number_of_delegations = intval ($number_of_delegations);
+      // get absolute value for vote value
+      $vote_weight = abs ($vote_value);
+      // compensate for neutral votes
+      if ($vote_weight == 0){
+        $vote_weight = intval (1 + $number_of_delegations); // in this case add delegations since value is 0
+      }
 
-      $stmt = $this->db->query('INSERT INTO '.$this->au_votes.' (status, vote_value, user_id, idea_id, last_update, created, hash_id) VALUES (1, :vote_value, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
+
+      $stmt = $this->db->query('INSERT INTO '.$this->db->au_votes.' (number_of_delegations, vote_weight, status, vote_value, user_id, idea_id, last_update, created, hash_id) VALUES (:number_of_delegations, :vote_weight, 1, :vote_value, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
       // bind all VALUES
       $this->db->bind(':idea_id', $idea_id); // idea id
       $this->db->bind(':user_id', $user_id); // user id
-      $this->db->bind(':vote_value', $vote_value); // vote value1
+      $this->db->bind(':vote_value', $vote_value); // vote value
+      $this->db->bind(':vote_weight', $vote_weight); // vote weight
+      $this->db->bind(':number_of_delegations', $number_of_delegations); // vote delegations in this vote
       // generate unique hash for this vote
       $testrand = rand (100,10000000);
       $appendix = microtime(true).$testrand;
@@ -1433,7 +1513,7 @@ class Idea {
     protected function addLikeUser ($user_id, $idea_id) {
       // add a like into like table for a certain user and idea
 
-      $stmt = $this->db->query('INSERT INTO '.$this->au_likes.' (status, user_id, idea_id, last_update, created, hash_id) VALUES (1, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
+      $stmt = $this->db->query('INSERT INTO '.$this->db->au_likes.' (status, user_id, idea_id, last_update, created, hash_id) VALUES (1, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
       // bind all VALUES
       $this->db->bind(':idea_id', $idea_id); // idea id
       $this->db->bind(':user_id', $user_id); // user id
@@ -1461,12 +1541,21 @@ class Idea {
     }
 
 
-    public function setVoteUser ($user_id, $idea_id, $vote_value) {
+    public function setVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations=0) {
+      //sanitize
 
+      $vote_weight = abs ($vote_value);
+      // compensate for neutral votes
+      if ($vote_weight < 1){
+        $vote_weight = 1;
+      }
       // update sum of votes
-      $stmt = $this->db->query('UPDATE '.$this->au_votes.' SET vote_value = :vote_value, last_update= NOW() WHERE user_id = :user_id AND idea_id = :idea_id');
+      $stmt = $this->db->query('UPDATE '.$this->db->au_votes.' SET number_of_delegations= :number_of_delegations, vote_value = :vote_value, last_update= NOW(), vote_weight  = :vote_weight WHERE user_id = :user_id AND idea_id = :idea_id');
       // bind all VALUES
       $this->db->bind(':user_id', $user_id); // id of the user
+      $this->db->bind(':vote_value', $vote_value); // vote value
+      $this->db->bind(':vote_weight', $vote_weight); // vote weight
+      $this->db->bind(':number_of_delegations', $number_of_delegations); // number_of_delegations
 
       $this->db->bind(':idea_id', $idea_id); // idea that is updated
 
@@ -1493,8 +1582,8 @@ class Idea {
       // add a vote into vote table for a certain user and idea
 
       // get vote value for this user on this idea
-
-      $stmt = $this->db->query('DELETE FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      echo ("<br>DELETING in revokeVoteUser:".$user_id);
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
       // bind all VALUES
 
       $this->db->bind(':idea_id', $idea_id); // idea id
@@ -1523,7 +1612,7 @@ class Idea {
 
       // get vote value for this user on this idea
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_likes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_likes.' WHERE user_id = :user_id AND idea_id = :idea_id');
       // bind all VALUES
 
       $this->db->bind(':idea_id', $idea_id); // idea id
@@ -1552,7 +1641,7 @@ class Idea {
       */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->au_users_basedata.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->db->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
@@ -1567,12 +1656,12 @@ class Idea {
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $topic_id = $this->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $stmt = $this->db->query('SELECT user_id_target FROM '.$this->au_delegation.' WHERE user_id_original = :user_id AND topic_id = :topic_id AND status = 1');
-      //$stmt = $this->db->query('SELECT user_id_target FROM '.$this->au_delegation.' INNER JOIN '.$this->au_rel_topics_ideas.' ON ('.$this->au_rel_topics_ideas.'.idea_id = WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id AND status = 1');
+      $stmt = $this->db->query('SELECT user_id_target FROM '.$this->db->au_delegation.' WHERE user_id_original = :user_id AND topic_id = :topic_id AND status = 1');
+      //$stmt = $this->db->query('SELECT user_id_target FROM '.$this->db->au_delegation.' INNER JOIN '.$this->db->au_rel_topics_ideas.' ON ('.$this->db->au_rel_topics_ideas.'.idea_id = WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id AND status = 1');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $has_delegated = $this->db->resultSet();
-
+      //echo ("<br>userhasdelegated:".count ($has_delegated));
       if (count ($has_delegated)>0) {
         return $has_delegated ['user_id_target'];
       }
@@ -1590,12 +1679,14 @@ class Idea {
         // sanitize vote value
       $vote_value = intval ($vote_value);
       // set maximum boundaries for vote value
-      if ($vote_value>1) {
+      if ($vote_value > 1) {
         $vote_value = 1;
       }
-      if ($vote_value<-1) {
+      if ($vote_value < -1) {
         $vote_value = -1;
       }
+
+      // echo ("<br>Voting for idea:  ".$idea_id." by user: ".$user_id." vote value: ".$vote_value);
 
       $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -1604,21 +1695,24 @@ class Idea {
 
       $idea_basedata = $this->getIdeaBaseData ($idea_id);
       if ($idea_basedata['id'] == 0){
-        // idea does not exist
+        // idea does not exist, return with error code
         return ("0,0,0"); // return error code - idea non existant
       }
-      $status_idea = $idea_basedata['status'];
-      $topic_id = $this->getIdeaTopic ($idea_id);
+      $status_idea = $idea_basedata['status']; // get idea status
+      $topic_id = $this->getIdeaTopic ($idea_id); // get toipic id for idea
       $room_id = $idea_basedata['room_id'];
 
+      // check if user is member of the room
+
       if ($status_idea == 0 || $status_idea >1) {
-        // idea does not exist or status >1 (suspended or archived)
+        // idea does not exist/inactive or status >1 (suspended or archived)
         return ("0,1,0"); // return error (0) idea is inactive / suspended /archived / in review (1)
       } // else continue processing
 
       $sum_votes_correction = 0; // init correction value for vote_sum in idea table
 
       $only_voting_once_allowed = 0; // 1 = user can only vote once, 0 = user can change vote any time
+      $number_of_delegations = 0;
 
       // check if user has infinite votes, if yes - disable everything
       if ($this->getUserInfiniteVotesStatus($user_id)==0){
@@ -1633,31 +1727,34 @@ class Idea {
           } else {
             $vote_value_original = $this->getVoteValue ($user_id, $idea_id); // returns 0 if user has not yet voted
             // user can vote (change his mind) as often as he wishes
-            $this->revokeVoteUser ($user_id, $idea_id); // remove votes from user
+            $this->revokeVoteUser ($user_id, $idea_id); // remove vote from user
             // correct sum votes for the idea
-            $current_sum = $this->getIdeaVotes ($idea_id);
+            $current_sum = $this->getIdeaVotes ($idea_id); // get votes for this idea
             // echo ("<br>current sum: ".$current_sum." vote value original: ".$vote_value_original);
-            $new_vote_value = intval (intval ($current_sum)-intval ($vote_value_original));
-            $this->IdeaSetVotes ($idea_id, $new_vote_value);
+            $new_vote_value = intval (intval ($current_sum)-intval ($vote_value_original)); // calculate difference votes
+            $this->IdeaSetVotes ($idea_id, $new_vote_value); // adjust sum_votes in idea
 
           }
         } // else continue processing
 
+
         // check if user has delegated his votes to another user
         $delegated_user = $this->userHasDelegated($user_id, $topic_id);
+        //echo ("<br>user ".$user_id." has delegated votes to user: ".$delegated_user);
         if ($delegated_user==0){
           // user has not delegated his votes, get vote bias by delegations to this user from other users
-          $votes_bias = $this->getVoteBiasDelegations ($user_id, $topic_id, $idea_id);
+          $votes_bias = $this->getVoteBiasDelegations ($user_id, $topic_id, $idea_id); // calculates all delegations to this user
 
-          // echo ("<br>getting votes bias: ".$votes_bias);
-
+          $number_of_delegations = (intval ($votes_bias)-1); // number of users that have delgetaed their vote to this user
           // add total votes to db
           // sum up votes
-          $vote_value_final = intval (intval ($votes_bias) * intval ($vote_value));
+          $vote_value_final = intval (intval ($votes_bias) * intval ($vote_value)); // calculate total vote weight
           // addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $original_user_id)
-          $this->addVoteUser ($user_id, $idea_id, $vote_value_final);
+
+          // apply group vote bias
+          $this->addVoteUser ($user_id, $idea_id, $vote_value_final, $number_of_delegations);
           $sum_votes_correction = $vote_value_final;
-          //echo ("<br>user has not delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
+          // echo ("<br>user has not delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
         } else {
           // user has delegated his votes, check if the user that has received the votes already voted for the idea
@@ -1674,19 +1771,26 @@ class Idea {
             $delegation_correction_sum = 1; // correction for sum_votes in idea table
           }
           // add one vote to db for this user
-          $this->addVoteUser ($user_id, $idea_id, $vote_value);
+
+          // apply group vote bias
+
+          $this->addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations);
           // echo ("<br>user has delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
 
           $sum_votes_correction = intval (intval ($vote_value) + intval ($delegation_correction_sum));
           // correct vote of the delegated user and update in db
-          $this->setVoteUser ($delegated_user, $idea_id, $vote_value_delegated);
+          $this->setVoteUser ($delegated_user, $idea_id, $vote_value_delegated, $number_of_delegations);
 
         } // end else
-      } // end if infintievotes check
+      } else {
+        // user has infinite votes
+        $this->addVoteUser ($user_id, $idea_id, $vote_value, 0); // add vote to vote table
+        $sum_votes_correction = $vote_value; // set bias value for sum_votes of idea
+      }
 
-      // update sum of votes in idea
-      $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = sum_votes +'.intval ($sum_votes_correction).', last_update= NOW() WHERE id= :idea_id');
+      // update sum of votes in idea (sum_votes)
+      $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_votes = sum_votes +'.intval ($sum_votes_correction).', last_update= NOW() WHERE id= :idea_id');
       // bind all VALUES
       $this->db->bind(':idea_id', $idea_id); // idea that is updated
 
@@ -1701,11 +1805,13 @@ class Idea {
       }
       if (!$err)
       {
-        $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") added Vote - value: ".$vote_value." by ".$user_id, 0, "", 1);
-        return ("1,1,".$sum_votes_correction);
+        //update the number of votes for this idea
+        $this->IdeaSetNumberOfVotesGiven ($idea_id, intval ($this->getIdeaNumberVotes($idea_id)));
+        $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") added Vote - value: ".$vote_value." by ".$user_id, 0, "", 1); // add to systemlog
+        return ("1,1,".$sum_votes_correction); // return success and total vote value
 
       } else {
-        $this->syslog->addSystemEvent(1, "Error adding vote idea (#".$idea_id.") value:  ".$vote_value." by ".$user_id, 0, "", 1);
+        $this->syslog->addSystemEvent(1, "Error adding vote idea (#".$idea_id.") value:  ".$vote_value." by ".$user_id, 0, "", 1); // add to systemlog
         return ("0,0,0"); // return 0 to indicate that there was an error executing the statement
       }
       // add vote to database
@@ -1741,7 +1847,7 @@ class Idea {
         $vote_value=1; // will be exchanged with vote value read from database
 
         // update sum of votes
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET sum_votes = sum_votes -'.$vote_value.', last_update = NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_votes = sum_votes -'.$vote_value.', last_update = NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
 
@@ -1776,7 +1882,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_ideas.' SET info= :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET info= :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':content', $this->crypt->encrypt($content));
         $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
@@ -1848,7 +1954,7 @@ class Idea {
       /* Returns Database ID of room when hash_id is provided
       */
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_rooms.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
@@ -1862,7 +1968,7 @@ class Idea {
       /* Returns vote value for a specified user and idea
       */
 
-      $stmt = $this->db->query('SELECT vote_value FROM '.$this->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $stmt = $this->db->query('SELECT vote_value FROM '.$this->db->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
 
@@ -1879,7 +1985,7 @@ class Idea {
       returns 0 if not, returns 1 if yes
       */
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_likes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_likes.' WHERE user_id = :user_id AND idea_id = :idea_id');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
 
@@ -1906,7 +2012,7 @@ class Idea {
         */
         $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        $stmt = $this->db->query('DELETE FROM '.$this->au_ideas.' WHERE id = :id');
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_ideas.' WHERE id = :id');
         $this->db->bind (':id', $idea_id);
         $err=false;
         try {
