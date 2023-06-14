@@ -113,11 +113,15 @@ echo ("<i>(User 6 has a delegation from user 10 = double vote weight for user 6)
 $ideadata = $idea->getIdeas($offset, $limit, 4, 1, 1);
 // idea list:
 foreach ($ideadata as $result) {
+    $votes_made = $idea->getIdeaNumberVotes($result['id']);
     echo ('<form action="" method ="_POST">');
     echo ("<h2>".$result['id'].".". $crypt->decrypt ($result['content'])."</h2>");
-    echo ("<b>Sum Votes: " . ($result['sum_votes']).", Sum Likes: " . ($result['sum_likes'])."</b>");
+    echo ("<b>Voting result: " . ($result['sum_votes']).", number of likes: " . ($result['sum_likes']).", votes given in total: ".$votes_made."</b>");
     echo ("<br><small>Last Update: " . $result['last_update']."</small>");
     echo ("<input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='1'><br><button type=submit name='submitter'>VOTE for</button></form><form method ='_POST'><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='-1'><button type=submit name='submitter'>VOTE against</button></form>");
+    echo ('<form action="" method ="_POST">');
+    echo ("<input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='0'><br><button type=submit name='submitter'>VOTE NEUTRAL</button>");
+    echo ("</form>");
     echo ('<form action="" method ="_POST">');
     echo ("<input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='1'><button type=submit name='submitter'>LIKE</button></form><form method ='_POST'><input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='0'><button type=submit name='submitter'>UNLIKE</button></form>");
     // User id <input type='text' name='user' value='". $user_id."'>
