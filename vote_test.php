@@ -99,14 +99,20 @@ if (isset ($_REQUEST['like']))
 $offset = 0; // set start at dataset #10
 $limit = 5; // get 10 datasets
 echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4).")</h2>");
-echo ("<i>(User 6 has a delegation from user 10 = double vote weight for user 6)</i>");
+
 ?>
 
 <body style="font-family: arial;font-size:1.2em;">
   <div style="width:100%;background-color:#e9e9e9; padding:10px;">
     <span style="color:#ff0000; font-weight:bold;"><?php echo $msg ?>&nbsp;</span>
-    <br>Set User id <form method ="_POST"><input type='text' name='user' value='<?php echo $_SESSION ['user_id'] ?>'><button type=submit name='submitter'>SET USER</button></form>
+    <br>Set User id, Enter number here and press SET USER<form method ="_POST"><input type='text' name='user' value='<?php echo $_SESSION ['user_id'] ?>'><button type=submit name='submitter'>SET USER</button></form>
     <br><form method ="_POST"><button type=submit name='reset'>RESET VOTES AND LIKES</button></form>
+    <small><i>User 6 has a delegation from user 10</i></small>
+    <br><small><i>User 9 has 3 delegations from users 42, 43, 44 </i></small>
+    <br><small><i>Have fun with voting! Try voting with users 6, 9, 10, 42, 43, 44 and others (like 5, 8 or whatever) in different constellations and watch the results :)
+      <br><b>To change the user id, enter id in the above field and press the button "SET USER"</b>
+      <br><b>"RESET VOTES AND LIKES" resets the votes and likes to 0 to start over again</b></i></small>
+
   </div>
   <div id ="content_pane" style="">
 <?php
