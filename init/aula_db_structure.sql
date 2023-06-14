@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-13 13:05:09 +0000
+# Verarbeitungszeit: 2023-06-14 12:45:49 +0000
 # ************************************************************
 
 
@@ -140,7 +140,7 @@ CREATE TABLE `au_groups` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the group',
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set then access code is needed to join group',
   `group_order` int(11) DEFAULT NULL COMMENT 'order htat groups are shown (used for display)',
-  `votes_per_user` int(11) DEFAULT NULL COMMENT 'votes available per user in this group',
+  `vote_bias` int(11) DEFAULT NULL COMMENT 'votes weight per user in this group',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -156,6 +156,7 @@ CREATE TABLE `au_ideas` (
   `content` text DEFAULT NULL COMMENT 'content of the idea',
   `sum_likes` int(11) DEFAULT NULL COMMENT 'aggregated likes for faster access, less DB Queries',
   `sum_votes` int(11) DEFAULT NULL COMMENT 'aggregated votes for faster access, less DB Queries',
+  `number_of_votes` int(11) DEFAULT NULL COMMENT 'number of votes given for this idea',
   `user_id` int(11) DEFAULT NULL COMMENT 'creator id',
   `votes_available_per_user` int(11) DEFAULT NULL COMMENT 'number of votes that are available per user',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review',
@@ -231,12 +232,14 @@ CREATE TABLE `au_messages` (
   `single_target` tinyint(1) DEFAULT NULL COMMENT '0=no 1= message to a single user',
   `target_id` int(11) DEFAULT NULL COMMENT 'user_id of user that should receive the message',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active 2=archive',
-  `only_on_dashboard` tinyint(1) DEFAULT NULL COMMENT '0=no (news are also snet to users that have consented to receiving news) 1= only displayed on dashboard, no active sending',
+  `only_on_dashboard` tinyint(1) DEFAULT NULL COMMENT '0=no (news are also sent to users that have consented to receiving news) 1= only displayed on dashboard, no active sending',
   `created` datetime DEFAULT NULL COMMENT 'date when news were created',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash_id for news post',
   `language_id` int(11) DEFAULT NULL COMMENT 'id of language 0=default',
+  `level_of_detail` int(11) DEFAULT NULL COMMENT 'enables the user to filter msgs....the higher the number is the more detailed the msg is (high = an idea X was voted for)',
+  `type` int(11) DEFAULT NULL COMMENT 'type id of a msg 1=general news 2=user specific news, 3=idea news etc.',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -282,7 +285,8 @@ CREATE TABLE `au_phases_topic_config` (
   `type` int(11) DEFAULT NULL COMMENT 'phase type, 0=voting enabled, 1=voting+likes enabled, 2=likes enabled, 3=no votes, no likes etc.)',
   `created` datetime DEFAULT NULL COMMENT 'datetime of creation',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of specific phase',
-  `updater_id` int(11) DEFAULT NULL,
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the updateing user',
+  `topic_id` int(11) DEFAULT NULL COMMENT 'id of the topic',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -488,22 +492,6 @@ CREATE TABLE `au_rel_users_media` (
   `last update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`user_id`,`media_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
-
-
-# Tabellen-Dump au_rel_users_roles
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_rel_users_roles`;
-
-CREATE TABLE `au_rel_users_roles` (
-  `user_id` int(11) NOT NULL COMMENT 'id of user',
-  `role_id` int(11) NOT NULL COMMENT 'id of role',
-  `created` datetime DEFAULT NULL COMMENT 'create date',
-  `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last_update',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
-  PRIMARY KEY (`user_id`,`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 
@@ -797,6 +785,7 @@ CREATE TABLE `au_users_basedata` (
   `bi` varchar(1024) DEFAULT NULL COMMENT 'blind index',
   `userlevel` int(11) DEFAULT NULL COMMENT 'level of the user (access rights)',
   `infinite_votes` int(11) DEFAULT NULL COMMENT '0=inactive 1= active (this user has infinite votes)',
+  `last_login` datetime DEFAULT NULL COMMENT 'date of last login',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -858,6 +847,8 @@ CREATE TABLE `au_votes` (
   `created` datetime DEFAULT NULL COMMENT 'time of first creation',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update on this dataset',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the vote',
+  `vote_weight` int(11) DEFAULT NULL COMMENT 'absolute value for given votes,  neutral = 1 or =vote_value',
+  `number_of_delegations` int(11) DEFAULT NULL COMMENT 'number of delegated votes included',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
