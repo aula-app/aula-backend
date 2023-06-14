@@ -30,6 +30,7 @@ function out ($text, $form=false){ // lazy helper function
   echo ("<br>".$formstart.$text.$formend."<br>");
 }
 
+$msg="";
 
 $user_id = 5;
 if (!isset ($_SESSION ['user_id'])){
@@ -37,9 +38,11 @@ if (!isset ($_SESSION ['user_id'])){
 }
 if (isset ($_REQUEST['user']))
 {
-  echo ("<br>USER ID is set to ".intval ($_REQUEST['user']));
+  $msg.= ("<br>USER ID is set to ".intval ($_REQUEST['user']));
   $_SESSION ['user_id'] = intval ($_REQUEST['user']);
 }
+
+
 
 $vote_value = 1;
 if (isset ($_REQUEST['votevalue']))
@@ -59,24 +62,24 @@ if (isset ($_REQUEST['vote']))
 {
   $idea_id = intval ($_REQUEST['vote']);
   // voteForIdea($idea_id, $vote_value, $user_id)
-  echo ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$vote_value);
+  $msg.= ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$vote_value);
   $return_value = $idea->voteForIdea ($idea_id, $vote_value, $_SESSION ['user_id']);
-  echo ("<br>Returning value: ".$return_value);
+  $msg.= ("<br>Returning value: ".$return_value);
 } // end if
 
 if (isset ($_REQUEST['reset']))
 {
   // voteForIdea($idea_id, $vote_value, $user_id)
-  echo ("<br>Resetting votes and likes");
+  $msg.= ("<br>Resetting votes and likes");
   $return_value = $idea->resetVotes ();
-  echo ("<br>Returning value: ".$return_value);
+  $msg.= ("<br>Returning value: ".$return_value);
 } // end if
 
 if (isset ($_REQUEST['like']))
 {
   $idea_id = intval ($_REQUEST['like']);
   // voteForIdea($idea_id, $vote_value, $user_id)
-  echo ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$like_value);
+  $msg.= ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$like_value);
   if ($like_value==0) {
     //unlike
     $return_value = $idea->IdeaRemoveLike ($idea_id, $_SESSION ['user_id']);
@@ -84,7 +87,7 @@ if (isset ($_REQUEST['like']))
   } else {
     $return_value = $idea->IdeaAddLike ($idea_id, $_SESSION ['user_id']);
   }
-  echo ("<br>Returning value: ".$return_value);
+  $msg.= ("<br>Returning value: ".$return_value);
 } // end if
 
 ?>
@@ -95,29 +98,33 @@ if (isset ($_REQUEST['like']))
 
 $offset = 0; // set start at dataset #10
 $limit = 5; // get 10 datasets
-out ("Reading 5 idea datasets (".$room->getNumberOfUsers(4).")",true);
-echo ("<br>(User 6 has a delegation from user 10 = double vote weight for user 6)");
+echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4).")</h2>");
+echo ("<i>(User 6 has a delegation from user 10 = double vote weight for user 6)</i>");
 ?>
-<br><br>User id <form method ="_POST"><input type='text' name='user' value='<?php echo $_SESSION ['user_id'] ?>'><button type=submit name='submitter'>SET USER</button></form>
-<br><form method ="_POST"><button type=submit name='reset'>RESET VOTES AND LIKES</button></form>
+
+<body style="font-family: arial;font-size:1.2em;">
+  <div style="width:100%;background-color:#e9e9e9; padding:10px;">
+    <span style="color:#ff0000; font-weight:bold;"><?php echo $msg ?>&nbsp;</span>
+    <br>Set User id <form method ="_POST"><input type='text' name='user' value='<?php echo $_SESSION ['user_id'] ?>'><button type=submit name='submitter'>SET USER</button></form>
+    <br><form method ="_POST"><button type=submit name='reset'>RESET VOTES AND LIKES</button></form>
+  </div>
+  <div id ="content_pane" style="">
 <?php
 $ideadata = $idea->getIdeas($offset, $limit, 4, 1, 1);
 // idea list:
 foreach ($ideadata as $result) {
     echo ('<form action="" method ="_POST">');
-    out ("ID: " . $result['id']);
-    out ("Name: " . $crypt->decrypt ($result['displayname']));
-    out ("Idea: " . $crypt->decrypt ($result['content']));
-    out ("<b>Sum Votes: " . ($result['sum_votes']).", Sum Likes: " . ($result['sum_likes'])."</b>");
-    out ("Last Update: " . $result['last_update']);
-    out ("created: " . $result['created']."<br><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='1'><br><button type=submit name='submitter'>VOTE for</button></form><form method ='_POST'><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='-1'><button type=submit name='submitter'>VOTE against</button></form>");
+    echo ("<h2>".$result['id'].".". $crypt->decrypt ($result['content'])."</h2>");
+    echo ("<b>Sum Votes: " . ($result['sum_votes']).", Sum Likes: " . ($result['sum_likes'])."</b>");
+    echo ("<br><small>Last Update: " . $result['last_update']."</small>");
+    echo ("<input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='1'><br><button type=submit name='submitter'>VOTE for</button></form><form method ='_POST'><input type='hidden' name='vote' value='". intval (trim ($result['id']))."'><input type='hidden' name='votevalue' value='-1'><button type=submit name='submitter'>VOTE against</button></form>");
     echo ('<form action="" method ="_POST">');
-    out ("<input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='1'><button type=submit name='submitter'>LIKE</button></form><form method ='_POST'><input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='0'><button type=submit name='submitter'>UNLIKE</button></form>");
+    echo ("<input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='1'><button type=submit name='submitter'>LIKE</button></form><form method ='_POST'><input type='hidden' name='like' value='". intval (trim ($result['id']))."'><input type='hidden' name='likevalue' value='0'><button type=submit name='submitter'>UNLIKE</button></form>");
     // User id <input type='text' name='user' value='". $user_id."'>
     echo ("</form>");
 }
 
 ?>
-
+</div>
 </body>
 </html>
