@@ -18,25 +18,14 @@ class Group {
         $this->crypt = $crypt;
         $this->syslog = $syslog;
 
-        $au_rooms = 'au_rooms';
-        $au_groups = 'au_groups';
-        $au_users_basedata = 'au_users_basedata';
-        $au_rel_rooms_users ='au_rel_rooms_users';
-        $au_rel_groups_users ='au_rel_groups_users';
-
-        $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
-        $this->$au_rooms = $au_rooms; // table name for rooms
-        $this->$au_groups = $au_groups; // table name for groups
-        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
-        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
-
+        
     }// end function
 
     public function getGroupBaseData($group_id) {
       /* returns group base data for a specified db id or 0 if nothing is found */
       $group_id = $this->checkGroupId($group_id); // checks group_id id and converts group id to db group id if necessary (when group hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_groups.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_groups.' WHERE id = :id');
       $this->db->bind(':id', $group_id); // bind group id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
@@ -46,24 +35,54 @@ class Group {
       }
     }// end function
 
-    public function getGroupHashId($group_id) {
-      /* returns hash_id of a group for a integer group id
-      */
-      $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_groups.' WHERE id = :id');
-      $this->db->bind(':id', $group_id); // bind group id
-      $groups = $this->db->resultSet();
-      if (count($groups)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $groups[0]['hash_id']; // return an array (associative) with all the data for the group
-      }
-    }// end function
+  public function getGroupHashId($group_id) {
+    /* returns hash_id of a group for an integer group id
+    */
+    $stmt = $this->db->query('SELECT hash_id FROM '.$this->db->au_groups.' WHERE id = :id');
+    $this->db->bind(':id', $group_id); // bind group id
+    $groups = $this->db->resultSet();
+    if (count($groups)<1){
+      return 0; // nothing found, return 0 code
+    }else {
+      return $groups[0]['hash_id']; //  returns the value
+    }
+  }// end function
 
-    public function getGroupIdByHashId($hash_id) {
+  public function getGroupVoteBias ($group_id) {
+    /* returns voting bias for this group for an integer group id
+    */
+    $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+
+    $stmt = $this->db->query('SELECT vote_bias FROM '.$this->db->au_groups.' WHERE id = :id');
+    $this->db->bind(':id', $group_id); // bind group id
+    $groups = $this->db->resultSet();
+    $return_value = 1; // default value = 1 vote per user
+    if (count($groups)>0){
+      $return_value = $groups[0]['votes_per_user']; // return the vote bias for this group
+    }
+    return $return_value;
+  }// end function
+
+  public function getGroupVoteBiasForUser ($user_id) {
+    /* returns voting bias for this group for an integer group id
+    */
+    $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+
+    $stmt = $this->db->query('SELECT '.$this->db->au_groups.'.vote_bias FROM '.$this->db->au_groups.' INNER JOIN '.$this->db->au_rel_groups_users.' ON ('.$this->db->au_groups.'.id = '.$this->db->au_rel_groups_users.'.group_id) WHERE '.$this->db->au_rel_groups_users.'.user_id = :id');
+    $this->db->bind(':id', $user_id); // bind group id
+    $groups = $this->db->resultSet();
+    $return_value = 1; // default value = 1 vote per user
+    if (count($groups)>0){
+      $return_value = $groups[0]['votes_per_user']; // return the vote bias for this user
+    }
+    return $return_value;
+  }// end function
+
+  public function getGroupIdByHashId($hash_id) {
       /* Returns Database ID of group when hash_id is provided
       */
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE hash_id = :hash_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_groups.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
@@ -77,7 +96,9 @@ class Group {
     public function checkAccesscode($group_id, $access_code) { // access_code = clear text
       /* checks access code and returns database group id (credentials correct) or 0 (credentials not correct)
       */
-      $stmt = $this->db->query('SELECT group_name, id,access_code,hash_id FROM '.$this->au_groups.' WHERE id= :id');
+      $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+
+      $stmt = $this->db->query('SELECT group_name, id,access_code,hash_id FROM '.$this->db->au_groups.' WHERE id= :id');
       $this->db->bind(':id', $group_id); // bind group id
 
       $groups = $this->db->resultSet();
@@ -107,7 +128,7 @@ class Group {
       */
       $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_groups.' WHERE id = :id');
       $this->db->bind(':id', $group_id); // bind group id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
@@ -121,8 +142,9 @@ class Group {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
+      $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-      $stmt = $this->db->query('SELECT '.$this->au_users_basedata.'.realname, '.$this->au_users_basedata.'.displayname, '.$this->au_users_basedata.'.id, '.$this->au_users_basedata.'.username, '.$this->au_users_basedata.'.email FROM '.$this->au_rel_groups_users.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_rel_groups_users.'.user_id='.$this->au_users_basedata.'.id) WHERE '.$this->au_rel_groups_users.'.group_id= :groupid AND '.$this->au_users_basedata.'.status= :status' );
+      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_groups_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_groups_users.'.group_id= :groupid AND '.$this->db->au_users_basedata.'.status= :status' );
       $this->db->bind(':groupid', $group_id); // bind group id
       $this->db->bind(':status', $status); // bind status
 
@@ -143,13 +165,14 @@ class Group {
       }
     }// end function
 
-    
+
 
     public function emptyGroup($group_id) {
       /* deletes all users from a group
       */
+      $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE group_id = :groupid' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_groups_users.' WHERE group_id = :groupid' );
       $this->db->bind(':groupid', $group_id); // bind room id
 
       $err=false;
@@ -213,7 +236,7 @@ class Group {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_groups.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_groups.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
 
       if ($limit){
         // only bind if limit is set
@@ -242,7 +265,7 @@ class Group {
       // checks if a group with this name is already in database
       $group_name=trim ($group_name); // trim spaces
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE group_name = :group_name');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_groups.' WHERE group_name = :group_name');
       $this->db->bind(':group_name', $group_name); // bind room id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
@@ -252,7 +275,7 @@ class Group {
       }
     }
 
-    public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $group_order=10) {
+    public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $group_order=10, $votes_per_user=1) {
         /* adds a new group and returns insert id (group id) if successful, accepts the above parameters
          description_public = actual description of the group, status = status of inserted group (0 = inactive, 1=active)
         */
@@ -270,7 +293,7 @@ class Group {
 
         $hash_access_code = password_hash(trim ($access_code), PASSWORD_DEFAULT); // hash access code
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_groups.' (group_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, group_order) VALUES (:group_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :group_order)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_groups.' (group_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, group_order) VALUES (:group_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :group_order)');
         // bind all VALUES
         $this->db->bind(':group_name', trim ($group_name));
         $this->db->bind(':description_public', trim ($description_public));
@@ -315,7 +338,7 @@ class Group {
         */
         $group_id = $this->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -341,6 +364,40 @@ class Group {
         }
     }// end function
 
+
+    public function setGroupVotesPerUser ($group_id, $votes, $updater_id=0) {
+        /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         status = status of inserted group (0 = inactive, 1=active)
+         updater_id is the id of the group that commits the update (i.E. admin )
+        */
+        $group_id = $this->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET votes_per_user= :votes_per_user, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+        // bind all VALUES
+        $this->db->bind(':votes_per_user', $votes_per_user);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':group_id', $group_id); // group that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Group votes per user changed ".$group_id." by ".$updater_id, 0, "", 1);
+          return intval($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing votes per user of group ".$group_id." by ".$updater_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+    }// end function
+
     public function setGroupDescriptionPublic($group_id, $about, $updater_id=0) {
         /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          about (text) -> description of a group
@@ -348,7 +405,7 @@ class Group {
         */
         $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET description_public= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET description_public= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
         $this->db->bind(':about', $about);
         $this->db->bind(':updater_id', $updater_id); // id of the group doing the update (i.e. admin)
@@ -381,7 +438,7 @@ class Group {
         */
         $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET description_internal= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET description_internal= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
         $this->db->bind(':about', $about);
         $this->db->bind(':updater_id', $updater_id); // id of the group doing the update (i.e. admin)
@@ -413,7 +470,7 @@ class Group {
         */
         $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET group_name= :group_name, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET group_name= :group_name, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
         $this->db->bind(':group_name', $group_name);
         $this->db->bind(':group_id', $group_id); // group that is updated
@@ -444,7 +501,7 @@ class Group {
         */
         $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_groups.' SET access_code= :access_code, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET access_code= :access_code, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
 
         // generate access code hash
         $hash = password_hash($access_code, PASSWORD_DEFAULT);
@@ -491,7 +548,7 @@ class Group {
         /* deletes group and returns the number of rows (int) accepts group id or group hash id // */
         $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-        $stmt = $this->db->query('DELETE FROM '.$this->au_groups.' WHERE id = :id');
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_groups.' WHERE id = :id');
         $this->db->bind (':id', $group_id);
         $err=false;
         try {
@@ -512,5 +569,5 @@ class Group {
 
     }// end function
 
-}
+} // end class
 ?>
