@@ -22,30 +22,6 @@ class Idea {
         $this->syslog = $syslog;
         $this->group = new Group ($db, $crypt, $syslog); // init group class
 
-        $au_rooms = 'au_rooms';
-        $au_groups = 'au_groups';
-        $au_votes = 'au_votes';
-        $au_likes = 'au_likes';
-        $au_topics = 'au_topics';
-        $au_delegation = 'au_delegation';
-        $au_reported = 'au_reported';
-        $au_users_basedata = 'au_users_basedata';
-        $au_rel_rooms_users ='au_rel_rooms_users';
-        $au_rel_groups_users ='au_rel_groups_users';
-        $au_rel_topics_ideas ='au_rel_topics_ideas';
-
-        $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
-        $this->$au_rooms = $au_rooms; // table name for rooms
-        $this->$au_delegation = $au_delegation; // table name for delegation
-        $this->$au_groups = $au_groups; // table name for groups
-        $this->$au_topics = $au_topics; // table name for topics
-        $this->$au_votes = $au_votes; // table name for votes
-        $this->$au_likes = $au_likes; // table name for likes
-        $this->$au_reported = $au_reported; // table name for reportings
-
-        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
-        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
-        $this->$au_rel_topics_ideas = $au_rel_topics_ideas; // table name for relations topics - ideas
     }// end function
 
     public function getIdeaBaseData($idea_id) {
@@ -251,7 +227,7 @@ class Idea {
     }// end function
 
     public function getTopicIdByHashId($hash_id) {
-      /* Returns Database ID of idea when hash_id is provided
+      /* Returns Database ID of TOPIC when hash_id is provided
       */
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE hash_id = :hash_id');
@@ -261,6 +237,20 @@ class Idea {
         return 0; // nothing found, return 0 code
       }else {
         return $topics[0]['id']; // return topic id
+      }
+    }// end function
+
+    public function getCategoryIdByHashId($hash_id) {
+      /* Returns Database ID of category when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_categories.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $categories = $this->db->resultSet();
+      if (count($categories)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $categories[0]['id']; // return category id
       }
     }// end function
 
@@ -442,7 +432,59 @@ class Idea {
           return "1,1,1"; // return error code 1 = successful
 
         } else {
-          $this->syslog->addSystemEvent(0, "Error while adding idea ".$idea_id." to room ".$topic_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Error while adding idea ".$idea_id." to topic ".$topic_id, 0, "", 1);
+
+          return "0,1,1"; // return 0 to indicate that there was an error executing the statement
+        }
+
+      }else {
+        return "0,".$idea_exist.",".$topic_exist; // returns error and 0 or 1 for user and room (0=doesn't exist, 1=exists)
+      }
+
+      return "1,1,1"; // returns 1=ok/successful, user exists (1), room exists (1)
+
+    }
+
+    public function addIdeaToCategory ($idea_id, $category_id, $updater_id=0){
+      // adds an idea (idea_id) to a specified topic (topic_id)
+
+      //
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $category_id = $this->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+      $idea_exist = $this->checkIdeaExist($idea_id);
+      $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+
+      if ($idea_exist==1) {
+        // everything ok, idea exists
+        // add relation to database
+
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rel_categories_ideas.' (idea_id, category_id, status, created, last_update, updater_id) VALUES (:idea_id, :category_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
+
+        // bind all VALUES
+        $this->db->bind(':idea_id', $idea_id);
+        $this->db->bind(':category_id', $category_id);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added idea ".$idea_id." to category ".$category_id, 0, "", 1);
+          return "1,1,1"; // return error code 1 = successful
+
+        } else {
+          $this->syslog->addSystemEvent(0, "Error while adding idea ".$idea_id." to category ".$category_id, 0, "", 1);
 
           return "0,1,1"; // return 0 to indicate that there was an error executing the statement
         }
@@ -482,6 +524,30 @@ class Idea {
 
     }// end function
 
+    public function removeIdeaFromCategory($category_id, $idea_id) {
+      /* removes an idea from a topic
+      */
+      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $category_id = $this->checkCategoryId($category_id); // checks  id and converts  id to db  id if necessary (when  hash id was passed)
+
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_categories_ideas.' WHERE idea_id = :idea_id AND category_id = :category_id' );
+      $this->db->bind(':category_id', $category_id); // bind topic id
+      $this->db->bind(':idea_id', $idea_id); // bind idea id
+
+      $err=false;
+      try {
+        $topics = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while deleting idea from category: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
+
+      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+
+    }// end function
+
 
     public function removeAllIdeasFromTopic ($topic_id) {
       /* removes all associations of ideas from a topic
@@ -490,7 +556,6 @@ class Idea {
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_topics_ideas.' WHERE topic_id = :topic_id' );
       $this->db->bind(':topic_id', $topic_id); // bind topic id
-      $this->db->bind(':idea_id', $idea_id); // bind idea id
 
       $err=false;
       try {
@@ -507,7 +572,30 @@ class Idea {
 
     }// end function
 
-    public function getIdeasByTopic ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id) {
+    public function removeAllIdeasFromCategory ($category_id) {
+      /* removes all associations of ideas from a topic
+      */
+      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_categories_ideas.' WHERE category_id = :category_id' );
+      $this->db->bind(':topic_id', $category_id); // bind topic id
+
+      $err=false;
+      try {
+        $topics = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          echo 'Error occured while deleting all ideas from category: ',  $e->getMessage(), "\n"; // display error
+          $err=true;
+          return "0,0";
+      }
+
+
+      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+
+    }// end function
+
+  public function getIdeasByTopic ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -570,7 +658,7 @@ class Idea {
         $this->db->bind(':limit', $limit); // bind limit
       }
       $this->db->bind(':status', $status); // bind status
-      $this->db->bind(':group_id', $group_id); // bind group id
+      $this->db->bind(':topic_id', $topic_id); // bind group id
 
       $err=false;
       try {
@@ -588,6 +676,88 @@ class Idea {
         return $ideas; // return an array (associative) with all the data
       }
     }// end function
+
+    public function getIdeasByCategory ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id) {
+        /* returns category list (associative array) with start and limit provided
+        if start and limit are set to 0, then the whole list is read (without limit)
+        orderby is the field (int, see switch), defaults to last_update (3)
+        asc (smallint), is either ascending (1) or descending (0), defaults to descending
+        $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+        $room_id is the id of the room
+        */
+
+        // init vars
+        $orderby_field="";
+        $asc_field ="";
+
+        $limit_string=" LIMIT :offset , :limit ";
+        $limit_active=true;
+
+        // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+        if ($offset==0 && $limit==0){
+          $limit_string="";
+          $limit_active=false;
+        }
+
+        switch (intval ($orderby)){
+          case 0:
+          $orderby_field = $this->db->au_ideas."status";
+          break;
+          case 1:
+          $orderby_field = $this->db->au_ideas."order_importance";
+          break;
+          case 2:
+          $orderby_field = $this->db->au_ideas."created";
+          break;
+          case 3:
+          $orderby_field = $this->db->au_ideas."last_update";
+          break;
+          case 4:
+          $orderby_field = $this->db->au_ideas."id";
+          break;
+
+          default:
+          $orderby_field = $this->db->au_ideas."last_update";
+        }
+
+        switch (intval ($asc)){
+          case 0:
+          $asc_field = "DESC";
+          break;
+          case 1:
+          $asc_field = "ASC";
+          break;
+          default:
+          $asc_field = "DESC";
+        }
+        $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+        $join =  'INNER JOIN '.$this->db->au_rel_categories_ideas.' ON ('.$this->db->au_rel_categories_ideas.'.idea_id='.$this->db->au_ideas.'.id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
+        $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_rel_categories_ideas.'.category_id= :category_id ';
+        $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+        if ($limit){
+          // only bind if limit is set
+          $this->db->bind(':offset', $offset); // bind limit
+          $this->db->bind(':limit', $limit); // bind limit
+        }
+        $this->db->bind(':status', $status); // bind status
+        $this->db->bind(':category_id', $category_id); // bind category_id
+
+        $err=false;
+        try {
+          $ideas = $this->db->resultSet();
+
+        } catch (Exception $e) {
+            echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+            return 0;
+        }
+
+        if (count($ideas)<1){
+          return 0; // nothing found, return 0 code
+        }else {
+          return $ideas; // return an array (associative) with all the data
+        }
+      }// end function
 
     protected function checkIfVoteWasMade ($user_id, $idea_id){
       // checks if there already is a vote by this user (user_id) for this idea (idea_id)
@@ -1947,6 +2117,20 @@ class Idea {
       } else
       {
         return $this->getTopicIdByHashId ($topic_id);
+      }
+    } // end function
+
+    private function checkCategoryId ($category_id) {
+      /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
+      if a hash was passed, function gets db topic id and returns db id
+      */
+
+      if (is_int($category_id))
+      {
+        return $category_id;
+      } else
+      {
+        return $this->getTopicIdByHashId ($category_id);
       }
     } // end function
 
