@@ -677,6 +677,7 @@ class Idea {
       }
     }// end function
 
+
     public function getIdeasByCategory ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id) {
         /* returns category list (associative array) with start and limit provided
         if start and limit are set to 0, then the whole list is read (without limit)
@@ -1611,6 +1612,41 @@ class Idea {
           return intval ($this->db->rowCount()); // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error changing idea content ".$idea_id." by ".$updater_id, 0, "", 1);
+          return 0; // return 0 to indicate that there was an error executing the statement
+        }
+    }// end function
+
+
+    public function setCategory($idea_id, $category_id, $updater_id=0) {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         content = content of the idea
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $category_id = $this->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET category_id= :category_id, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        // bind all VALUES
+        $this->db->bind(':category_id', $category_id);
+        $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+
+        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Idea category changed ".$idea_id." by ".$updater_id, 0, "", 1);
+          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing idea category ".$idea_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
     }// end function
