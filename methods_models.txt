@@ -40,6 +40,7 @@ public function getIdeaHashId($idea_id)
 public function getUserIdByHashId($hash_id)
 public function getIdeaIdByHashId($hash_id)
 public function getTopicIdByHashId($hash_id)
+public function getCategoryIdByHashId($hash_id)
 public function reportIdea ($idea_id, $user_id, $updater_id, $reason =""){
 public function suspendIdea ($idea_id, $updater_id){
 public function archiveIdea ($idea_id, $updater_id){
@@ -49,9 +50,13 @@ public function setIdeatoReview ($idea_id, $updater_id){
 public function checkIdeaExist($idea_id)
 public function checkTopicExist($topic_id)
 public function addIdeaToTopic ($idea_id, $topic_id, $updater_id){
+public function addIdeaToCategory ($idea_id, $category_id, $updater_id=0){
 public function removeIdeaFromTopic($topic_id, $idea_id)
+public function removeIdeaFromCategory($category_id, $idea_id)
 public function removeAllIdeasFromTopic ($topic_id)
+public function removeAllIdeasFromCategory ($category_id)
 public function getIdeasByTopic ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id)
+public function getIdeasByCategory ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id)
 public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="")
 public function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id)
 public function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status=1, $group_id)
