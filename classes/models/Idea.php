@@ -22,12 +22,10 @@ class Idea {
         $this->syslog = $syslog;
         $this->group = new Group ($db, $crypt, $syslog); // init group class
         $this->converters = new Converters ($db); // load converters
-
-        /* ======== Memcached Server Connection ========= */
+        /*
         $memcache = new Memcached();
         $memcache->addServer('localhost', 11211) or die ("Could not connect");
-        /* ======== Memcached Server Connection ========= */
-
+        */
     }// end function
 
     public function getIdeaBaseData($idea_id) {
