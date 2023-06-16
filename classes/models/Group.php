@@ -17,13 +17,14 @@ class Group {
         $this->db = $db;
         $this->crypt = $crypt;
         $this->syslog = $syslog;
+        $this->converters = new Converters ($db); // load converters
 
-        
+
     }// end function
 
     public function getGroupBaseData($group_id) {
       /* returns group base data for a specified db id or 0 if nothing is found */
-      $group_id = $this->checkGroupId($group_id); // checks group_id id and converts group id to db group id if necessary (when group hash id was passed)
+      $group_id = $this->converters->checkGroupId($group_id); // checks group_id id and converts group id to db group id if necessary (when group hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_groups.' WHERE id = :id');
       $this->db->bind(':id', $group_id); // bind group id
@@ -51,7 +52,7 @@ class Group {
   public function getGroupVoteBias ($group_id) {
     /* returns voting bias for this group for an integer group id
     */
-    $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+    $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
     $stmt = $this->db->query('SELECT vote_bias FROM '.$this->db->au_groups.' WHERE id = :id');
     $this->db->bind(':id', $group_id); // bind group id
@@ -66,7 +67,7 @@ class Group {
   public function getGroupVoteBiasForUser ($user_id) {
     /* returns voting bias for this group for an integer group id
     */
-    $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+    $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
     $stmt = $this->db->query('SELECT '.$this->db->au_groups.'.vote_bias FROM '.$this->db->au_groups.' INNER JOIN '.$this->db->au_rel_groups_users.' ON ('.$this->db->au_groups.'.id = '.$this->db->au_rel_groups_users.'.group_id) WHERE '.$this->db->au_rel_groups_users.'.user_id = :id');
     $this->db->bind(':id', $user_id); // bind group id
@@ -96,7 +97,7 @@ class Group {
     public function checkAccesscode($group_id, $access_code) { // access_code = clear text
       /* checks access code and returns database group id (credentials correct) or 0 (credentials not correct)
       */
-      $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+      $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
       $stmt = $this->db->query('SELECT group_name, id,access_code,hash_id FROM '.$this->db->au_groups.' WHERE id= :id');
       $this->db->bind(':id', $group_id); // bind group id
@@ -122,27 +123,11 @@ class Group {
     }// end function
 
 
-
-    public function checkGroupExist($group_id) {
-      /* returns 0 if group does not exist, 1 if group exists, accepts databse id (int)
-      */
-      $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_groups.' WHERE id = :id');
-      $this->db->bind(':id', $group_id); // bind group id
-      $groups = $this->db->resultSet();
-      if (count($groups)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return 1; // group found, return 1
-      }
-    } // end function
-
     public function getUsersInGroup($group_id, $status=1) {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
-      $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+      $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
       $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_groups_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_groups_users.'.group_id= :groupid AND '.$this->db->au_users_basedata.'.status= :status' );
       $this->db->bind(':groupid', $group_id); // bind group id
@@ -170,7 +155,7 @@ class Group {
     public function emptyGroup($group_id) {
       /* deletes all users from a group
       */
-      $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+      $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_groups_users.' WHERE group_id = :groupid' );
       $this->db->bind(':groupid', $group_id); // bind room id
@@ -286,7 +271,7 @@ class Group {
 
 
         // check if group name is still available
-        if ($this->checkGroupExistsByName($group_name)>0){
+        if ($this->converters->checkGroupExistsByName($group_name)>0){
           return "0,1"; // group exists, stop exectuing, return errorcode 1 = group exists
         }
 
@@ -336,7 +321,7 @@ class Group {
          status = status of inserted group (0 = inactive, 1=active)
          updater_id is the id of the group that commits the update (i.E. admin )
         */
-        $group_id = $this->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->converters->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -370,7 +355,7 @@ class Group {
          status = status of inserted group (0 = inactive, 1=active)
          updater_id is the id of the group that commits the update (i.E. admin )
         */
-        $group_id = $this->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->converters->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET votes_per_user= :votes_per_user, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -403,7 +388,7 @@ class Group {
          about (text) -> description of a group
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET description_public= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -436,7 +421,7 @@ class Group {
          about (text) -> description of a group
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET description_internal= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -468,7 +453,7 @@ class Group {
         /* edits a group and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          group_name =  name of the group
         */
-        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET group_name= :group_name, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
         // bind all VALUES
@@ -499,7 +484,7 @@ class Group {
         /* edits a group and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          pw = pw in clear text
         */
-        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET access_code= :access_code, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
 
@@ -546,7 +531,7 @@ class Group {
 
     public function deleteGroup($group_id, $updater_id=0) {
         /* deletes group and returns the number of rows (int) accepts group id or group hash id // */
-        $group_id = $this->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+        $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
         $stmt = $this->db->query('DELETE FROM '.$this->db->au_groups.' WHERE id = :id');
         $this->db->bind (':id', $group_id);

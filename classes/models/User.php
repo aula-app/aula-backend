@@ -17,6 +17,7 @@ class User {
         $this->db = $db;
         $this->crypt = $crypt;
         $this->syslog = $syslog;
+        $this->converters = new Converters ($db); // load converters
 
         $au_users_basedata = 'au_users_basedata';
         $au_rooms = 'au_rooms';
@@ -40,9 +41,14 @@ class User {
         $this->$au_rel_user_user = $au_rel_user_user;
     }// end function
 
+    private function decrypt ($content){
+      // decryption helper
+      return $content = $this->crypt->decrypt ($content);
+    }
+
     public function getUserBaseData($user_id) {
       /* returns user base data for a specified db id */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $user_id); // bind userid
@@ -50,6 +56,11 @@ class User {
       if (count($users)<1){
         return 0; // nothing found, return 0 code
       }else {
+        // descrypt the encrypted fields
+        /*$users[0]['realname'] = $this->decrypt ($users[0]['realname']);
+        $users[0]['displayname'] = $this->decrypt ($users[0]['displayname']);
+        $users[0]['username'] = $this->decrypt ($users[0]['username']);
+        $users[0]['email'] = $this->decrypt ($users[0]['email']);*/
         return $users[0]; // return an array (associative) with all the data for the user
       }
     }// end function
@@ -85,10 +96,10 @@ class User {
       /* Returns Database ID of user when hash_id is provided
       */
       //sanitize variables
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
-      $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
 
       $stmt = $this->db->query('SELECT room_id FROM '.$this->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
@@ -131,48 +142,19 @@ class User {
       }
     }// end function
 
-    private function checkTopicId ($topic_id) {
-      /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
-      if a hash was passed, function gets db topic id and returns db id
-      */
-
-      if (is_int($topic_id))
-      {
-        return $topic_id;
-      } else
-      {
-        return $this->getTopicIdByHashId ($topic_id);
-      }
-    } // end function
-
-    protected function getTopicIdByHashId($hash_id) {
-      /* Returns Database ID of idea when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $topics = $this->db->resultSet();
-      if (count($topics)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $topics[0]['id']; // return idea id
-      }
-    }// end function
-
-
 
     public function delegateVoteRight ($user_id, $user_id_target, $room_id, $topic_id, $updater_id) {
       /* delegates voting rights from one user to another within a room for a certain topic, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
-      $topic_id = $this->checkRoomId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $topic_id = $this->converters->checkRoomId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       // check if user and room exist
-      $user_exist = $this->checkUserExist($user_id);
-      $user_exist_target = $this->checkUserExist($user_id_target);
-      $room_exist = $this->checkRoomExist($room_id);
+      $user_exist = $this->converters->checkUserExist($user_id);
+      $user_exist_target = $this->converters->checkUserExist($user_id_target);
+      $room_exist = $this->converters->checkRoomExist($room_id);
 
       if ($user_exist==1 && $room_exist==1 && $user_exist_target==1) {
         // everything ok, users and room exists
@@ -218,34 +200,6 @@ class User {
     } // end function
 
 
-    public function getRoomIdByHashId($hash_id) {
-      /* Returns Database ID of room when only hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind userid
-      $rooms = $this->db->resultSet();
-      if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $rooms[0]['id']; // return room db id
-      }
-    }// end function
-
-    public function getGroupIdByHashId($hash_id) {
-      /* Returns Database ID of group when only hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_groups.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind userid
-      $groups = $this->db->resultSet();
-      if (count($groups)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $groups[0]['id']; // return group db id
-      }
-    }// end function
-
     public function setDelegationStatus ($user_id, $status, $room_id = 0, $target = 0) {
         /* edits the status of a delegation and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          status = status for delegation (0 = inactive, 1=active, 2 = suspended, 4 = archived)
@@ -253,9 +207,9 @@ class User {
          target specifies if original or target users are adressed 0 = remove delegations of delegating user (original owner->default) 1= remove delegation of target user
         */
 
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+        $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
         $room_clause = "";
 
@@ -297,7 +251,7 @@ class User {
     public function getReceivedDelegations ($user_id, $topic_id) {
       /* returns received delegations for a specific user (user_id) in the room
       */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_original) WHERE '.$this->au_delegation.'.user_id_target = :id AND '.$this->au_delegation.'.topic_id = :topic_id');
       $this->db->bind(':id', $user_id); // bind userid
@@ -314,7 +268,7 @@ class User {
     public function getGivenDelegations ($user_id, $topic_id) {
       /* returns received delegations for a specific user (user_id) in the room
       */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_target) WHERE '.$this->au_delegation.'.user_id_original = :id AND '.$this->au_delegation.'.topic_id = :topic_id');
       $this->db->bind(':id', $user_id); // bind userid
@@ -342,9 +296,9 @@ class User {
       /* remove delegation from a specific user A (user_id_original) to a specific user B (user_id_target) for
       a) a certain room (room id>0) or all delegations (room_id=0), defaults to all rooms
       */
-      $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $user_id_original = $this->checkUserId($user_id_original); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $topic_id = $this->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id_original = $this->converters->checkUserId($user_id_original); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $topic_clause = "";
 
@@ -383,8 +337,8 @@ class User {
        target specifies if original or target users are adressed 0 = remove delegations of delegating user (original owner->default) 1= remove delegation of target
       */
 
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $topic_id = $this->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $topic_clause = "";
 
@@ -423,11 +377,11 @@ class User {
     public function addUserToRoom($user_id, $room_id, $status, $updater_id) {
       /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
       // check if user and room exist
-      $user_exist = $this->checkUserExist($user_id);
-      $room_exist = $this->checkRoomExist($room_id);
+      $user_exist = $this->converters->checkUserExist($user_id);
+      $room_exist = $this->converters->checkRoomExist($room_id);
 
       if ($user_exist==1 && $room_exist==1) {
         // everything ok, user and room exists
@@ -474,8 +428,8 @@ class User {
     public function removeUserFromRoom($room_id, $user_id) {
       /* deletes a user from a room
       */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE user_id = :userid AND room_id = :roomid' );
       $this->db->bind(':roomid', $room_id); // bind room id
@@ -492,7 +446,13 @@ class User {
           return "0,0";
       }
       // remove delegations for this user
-      $this->deleteRoomUserDelegations ($room_id, $user_id);
+      // todo -> remove delegations from this user
+      //  $this->deleteRoomUserDelegations ($room_id, $user_id);
+      // remove all delegations for this user
+      $this->removeUserDelegations ($user_id, 0, 0); // active delegations (original user)
+      $this->removeUserDelegations ($user_id, 0, 1); // passive delegations (target user)
+
+
 
       return "1,".$rowcount; // return number of affected rows to calling script
 
@@ -526,12 +486,12 @@ class User {
       /*
       user A (user_id) follows user B (user_id_target), type = 1 => follow /  type = 2 => friend / type = 0 => blocked
        */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // check if user and room exist
-      $user_exist = $this->checkUserExist($user_id);
-      $user_exist_target = $this->checkUserExist($user_id_target);
+      $user_exist = $this->converters->checkUserExist($user_id);
+      $user_exist_target = $this->converters->checkUserExist($user_id_target);
 
       if ($user_exist==1 && $user_exist_target==1) {
         // everything ok, both users exist
@@ -579,8 +539,8 @@ class User {
     public function removeUserRelation($user_id, $user_id_target) {
       /* deletes a user relation form the db
       */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $user_id_target = $this->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->au_rel_user_user.' WHERE user_id1 = :user_id1 AND user_id2 = :user_id2' );
       $this->db->bind(':user_id1', $user_id); // bind user id
@@ -628,11 +588,11 @@ class User {
     public function addUserToGroup($user_id, $group_id, $status, $updater_id) {
       /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 group id not in db 0,3 user id not in db group id not in db */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $group_id = $this->checkGroupId($group_id); // checks group id and converts room id to db room id if necessary (when room hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts room id to db room id if necessary (when room hash id was passed)
       // check if user and room exist
-      $user_exist = $this->checkUserExist($user_id);
-      $group_exist = $this->checkGroupExist($group_id);
+      $user_exist = $this->converters->checkUserExist($user_id);
+      $group_exist = $this->converters->checkGroupExist($group_id);
 
       if ($user_exist==1 && $group_exist==1) {
         // everything ok, user and room exists
@@ -727,53 +687,6 @@ class User {
     }// end function
 
 
-
-    public function checkUserExist($user_id) {
-      /* helper function to check if a user with a certain id exists, returns 0 if user does not exist, 1 if user exists, accepts database (int) or hash id (varchar)
-      */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE id = :id');
-      $this->db->bind(':id', $user_id); // bind userid
-      $users = $this->db->resultSet();
-      if (count($users)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return 1; // user found, return 1
-      }
-    } // end function
-
-    private function checkRoomExist($room_id) {
-      /* returns 0 if room does not exist, 1 if room exists, accepts databse id (int)
-      */
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts user id to db room id if necessary (when room hash id was passed)
-
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_rooms.' WHERE id = :id');
-      $this->db->bind(':id', $room_id); // bind roomid
-      $rooms = $this->db->resultSet();
-      if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return 1; // room found, return 1
-      }
-    } // end function
-
-    private function checkGroupExist($group_id) {
-      /* returns 0 if room does not exist, 1 if room exists, accepts databse id (int)
-      */
-      $group_id = $this->checkRoomId($group_id); // checks group id and converts user id to db group id if necessary (when room hash id was passed)
-
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_groups.' WHERE id = :id');
-      $this->db->bind(':id', $group_id); // bind groupid
-      $groups = $this->db->resultSet();
-      if (count($groups)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return 1; // room found, return 1
-      }
-    } // end function
-
-
     public function getUsers($offset, $limit, $orderby=3, $asc=0, $status=1) {
       /* returns userlist (associative array) with start and limit provided
       */
@@ -859,7 +772,7 @@ class User {
       // generate blind index
       $bi = md5 (strtolower (trim ($username)));
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE bi = :bi');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_users_basedata.' WHERE bi = :bi');
       $this->db->bind(':bi', $bi); // bind blind index
       $users = $this->db->resultSet();
       if (count($users)<1){
@@ -869,7 +782,6 @@ class User {
         return $user_id; // return user id
       }
     }
-
 
 
     public function addUser($realname, $displayname, $username, $email, $password, $status, $updater_id=0, $userlevel=10) {
@@ -944,7 +856,7 @@ class User {
          realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
         */
         // query('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET realname = :realname , displayname= :displayname, username= :username, email = :email, status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
@@ -982,7 +894,7 @@ class User {
          status = status of inserted user (0 = inactive, 1=active)
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
@@ -1016,13 +928,13 @@ class User {
     }// end function
 
     public function grantInfiniteVotesToUser ($user_id){
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       return $this->setUserInfiniteVote ($user_id, 1);
     }
 
     public function revokeInfiniteVotesFromUser ($user_id){
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       return $this->setUserInfiniteVote ($user_id, 0);
     }
@@ -1030,7 +942,7 @@ class User {
     public function getUserInfiniteVotesStatus($user_id) {
       /* returns hash_id of a user for a integer user id
       */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $user_id); // bind userid
@@ -1049,7 +961,7 @@ class User {
          sets the specified user to infinite vote capability
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         // sanitize
         $infinite = intval ($infinite);
         if ($infinite>1){
@@ -1130,7 +1042,7 @@ class User {
          userlevel = level of the user (10 (guest)-50 (techadmin))
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $userlevel = intval (§userlevel);
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET userlevel= :userlevel, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
@@ -1166,7 +1078,7 @@ class User {
         */
         $about = $this->crypt->encrypt(trim ($about)); // sanitize and encrypt about text
 
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET about_me= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
@@ -1201,7 +1113,7 @@ class User {
         */
         $about = $this->crypt->encrypt(trim ($userposition)); // sanitize and encrypt position text
 
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET position= :position, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
@@ -1233,7 +1145,7 @@ class User {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          realname = actual name of the user
         */
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET realname= :realname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
@@ -1264,7 +1176,7 @@ class User {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          displayname = shown name of the user in the system
         */
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET displayname= :displayname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
@@ -1296,7 +1208,7 @@ class User {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          email = email address of the user
         */
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET email= :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
@@ -1328,7 +1240,7 @@ class User {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          pw = pw in clear text
         */
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET pw= :pw, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
 
@@ -1359,58 +1271,13 @@ class User {
         }
     }// end function
 
-    private function checkUserId ($user_id) {
-      /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
-      if a hash was passed, function gets db user id and returns db id
-      */
 
-      if (is_int($user_id))
-      {
-        return $user_id;
-      } else
-      {
-
-        return $this->getUserIdByHashId ($user_id);
-      }
-    } // end function
-
-    private function checkRoomId ($room_id) {
-      /* helper function that checks if a room id is a standard db id (int) or if a hash roomid was passed
-      if a hash was passed, function gets db room id and returns db id
-      */
-
-      if (is_int($room_id))
-      {
-
-        return $room_id;
-      } else
-      {
-
-        return $this->getRoomIdByHashId ($room_id);
-      }
-    } // end function
-
-    private function checkGroupId ($group_id) {
-      /* helper function that checks if a group id is a standard db id (int) or if a hash group id was passed
-      if a hash was passed, function gets db group id and returns db id
-      */
-
-      if (is_int($group_id))
-      {
-
-        return $group_id;
-      } else
-      {
-
-        return $this->getGroupIdByHashId ($group_id);
-      }
-    } // end function
 
     public function setUserRegStatus($user_id, $regstatus, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
          regstatus (int) sets user registration status
         */
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET registration_status= :regstatus, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
 
@@ -1442,7 +1309,7 @@ class User {
     public function deleteUser($user_id, $updater_id=0) {
         /* deletes user and returns the number of rows (int) accepts user id or user hash id // */
 
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $stmt = $this->db->query('DELETE FROM '.$this->au_users_basedata.' WHERE id = :id');
         $this->db->bind (':id', $user_id);

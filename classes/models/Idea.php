@@ -11,8 +11,8 @@ if ($allowed_include==1){
 
 
 class Idea {
-    private $db;
 
+    private $db;
 
     public function __construct($db, $crypt, $syslog) {
         // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
@@ -21,12 +21,18 @@ class Idea {
         //$this->syslog = new Systemlog ($db);
         $this->syslog = $syslog;
         $this->group = new Group ($db, $crypt, $syslog); // init group class
+        $this->converters = new Converters ($db); // load converters
+
+        /* ======== Memcached Server Connection ========= */
+        $memcache = new Memcached();
+        $memcache->addServer('localhost', 11211) or die ("Could not connect");
+        /* ======== Memcached Server Connection ========= */
 
     }// end function
 
     public function getIdeaBaseData($idea_id) {
       /* returns idea base data for a specified db id */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
@@ -41,7 +47,7 @@ class Idea {
     public function getIdeaContent ($idea_id) {
       /* returns content, sum votes, sum likes, number of votes, create, last_update, hash id and the user displayname of an idea for a integer idea id
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
       $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
@@ -56,7 +62,7 @@ class Idea {
     public function getIdeaNumberVotes ($idea_id) {
       /* returns the calculated number of given votes for this idea
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
       $stmt = $this->db->query('SELECT SUM(vote_weight) AS totalvotes FROM '.$this->db->au_votes.' WHERE idea_id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
@@ -72,7 +78,7 @@ class Idea {
     public function getIdeaVotes ($idea_id) {
       /* returns sum of votes of an idea for a integer idea id
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
       $stmt = $this->db->query('SELECT sum_votes FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
@@ -87,7 +93,7 @@ class Idea {
     public function getIdeaTopic ($idea_id) {
       /* returns the topic for a specificc idea integer idea id
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
       $stmt = $this->db->query('SELECT topic_id FROM '.$this->db->au_rel_topics_ideas.' WHERE idea_id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
@@ -102,7 +108,7 @@ class Idea {
     public function getIdeaRoom ($idea_id) {
       /* returns the topic for a specificc idea integer idea id
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
       $stmt = $this->db->query('SELECT room_id FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
@@ -121,7 +127,7 @@ class Idea {
     public function getIdeaLikes ($idea_id) {
       /* returns sum of likes of an idea for a integer idea id
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
       $stmt = $this->db->query('SELECT sum_likes FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
@@ -136,7 +142,7 @@ class Idea {
     public function getIdeaStatus ($idea_id) {
       /* returns the status of an idea for a integer idea id
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
       $stmt = $this->db->query('SELECT status FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
@@ -152,12 +158,12 @@ class Idea {
   public function getPersonalVoteStatus ($user_id, $idea_id, $room_id) {
       /* returns content, sum votes, sum likes, create, last_update, hash id and the user displayname of an idea for a integer idea id
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
       // check if this user still has votes available
-      $available_votes = $this->checkAvailableVotesUser ($user_id, $idea_id);
+      $available_votes = $this->converters->checkAvailableVotesUser ($user_id, $idea_id);
 
       // check for delegations
       $vote_factor = $this->getVoteBiasDelegations ($user_id, $room_id, $idea_id);
@@ -166,7 +172,6 @@ class Idea {
       return $has_delegated.",".$vote_factor.",".$available_votes; // returns status of the voting for a specific user idea and room
 
     }// end function
-
 
 
     public function getIdeaHashId($idea_id) {
@@ -182,78 +187,6 @@ class Idea {
       }
     }// end function
 
-    private function checkUserId ($user_id) {
-      /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
-      if a hash was passed, function gets db user id and returns db id
-      */
-
-      if (is_int($user_id))
-      {
-        return $user_id;
-      } else
-      {
-
-        return $this->getUserIdByHashId ($user_id);
-      }
-    } // end function
-
-
-    public function getUserIdByHashId($hash_id) {
-      /* Returns Database ID of user when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_users_basedata.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind userid
-      $users = $this->db->resultSet();
-      if (count($users)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $users[0]['id']; // return user id
-      }
-    }// end function
-
-    public function getIdeaIdByHashId($hash_id) {
-      /* Returns Database ID of idea when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_ideas.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $ideas = $this->db->resultSet();
-      if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $ideas[0]['id']; // return idea id
-      }
-    }// end function
-
-    public function getTopicIdByHashId($hash_id) {
-      /* Returns Database ID of TOPIC when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $topics = $this->db->resultSet();
-      if (count($topics)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $topics[0]['id']; // return topic id
-      }
-    }// end function
-
-    public function getCategoryIdByHashId($hash_id) {
-      /* Returns Database ID of category when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_categories.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $categories = $this->db->resultSet();
-      if (count($categories)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $categories[0]['id']; // return category id
-      }
-    }// end function
-
 
     public function reportIdea ($idea_id, $user_id, $updater_id, $reason =""){
       /* sets the status of an idea to 3 = reported
@@ -261,8 +194,8 @@ class Idea {
       user_id is the id of the user that reported the idea
       updater_id is the id of the user that did the update
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // check if idea is existent
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_ideas.' WHERE id = :idea_id');
@@ -361,47 +294,16 @@ class Idea {
 
     }
 
-
-    public function checkIdeaExist($idea_id) {
-      /* returns 0 if idea does not exist, 1 if idea exists, accepts database id (int)
-      */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-
-      $stmt = $this->db->query('SELECT status, room_id FROM '.$this->db->au_ideas.' WHERE id = :id');
-      $this->db->bind(':id', $idea_id); // bind idea id
-      $ideas = $this->db->resultSet();
-      if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return 1; // idea found, return 1
-      }
-    } // end function
-
-      public function checkTopicExist($topic_id) {
-        /* returns 0 if topic does not exist, 1 if topic exists, accepts database id (int)
-        */
-        $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
-
-        $stmt = $this->db->query('SELECT status, room_id FROM '.$this->db->au_topics.' WHERE id = :id');
-        $this->db->bind(':id', $topic_id); // bind topic id
-        $topic_id = $this->db->resultSet();
-        if (count($topic_id)<1){
-          return 0; // nothing found, return 0 code
-        }else {
-          return 1; // topic found, return 1
-        }
-      } // end function
-
     public function addIdeaToTopic ($idea_id, $topic_id, $updater_id){
       // adds an idea (idea_id) to a specified topic (topic_id)
 
       //
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-      $idea_exist = $this->checkIdeaExist($idea_id);
-      $topic_exist = $this->checkTopicExist($topic_id);
-      $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $idea_exist = $this->converters->checkIdeaExist($idea_id);
+      $topic_exist = $this->converters->checkTopicExist($topic_id);
+      $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
 
       if ($idea_exist==1 && $topic_exist==1) {
@@ -449,11 +351,11 @@ class Idea {
       // adds an idea (idea_id) to a specified topic (topic_id)
 
       //
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $category_id = $this->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $category_id = $this->converters->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $idea_exist = $this->checkIdeaExist($idea_id);
-      $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $idea_exist = $this->converters->checkIdeaExist($idea_id);
+      $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
 
       if ($idea_exist==1) {
@@ -502,8 +404,8 @@ class Idea {
     public function removeIdeaFromTopic($topic_id, $idea_id) {
       /* removes an idea from a topic
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_topics_ideas.' WHERE idea_id = :idea_id AND topic_id = :topic_id' );
       $this->db->bind(':topic_id', $topic_id); // bind topic id
@@ -527,8 +429,8 @@ class Idea {
     public function removeIdeaFromCategory($category_id, $idea_id) {
       /* removes an idea from a topic
       */
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $category_id = $this->checkCategoryId($category_id); // checks  id and converts  id to db  id if necessary (when  hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $category_id = $this->converters->checkCategoryId($category_id); // checks  id and converts  id to db  id if necessary (when  hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_categories_ideas.' WHERE idea_id = :idea_id AND category_id = :category_id' );
       $this->db->bind(':category_id', $category_id); // bind topic id
@@ -552,7 +454,7 @@ class Idea {
     public function removeAllIdeasFromTopic ($topic_id) {
       /* removes all associations of ideas from a topic
       */
-      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_topics_ideas.' WHERE topic_id = :topic_id' );
       $this->db->bind(':topic_id', $topic_id); // bind topic id
@@ -575,7 +477,7 @@ class Idea {
     public function removeAllIdeasFromCategory ($category_id) {
       /* removes all associations of ideas from a topic
       */
-      $topic_id = $this->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_categories_ideas.' WHERE category_id = :category_id' );
       $this->db->bind(':topic_id', $category_id); // bind topic id
@@ -789,7 +691,7 @@ class Idea {
           // check if original owner has already voted - if yes then reduce the count for vote bias by 1
           //echo ("<br>FOUND DELEGATION from ...".$result['user_id_original']);
           $user_original = $result['user_id_original'];
-          if ($this->checkIfVoteWasMade($user_original, $idea_id)==0)
+          if ($this->converters->checkIfVoteWasMade($user_original, $idea_id)==0)
           {
             // original owner of the delegated vote has not voted yet (although he delegated)
             //echo ("<br>Original owner (".$user_original.") has not voted yet...".$vote_bias);
@@ -899,7 +801,7 @@ class Idea {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $room_id is the id of the room
       */
-      $room_id = $this->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+      $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
       // init vars
       $orderby_field="";
@@ -1064,7 +966,7 @@ class Idea {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $$user_id is the id of the user
       */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // init vars
       $orderby_field="";
@@ -1148,10 +1050,10 @@ class Idea {
         */
 
         //sanitize in vars
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-        $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $status = intval($status);
-        $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+        $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
         $order_importance = intval ($order_importance);
         $content = trim ($content);
         $info = trim ($info);
@@ -1201,7 +1103,7 @@ class Idea {
          status = status of idea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
@@ -1234,7 +1136,7 @@ class Idea {
          approves an idea (usually by school administration)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET approved = 1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
@@ -1266,7 +1168,7 @@ class Idea {
          approves an idea (usually by school administration)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET approved = 0, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
@@ -1298,7 +1200,7 @@ class Idea {
          flags an idea as winner in voting phase
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET is_winner = 1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
@@ -1330,7 +1232,7 @@ class Idea {
          flags an idea as winner in voting phase
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET is_winner = 0, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
@@ -1362,7 +1264,7 @@ class Idea {
          sets sum_votes of a specific idea to a specific value (votes)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_votes = :votes, last_update= NOW() WHERE id= :idea_id');
         // bind all VALUES
@@ -1394,7 +1296,7 @@ class Idea {
          sets number of votes given to an idea to a specific value (votes)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET number_of_votes = :votes, last_update= NOW() WHERE id= :idea_id');
         // bind all VALUES
@@ -1426,7 +1328,7 @@ class Idea {
          sets sum_likes of a specific idea to a specific value (likes)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_likes = :likes, last_update= NOW() WHERE id= :idea_id');
         // bind all VALUES
@@ -1458,8 +1360,8 @@ class Idea {
          Adds a like to an idea, increments sum_likes of a specific idea to a specific value (likes)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
-        $user_id = $this->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
         // Check if user liked already
         if ($this->getLikeStatus($user_id, $idea_id)==1){
@@ -1498,7 +1400,7 @@ class Idea {
          Adds a like to an idea, increments sum_likes of a specific idea to a specific value (likes)
          updater_id is the id of the idea that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         if ($this->getLikeStatus($user_id, $idea_id)==0){
           // user has already liked, return without incrementing vote
@@ -1588,7 +1490,7 @@ class Idea {
          content = content of the idea
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET content= :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
@@ -1619,13 +1521,13 @@ class Idea {
 
     public function setCategory($idea_id, $category_id, $updater_id=0) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-         content = content of the idea
+         Sets all categories for an idea to specified idea id - use with caution!
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-        $category_id = $this->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $category_id = $this->converters->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET category_id= :category_id, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rel_categories_ideas.' SET category_id= :category_id, last_update= NOW(), updater_id= :updater_id WHERE idea_id= :idea_id');
         // bind all VALUES
         $this->db->bind(':category_id', $category_id);
         $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
@@ -1845,7 +1747,7 @@ class Idea {
     public function getUserInfiniteVotesStatus($user_id) {
       /* returns hash_id of a user for a integer user id
       */
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->db->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $user_id); // bind userid
@@ -1859,8 +1761,8 @@ class Idea {
 
     public function userHasDelegated($user_id, $topic_id) {
       // checks if the user with user id has already delegated his votes for this idea (topic this idea belongs to)
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $topic_id = $this->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $stmt = $this->db->query('SELECT user_id_target FROM '.$this->db->au_delegation.' WHERE user_id_original = :user_id AND topic_id = :topic_id AND status = 1');
       //$stmt = $this->db->query('SELECT user_id_target FROM '.$this->db->au_delegation.' INNER JOIN '.$this->db->au_rel_topics_ideas.' ON ('.$this->db->au_rel_topics_ideas.'.idea_id = WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id AND status = 1');
@@ -1894,8 +1796,8 @@ class Idea {
 
       // echo ("<br>Voting for idea:  ".$idea_id." by user: ".$user_id." vote value: ".$vote_value);
 
-      $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // check if idea und user exist
 
@@ -1924,7 +1826,7 @@ class Idea {
       if ($this->getUserInfiniteVotesStatus($user_id)==0){
         // user does not have infinite votes
         // check if user has already used up his votes
-        if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
+        if ($this->converters->checkAvailableVotesUser ($user_id, $idea_id)<1) {
           // votes are not available, user has used all votes
           if ($only_voting_once_allowed==1) {
 
@@ -2031,11 +1933,11 @@ class Idea {
          updater_id is the id of the user that commits the update (i.E. admin )
         */
 
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
-        $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         //check if idea exists
-        $idea_exists = $this->checkIdeaExist ($idea_id);
+        $idea_exists = $this->converters->checkIdeaExist ($idea_id);
         $status_idea = $idea_exists['status'];
         $room_id = $idea_exists['room_id'];
 
@@ -2086,7 +1988,7 @@ class Idea {
          content = content of the idea
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET info= :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
@@ -2112,76 +2014,6 @@ class Idea {
           $this->syslog->addSystemEvent(1, "Error changing idea info ".$idea_id." by ".$updater_id, 0, "", 1);
           return 0; // return 0 to indicate that there was an error executing the statement
         }
-    }// end function
-
-    private function checkIdeaId ($idea_id) {
-      /* helper function that checks if a idea id is a standard db id (int) or if a hash idea id was passed
-      if a hash was passed, function gets db idea id and returns db id
-      */
-      if (is_int($idea_id))
-      {
-        return $idea_id;
-      } else
-      {
-        return $this->getIdeaIdByHashId ($idea_id);
-      }
-    } // end function
-
-    private function checkRoomId ($room_id) {
-      /* helper function that checks if a room id is a standard db id (int) or if a hash room id was passed
-      if a hash was passed, function gets db room id and returns db id
-      */
-
-      if (is_int($room_id))
-      {
-        return $room_id;
-      } else
-      {
-
-        return $this->getRoomIdByHashId ($room_id);
-      }
-    } // end function
-
-    private function checkTopicId ($topic_id) {
-      /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
-      if a hash was passed, function gets db topic id and returns db id
-      */
-
-      if (is_int($topic_id))
-      {
-        return $topic_id;
-      } else
-      {
-        return $this->getTopicIdByHashId ($topic_id);
-      }
-    } // end function
-
-    private function checkCategoryId ($category_id) {
-      /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
-      if a hash was passed, function gets db topic id and returns db id
-      */
-
-      if (is_int($category_id))
-      {
-        return $category_id;
-      } else
-      {
-        return $this->getTopicIdByHashId ($category_id);
-      }
-    } // end function
-
-    public function getRoomIdByHashId($hash_id) {
-      /* Returns Database ID of room when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_rooms.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $rooms = $this->db->resultSet();
-      if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $rooms[0]['id']; // return room id
-      }
     }// end function
 
     public function getVoteValue ($user_id, $idea_id) {
@@ -2230,7 +2062,7 @@ class Idea {
         /* deletes idea and returns the number of rows (int) accepts idea id or idea hash id //
 
         */
-        $idea_id = $this->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
         $stmt = $this->db->query('DELETE FROM '.$this->db->au_ideas.' WHERE id = :id');
         $this->db->bind (':id', $idea_id);
