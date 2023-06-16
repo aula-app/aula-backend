@@ -12,19 +12,43 @@ require_once ("./base_config.php");
     private $stmt;
 
     public function __construct() {
-        // Load the database configuration from a file
+        // Load the database configuration from db config
         global $baseClassDir;
         global $baseConfigDir;
 
         $config = parse_ini_file($baseConfigDir.'db_config.ini');
-        //$file = file_get_contents($baseConfigDir.'db_config.ini', true);
-        //print_r ($config);
-        //echo ("file: ".$file);
+        //base config
         $this->host = $config['host'];
         $this->user = $config['user'];
         $this->pass = $config['pass'];
         $this->dbname = $config['dbname'];
-        //echo ($baseConfigDir."Setting up database...".$config['host']);
+        //table names
+        $this->au_ideas = $config['au_ideas'];
+        $this->au_groups = $config['au_groups'];
+        $this->au_rooms = $config['au_rooms'];
+        $this->au_votes = $config['au_votes'];
+        $this->au_likes = $config['au_likes'];
+        $this->au_delegation = $config['au_delegation'];
+        $this->au_media = $config['au_media'];
+        $this->au_messages = $config['au_messages'];
+        $this->au_comments = $config['au_comments'];
+        $this->au_commands = $config['au_commands'];
+        $this->au_texts = $config['au_texts'];
+        $this->au_reported = $config['au_reported'];
+        $this->au_categories = $config['au_categories'];
+        $this->au_activitylog = $config['au_activitylog'];
+        $this->au_users_basedata = $config['au_users_basedata'];
+
+        $this->au_rel_user_user = $config['au_rel_user_user'];
+        $this->au_rel_rooms_users = $config['au_rel_rooms_users'];
+        $this->au_rel_topics_ideas = $config['au_rel_topics_ideas'];
+        $this->au_rel_topics_media = $config['au_rel_topics_media'];
+        $this->au_rel_groups_users = $config['au_rel_groups_users'];
+        $this->au_rel_categories_ideas = $config['au_rel_categories_ideas'];
+
+
+
+
 
         // Set up a PDO connection
         $dsn = "mysql:host=$this->host;dbname=$this->dbname";
@@ -41,7 +65,6 @@ require_once ("./base_config.php");
     }
 
     public function query($query) {
-        //echo ("<br><br>QUERY:".$query);
         $this->stmt = $this->dbh->prepare($query);
         return $this->stmt;
     }
