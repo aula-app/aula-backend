@@ -92,9 +92,8 @@ if (!$userdata){
 }else {
   //print_r($userdata);
   out ("real name:".$userdata['realname']);
-  out ("real name decrypted:".$crypt->decrypt($userdata['realname']));
   out ("hash id:".$userdata['hash_id']);
-  out ("user name decrypted:".$crypt->decrypt($userdata['username']));
+  out ("user name:".$userdata['username']);
 
 
 }
@@ -222,13 +221,13 @@ if (!$userdata){
 $roomid = 1;
 $userid = 1;
 out ("Adding User ".$userid." to Room ".$roomid, true);
-$userdata = $user->addToRoom ($userid, $roomid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
+$userdata = $user->addUserToRoom ($userid, $roomid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
 out ("USER Class returned: ".$userdata);
 
 $roomid = 5;
 $userid = 1;
 out ("Deleting User ".$userid." from Room ".$roomid, true);
-$userdata = $room->deleteUserFromRoom ($roomid,$userid);
+$userdata = $user->removeUserFromRoom ($roomid,$userid);
 out ("ROOM Class returned: ".$userdata);
 
 $roomid = 6;
@@ -240,7 +239,7 @@ out ("ROOM Class returned: ".$userdata);
 $groupid = 9;
 $userid = 45;
 out ("Deleting User ".$userid." from group ".$groupid, true);
-$userdata = $group->deleteUserFromGroup ($groupid,$userid);
+$userdata = $user->removeUserFromGroup ($groupid,$userid);
 out ("GROUP Class returned: ".$userdata);
 
 
@@ -266,7 +265,7 @@ out ("GROUP Class returned: ".$userdata);
 $groupid = 2;
 $userid = 3;
 out ("Adding User ".$userid." to Group ".$groupid, true);
-$userdata = $user->addToGroup ($userid,$groupid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
+$userdata = $user->addUserToGroup ($userid,$groupid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
 out ("USER Class returned: ".$userdata);
 
 $roomid = 1;
