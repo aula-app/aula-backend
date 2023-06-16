@@ -20,7 +20,7 @@ class Message {
         $this->crypt = $crypt;
         //$this->syslog = new Systemlog ($db);
         $this->syslog = $syslog;
-
+        $this->converters = new Converters ($db);
     }// end function
 
     protected function buildCacheHash ($key) {
@@ -28,92 +28,22 @@ class Message {
       }
 
 
-    public function getIdeaHashId($idea_id) {
+    public function getMessageHashId($message_id) {
       /* returns hash_id of an idea for a integer idea id
       */
-      $stmt = $this->db->query('SELECT hash_id FROM '.$this->db->au_ideas.' WHERE id = :id');
-      $this->db->bind(':id', $idea_id); // bind idea id
-      $ideas = $this->db->resultSet();
-      if (count($ideas)<1){
-        return "0,0"; // nothing found, return 0 code
-      }else {
-        return "1,".$ideas[0]['hash_id']; // return hash id for the idea
-      }
-    }// end function
+      $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    private function checkUserId ($user_id) {
-      /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
-      if a hash was passed, function gets db user id and returns db id
-      */
-
-      if (is_int($user_id))
-      {
-        return $user_id;
-      } else
-      {
-
-        return $this->getUserIdByHashId ($user_id);
-      }
-    } // end function
-
-
-    public function getUserIdByHashId($hash_id) {
-      /* Returns Database ID of user when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_users_basedata.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind userid
-      $users = $this->db->resultSet();
-      if (count($users)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $users[0]['id']; // return user id
-      }
-    }// end function
-
-    public function getIdeaIdByHashId($hash_id) {
-      /* Returns Database ID of idea when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_ideas.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $ideas = $this->db->resultSet();
-      if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $ideas[0]['id']; // return idea id
-      }
-    }// end function
-
-    public function getTopicIdByHashId($hash_id) {
-      /* Returns Database ID of topic when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $topics = $this->db->resultSet();
-      if (count($topics)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $topics[0]['id']; // return topic id
-      }
-    }// end function
-
-    public function getMessageIdByHashId($hash_id) {
-      /* Returns Database ID of Message when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_messages.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $stmt = $this->db->query('SELECT hash_id FROM '.$this->db->au_messages.' WHERE id = :id');
+      $this->db->bind(':id', $message_id); // bind message id
       $messages = $this->db->resultSet();
       if (count($messages)<1){
-        return 0; // nothing found, return 0 code
+        return "0,0"; // nothing found, return 0 code
       }else {
-        return $messages[0]['id']; // return message id
+        return "1,".$messages[0]['hash_id']; // return hash id
       }
     }// end function
 
-    public function getMessagesByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id) {
+    public function getMessagesByRoom ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $room_id) {
       /* returns message list (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -121,7 +51,7 @@ class Message {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $room_id is the id of the room
       */
-      $message_id = $this->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       // init vars
       $orderby_field="";
@@ -200,7 +130,7 @@ class Message {
       accepts db id and hash id
       updater_id is the id of the user that did the update
       */
-      $message_id = $this->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setMessageStatus($message_id, 4, $updater_id=0);
 
@@ -211,7 +141,7 @@ class Message {
       accepts db id and hash id
       updater_id is the id of the user that did the update
       */
-      $message_id = $this->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setMessageStatus($message_id, 1, $updater_id=0);
 
@@ -222,7 +152,7 @@ class Message {
       accepts db id and hash id
       updater_id is the id of the user that did the update
       */
-      $message_id = $this->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setMessageStatus($message_id, 0, $updater_id=0);
     }
@@ -232,7 +162,7 @@ class Message {
       accepts db id and hash id
       updater_id is the id of the user that did the update
       */
-      $message_id = $this->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setMessageStatus($message_id, 5, $updater_id=0);
 
@@ -240,7 +170,7 @@ class Message {
 
     public function getMessageBaseData ($message_id) {
       /* returns message base data for a specified db id */
-      $message_id = $this->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_messages.' WHERE id = :id');
       $this->db->bind(':id', $message_id); // bind idea id
@@ -252,7 +182,7 @@ class Message {
       }
     }// end function
 
-    public function getMessages ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $publish_date, $target_group, $room_id) {
+    public function getMessages ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $publish_date=0, $target_group=0, $room_id=0) {
       /* returns message list (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -284,7 +214,7 @@ class Message {
         $extra_where.= " AND room_id = ".$room_id;
       }
 
-      if (checkdate ($publish_date)){
+      if (!(intval ($publish_date)==0)){
         // if a publish date is set then add to where clause
         $extra_where.= " AND publish_date > ".$publish_date;
       }
@@ -361,35 +291,7 @@ class Message {
       return $val;
     }
 
-    private function checkGroupId ($group_id) {
-      /* helper function that checks if a group id is a standard db id (int) or if a hash group id was passed
-      if a hash was passed, function gets db group id and returns db id
-      */
-
-      if (is_int($group_id))
-      {
-        return $group_id;
-      } else
-      {
-        return $this->getGroupIdByHashId ($group_id);
-      }
-    } // end function
-
-    public function getGroupIdByHashId($hash_id) {
-        /* Returns Database ID of group when hash_id is provided
-        */
-
-        $stmt = $this->db->query('SELECT id FROM '.$this->db->au_groups.' WHERE hash_id = :hash_id');
-        $this->db->bind(':hash_id', $hash_id); // bind hash id
-        $groups = $this->db->resultSet();
-        if (count($groups)<1){
-          return 0; // nothing found, return 0 code
-        }else {
-          return $groups[0]['id']; // return group id
-        }
-      }// end function
-
-    public function addMessage ($headline, $body, $target_group, $target_id, $pin_to_top=0, $msg_type, $publish_date, $level_of_detail, $only_on_dashboard, $status=1, $room_id=0, $updater_id=0) {
+    public function addMessage ($headline, $body, $msg_type, $publish_date, $creator_id=0, $target_group=0, $target_id=0, $pin_to_top=0, $level_of_detail=1, $only_on_dashboard=0, $status=1, $room_id=0, $updater_id=0, $language_id=0) {
         /* adds a new message and returns insert id (idea id) if successful, accepts the above parameters
         $headline is the headline of the message, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
         target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
@@ -402,20 +304,20 @@ class Message {
         updater id specifies the id of the user (i.e. admin) that added this message
         */
         //sanitize the vars
-        $updater_id = $this->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         if (!(intval ($target_id)==0)){
           // only check for target id if it is not set to 0
-          $target_id = $this->checkUserId($target_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+          $target_id = $this->converters->checkUserId($target_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         }
         if (!(intval ($target_group)==0)){
-          $target_group = $this->checkGroupId($target_group); // check id and converts id to db id if necessary (when hash id was passed)
+          $target_group = $this->converters->checkGroupId($target_group); // check id and converts id to db id if necessary (when hash id was passed)
         }
         $status = intval($status);
         if (!(intval ($room_id)==0)){
-          $room_id = $this->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+          $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
         }
-        $pin_to_top = makeBool ($pin_to_top);
-        $only_on_dashboard = makebool ($only_on_dashboard);
+        $pin_to_top = $this->makeBool ($pin_to_top);
+        $only_on_dashboard = $this->makebool ($only_on_dashboard);
         $level_of_detail = intval ($level_of_detail);
         $msg_type = intval ($msg_type);
 
@@ -423,7 +325,7 @@ class Message {
         $body = trim ($body);
 
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_messages.' (headline, body, target_group, target_id, pin_to_top, msg_type, publish_date, level_of_detail, only_on_dashboard, status, room_id, hash_id, created, last_update, updater_id) VALUES (:headline, :body, :target_group, :target_id, :pin_to_top, :msg_type, :publish_date, :level_of_detail, :only_on_dashboard, :status, :room_id, :hash_id, NOW(), NOW(), :updater_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_messages.' (creator_id, headline, body, target_group, target_id, pin_to_top, msg_type, publish_date, level_of_detail, only_on_dashboard, status, room_id, hash_id, created, last_update, updater_id, language_id) VALUES (:creator_id, :headline, :body, :target_group, :target_id, :pin_to_top, :msg_type, :publish_date, :level_of_detail, :only_on_dashboard, :status, :room_id, :hash_id, NOW(), NOW(), :updater_id, :language_id)');
         // bind all VALUES
 
         $this->db->bind(':headline', $headline);
@@ -437,11 +339,13 @@ class Message {
         $this->db->bind(':only_on_dashboard', $only_on_dashboard);
         $this->db->bind(':status', $status);
         $this->db->bind(':room_id', $room_id);
+        $this->db->bind(':creator_id', $creator_id);
+        $this->db->bind(':language_id', $language_id);
 
         // generate unique hash for this idea
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
-        $hash_id = md5($name.$appendix); // create hash id for this message
+        $hash_id = md5($headlin.$appendix); // create hash id for this message
         $this->db->bind(':hash_id', $hash_id);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -474,7 +378,7 @@ class Message {
          status = status of message (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
          updater_id is the id of the user that does the update (i.E. admin )
         */
-        $message_id = $this->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+        $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_messages.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :message_id');
         // bind all VALUES
@@ -501,66 +405,6 @@ class Message {
           return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
         }
     }// end function
-
-
-
-
-    private function checkIdeaId ($idea_id) {
-      /* helper function that checks if a idea id is a standard db id (int) or if a hash idea id was passed
-      if a hash was passed, function gets db idea id and returns db id
-      */
-
-      if (is_int($idea_id))
-      {
-        return $idea_id;
-      } else
-      {
-        return $this->getIdeaIdByHashId ($idea_id);
-      }
-    } // end function
-
-    private function checkRoomId ($room_id) {
-      /* helper function that checks if a room id is a standard db id (int) or if a hash room id was passed
-      if a hash was passed, function gets db room id and returns db id
-      */
-
-      if (is_int($room_id))
-      {
-        return $room_id;
-      } else
-      {
-
-        return $this->getRoomIdByHashId ($room_id);
-      }
-    } // end function
-
-    private function checkTopicId ($topic_id) {
-      /* helper function that checks if a topic id is a standard db id (int) or if a hash topic id was passed
-      if a hash was passed, function gets db topic id and returns db id
-      */
-
-      if (is_int($topic_id))
-      {
-        return $topic_id;
-      } else
-      {
-        return $this->getTopicIdByHashId ($topic_id);
-      }
-    } // end function
-
-    private function checkMessageId ($message_id) {
-      /* helper function that checks if a message id is a standard db id (int) or if a hash id was passed
-      if a hash was passed, function returns db id
-      */
-
-      if (is_int($message_id))
-      {
-        return $message_id;
-      } else
-      {
-        return $this->getMessageIdByHashId ($message_id);
-      }
-    } // end function
 
     public function getRoomIdByHashId($hash_id) {
       /* Returns Database ID of room when hash_id is provided
@@ -590,10 +434,11 @@ class Message {
         /* deletes message, accepts message_id (hash (varchar) or db id (int))
 
         */
-        $message_id = $this->checkMessageId($message_id); // checks id and converts id to db  id if necessary (when hash id was passed)
+        $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db  id if necessary (when hash id was passed)
 
         $stmt = $this->db->query('DELETE FROM '.$this->db->au_messages.' WHERE id = :id');
-        $this->db->bind (':id', $idea_id);
+        $this->db->bind (':id', $message_id);
+
         $err=false;
         try {
           $action = $this->db->execute(); // do the query
