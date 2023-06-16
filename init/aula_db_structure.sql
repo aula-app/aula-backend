@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-14 12:45:49 +0000
+# Verarbeitungszeit: 2023-06-16 09:09:02 +0000
 # ************************************************************
 
 
@@ -229,7 +229,6 @@ CREATE TABLE `au_messages` (
   `body` text DEFAULT NULL COMMENT 'news body',
   `publish_date` datetime DEFAULT NULL COMMENT 'date, when the news are published to the dashboards',
   `target_group` int(11) DEFAULT NULL COMMENT 'defines group that should recreive the news (0=all or group id)',
-  `single_target` tinyint(1) DEFAULT NULL COMMENT '0=no 1= message to a single user',
   `target_id` int(11) DEFAULT NULL COMMENT 'user_id of user that should receive the message',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active 2=archive',
   `only_on_dashboard` tinyint(1) DEFAULT NULL COMMENT '0=no (news are also sent to users that have consented to receiving news) 1= only displayed on dashboard, no active sending',
@@ -239,7 +238,9 @@ CREATE TABLE `au_messages` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash_id for news post',
   `language_id` int(11) DEFAULT NULL COMMENT 'id of language 0=default',
   `level_of_detail` int(11) DEFAULT NULL COMMENT 'enables the user to filter msgs....the higher the number is the more detailed the msg is (high = an idea X was voted for)',
-  `type` int(11) DEFAULT NULL COMMENT 'type id of a msg 1=general news 2=user specific news, 3=idea news etc.',
+  `msg_type` int(11) DEFAULT NULL COMMENT 'type id of a msg 1=general news 2=user specific news, 3=idea news etc.',
+  `room_id` int(11) DEFAULT NULL COMMENT 'if specified only displayed to room members',
+  `pin_to_top` int(11) DEFAULT 0 COMMENT '0=no, 1 = yes',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -721,6 +722,7 @@ CREATE TABLE `au_topics` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the topic',
   `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that does the update',
   `room_id` int(11) DEFAULT NULL COMMENT 'id of the room the topic is in',
+  `phase_id` int(11) DEFAULT NULL COMMENT 'if o phase the thopic is in',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
