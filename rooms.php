@@ -10,7 +10,7 @@ $db = new Database();
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog ($db); // systemlog
 $room = new Room ($db, $crypt, $syslog); // instanciate room model class
-$roomdata = $room->getRooms($offset, $limit, 4, 1, 1);
+$roomdata = $room->getRooms(0, 0, 4, 1, 1);
 
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode($roomdata);
