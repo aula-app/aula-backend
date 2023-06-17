@@ -161,7 +161,7 @@ class Idea {
       $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
       // check if this user still has votes available
-      $available_votes = $this->converters->checkAvailableVotesUser ($user_id, $idea_id);
+      $available_votes = $this->checkAvailableVotesUser ($user_id, $idea_id);
 
       // check for delegations
       $vote_factor = $this->getVoteBiasDelegations ($user_id, $room_id, $idea_id);
@@ -689,7 +689,7 @@ class Idea {
           // check if original owner has already voted - if yes then reduce the count for vote bias by 1
           //echo ("<br>FOUND DELEGATION from ...".$result['user_id_original']);
           $user_original = $result['user_id_original'];
-          if ($this->converters->checkIfVoteWasMade($user_original, $idea_id)==0)
+          if ($this->checkIfVoteWasMade($user_original, $idea_id)==0)
           {
             // original owner of the delegated vote has not voted yet (although he delegated)
             //echo ("<br>Original owner (".$user_original.") has not voted yet...".$vote_bias);
