@@ -176,13 +176,28 @@ class Message {
       $this->db->bind(':id', $message_id); // bind idea id
       $messages = $this->db->resultSet();
       if (count($messages)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue; // nothing found, return 0 code
       }else {
-        return $messages[0]; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $messages[0]; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue; // return an array (associative) with all the data
       }
     }// end function
+    public function getMessagesByUser ($user_id, $publish_date=0){
+      // returns all message for this specific user
+      $user_id = $this->converters->checkUserId ($user_id);
+      return getMessages (0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0);
+    }
 
-    public function getMessages ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $publish_date=0, $target_group=0, $room_id=0) {
+    public function getMessages ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $publish_date=0, $target_group=0, $room_id=0, $user_id=0, $creator_id=0) {
       /* returns message list (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -190,8 +205,16 @@ class Message {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 5= in review defaults to active (1)
       publish_date = date that specifies messages younger than publish date
       extra_where = extra parameters for where clause, synthax " AND XY=4"
+      user_id = specifies a certain user (for private messages) if set to 0 all users are included
       */
 
+      // init return array
+      $returnvalue ['success'] = false; // success (true) or failure (false)
+      $returnvalue ['errorcode'] = 0; // error code
+      $returnvalue ['data'] = false; // the actual data
+      $returnvalue ['count_data'] = 0; // number of datasets
+
+      $date_now = date('Y-m-d H:i:s');
       // init vars
       $orderby_field="";
       $asc_field ="";
@@ -207,6 +230,18 @@ class Message {
       if ($target_group > 0){
         // if a target group is set then add to where clause
         $extra_where.= " AND target_group = ".$target_group;
+      }
+
+      if ($user_id > 0){
+        // if a target user id is set then add to where clause
+        $extra_where.= " AND target_id = ".$user_id; // get specific messages to this user (private messages)
+      } else {
+        $extra_where.= " AND target_id = 0"; // get all messages aside from private messages
+      }
+
+      if ($creator_id > 0){
+        // if a target group is set then add to where clause
+        $extra_where.= " AND creator_id = ".$creator_id;
       }
 
       if ($room_id > 0){
@@ -254,7 +289,9 @@ class Message {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_messages.' WHERE status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $count_datasets = 0; // number of datasets retrieved
+
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_messages.' WHERE status= :status '.$extra_where.' AND publish_date <= \''.$date_now.'\' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
@@ -266,16 +303,33 @@ class Message {
       try {
         $messages = $this->db->resultSet();
 
+
       } catch (Exception $e) {
           echo 'Error occured while getting messages: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
-      }
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // database error while executing query
+          $returnvalue ['data'] = false; // returned data is false
+          $returnvalue ['count'] = 0; // returned count of datasets
 
-      if (count($messages)<1){
-        return 0; // nothing found, return 0 code
+          return $returnvalue;
+      }
+      $count_datasets = count ($messages);
+
+      if ($count_datasets<1){
+        $returnvalue['success'] = true; // set success value
+        $returnvalue['error_code'] = 2; // no data found
+        $returnvalue ['data'] = false; // returned data is false
+        $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+        return $returnvalue; // nothing found, return 0 code
       }else {
-        return $messages; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $messages; // returned data
+        $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+        return $returnvalue; // return an array (associative) with all the data
       }
     }// end function
 
@@ -358,15 +412,26 @@ class Message {
             echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
             $err=true;
         }
-        $insertid = intval($this->db->lastInsertId());
         if (!$err)
         {
+          $insertid = intval($this->db->lastInsertId());
+
           $this->syslog->addSystemEvent(0, "Added new message (#".$insertid.") ".$headline, 0, "", 1);
-          return $insertid; // return insert id to calling script
+          $returnvalue ['success'] = true; // set return value
+          $returnvalue ['error_code'] = 0; // error code
+          $returnvalue ['data'] = $insertid; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue; // return insert id to calling script
 
         } else {
           $this->syslog->addSystemEvent(1, "Error adding message ".$headline, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue ['success'] = false; // set return value
+          $returnvalue ['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
         }
 
 
@@ -388,6 +453,7 @@ class Message {
         $this->db->bind(':message_id', $message_id); // message that is updated
 
         $err=false; // set error variable to false
+        $count_datasets = 0; // init row count
 
         try {
           $action = $this->db->execute(); // do the query
@@ -398,27 +464,25 @@ class Message {
         }
         if (!$err)
         {
+          $count_datasets = intval($this->db->rowCount());
           $this->syslog->addSystemEvent(0, "Message status changed ".$message_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue ['success'] = true; // set return value
+          $returnvalue ['error_code'] = 0; // error code
+          $returnvalue ['data'] = $count_datasets; // returned data
+          $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+
+          return $returnvalue; // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing status of message ".$message_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue ['success'] = false; // set return value
+          $returnvalue ['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+          return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
         }
     }// end function
 
-    public function getRoomIdByHashId($hash_id) {
-      /* Returns Database ID of room when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_rooms.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $rooms = $this->db->resultSet();
-      if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $rooms[0]['id']; // return room id
-      }
-    }// end function
 
     private function sendMessage ($user_id, $msg){
       /* send a message to the dashboard of the user
@@ -449,14 +513,24 @@ class Message {
         }
         if (!$err)
         {
+          $count_datasets = intval($this->db->rowCount());
           $this->syslog->addSystemEvent(0, "Message deleted, id=".$message_id." by ".$updater_id, 0, "", 1);
+          $returnvalue ['success'] = true; // set return value
+          $returnvalue ['error_code'] = 0; // error code
+          $returnvalue ['data'] =  $count_datasets; // returned data
+          $returnvalue ['count'] = $count_datasets; // returned count of datasets
 
-          // remove delegations and remove associations with this message
 
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          return $returnvalue; // return number of affected rows to calling script
         } else {
           $this->syslog->addSystemEvent(1, "Error deleting message with id ".$message_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue ['success'] = false; // set return value
+          $returnvalue ['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+
+          return $returnvalue; // return success = false and error code = 1 to indicate that there was an db error executing the statement
         }
 
     }// end function

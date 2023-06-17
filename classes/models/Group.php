@@ -271,7 +271,7 @@ class Group {
 
 
         // check if group name is still available
-        if ($this->converters->checkGroupExistsByName($group_name)>0){
+        if ($this->checkGroupExistsByName($group_name)>0){
           return "0,1"; // group exists, stop exectuing, return errorcode 1 = group exists
         }
 

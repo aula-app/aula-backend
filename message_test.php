@@ -17,8 +17,6 @@ $room = new Room ($db, $crypt, $syslog); // instanciate room model class
 $topic = new Topic ($db, $crypt, $syslog); // instanciate topic model class
 $message = new Message ($db, $crypt, $syslog); // instanciate message model class
 
-
-
 function out ($text, $form=false){ // lazy helper function
   $formstart="";
   $formend="";
@@ -45,9 +43,9 @@ if (isset ($_REQUEST['user']))
 
 
 
-$headline="";
-$body="";
-$publish_date="2023-06-16 17:30";
+$headline = "";
+$body = "";
+$publish_date = date('Y-m-d H:i:s');
 
 $like_value = 1;
 if (isset ($_REQUEST['likevalue']))
@@ -103,20 +101,17 @@ echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4).")</h2>");
 
       <button type=submit name='addmsg'>ADD MESSAGE</button>
     </form>
-    <small><i>User 6 has a delegation from user 10</i></small>
-    <br><small><i>User 9 has 3 delegations from users 42, 43, 44 </i></small>
-    <br><small><i>Have fun with voting! Try voting with users 6, 9, 10, 42, 43, 44 and others (like 5, 8 or whatever) in different constellations and watch the results :)
-      <br><b>To change the user id, enter id in the above field and press the button "SET USER"</b>
-      <br><b>"RESET VOTES AND LIKES" resets the votes and likes to 0 to start over again</b></i></small>
 
   </div>
   <div id ="content_pane" style="">
 <?php
 // getMessages ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $publish_date, $target_group, $room_id)
 $messagedata = $message->getMessages ($offset, $limit, 4, 1, 1);
+
+$data = $messagedata ['data'];
 // idea list:
-out ("found messages!");
-foreach ($messagedata as $result) {
+out ("found ".$messagedata['count']." messages!");
+foreach ($data as $result) {
   //  $votes_made = $idea->getIdeaNumberVotes($result['id']);
     echo ('<form action="" method ="_POST">');
     echo ("<h2>".$result['id'].".". $result['headline']."</h2>");
