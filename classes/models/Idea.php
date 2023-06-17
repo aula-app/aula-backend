@@ -1824,7 +1824,7 @@ class Idea {
       if ($this->getUserInfiniteVotesStatus($user_id)==0){
         // user does not have infinite votes
         // check if user has already used up his votes
-        if ($this->converters->checkAvailableVotesUser ($user_id, $idea_id)<1) {
+        if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
           // votes are not available, user has used all votes
           if ($only_voting_once_allowed==1) {
 
