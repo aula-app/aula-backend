@@ -176,11 +176,26 @@ class Message {
       $this->db->bind(':id', $message_id); // bind idea id
       $messages = $this->db->resultSet();
       if (count($messages)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue; // nothing found, return 0 code
       }else {
-        return $messages[0]; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $messages[0]; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue; // return an array (associative) with all the data
       }
     }// end function
+    public function getMessagesByUser ($user_id, $publish_date=0){
+      // returns all message for this specific user
+      $user_id = $this->converters->checkUserId ($user_id);
+      return getMessages (0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0);
+    }
 
     public function getMessages ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $publish_date=0, $target_group=0, $room_id=0, $user_id=0, $creator_id=0) {
       /* returns message list (associative array) with start and limit provided
@@ -218,8 +233,10 @@ class Message {
       }
 
       if ($user_id > 0){
-        // if a target group is set then add to where clause
-        $extra_where.= " AND user_id = ".$user_id;
+        // if a target user id is set then add to where clause
+        $extra_where.= " AND target_id = ".$user_id; // get specific messages to this user (private messages)
+      } else {
+        $extra_where.= " AND target_id = 0"; // get all messages aside from private messages
       }
 
       if ($creator_id > 0){
