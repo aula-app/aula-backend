@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-16 09:09:02 +0000
+# Verarbeitungszeit: 2023-06-17 10:53:54 +0000
 # ************************************************************
 
 
@@ -851,6 +851,7 @@ CREATE TABLE `au_votes` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the vote',
   `vote_weight` int(11) DEFAULT NULL COMMENT 'absolute value for given votes,  neutral = 1 or =vote_value',
   `number_of_delegations` int(11) DEFAULT NULL COMMENT 'number of delegated votes included',
+  `comment` varchar(2048) DEFAULT NULL COMMENT 'Comment that the user added to a vote he did',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
