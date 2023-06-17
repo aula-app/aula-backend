@@ -409,7 +409,7 @@ class Room {
         }
 
         // check if room name is still available
-        if ($this->converters->checkRoomExistsByName($room_name)>0){
+        if ($this->checkRoomExistsByName($room_name)>0){
           return "0,1"; // room exists, stop exectuing, return errorcode 1 = room exists
         }
 
