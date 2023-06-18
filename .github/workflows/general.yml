@@ -10,12 +10,16 @@ jobs:
       CI: true
       LOCAL: test
     steps:
+      - name: Create SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_HOST_KEY" > ../private.key
+          sudo chmod 600 ../private.key
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        shell: bash
+        env:
+          SSH_HOST_KEY: ${{secrets.SSH_HOST_KEY}}
+          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
       - name: Copy folder content recursively to remote
-        uses: garygrossgarten/github-action-scp@release
-        with:
-          local: .
-          remote: /var/www/playground
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.PASSWORD }}
-          port: 4222
+        run: |
+          scp -P 4222 ${{ github.workspace}} -i ${{SSH_KEY_PATH}} aula@devel.aula.de:
