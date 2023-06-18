@@ -32,7 +32,7 @@ $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from ba
 $syslog = new Systemlog ($db); // systemlog
 $group = new Group ($db, $crypt, $syslog); // instanciate group model class
 $room = new Room ($db, $crypt, $syslog); // instanciate room model class
-
+$converters = new Converters ($db);
 
 
 function out ($text, $form=false){ // lazy helper function
@@ -72,8 +72,9 @@ $testusername = "username_".$appendix;
 // public function addUser($realname, $displayname, $username, $email, $password, $status) $status-> 0=inactive, 1=active
 
 $inserted_user_id = $user->addUser('real_testuser'.$appendix, 'display_testuser'.$appendix, $testusername, 'testuser'.$appendix.'.@aula.de', 'aula', 1);
+$data = $inserted_user_id['data'];
 
-out ("Inserted user at id:".$inserted_user_id);
+out ("Inserted user at id:".$data);
 // write to system log
 $syslog->addSystemEvent(0, "Added new user ".$inserted_user_id, 0, "", 1);
 
@@ -87,13 +88,15 @@ $userid=100; // sample user id
 out ("reading user #".$userid);
 // read data from a certain user
 $userdata = $user->getUserBaseData($userid); // read base data from user id
-if (!$userdata){
+$data = $userdata ['data'];
+
+if (!$userdata ['success']){
   out ("nothing found!");
 }else {
   //print_r($userdata);
-  out ("real name:".$userdata['realname']);
-  out ("hash id:".$userdata['hash_id']);
-  out ("user name:".$userdata['username']);
+  out ("real name:".$crypt->decrypt ($data['realname']));
+  out ("hash id:".$data['hash_id']);
+  out ("user name:".$crypt->decrypt ($data['username']));
 
 
 }
@@ -110,8 +113,9 @@ $userdata = $user->getUsers($offset, $limit, 4, 1, 1); // read base data from us
 if (!$userdata){
   out ("nothing found!");
 }else {
+  $users = $userdata ['data'];
   // Loop through the results and output them
-  foreach ($userdata as $result) {
+  foreach ($users as $result) {
       out ("ID: " . $result['id']);
       out ("Name: " . $crypt->decrypt ($result['realname']));
       out ("Email: " . $crypt->decrypt ($result['email']));
@@ -133,12 +137,12 @@ if (!$deleted_usersets){
 
 $user_id=5;
 out ("Getting the hash id for user id ".$user_id,true);
-$hash_id = $user->getUserHashId($user_id);
-out ("hash id for user ".$user_id." = ".$hash_id);
+$user_data = $user->getUserHashId($user_id);
+out ("hash id for user ".$user_id." = ".$user_data ['data']);
 
 $hash_id="5790bd186ff18db1bed495b3f6411ba3";
 out ("Getting the database id for a hash id...".$hash_id,true);
-$user_id = $user->getUserIdByHashId($hash_id);
+$user_id = $converters->getUserIdByHashId($hash_id);
 out ("id for user with hash ".$hash_id." = ".$user_id);
 
 $user_id = 12;
@@ -146,10 +150,10 @@ $user_id = 12;
 $username = $crypt->decrypt("QOzPiMqW9IxM3Gb4hSBLXuJCA8xRDFAKxdZMNfrMSTeU/riZEMZ55p6f+5/727stKRWqtMb4vQ====");
 out ("checking credentials for user  ".$username." (DB ID: ".$user_id.") using standard pw aula ...", true);
 $userdata = $user->checkCredentials( $username,"aula"); // read base data from user id, aula is the standard pw i wrote into the db, $username is the username in clear text
-if (!$userdata){
+if (!$userdata['success']){
   out ("User is not authorized!");
 } else {
-  out ("User is authorized! The user id returned from db is: ".$userdata);
+  out ("User is authorized! The user id returned from db is: ".$userdata['data']);
 }
 
 $userid=10; // user that will be edited
@@ -166,55 +170,56 @@ $username="username_1685098107.2936873"; // username that will be checked
 
 out ("Checking if ".$username." exists in db and getting the user id ",true);
 $userdata = $user->checkUserExistsByUsername($username); // check if user exists
-if ($userdata==0){
+print_r ($userdata);
+if (!$userdata['success']){
   out ("User not found!");
 } else {
-  out ("User ".$username." exists! User has user id ".$userdata);
+  out ("User ".$username." exists! User has user id ".$userdata['data']);
 }
 
 
 out ("Change displayname of user#100 to EDGAR",true);
 $userdata = $user->setUserDisplayname( $userid,"EDGAR"); // set status of user #100 to 0
-if (!$userdata){
+if (!$userdata['success']){
   out ("User not found!");
 } else {
-  out ("User display name changed: No. of datasets affected: ".$userdata);
+  out ("User display name changed: No. of datasets affected: ".$userdata['data']);
 }
 
 out ("Change real name of user#100 to DANIEL",true);
 $userdata = $user->setUserRealname( $userid,"DANIEL"); // set status of user #100 to 0
-if (!$userdata){
+if (!$userdata['success']){
   out ("User not found!");
 } else {
-  out ("User real name changed: No. of datasets affected: ".$userdata);
+  out ("User real name changed: No. of datasets affected: ".$userdata['count']);
 }
 
 
 out ("Change email adress of user#100 to daniel@aula.de",true);
 $userdata = $user->setUserEmail( $userid,"DANIEL"); // set status of user #100 to 0
-if (!$userdata){
+if (!$userdata['success']){
   out ("User not found!");
 } else {
-  out ("User email changed: No. of datasets affected: ".$userdata);
+  out ("User email changed: No. of datasets affected: ".$userdata['count']);
 }
 
 $testhash = "eee26e36837a64181a9264754097553e";
 out ("Setting registration status of a user using hash id of user instead of db id", true);
 $userdata = $user->setUserRegStatus ($testhash,2);
-if (!$userdata){
+if (!$userdata['success']){
   out ("User not found!");
 } else {
-  out ("User reg status changed: No. of datasets affected: ".$userdata);
+  out ("User reg status changed: No. of datasets affected: ".$userdata['count']);
 }
 
 $testhash = "7754767dd4d9fc697cbd8b21fc9eb20a";
 $about ="I am an aula developer....";
 out ("Adding about text to a user using hash id of user instead of db id", true);
 $userdata = $user->setUserAbout ($testhash,$about);
-if (!$userdata){
+if (!$userdata['success']){
   out ("User not found!");
 } else {
-  out ("User about text added status changed: No. of datasets affected: ".$userdata);
+  out ("User about text added status changed: No. of datasets affected: ".$userdata['count']);
 }
 
 
