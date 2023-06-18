@@ -307,10 +307,14 @@ class Converters {
       $stmt = $this->db->query('SELECT status, room_id FROM '.$this->db->au_ideas.' WHERE id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
+      print_r ($ideas);
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $ideas ['status'] = 0;
+        $ideas ['room_id'] = 0;
+
+        return $ideas[0]; // nothing found, return 0 code
       }else {
-        return 1;
+        return $ideas[0];
       }
     } // end function
 
