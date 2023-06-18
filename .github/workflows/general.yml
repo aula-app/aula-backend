@@ -10,12 +10,11 @@ jobs:
       CI: true
       LOCAL: test
     steps:
-      - name: Create SSH key
+      - name: Create SSH key and copy files
         run: |
           mkdir -p ~/.ssh/
           echo "$SSH_HOST_KEY" > ../private.key
           sudo chmod 600 ../private.key
-          ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
           echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
           scp -P 4222 -r ${{ github.workspace }} -i $SSH_KEY_PATH aula@devel.aula.de:
         shell: bash
