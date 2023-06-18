@@ -12,6 +12,6 @@ jobs:
     steps:
       - name: Create SSH key and copy files
         run: |
-          cp -r ${{ github.workspace }}/* /tmp/playground
+          cp -r * /tmp/playground
         shell: bash
 
