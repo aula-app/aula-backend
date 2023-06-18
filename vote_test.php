@@ -66,7 +66,7 @@ if (isset ($_REQUEST['vote']))
   $return_value = $idea->voteForIdea ($idea_id, $vote_value, $_SESSION ['user_id']);
 
   if ($return_value['success']){
-    $msg.="<br>".abs ($return_value['data'])." votes made successfully";
+    $msg.="<br>".abs ($return_value['data'])." is the difference in absolute value";
   }
   else {
     $msg.="<br>There was an error while voting - error code: ".$return_value['error_code'];
@@ -129,7 +129,7 @@ echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4)['data'].")</h2>
 $ideadata = $idea->getIdeas($offset, $limit, 4, 1, 1);
 // idea list:
 foreach ($ideadata['data'] as $result) {
-    $votes_made = $idea->getIdeaNumberVotes($result['id']);
+    $votes_made = $idea->getIdeaNumberVotes($result['id'])['data'];
     echo ('<form action="" method ="_POST">');
     echo ("<h2>".$result['id'].".". $crypt->decrypt ($result['content'])."</h2>");
     echo ("<b>Voting result: " . ($result['sum_votes']).", number of likes: " . ($result['sum_likes']).", votes given in total: ".$votes_made."</b>");
