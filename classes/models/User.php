@@ -719,7 +719,7 @@ class User {
       $this->syslog->addSystemEvent(0, "Removed user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // error code
-      $returnvalue ['data'] = false; // returned data
+      $returnvalue ['data'] = 1; // returned data
       $returnvalue ['count'] = 1; // returned count of datasets
 
       return $returnvalue;

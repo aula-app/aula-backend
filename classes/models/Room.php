@@ -43,9 +43,20 @@ class Room {
       $this->db->bind(':id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $rooms[0]; // return an array (associative) with all the data for the room
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = $rooms[0]; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -57,7 +68,13 @@ class Room {
       $stmt = $this->db->query('SELECT user_id FROM '.$this->au_rel_rooms_users.' WHERE room_id = :room_id');
       $this->db->bind(':room_id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
-      return count($rooms);
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue ['data'] = count($rooms); // returned data
+      $returnvalue ['count'] = count($rooms); // returned count of datasets
+
+      return $returnvalue;
+
     }// end function
 
     public function getNumberOfTopics($room_id) {
@@ -67,7 +84,12 @@ class Room {
       $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE room_id = :room_id');
       $this->db->bind(':room_id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
-      return count($rooms);
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue ['data'] = count($rooms); // returned data
+      $returnvalue ['count'] = count($rooms); // returned count of datasets
+
+      return $returnvalue;
     }// end function
 
     public function getNumberOfIdeas($room_id) {
@@ -77,7 +99,12 @@ class Room {
       $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE room_id = :room_id');
       $this->db->bind(':room_id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
-      return count($rooms);
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue ['data'] = count($rooms); // returned data
+      $returnvalue ['count'] = count($rooms); // returned count of datasets
+
+      return $returnvalue;
     }// end function
 
 
@@ -89,38 +116,20 @@ class Room {
       $this->db->bind(':id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $rooms[0]['hash_id']; // return hash id for the room
-      }
-    }// end function
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = $rooms[0]['hash_id']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
 
-    public function getGroupHashId ($room_id) {
-      /* returns hash_id of a room for a integer room id
-      */
-      $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+        return $returnvalue;
 
-      $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_rooms.' WHERE id = :id');
-      $this->db->bind(':id', $room_id); // bind room id
-      $rooms = $this->db->resultSet();
-      if (count($rooms)<1){
-        return "0,0"; // nothing found, return 0,0 code
-      }else {
-        return "1,".$rooms[0]['hash_id']; // return room phase (int) for the room
-      }
-    }// end function
-
-    public function getRoomIdByHashId($hash_id) {
-      /* Returns Database ID of room when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $rooms = $this->db->resultSet();
-      if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $rooms[0]['id']; // return room id
       }
     }// end function
 
@@ -249,13 +258,28 @@ class Room {
       } catch (Exception $e) {
           echo 'Error occured while getting users in room: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $rooms; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = $rooms; // returned data
+        $returnvalue ['count'] = count ($rooms); // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
 
@@ -282,35 +306,6 @@ class Room {
 
     } // end function
 
-    private function checkUserId ($user_id) {
-      /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
-      if a hash was passed, function gets db user id and returns db id
-      */
-
-      if (is_int($user_id))
-      {
-        return $user_id;
-      } else
-      {
-
-        return $this->getUserIdByHashId ($user_id);
-      }
-    } // end function
-
-    public function getUserIdByHashId($hash_id) {
-      /* Returns Database ID of user when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_users_basedata.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind userid
-      $users = $this->db->resultSet();
-      if (count($users)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $users[0]['id']; // return user id
-      }
-    }// end function
-
     public function deleteRoomUserDelegations ($room_id, $user_id){
       // dleetes all delegations in a specified room
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
@@ -336,21 +331,6 @@ class Room {
     } // end function
 
 
-    private function checkRoomId ($room_id) {
-      /* helper function that checks if a room id is a standard db id (int) or if a hash room id was passed
-      if a hash was passed, function gets db room id and returns db id
-      */
-
-      if (is_int($room_id))
-      {
-        return $room_id;
-      } else
-      {
-
-        return $this->getRoomIdByHashId ($room_id);
-      }
-    } // end function
-
     public function emptyRoom($room_id) {
       /* deletes all users from a room
       */
@@ -362,32 +342,56 @@ class Room {
 
       $err=false;
       try {
-        $rooms = $this->db->resultSet();
+        $rooms = $this->db->execute(); // do the query
         $room_content_count = $this->db->rowCount();
 
       } catch (Exception $e) {
           echo 'Error occured while emptying room: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return "0,0";
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
       }
 
       // remove all delegations in this room
       $this->deleteRoomDelegations ($room_id);
-      return "1,".$room_content_count; // return number of affected rows to calling script
+
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue ['data'] = $room_content_count; // returned data
+      $returnvalue ['count'] = $room_content_count; // returned count of datasets
+
+      return $returnvalue;
+
 
     }// end function
 
     public function checkRoomExistsByName($room_name){
       // checks if a room with this name is already in database
-      $room_name=trim ($room_name); // trim spaces
+      $room_name = trim ($room_name); // trim spaces
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_rooms.' WHERE room_name = :room_name');
       $this->db->bind(':room_name', $room_name); // bind room id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $rooms[0]['id']; //  return room id (>0) = exists
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $rooms[0]['id']; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }
 
@@ -409,8 +413,13 @@ class Room {
         }
 
         // check if room name is still available
-        if ($this->checkRoomExistsByName($room_name)>0){
-          return "0,1"; // room exists, stop exectuing, return errorcode 1 = room exists
+        if ($this->checkRoomExistsByName($room_name)['data']>0){
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 3; // error code - room with this name exists already
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
         $stmt = $this->db->query('INSERT INTO '.$this->au_rooms.' (phase, room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, roomorder) VALUES (:room_phase, :room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
@@ -445,11 +454,23 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added new room (#".$insertid.") ".$room_name, 0, "", 1);
-          return $insertid; // return insert id to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = $insertid; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+
+          return $returnvalue; // return insert id to calling script
 
         } else {
           $this->syslog->addSystemEvent(1, "Error adding room ".$room_name, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -480,10 +501,21 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Room status changed ".$room_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of room ".$room_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -513,10 +545,21 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Room status changed ".$room_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of room ".$room_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -546,10 +589,20 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Room description public changed ".$room_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing room description (public) ".$room_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -579,10 +632,20 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Room description internal changed ".$room_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing room description internal ".$room_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -613,10 +676,21 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Room name changed ".$room_id." by ".$updater_id, 0, "", 1);
-          return intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 2; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
         } else {
           $this->syslog->addSystemEvent(1, "Error changing name of room ".$room_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -648,10 +722,20 @@ class Room {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Room Access Code changed ".$room_id." by ".$updater_id, 0, "", 1);
-          return intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing access code of room ".$room_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -695,11 +779,21 @@ class Room {
           }
           // remove all delegations in this room
           $this->deleteRoomDelegations ($room_id);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = $rowCount; // returned count of datasets
 
-          return $rowcount; // return number of affected rows to calling script
+          return $returnvalue;
+
         } else {
           $this->syslog->addSystemEvent(1, "Error deleting room with id ".$room_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
     }// end function

@@ -30,9 +30,22 @@ class Group {
       $this->db->bind(':id', $group_id); // bind group id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
       }else {
-        return $groups[0]; // return an array (associative) with all the data for the group
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $groups[0]; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+
       }
     }// end function
 
@@ -43,9 +56,21 @@ class Group {
     $this->db->bind(':id', $group_id); // bind group id
     $groups = $this->db->resultSet();
     if (count($groups)<1){
-      return 0; // nothing found, return 0 code
+      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue ['data'] = false; // returned data
+      $returnvalue ['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+
     }else {
-      return $groups[0]['hash_id']; //  returns the value
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue ['data'] =  $groups[0]['hash_id']; // returned data
+      $returnvalue ['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
     }
   }// end function
 
@@ -79,21 +104,6 @@ class Group {
     return $return_value;
   }// end function
 
-  public function getGroupIdByHashId($hash_id) {
-      /* Returns Database ID of group when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_groups.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $groups = $this->db->resultSet();
-      if (count($groups)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $groups[0]['id']; // return group id
-      }
-    }// end function
-
-
     public function checkAccesscode($group_id, $access_code) { // access_code = clear text
       /* checks access code and returns database group id (credentials correct) or 0 (credentials not correct)
       */
@@ -105,21 +115,44 @@ class Group {
       $groups = $this->db->resultSet();
 
       if (count($groups)<1){
-        return 0;
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - group not found
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
       } // nothing found or empty database
 
       foreach ($groups as $group) {
           $db_access_code = $group['access_code'];
           if (password_verify($access_code, $db_access_code))
           {
-            return $group['id'];
-          }else {
+            $returnvalue['success'] = true; // set return value to false
+            $returnvalue['error_code'] = 0; // error code - no error
+            $returnvalue ['data'] = $group ['id']; // returned data
+            $returnvalue ['count'] = 1; // returned count of datasets
 
-            return 0;
+            return $returnvalue;
+
+          }else {
+            $returnvalue['success'] = false; // set return value to false
+            $returnvalue['error_code'] = 3; // error code - pw mismatch
+            $returnvalue ['data'] = false; // returned data
+            $returnvalue ['count'] = 0; // returned count of datasets
+
+            return $returnvalue;
+            $this->syslog->addSystemEvent("Group access code incorrect: ".$group['group_name'], 0, "", 1);
           }
       } // end foreach
         $this->syslog->addSystemEvent("Group access code incorrect: ".$group['group_name'], 0, "", 1);
-        return 0;
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 4; // error code - no matching dataset
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
     }// end function
 
 
@@ -140,12 +173,28 @@ class Group {
       } catch (Exception $e) {
           echo 'Error occured while getting users in group: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($groups)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - group not found
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - no matching dataset
+        $returnvalue ['data'] = $groups; // returned data
+        $returnvalue ['count'] = count ($groups); // returned count of datasets
+
+        return $returnvalue;
         return $groups; // return an array (associative) with all the data
       }
     }// end function
@@ -167,11 +216,20 @@ class Group {
       } catch (Exception $e) {
           echo 'Error occured while emptying group: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return "0,0";
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - no matching dataset
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
       }
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - no matching dataset
+      $returnvalue ['data'] = $this->db->rowCount(); // returned data
+      $returnvalue ['count'] = $this->db->rowCount(); // returned count of datasets
 
-
-      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+      return $returnvalue;
 
     }// end function
 
@@ -236,13 +294,28 @@ class Group {
       } catch (Exception $e) {
           echo 'Error occured while getting groups: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($groups)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - no matching dataset
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $groups; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - no matching dataset
+        $returnvalue ['data'] = $groups; // returned data
+        $returnvalue ['count'] = count($groups); // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
 
@@ -254,9 +327,19 @@ class Group {
       $this->db->bind(':group_name', $group_name); // bind room id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - no matching dataset
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = count ($groups); // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return 1; // return 1 = exists
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - no matching dataset
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }
 
@@ -271,8 +354,13 @@ class Group {
 
 
         // check if group name is still available
-        if ($this->checkGroupExistsByName($group_name)>0){
-          return "0,1"; // group exists, stop exectuing, return errorcode 1 = group exists
+        if ($this->checkGroupExistsByName($group_name)['data']>0){
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 2; // error code - no matching dataset
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         }
 
 
@@ -307,11 +395,22 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added new group (#".$insertid.") ".$group_name, 0, "", 1);
-          return $insertid; // return insert id to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - no matching dataset
+          $returnvalue ['data'] = $insertid; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
 
         } else {
           $this->syslog->addSystemEvent(1, "Error adding group ".$group_name, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - no matching dataset
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -342,10 +441,19 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group status changed ".$group_id." by ".$updater_id, 0, "", 1);
-          return intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - no matching dataset
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of group ".$group_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - no matching dataset
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -376,10 +484,20 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group votes per user changed ".$group_id." by ".$updater_id, 0, "", 1);
-          return intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - no error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing votes per user of group ".$group_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -409,10 +527,20 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group description public changed ".$group_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing description public ".$group_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -442,10 +570,20 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group description internal changed ".$group_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing description internal of group ".$group_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -473,10 +611,20 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group name changed ".$group_id." by ".$updater_id, 0, "", 1);
-          return intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing name of group ".$group_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -508,26 +656,22 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group Access Code changed ".$group_id." by ".$updater_id, 0, "", 1);
-          return intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing access code of group ".$group_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
-
-    private function checkGroupId ($group_id) {
-      /* helper function that checks if a group id is a standard db id (int) or if a hash group id was passed
-      if a hash was passed, function gets db group id and returns db id
-      */
-
-      if (is_int($group_id))
-      {
-        return $group_id;
-      } else
-      {
-        return $this->getGroupIdByHashId ($group_id);
-      }
-    } // end function
 
     public function deleteGroup($group_id, $updater_id=0) {
         /* deletes group and returns the number of rows (int) accepts group id or group hash id // */
@@ -546,10 +690,20 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group deleted with id ".$group_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error deleting group with id ".$group_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
     }// end function

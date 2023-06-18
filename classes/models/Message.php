@@ -176,9 +176,9 @@ class Message {
       $this->db->bind(':id', $message_id); // bind idea id
       $messages = $this->db->resultSet();
       if (count($messages)<1){
-        $returnvalue['success'] = true; // set return value to false
-        $returnvalue['error_code'] = 0; // no error code
-        $returnvalue ['data'] = false; // returned data
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // no error code
+        $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue; // nothing found, return 0 code
@@ -192,9 +192,13 @@ class Message {
       }
     }// end function
     public function getMessagesByUser ($user_id, $publish_date=0){
-      // returns all message for this specific user
+      // returns all messages for this specific user
       $user_id = $this->converters->checkUserId ($user_id);
       return getMessages (0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0);
+    }
+
+    public function sendMessageToUser ($user_id, $msg, $publish_date=0){
+
     }
 
     public function getMessages ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $publish_date=0, $target_group=0, $room_id=0, $user_id=0, $creator_id=0) {
@@ -203,9 +207,10 @@ class Message {
       orderby is the field (int, see switch), defaults to last_update (3)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 5= in review defaults to active (1)
-      publish_date = date that specifies messages younger than publish date
+      publish_date = date that specifies messages younger than publish date (if set to 0, gets all messages)
       extra_where = extra parameters for where clause, synthax " AND XY=4"
       user_id = specifies a certain user (for private messages) if set to 0 all users are included
+      creator_id specifies contentt that was created by a certain user
       */
 
       // init return array
@@ -317,7 +322,7 @@ class Message {
       $count_datasets = count ($messages);
 
       if ($count_datasets<1){
-        $returnvalue['success'] = true; // set success value
+        $returnvalue['success'] = false; // set success value
         $returnvalue['error_code'] = 2; // no data found
         $returnvalue ['data'] = false; // returned data is false
         $returnvalue ['count'] = $count_datasets; // returned count of datasets

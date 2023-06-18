@@ -35,10 +35,20 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        $ideas['id'] = 0;
-        return $ideas['id']; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas[0]; // return an array (associative) with all the data for the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -51,9 +61,20 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas[0]; // return content for the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -66,9 +87,20 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return intval ($ideas[0]['totalvotes']); // return total made votes for the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]['totalvotes']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -82,9 +114,20 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0,0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas[0]['sum_votes']; // return sum of the votes for the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]['sum_votes']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -97,9 +140,20 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0,0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas[0]['topic_id']; // return topic id for the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]['topic_id']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -112,9 +166,20 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0,0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas[0]['room_id']; // return room id for the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]['room_id']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -131,9 +196,20 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0,0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas[0]['sum_likes']; // return sum of the likes for the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]['sum_likes']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -146,14 +222,25 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return 0; // nothing found, return 0,0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas[0]['status']; // return status of the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]['status']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
 
-  public function getPersonalVoteStatus ($user_id, $idea_id, $room_id) {
+  public function getPersonalVoteStatus ($user_id, $idea_id, $topic_id) {
       /* returns content, sum votes, sum likes, create, last_update, hash id and the user displayname of an idea for a integer idea id
       */
       $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
@@ -164,9 +251,9 @@ class Idea {
       $available_votes = $this->checkAvailableVotesUser ($user_id, $idea_id);
 
       // check for delegations
-      $vote_factor = $this->getVoteBiasDelegations ($user_id, $room_id, $idea_id);
+      $vote_factor = $this->getVoteBiasDelegations ($user_id, $topic_id, $idea_id);
 
-      $has_delegated = $this->userHasDelegated($user_id, $room_id);
+      $has_delegated = $this->userHasDelegated($user_id, $topic_id)['data'];
       return $has_delegated.",".$vote_factor.",".$available_votes; // returns status of the voting for a specific user idea and room
 
     }// end function
@@ -179,9 +266,20 @@ class Idea {
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return "0,0"; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return "1,".$ideas[0]['hash_id']; // return hash id for the idea
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas[0]['hash_id']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -200,7 +298,12 @@ class Idea {
       $this->db->bind(':idea_id', $idea_id); // bind user id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
-        return ('0,3'); // idea does not exist
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       } // else continue processing
       // check if this user has already reported this idea
       $stmt = $this->db->query('SELECT object_id FROM '.$this->db->au_reported.' WHERE user_id = :user_id AND type = 0 AND object_id = :idea_id');
@@ -231,14 +334,29 @@ class Idea {
           $this->syslog->addSystemEvent(0, "Added new reporting (#".$insertid.") ".$content, 0, "", 1);
           // set idea status to reported
           $this->setIdeaStatus($idea_id, 3, $updater_id=0);
-          return '1,1'; // nothing found, return 0 code
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
 
         } else {
           $this->syslog->addSystemEvent(1, "Error reporting idea ".$content, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
       }else {
-        return '0,1'; // return error, user has already reported this idea
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
 
     } // end function
@@ -329,21 +447,35 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added idea ".$idea_id." to topic ".$topic_id, 0, "", 1);
-          return "1,1,1"; // return error code 1 = successful
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
 
         } else {
           $this->syslog->addSystemEvent(0, "Error while adding idea ".$idea_id." to topic ".$topic_id, 0, "", 1);
 
-          return "0,1,1"; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
       }else {
-        return "0,".$idea_exist.",".$topic_exist; // returns error and 0 or 1 for user and room (0=doesn't exist, 1=exists)
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - topic or idea doesn't exist
+        $returnvalue ['data'] = $idea_exist.",".$topic_exist; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
       }
 
-      return "1,1,1"; // returns 1=ok/successful, user exists (1), room exists (1)
-
-    }
+    } // end function
 
     public function addIdeaToCategory ($idea_id, $category_id, $updater_id=0){
       // adds an idea (idea_id) to a specified topic (topic_id)
@@ -381,21 +513,35 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added idea ".$idea_id." to category ".$category_id, 0, "", 1);
-          return "1,1,1"; // return error code 1 = successful
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
 
         } else {
           $this->syslog->addSystemEvent(0, "Error while adding idea ".$idea_id." to category ".$category_id, 0, "", 1);
 
-          return "0,1,1"; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
       }else {
-        return "0,".$idea_exist.",".$topic_exist; // returns error and 0 or 1 for user and room (0=doesn't exist, 1=exists)
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = $idea_exist.",".$topic_exist; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
       }
 
-      return "1,1,1"; // returns 1=ok/successful, user exists (1), room exists (1)
-
-    }
+    } // end function
 
 
 
@@ -416,11 +562,20 @@ class Idea {
       } catch (Exception $e) {
           echo 'Error occured while deleting idea from topic: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return "0,0";
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue ['data'] = 1; // returned data
+      $returnvalue ['count'] = 1; // returned count of datasets
 
+      return $returnvalue;
 
-      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
 
     }// end function
 
@@ -441,10 +596,20 @@ class Idea {
       } catch (Exception $e) {
           echo 'Error occured while deleting idea from category: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return "0,0";
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
-      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue ['data'] = 1; // returned data
+      $returnvalue ['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
 
     }// end function
 
@@ -464,11 +629,19 @@ class Idea {
       } catch (Exception $e) {
           echo 'Error occured while deleting all ideas from topic: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return "0,0";
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue ['data'] = 1; // returned data
+      $returnvalue ['count'] = 1; // returned count of datasets
 
-
-      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+      return $returnvalue;
 
     }// end function
 
@@ -487,11 +660,19 @@ class Idea {
       } catch (Exception $e) {
           echo 'Error occured while deleting all ideas from category: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return "0,0";
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue ['data'] = 1; // returned data
+      $returnvalue ['count'] = 1; // returned count of datasets
 
-
-      return "1,".$this->db->rowCount(); // return number of affected rows to calling script
+      return $returnvalue;
 
     }// end function
 
@@ -571,9 +752,20 @@ class Idea {
       }
 
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -654,9 +846,20 @@ class Idea {
         }
 
         if (count($ideas)<1){
-          return 0; // nothing found, return 0 code
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 2; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }else {
-          return $ideas; // return an array (associative) with all the data
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = $ideas; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
         }
       }// end function
 
@@ -705,7 +908,7 @@ class Idea {
     } // end function
 
 
-    public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
+    public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -725,6 +928,11 @@ class Idea {
       if ($offset==0 && $limit==0){
         $limit_string="";
         $limit_active=false;
+      }
+
+      if ($room_id > 0){
+        // if a room id is set then add to where clause
+        $extra_where.= " AND room_id = ".$room_id; // get specific topics to a room
       }
 
       switch (intval ($orderby)){
@@ -780,13 +988,31 @@ class Idea {
       } catch (Exception $e) {
           echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
       }
 
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // db error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
       }else {
-        return $ideas; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = $ideas; // returned data
+        $returnvalue ['count'] = count ($ideas); // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -864,13 +1090,29 @@ class Idea {
       } catch (Exception $e) {
           echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas; // returned data
+        $returnvalue ['count'] = count ($ideas); // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -946,13 +1188,28 @@ class Idea {
       } catch (Exception $e) {
           echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas; // returned data
+        $returnvalue ['count'] = count ($ideas); // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
 
@@ -1029,13 +1286,29 @@ class Idea {
       } catch (Exception $e) {
           echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($ideas)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $ideas; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ideas; // returned data
+        $returnvalue ['count'] = count ($ideas); // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -1086,11 +1359,21 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added new idea (#".$insertid.") ".$content, 0, "", 1);
-          return $insertid; // return insert id to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = $insertid; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
 
         } else {
           $this->syslog->addSystemEvent(1, "Error adding idea ".$content, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
 
@@ -1122,10 +1405,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea status changed ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of idea ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1154,10 +1447,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea approved ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error approving idea ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1186,10 +1489,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea approved ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error approving idea ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1218,10 +1531,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea set to winning ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error setting idea to winning ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1250,10 +1573,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea set to losing ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error setting idea to losing ".$idea_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1282,10 +1615,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." votes set to ".$votes, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error setting votes from idea ".$idea_id." to ".$votes, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1314,10 +1657,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." number of votes given set to ".$votes, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error setting number of votes given for idea ".$idea_id." to ".$votes, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1346,10 +1699,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." likes set to ".$likes, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error setting likes from idea ".$idea_id." to ".$likes, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1362,7 +1725,7 @@ class Idea {
         $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
         // Check if user liked already
-        if ($this->getLikeStatus($user_id, $idea_id)==1){
+        if ($this->getLikeStatus($user_id, $idea_id)['data']==1){
           // user has already liked, return without incrementing vote
           return "0,1";
         }
@@ -1386,10 +1749,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." incremented likes", 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error incrementing likes from idea ".$idea_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1400,9 +1773,14 @@ class Idea {
         */
         $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-        if ($this->getLikeStatus($user_id, $idea_id)==0){
+        if ($this->getLikeStatus($user_id, $idea_id)['data']==0){
           // user has already liked, return without incrementing vote
-          return "0,1";
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 0; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         }
         else {
           // add like to db
@@ -1425,10 +1803,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea  ".$idea_id." decrementing likes", 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error decrementing likes from idea ".$idea_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1472,13 +1860,29 @@ class Idea {
           } catch (Exception $e) {
               echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
               $err=true;
+              $returnvalue['success'] = false; // set return value to false
+              $returnvalue['error_code'] = 1; // error code
+              $returnvalue ['data'] = false; // returned data
+              $returnvalue ['count'] = 0; // returned count of datasets
+
+              return $returnvalue;
           }
 
           $this->syslog->addSystemEvent(0, "Resetting all votes", 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error resetting votes", 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1509,10 +1913,20 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea content changed ".$idea_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing idea content ".$idea_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -1544,14 +1958,24 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea category changed ".$idea_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing idea category ".$idea_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
-    public function checkAvailableVotesUser ($user_id, $idea_id){
+    private function checkAvailableVotesUser ($user_id, $idea_id){
       // returns how many votes are still available for a certain idea
 // get available votes for idea_id
       // check if user has delegated votes
@@ -1610,9 +2034,19 @@ class Idea {
       }
       if (!$err)
       {
-        return 1;
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
       } else {
-        return 0; // return 0 to indicate that there was an error executing the statement
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }
 
@@ -1640,9 +2074,19 @@ class Idea {
       }
       if (!$err)
       {
-        return 1;
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
       } else {
-        return 0; // return 0 to indicate that there was an error executing the statement
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }
 
@@ -1677,10 +2121,20 @@ class Idea {
       if (!$err)
       {
         $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") setting Vote - value: ".$vote_value." by ".$user_id, 0, "", 1);
-        return ("1,1");
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
       } else {
         $this->syslog->addSystemEvent(1, "Error setting vote value:  ".$vote_value." by ".$user_id." for idea #".$idea_id, 0, "", 1);
-        return ("0,0"); // return 0 to indicate that there was an error executing the statement
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }
 
@@ -1688,7 +2142,7 @@ class Idea {
       // add a vote into vote table for a certain user and idea
 
       // get vote value for this user on this idea
-      echo ("<br>DELETING in revokeVoteUser:".$user_id);
+
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
       // bind all VALUES
 
@@ -1707,9 +2161,19 @@ class Idea {
       }
       if (!$err)
       {
-        return $rows;
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = $rows; // returned data
+        $returnvalue ['count'] = $rows; // returned count of datasets
+
+        return $returnvalue;
       } else {
-        return 0; // return 0 to indicate that there was an error executing the statement
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }
 
@@ -1736,9 +2200,20 @@ class Idea {
       }
       if (!$err)
       {
-        return $rows;
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $rows; // returned data
+        $returnvalue ['count'] = $rows; // returned count of datasets
+
+        return $returnvalue;
+
       } else {
-        return 0; // return 0 to indicate that there was an error executing the statement
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }
 
@@ -1751,9 +2226,21 @@ class Idea {
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
       }else {
-        return $users[0]['infinite_votes']; // returns value of infinite votes
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $users[0]['infinite_votes']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -1768,10 +2255,23 @@ class Idea {
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $has_delegated = $this->db->resultSet();
       //echo ("<br>userhasdelegated:".count ($has_delegated));
+      // user has delegated?
       if (count ($has_delegated)>0) {
-        return $has_delegated ['user_id_target'];
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = $has_delegated[0]['user_id_target']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
-      return 0;
+      // user has not delegated
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue ['data'] = 0; // returned data
+      $returnvalue ['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
     }
 
     public function voteForIdea($idea_id, $vote_value, $user_id) {
@@ -1792,27 +2292,36 @@ class Idea {
         $vote_value = -1;
       }
 
-      // echo ("<br>Voting for idea:  ".$idea_id." by user: ".$user_id." vote value: ".$vote_value);
+      //echo ("<br>Voting for idea:  ".$idea_id." by user: ".$user_id." vote value: ".$vote_value);
 
       $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // check if idea und user exist
 
-      $idea_basedata = $this->getIdeaBaseData ($idea_id);
+      $idea_basedata = $this->getIdeaBaseData ($idea_id) ['data'];
       if ($idea_basedata['id'] == 0){
         // idea does not exist, return with error code
-        return ("0,0,0"); // return error code - idea non existant
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // idea doesn't exist
+        $returnvalue ['data'] = false; // returned data -false
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
       $status_idea = $idea_basedata['status']; // get idea status
-      $topic_id = $this->getIdeaTopic ($idea_id); // get toipic id for idea
+      $topic_id = $this->getIdeaTopic ($idea_id)['data']; // get topic id for idea
       $room_id = $idea_basedata['room_id'];
 
       // check if user is member of the room
 
       if ($status_idea == 0 || $status_idea >1) {
         // idea does not exist/inactive or status >1 (suspended or archived)
-        return ("0,1,0"); // return error (0) idea is inactive / suspended /archived / in review (1)
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 3; //  error code - idea inactive, suspended or archived
+        $returnvalue ['data'] = false; // returned data - final vote value
+        $returnvalue ['count'] = 0; // returned count of datasets
+        return $returnvalue;
       } // else continue processing
 
       $sum_votes_correction = 0; // init correction value for vote_sum in idea table
@@ -1821,21 +2330,29 @@ class Idea {
       $number_of_delegations = 0;
 
       // check if user has infinite votes, if yes - disable everything
-      if ($this->getUserInfiniteVotesStatus($user_id)==0){
+      $infinite = $this->getUserInfiniteVotesStatus($user_id);
+
+      if ($infinite ['data']==0){
         // user does not have infinite votes
         // check if user has already used up his votes
         if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
           // votes are not available, user has used all votes
           if ($only_voting_once_allowed==1) {
-
             // voting is only allowed once
-            return ("0,2,0"); // all votes used already, return error
+            $returnvalue['success'] = false; // set return value to false
+            $returnvalue['error_code'] = 4; //  error code - all available votes used already
+            $returnvalue ['data'] = false; // returned data - final vote value
+            $returnvalue ['count'] = 0; // returned count of datasets
+            return $returnvalue;
           } else {
-            $vote_value_original = $this->getVoteValue ($user_id, $idea_id); // returns 0 if user has not yet voted
+            $vote_value_original_array = $this->getVoteValue ($user_id, $idea_id);
+            $vote_value_original = $vote_value_original_array['data']; // returns 0 if user has not yet voted
             // user can vote (change his mind) as often as he wishes
+            //echo ("<br>vote value original: ".$vote_value_original);
             $this->revokeVoteUser ($user_id, $idea_id); // remove vote from user
             // correct sum votes for the idea
-            $current_sum = $this->getIdeaVotes ($idea_id); // get votes for this idea
+            $current_sum = $this->getIdeaVotes ($idea_id)['data']; // get votes for this idea
+            //echo ("<br>current sum: ".$current_sum);
             // echo ("<br>current sum: ".$current_sum." vote value original: ".$vote_value_original);
             $new_vote_value = intval (intval ($current_sum)-intval ($vote_value_original)); // calculate difference votes
             $this->IdeaSetVotes ($idea_id, $new_vote_value); // adjust sum_votes in idea
@@ -1843,15 +2360,15 @@ class Idea {
           }
         } // else continue processing
 
-
         // check if user has delegated his votes to another user
-        $delegated_user = $this->userHasDelegated($user_id, $topic_id);
+        $delegated_user = $this->userHasDelegated($user_id, $topic_id)['data'];
         //echo ("<br>user ".$user_id." has delegated votes to user: ".$delegated_user);
         if ($delegated_user==0){
           // user has not delegated his votes, get vote bias by delegations to this user from other users
           $votes_bias = $this->getVoteBiasDelegations ($user_id, $topic_id, $idea_id); // calculates all delegations to this user
+          //echo ("<br>Votes bias (from delegations): ".$votes_bias);
 
-          $number_of_delegations = (intval ($votes_bias)-1); // number of users that have delgetaed their vote to this user
+          $number_of_delegations = (intval ($votes_bias)-1); // number of users that have delegated their vote to this user
           // add total votes to db
           // sum up votes
           $vote_value_final = intval (intval ($votes_bias) * intval ($vote_value)); // calculate total vote weight
@@ -1860,12 +2377,14 @@ class Idea {
           // apply group vote bias
           $this->addVoteUser ($user_id, $idea_id, $vote_value_final, $number_of_delegations);
           $sum_votes_correction = $vote_value_final;
-          // echo ("<br>user has not delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
+          //echo ("<br>user has not delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
         } else {
           // user has delegated his votes, check if the user that has received the votes already voted for the idea
           // reduce vote of the target user vote and add one vote
-          $vote_value_delegated = getVoteValue ($delegated_user, $idea_id); // returns 0 if user has not yet voted
+          $vote_value_delegated_array = $this->getVoteValue ($delegated_user, $idea_id); // returns 0 if user has not yet voted
+          $vote_value_delegated = $vote_value_delegated_array ['data']; // returns 0 if user has not yet voted
+
           $delegation_correction_sum = 0; // correction factor for sum_votes in idea table
 
           if ($vote_value_delegated > 0 ){
@@ -1881,10 +2400,11 @@ class Idea {
           // apply group vote bias
 
           $this->addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations);
-          // echo ("<br>user has delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
+          //echo ("<br>user has delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
 
           $sum_votes_correction = intval (intval ($vote_value) + intval ($delegation_correction_sum));
+          //echo ("<br>Votes  (from delegations): ".$vote_value. "delegation_correction_sum: ".$delegation_correction_sum);
           // correct vote of the delegated user and update in db
           $this->setVoteUser ($delegated_user, $idea_id, $vote_value_delegated, $number_of_delegations);
 
@@ -1912,13 +2432,24 @@ class Idea {
       if (!$err)
       {
         //update the number of votes for this idea
-        $this->IdeaSetNumberOfVotesGiven ($idea_id, intval ($this->getIdeaNumberVotes($idea_id)));
+        $this->IdeaSetNumberOfVotesGiven ($idea_id, intval ($this->getIdeaNumberVotes($idea_id)['data']));
         $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") added Vote - value: ".$vote_value." by ".$user_id, 0, "", 1); // add to systemlog
-        return ("1,1,".$sum_votes_correction); // return success and total vote value
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $sum_votes_correction; // returned data - final vote value
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
 
       } else {
         $this->syslog->addSystemEvent(1, "Error adding vote idea (#".$idea_id.") value:  ".$vote_value." by ".$user_id, 0, "", 1); // add to systemlog
-        return ("0,0,0"); // return 0 to indicate that there was an error executing the statement
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // db error code
+        $returnvalue ['data'] = false; // returned data - final vote value
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
       // add vote to database
 
@@ -1937,17 +2468,28 @@ class Idea {
         //check if idea exists
         $idea_exists = $this->converters->checkIdeaExist ($idea_id);
         $status_idea = $idea_exists['status'];
-        $room_id = $idea_exists['room_id'];
+        // $room_id = $idea_exists['room_id'];
 
         if ($status_idea == 0 || $status_idea >1) {
           // idea does not exist or status >1 (suspended or archived)
-          return ("0,1"); // return error (0) idea does not exist or is suspended /archived / in review (1)
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 2; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
         } // else continue processing
 
         // add user vote to db
-        $affected = $this->revokeVoteUser ($user_id, $idea_id, $updater_id);
+        $affected = $this->revokeVoteUser ($user_id, $idea_id)['data'];
         if ($affected<1){
-          return ("0,2"); // return with error message
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 3; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         } // else continue processing
 
         $vote_value=1; // will be exchanged with vote value read from database
@@ -1971,10 +2513,22 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea (#".$idea_id.") revoked Vote by ".$updater_id, 0, "", 1);
-          return ("1,1");
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // db error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
         } else {
           $this->syslog->addSystemEvent(1, "Error revoking vote for idea (#".$idea_id.") by ".$updater_id, 0, "", 1);
-          return ("0,0"); // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
         }
         // add vote to database
 
@@ -2007,10 +2561,21 @@ class Idea {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Idea info changed ".$idea_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // db error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
         } else {
           $this->syslog->addSystemEvent(1, "Error changing idea info ".$idea_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -2024,9 +2589,19 @@ class Idea {
 
       $votes = $this->db->resultSet();
       if (count($votes)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return intval ($votes[0]['vote_value']); // return vote value for this idea and user
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = intval ($votes[0]['vote_value']); // returned data
+        $returnvalue ['count'] = count($votes); // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
 
@@ -2041,9 +2616,19 @@ class Idea {
 
       $likes = $this->db->resultSet();
       if (count($likes)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return 1; // return user has already liked
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
 
@@ -2076,12 +2661,20 @@ class Idea {
         {
           $this->syslog->addSystemEvent(0, "Idea deleted, id=".$idea_id." by ".$updater_id, 0, "", 1);
           //check for action
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // db error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
 
-
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error deleting idea with id ".$idea_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
     }// end function

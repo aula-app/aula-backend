@@ -52,20 +52,6 @@ class Topic {
         return md5 ($key);
       }
 
-
-    public function getIdeaHashId($idea_id) {
-      /* returns hash_id of an idea for a integer idea id
-      */
-      $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_ideas.' WHERE id = :id');
-      $this->db->bind(':id', $idea_id); // bind idea id
-      $ideas = $this->db->resultSet();
-      if (count($ideas)<1){
-        return "0,0"; // nothing found, return 0 code
-      }else {
-        return "1,".$ideas[0]['hash_id']; // return hash id for the idea
-      }
-    }// end function
-
     public function getTopicsByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id) {
       /* returns topiclist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
@@ -74,77 +60,9 @@ class Topic {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $room_id is the id of the room
       */
-      $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+      // getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0)
+      return $this->getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, "", $room_id);
 
-      // init vars
-      $orderby_field="";
-      $asc_field ="";
-
-      $limit_string=" LIMIT :offset , :limit ";
-      $limit_active=true;
-
-      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
-      if ($offset==0 && $limit==0){
-        $limit_string="";
-        $limit_active=false;
-      }
-
-      switch (intval ($orderby)){
-        case 0:
-        $orderby_field = "status";
-        break;
-        case 1:
-        $orderby_field = "order_importance";
-        break;
-        case 2:
-        $orderby_field = "created";
-        break;
-        case 3:
-        $orderby_field = "last_update";
-        break;
-        case 4:
-        $orderby_field = "id";
-        break;
-
-        default:
-        $orderby_field = "last_update";
-      }
-
-      switch (intval ($asc)){
-        case 0:
-        $asc_field = "DESC";
-        break;
-        case 1:
-        $asc_field = "ASC";
-        break;
-        default:
-        $asc_field = "DESC";
-      }
-      $where = ' WHERE '.$this->au_topics.'.status= :status AND '.$this->au_topics.'.room_id= :room_id ';
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_topics.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      if ($limit){
-        // only bind if limit is set
-        $this->db->bind(':offset', $offset); // bind limit
-        $this->db->bind(':limit', $limit); // bind limit
-      }
-      $this->db->bind(':status', $status); // bind status
-      $this->db->bind(':room_id', $room_id); // bind room id
-
-      $err=false;
-      try {
-        $topics = $this->db->resultSet();
-
-      } catch (Exception $e) {
-          echo 'Error occured while getting topics for room '.$room_id,  $e->getMessage(), "\n"; // display error
-          $err=true;
-          return 0;
-      }
-
-      if (count($topics)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $topics; // return an array (associative) with all the data
-      }
     }// end function
 
 
@@ -162,7 +80,12 @@ class Topic {
       $this->db->bind(':topic_id', $topic_id); // bind user id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
-        return ('0,3'); // topic does not exist
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       } // else continue processing
       // check if this user has already reported this topic
       $stmt = $this->db->query('SELECT object_id FROM '.$this->au_reported.' WHERE user_id = :user_id AND type = 1 AND object_id = :topic_id');
@@ -193,14 +116,29 @@ class Topic {
           $this->syslog->addSystemEvent(0, "Added new reporting topic (#".$insertid.") ".$content, 0, "", 1);
           // set idea status to reported
           $this->setIdeaStatus($idea_id, 3, $updater_id=0);
-          return '1,1'; // nothing found, return 0 code
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
 
         } else {
           $this->syslog->addSystemEvent(1, "Error reporting topic ".$content, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
       }else {
-        return '0,1'; // return error, user has already reported this idea
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
 
     } // end function
@@ -255,15 +193,26 @@ class Topic {
       $this->db->bind(':id', $topic_id); // bind idea id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $topics[0]; // return an array (associative) with all the data for the topic
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = $topics[0]; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
 
 
-    public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
+    public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0) {
       /* returns topiclist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -283,6 +232,11 @@ class Topic {
       if ($offset==0 && $limit==0){
         $limit_string="";
         $limit_active=false;
+      }
+
+      if ($room_id > 0){
+        // if a room id is set then add to where clause
+        $extra_where.= " AND room_id = ".$room_id; // get specific topics to a room
       }
 
       switch (intval ($orderby)){
@@ -332,13 +286,29 @@ class Topic {
       } catch (Exception $e) {
           echo 'Error occured while getting topics: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($topics)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $topics; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = $topics; // returned data
+        $returnvalue ['count'] = count($topics); // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
@@ -388,11 +358,22 @@ class Topic {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added new topic (#".$insertid.") ".$name, 0, "", 1);
-          return $insertid; // return insert id to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = $insertid; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
 
         } else {
           $this->syslog->addSystemEvent(1, "Error adding topic ".$name, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
 
@@ -425,10 +406,20 @@ class Topic {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Topic status changed ".$topic_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of topic ".$topic_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -458,10 +449,20 @@ class Topic {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Topic order changed ".$topic_id." by ".$updater_id, 0, "", 1);
-          return "1,".intval($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing order of topic ".$topic_id." by ".$updater_id, 0, "", 1);
-          return "0,2"; // return 0,2 to indicate that there was an db error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -494,10 +495,21 @@ class Topic {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Topic name changed ".$topic_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+          return $returnvalue;
+
         } else {
           $this->syslog->addSystemEvent(1, "Error changing topic name ".$topic_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
 
@@ -537,36 +549,22 @@ class Topic {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Topic description changed ".$topic_id." by ".$updater_id, 0, "", 1);
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing topic description ".$topic_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
     }// end function
-
-    public function getRoomIdByHashId($hash_id) {
-      /* Returns Database ID of room when hash_id is provided
-      */
-
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_rooms.' WHERE hash_id = :hash_id');
-      $this->db->bind(':hash_id', $hash_id); // bind hash id
-      $rooms = $this->db->resultSet();
-      if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
-      }else {
-        return $rooms[0]['id']; // return room id
-      }
-    }// end function
-
-    private function sendMessage ($user_id, $msg){
-      /* send a message to the dashboard of the user
-      yet to be written
-      */
-
-      $success = 0;
-      return $success;
-    }
-
 
     public function removeDelegationsTopic ($topic_id){
       // removes all delegations for a certain topic (topic_id)
@@ -588,10 +586,20 @@ class Topic {
         //check for action
         // remove delegations and remove associations with this topic
 
-        return intval ($this->db->rowCount()); // return number of affected rows to calling script
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+        return $returnvalue;
       } else {
         $this->syslog->addSystemEvent(1, "Error deleting delegations for topic with id ".$topic_id, 0, "", 1);
-        return 0; // return 0 to indicate that there was an error executing the statement
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }
 
@@ -619,10 +627,20 @@ class Topic {
           $this->removeAllIdeasFromTopic ($topic_id);
           $this->removeDelegationsTopic ($topic_id);
 
-          return intval ($this->db->rowCount()); // return number of affected rows to calling script
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+          return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error deleting topic with id ".$topic_id." by ".$updater_id, 0, "", 1);
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
     }// end function
