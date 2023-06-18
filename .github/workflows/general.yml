@@ -16,6 +16,7 @@ jobs:
           echo "$SSH_HOST_KEY" > ../private.key
           sudo chmod 600 ../private.key
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+          ssh-keyscan -t rsa devel.aula.de >> ~/.ssh/known_hosts
         shell: bash
         env:
           SSH_HOST_KEY: ${{secrets.SSH_HOST_KEY}}
