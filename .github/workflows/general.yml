@@ -22,3 +22,7 @@ jobs:
       - name: Copy folder content recursively to remote
         run: |
           scp -P 4222 ${{ github.workspace }} -i $SSH_KEY_PATH aula@devel.aula.de:
+        env:
+          SSH_HOST_KEY: ${{secrets.SSH_HOST_KEY}}
+          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
+
