@@ -1,25 +1,17 @@
-name: scp copy files to remote development server
+name: copy files 
 
 on: 
   push
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       CI: true
       LOCAL: test
     steps:
       - name: Create SSH key and copy files
         run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_HOST_KEY" > ../private.key
-          sudo chmod 600 ../private.key
-          echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-          scp -P 4222 -r ${{ github.workspace }} -i $SSH_KEY_PATH aula@devel.aula.de:
+          cp -r ${{ github.workspace }}/* /tmp/playground
         shell: bash
-        env:
-          SSH_HOST_KEY: ${{secrets.SSH_HOST_KEY}}
-          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
-          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
 
