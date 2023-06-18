@@ -15,8 +15,9 @@ require_once ($baseHelperDir.'Crypt.php');
 $db = new Database();
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog ($db); // systemlog
-$idea = new Idea ($db, $crypt, $syslog); // instanciate group model class
+$idea = new Idea ($db, $crypt, $syslog); //, $syslog); // instanciate group model class
 $room = new Room ($db, $crypt, $syslog); // instanciate room model class
+$topic = new Topic ($db, $crypt, $syslog); // instanciate topic model class
 
 
 
@@ -197,7 +198,7 @@ foreach ($randomIndexes as $index) {
 }
 // Get content of single idea
 $idea_id = 5;
-$result =  $idea->getIdeaContent ($idea_id);
+$result =  $idea->getIdeaContent ($idea_id)['data'];
 echo ("<br>Idea #".$idea_id." ".$crypt->decrypt ($result['displayname']).": ".$crypt->decrypt ($result['content'])." (".$result['created'].")");
 
 $offset = 0; // set start at dataset #10
@@ -205,7 +206,7 @@ $limit = 5; // get 10 datasets
 out ("Reading multiple idea datasets (only active, status = 1) <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
 $ideadata = $idea->getIdeas($offset, $limit, 4, 1, 1);
 // idea list:
-foreach ($ideadata as $result) {
+foreach ($ideadata['data'] as $result) {
     out ("ID: " . $result['id']);
     out ("Name: " . $crypt->decrypt ($result['displayname']));
     out ("Idea: " . $crypt->decrypt ($result['content']));
@@ -221,15 +222,18 @@ $room_id = 2;
 out ("Reading multiple idea datasets (of a certain room#".$room_id.") <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
 $ideadata = $idea->getIdeasByRoom($offset, $limit, 4, 1, 1, $room_id);
 // idea list:
-foreach ($ideadata as $result) {
-    out ("ID: " . $result['id']);
-    out ("Name: " . $crypt->decrypt ($result['displayname']));
-    out ("Idea: " . $crypt->decrypt ($result['content']));
-    out ("Sum Votes: " . ($result['sum_votes']).", Sum Likes: " . ($result['sum_likes']));
-    out ("Last Update: " . $result['last_update']);
-    out ("created: " . $result['created']);
+if ($ideadata['success']){
+  foreach ($ideadata['data'] as $result) {
+      out ("ID: " . $result['id']);
+      out ("Name: " . $crypt->decrypt ($result['displayname']));
+      out ("Idea: " . $crypt->decrypt ($result['content']));
+      out ("Sum Votes: " . ($result['sum_votes']).", Sum Likes: " . ($result['sum_likes']));
+      out ("Last Update: " . $result['last_update']);
+      out ("created: " . $result['created']);
+  }
+} else {
+  out ("No ideas found for room ".$room_id);
 }
-
 
 $offset = 0; // set start at dataset #0
 $limit = 5; // get 5 datasets
@@ -238,7 +242,7 @@ $user_id = 1;
 out ("Reading multiple idea datasets (of a certain user#".$user_id.") <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
 $ideadata = $idea->getIdeasByUser($offset, $limit, 4, 1, 1, $user_id);
 // idea list:
-foreach ($ideadata as $result) {
+foreach ($ideadata['data'] as $result) {
     out ("ID: " . $result['id']);
     out ("Name: " . $crypt->decrypt ($result['displayname']));
     out ("Idea: " . $crypt->decrypt ($result['content']));
@@ -256,7 +260,7 @@ $group_id = 9;
 out ("Reading multiple idea datasets (of a certain group#".$group_id.") <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
 $ideadata = $idea->getIdeasByGroup($offset, $limit, 4, 1, 1, $group_id);
 // idea list:
-foreach ($ideadata as $result) {
+foreach ($ideadata['data'] as $result) {
     out ("ID: " . $result['id']);
     out ("Name: " . $crypt->decrypt ($result['displayname']));
     out ("Idea: " . $crypt->decrypt ($result['content']));
@@ -275,7 +279,7 @@ $reason = "this idea is scandalous";
 out ("Report an idea #".$idea_id." by the user #".$user_id." for the reason: ".$reason."<br>using Idea class",true);
 
 $retvalue = $idea->reportIdea ($idea_id, $user_id, $updater_id, $reason);
-out ("return code:".$retvalue);
+out ("return code:".$retvalue ['error_code']." data:".$retvalue ['data']);
 
 // add a vote to an idea
 $idea_id=7;
@@ -285,11 +289,11 @@ $room_id =4;
 
 $updater_id=43;
 $vote_value=-1;
-out ("Vote for an idea #".$idea_id." by the user #".$user_id." vote value: ".$vote_value."<br>using Idea class",true);
+/* out ("Vote for an idea #".$idea_id." by the user #".$user_id." vote value: ".$vote_value."<br>using Idea class",true);
 // voteForIdea($idea_id, $vote_value, $user_id, $updater_id=0)
 $retvalue = $idea->voteForIdea ($idea_id, $vote_value, $user_id, $updater_id);
 out ("return code:".$retvalue);
-
+*/
 // add a vote to an idea
 $idea_id=7;
 $user_id=3;
@@ -298,39 +302,40 @@ $room_id =4;
 
 $updater_id=43;
 $vote_value=-1;
+/*
 out ("Try vote for an idea #".$idea_id." by the user #".$user_id." vote value: ".$vote_value."<br>using Idea class",true);
 // voteForIdea($idea_id, $vote_value, $user_id, $updater_id=0)
 $retvalue = $idea->voteForIdea ($idea_id, $vote_value, $user_id, $updater_id);
-out ("return code:".$retvalue);
-
+out ("return code:".$retvalue ['data']);
+*/
 // revoking vote
 out ("Revoke Vote from an idea #".$idea_id." by the user #".$user_id."<br>using Idea class",true);
-//$retvalue = $idea->RevokeVoteFromIdea($idea_id, $user_id, $updater_id=0);
-out ("return code:".$retvalue);
+$retvalue = $idea->RevokeVoteFromIdea($idea_id, $user_id, $updater_id=0);
+out ("return code:".$retvalue ['error_code']." ".$retvalue ['data']);
 
 $topic_id = 4;
 // delegating vote
 out ("Delegating voting right from user #".$user_id." to ".$user_id_target."<br to >using User class",true);
 $retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $topic_id, $updater_id=0);
-out ("return code:".$retvalue);
+out ("return code:".$retvalue ['data']);
 
 // delegating vote
 out ("Revoking delegation right from user #".$user_id_target." back to ".$user_id."<br>using User class",true);
 $retvalue = $user->revokeVoteRight($user_id, $user_id_target, $room_id, $topic_id, $updater_id=0);
-out ("return code:".$retvalue);
+out ("return code:".$retvalue ['data']);
 
 $user_id_target = 15;
 $topic_id = 4;
 // delegating vote
 out ("Delegating voting right from user #".$user_id." to ".$user_id_target."<br to >using User class",true);
 $retvalue = $user->delegateVoteRight($user_id, $user_id_target, $room_id, $topic_id, $updater_id=0);
-out ("return code:".$retvalue);
+out ("return code:".$retvalue['data']);
 
 // getting delegtaions
 out ("Getting received delegations user #".$user_id_target." for room ".$room_id."<br to >using User class",true);
 
 $users = $user->getReceivedDelegations ($user_id_target, $room_id);
-foreach ($users as $result) {
+foreach ($users['data'] as $result) {
     out ("ID: " . $result['id']);
     out ("Name: " . $crypt->decrypt ($result['displayname']));
     out ("email: " . $crypt->decrypt ($result['email']));
@@ -343,7 +348,9 @@ foreach ($users as $result) {
 out ("Getting given delegations user #".$user_id." for room ".$room_id."<br to >using User class",true);
 
 $users = $user->getGivenDelegations ($user_id, $room_id);
-foreach ($users as $result) {
+$userdata = $users ['data'];
+
+foreach ($userdata as $result) {
     out ("ID: " . $result['id']);
     out ("Name: " . $crypt->decrypt ($result['displayname']));
     out ("Email: " . $crypt->decrypt ($result['email']));
@@ -354,18 +361,18 @@ foreach ($users as $result) {
 
 out ("User #".$user_id." follows ".$user_id_target."<br to >using User class",true);
 $retvalue = $user->followUser($user_id, $user_id_target);
-out ("return code:".$retvalue);
+out ("return code:".$retvalue['data']);
 
 
 $user_id = 4;
 out ("User #".$user_id." blocks ".$user_id_target."<br to >using User class",true);
 $retvalue = $user->blockUser($user_id, $user_id_target, 1, 42, 3);
-out ("return code:".$retvalue);
+out ("return code:".$retvalue['data']);
 
 $user_id = 3;
 out ("User #".$user_id." unfollows ".$user_id_target." <br to >using User class",true);
 $retvalue = $user->unfollowUser($user_id, $user_id_target);
-out ("return code:".$retvalue);
+out ("return code:".$retvalue['count']);
 
 
 ?>

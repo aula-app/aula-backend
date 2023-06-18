@@ -209,7 +209,7 @@ out ("Adding a new group", true);
 
 $inserted_group_id = $group->addGroup($group_name, $description_public, $description_internal, 'internal info', 1, 'aula', 1, $grouporder);
 
-out ("return code:".$inserted_group_id);
+out ("return code (insert id in db):".$inserted_group_id['data']);
 
 
 
@@ -227,7 +227,7 @@ out ("Adding a new room", true);
 // addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $updater_id=0)
 $inserted_room_id = $room->addRoom($room_name, $description_public, $description_internal, 'internal info', 1, 'aula',0, $roomorder, 1);
 
-out ("return code:".$inserted_room_id);
+out ("return code (insert id in db):".$inserted_room_id['data']);
 
 
 

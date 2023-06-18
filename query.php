@@ -76,7 +76,7 @@ $data = $inserted_user_id['data'];
 
 out ("Inserted user at id:".$data);
 // write to system log
-$syslog->addSystemEvent(0, "Added new user ".$inserted_user_id, 0, "", 1);
+$syslog->addSystemEvent(0, "Added new user ".$data, 0, "", 1);
 
 
 /* */
@@ -160,10 +160,10 @@ $userid=10; // user that will be edited
 
 out ("Change status of user#100 to inactive (0)",true);
 $userdata = $user->setUserStatus( $userid,0); // set status of user #100 to 0
-if (!$userdata){
+if (!$userdata['success']){
   out ("User not found!");
 } else {
-  out ("User status changed: No. of datasets affected: ".$userdata);
+  out ("User status changed: No. of datasets affected: ".$userdata['count']);
 }
 
 $username="username_1685098107.2936873"; // username that will be checked
@@ -227,25 +227,25 @@ $roomid = 1;
 $userid = 1;
 out ("Adding User ".$userid." to Room ".$roomid, true);
 $userdata = $user->addUserToRoom ($userid, $roomid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
-out ("USER Class returned: ".$userdata);
+out ("USER Class returned: ".$userdata['data']);
 
 $roomid = 5;
 $userid = 1;
 out ("Deleting User ".$userid." from Room ".$roomid, true);
 $userdata = $user->removeUserFromRoom ($roomid,$userid);
-out ("ROOM Class returned: ".$userdata);
+out ("ROOM Class returned: ".$userdata['data']);
 
 $roomid = 6;
 out ("Deleting (emptying) all users from Room ".$roomid, true);
 $userdata = $room->emptyRoom ($roomid,$userid);
-out ("ROOM Class returned: ".$userdata);
+out ("ROOM Class returned: ".$userdata['data']);
 
 
 $groupid = 9;
 $userid = 45;
 out ("Deleting User ".$userid." from group ".$groupid, true);
 $userdata = $user->removeUserFromGroup ($groupid,$userid);
-out ("GROUP Class returned: ".$userdata);
+out ("GROUP Class returned: ".$userdata['data']);
 
 
 
@@ -253,17 +253,17 @@ $groupid = 9;
 $userid = 42;
 out ("Granting infinite votes to User ".$userid, true);
 $userdata = $user->grantInfiniteVotesToUser ($userid);
-out ("USER Class returned: ".$userdata);
+out ("USER Class returned: ".$userdata['data']);
 
 $userid = 42;
 out ("Getting infinite votes status from User ".$userid, true);
 $userdata = $user->getUserInfiniteVotesStatus ($userid);
-out ("USER Class returned: ".$userdata);
+out ("USER Class returned: ".$userdata['data']);
 
 $groupid = 7;
 out ("Deleting (emptying) all users from group ".$groupid, true);
 $userdata = $group->emptyGroup ($groupid, $userid);
-out ("GROUP Class returned: ".$userdata);
+out ("GROUP Class returned: ".$userdata['data']);
 
 
 
@@ -271,7 +271,7 @@ $groupid = 2;
 $userid = 3;
 out ("Adding User ".$userid." to Group ".$groupid, true);
 $userdata = $user->addUserToGroup ($userid,$groupid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
-out ("USER Class returned: ".$userdata);
+out ("USER Class returned: ".$userdata['data']);
 
 $roomid = 1;
 $userid = 1;
@@ -283,7 +283,7 @@ if (!$userdata){
 }else {
   // Loop through the results and output them
   $i=1;
-  foreach ($userdata as $result) {
+  foreach ($userdata['data'] as $result) {
       out ("<b>User #".$i."</b>");
       out ("ID: " . $result['id']);
       out ("Real name: " . $crypt->decrypt ($result['realname']));
@@ -306,7 +306,7 @@ if (!$userdata){
 }else {
   // Loop through the results and output them
   $i=1;
-  foreach ($userdata as $result) {
+  foreach ($userdata['data'] as $result) {
       out ("<b>User #".$i."</b>");
       out ("ID: " . $result['id']);
       out ("Real name: " . $crypt->decrypt ($result['realname']));

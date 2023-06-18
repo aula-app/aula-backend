@@ -62,9 +62,16 @@ if (isset ($_REQUEST['vote']))
 {
   $idea_id = intval ($_REQUEST['vote']);
   // voteForIdea($idea_id, $vote_value, $user_id)
-  $msg.= ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$vote_value);
+  $msg.= ("<br>Voting for idea: ".$idea_id." by user id: ".$_SESSION ['user_id']);
   $return_value = $idea->voteForIdea ($idea_id, $vote_value, $_SESSION ['user_id']);
-  $msg.= ("<br>Returning value: ".$return_value);
+
+  if ($return_value['success']){
+    $msg.="<br>".abs ($return_value['data'])." votes made successfully";
+  }
+  else {
+    $msg.="<br>There was an error while voting - error code: ".$return_value['error_code'];
+  }
+
 } // end if
 
 if (isset ($_REQUEST['reset']))
@@ -72,14 +79,14 @@ if (isset ($_REQUEST['reset']))
   // voteForIdea($idea_id, $vote_value, $user_id)
   $msg.= ("<br>Resetting votes and likes");
   $return_value = $idea->resetVotes ();
-  $msg.= ("<br>Returning value: ".$return_value);
+  $msg.= ("<br>Returning value: ".$return_value['data']);
 } // end if
 
 if (isset ($_REQUEST['like']))
 {
   $idea_id = intval ($_REQUEST['like']);
   // voteForIdea($idea_id, $vote_value, $user_id)
-  $msg.= ("<br>VOTING FOR idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$like_value);
+  $msg.= ("<br>Liking idea: ".$idea_id.", user id: ".$_SESSION ['user_id']." value:".$like_value);
   if ($like_value==0) {
     //unlike
     $return_value = $idea->IdeaRemoveLike ($idea_id, $_SESSION ['user_id']);
@@ -91,6 +98,9 @@ if (isset ($_REQUEST['like']))
 } // end if
 
 ?>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
 <html>
 <body>
 
@@ -98,7 +108,7 @@ if (isset ($_REQUEST['like']))
 
 $offset = 0; // set start at dataset #10
 $limit = 5; // get 10 datasets
-echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4).")</h2>");
+echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4)['data'].")</h2>");
 
 ?>
 
@@ -107,8 +117,8 @@ echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4).")</h2>");
     <span style="color:#ff0000; font-weight:bold;"><?php echo $msg ?>&nbsp;</span>
     <br>Set User id, Enter number here and press SET USER<form method ="_POST"><input type='text' name='user' value='<?php echo $_SESSION ['user_id'] ?>'><button type=submit name='submitter'>SET USER</button></form>
     <br><form method ="_POST"><button type=submit name='reset'>RESET VOTES AND LIKES</button></form>
-    <small><i>User 6 has a delegation from user 10</i></small>
-    <br><small><i>User 9 has 3 delegations from users 42, 43, 44 </i></small>
+    <small><i>User 7 has a delegation from user 10</i></small>
+    <br><small><i>User 9 has 2 delegations from users 43, 44 </i></small>
     <br><small><i>Have fun with voting! Try voting with users 6, 9, 10, 42, 43, 44 and others (like 5, 8 or whatever) in different constellations and watch the results :)
       <br><b>To change the user id, enter id in the above field and press the button "SET USER"</b>
       <br><b>"RESET VOTES AND LIKES" resets the votes and likes to 0 to start over again</b></i></small>
@@ -118,7 +128,7 @@ echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4).")</h2>");
 <?php
 $ideadata = $idea->getIdeas($offset, $limit, 4, 1, 1);
 // idea list:
-foreach ($ideadata as $result) {
+foreach ($ideadata['data'] as $result) {
     $votes_made = $idea->getIdeaNumberVotes($result['id']);
     echo ('<form action="" method ="_POST">');
     echo ("<h2>".$result['id'].".". $crypt->decrypt ($result['content'])."</h2>");
