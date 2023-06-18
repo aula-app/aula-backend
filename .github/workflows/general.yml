@@ -15,11 +15,10 @@ jobs:
           mkdir -p ~/.ssh/
           echo "$SSH_HOST_KEY" > ../private.key
           sudo chmod 600 ../private.key
-          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         shell: bash
         env:
           SSH_HOST_KEY: ${{secrets.SSH_HOST_KEY}}
           SSH_KEY_PATH: ${{ github.workspace }}/../private.key
       - name: Copy folder content recursively to remote
         run: |
-          scp -P 4222 ${{ github.workspace}} -i ${{SSH_KEY_PATH}} aula@devel.aula.de:
+          scp -P 4222 ${{ github.workspace }} -i $SSH_KEY_PATH aula@devel.aula.de:
