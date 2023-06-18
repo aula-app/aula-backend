@@ -10,8 +10,10 @@ jobs:
       CI: true
       LOCAL: test
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
       - name: Create SSH key and copy files
         run: |
-          ls -l
+          ls -l 
         shell: bash
 
