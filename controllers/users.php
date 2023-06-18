@@ -1,0 +1,27 @@
+<?php
+
+require_once ('../base_config.php'); // load base config with paths to classes etc.
+require_once ('../error_msg.php');
+require ('../functions.php'); // include Class autoloader (models)
+require ($baseHelperDir.'JWT.php');
+require_once ($baseHelperDir.'Crypt.php');
+
+$db = new Database();
+$crypt = new Crypt($cryptFile);
+$syslog = new Systemlog ($db);
+$user = new User ($db, $crypt, $syslog); 
+$userData = $user->getUsers($offset, $limit, 4, 1, 1);
+
+$i = 0;
+$newData = array();
+foreach ($userData['data'] as $user) {
+  $user["realname"] = $crypt->decrypt ($user['realname']);
+  $user["username"] = $crypt->decrypt ($user['username']);
+  array_push($newData, $user);
+  $i = $i + 1;
+}
+$userData["data"] = $newData;
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode($userData);
+
+?>
