@@ -7,7 +7,7 @@
 #
 # Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-17 10:53:54 +0000
+# Verarbeitungszeit: 2023-06-18 17:46:28 +0000
 # ************************************************************
 
 
@@ -171,6 +171,7 @@ CREATE TABLE `au_ideas` (
   `is_winner` int(11) DEFAULT NULL COMMENT 'flag that this idea succeeded in the voting phase',
   `approved` int(11) DEFAULT NULL COMMENT 'approved in approval phase',
   `approval_comment` text DEFAULT NULL COMMENT 'comment or reasonig why an idea was diapproved / approved',
+  `topic_id` int(11) DEFAULT NULL COMMENT 'id of topic that idea belongs to',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
