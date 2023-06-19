@@ -22,30 +22,6 @@ class Topic {
         $this->syslog = $syslog;
         $this->converters = new Converters ($db); // load converters
 
-        $au_rooms = 'au_rooms';
-        $au_groups = 'au_groups';
-        $au_ideas = 'au_ideas';
-        $au_votes = 'au_votes';
-        $au_topics = 'au_topics';
-        $au_delegation = 'au_delegation';
-        $au_reported = 'au_reported';
-        $au_users_basedata = 'au_users_basedata';
-        $au_rel_rooms_users ='au_rel_rooms_users';
-        $au_rel_groups_users ='au_rel_groups_users';
-        $au_rel_topics_ideas ='au_rel_topics_ideas';
-
-        $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
-        $this->$au_rooms = $au_rooms; // table name for rooms
-        $this->$au_delegation = $au_delegation; // table name for delegation
-        $this->$au_groups = $au_groups; // table name for groups
-        $this->$au_topics = $au_topics; // table name for topics
-        $this->$au_ideas = $au_ideas; // table name for ideas
-        $this->$au_votes = $au_votes; // table name for votes
-        $this->$au_reported = $au_reported; // table name for reportings
-
-        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
-        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
-        $this->$au_rel_topics_ideas = $au_rel_topics_ideas; // table name for relations topics - ideas
     }// end function
 
     protected function buildCacheHash ($key) {
@@ -76,7 +52,7 @@ class Topic {
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // check if idea is existent
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE id = :topic_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE id = :topic_id');
       $this->db->bind(':topic_id', $topic_id); // bind user id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
@@ -88,13 +64,13 @@ class Topic {
         return $returnvalue;
       } // else continue processing
       // check if this user has already reported this topic
-      $stmt = $this->db->query('SELECT object_id FROM '.$this->au_reported.' WHERE user_id = :user_id AND type = 1 AND object_id = :topic_id');
+      $stmt = $this->db->query('SELECT object_id FROM '.$this->db->au_reported.' WHERE user_id = :user_id AND type = 1 AND object_id = :topic_id');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
         //add this reporting to db
-        $stmt = $this->db->query('INSERT INTO '.$this->au_reported.' (reason, object_id, type, user_id, status, created, last_update) VALUES (:reason, :topic_id, 1, :user_id, 0, NOW(), NOW())');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_reported.' (reason, object_id, type, user_id, status, created, last_update) VALUES (:reason, :topic_id, 1, :user_id, 0, NOW(), NOW())');
         // bind all VALUES
 
         $this->db->bind(':topic_id', $topic_id);
@@ -107,7 +83,7 @@ class Topic {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         $insertid = intval($this->db->lastInsertId());
@@ -189,7 +165,7 @@ class Topic {
       /* returns topic base data for a specified db id */
       $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_topics.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_topics.' WHERE id = :id');
       $this->db->bind(':id', $topic_id); // bind idea id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
@@ -271,7 +247,7 @@ class Topic {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT '.$this->au_topics.'.name, '.$this->au_topics.'.hash_id, '.$this->au_topics.'.id, '.$this->au_topics.'.description_internal, '.$this->au_topics.'.description_public, '.$this->au_topics.'.last_update, '.$this->au_topics.'.created FROM '.$this->au_topics.' WHERE '.$this->au_topics.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT '.$this->db->au_topics.'.name, '.$this->db->au_topics.'.hash_id, '.$this->db->au_topics.'.id, '.$this->db->au_topics.'.description_internal, '.$this->db->au_topics.'.description_public, '.$this->db->au_topics.'.last_update, '.$this->db->au_topics.'.created FROM '.$this->db->au_topics.' WHERE '.$this->db->au_topics.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
@@ -329,7 +305,7 @@ class Topic {
         $description_public = trim ($description_public);
 
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_topics.' (name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_topics.' (name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
         // bind all VALUES
 
         $this->db->bind(':name', $this->crypt->encrypt($name));
@@ -351,7 +327,7 @@ class Topic {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         $insertid = intval($this->db->lastInsertId());
@@ -387,7 +363,7 @@ class Topic {
         */
         $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
         // bind all VALUES
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -400,7 +376,7 @@ class Topic {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -430,7 +406,7 @@ class Topic {
         */
         $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET order_importance = :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET order_importance = :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
         // bind all VALUES
         $this->db->bind(':order_importance', $order_importance);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -443,7 +419,7 @@ class Topic {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -476,7 +452,7 @@ class Topic {
         // sanitize
         $name = trim ($name);
 
-        $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET name= :name, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET name= :name, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
         // bind all VALUES
         $this->db->bind(':name', $name);
         $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
@@ -489,7 +465,7 @@ class Topic {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -530,7 +506,7 @@ class Topic {
         // sanitize
         $description = trim ($description);
 
-        $stmt = $this->db->query('UPDATE '.$this->au_topics.' SET description'.$description_appendix.' = :description, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET description'.$description_appendix.' = :description, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
         // bind all VALUES
         $this->db->bind(':description', $description);
         $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
@@ -543,7 +519,7 @@ class Topic {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -570,14 +546,14 @@ class Topic {
       // removes all delegations for a certain topic (topic_id)
       $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE topic_id = :id');
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE topic_id = :id');
       $this->db->bind (':id', $idea_id);
       $err=false;
       try {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       if (!$err)
@@ -609,14 +585,14 @@ class Topic {
         */
         $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-        $stmt = $this->db->query('DELETE FROM '.$this->au_topics.' WHERE id = :id');
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_topics.' WHERE id = :id');
         $this->db->bind (':id', $idea_id);
         $err=false;
         try {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)

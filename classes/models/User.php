@@ -19,26 +19,7 @@ class User {
         $this->syslog = $syslog;
         $this->converters = new Converters ($db); // load converters
 
-        $au_users_basedata = 'au_users_basedata';
-        $au_rooms = 'au_rooms';
-        $au_groups = 'au_groups';
-        $au_votes = 'au_votes';
-        $au_topics = 'au_topics';
-        $au_delegation = 'au_delegation';
-
-        $au_rel_rooms_users ='au_rel_rooms_users';
-        $au_rel_groups_users ='au_rel_groups_users';
-        $au_rel_user_user ='au_rel_user_user';
-
-        $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
-        $this->$au_rooms = $au_rooms; // table name for rooms
-        $this->$au_groups = $au_groups; // table name for groups
-        $this->$au_votes = $au_votes; // table name for votes
-        $this->$au_topics = $au_topics; // table name for topics
-        $this->$au_delegation = $au_delegation; // table name for delegation
-        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
-        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
-        $this->$au_rel_user_user = $au_rel_user_user;
+        
     }// end function
 
     private function decrypt ($content){
@@ -50,7 +31,7 @@ class User {
       /* returns user base data for a specified db id */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
@@ -79,7 +60,7 @@ class User {
     public function getUserHashId($user_id) {
       /* returns hash_id of a user for a integer user id
       */
-      $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_users_basedata.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT hash_id FROM '.$this->db->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
@@ -112,7 +93,7 @@ class User {
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
 
-      $stmt = $this->db->query('SELECT room_id FROM '.$this->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
+      $stmt = $this->db->query('SELECT room_id FROM '.$this->db->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
       // bind all VALUES
       $this->db->bind(':room_id', $room_id);
       $this->db->bind(':user_id', $user_id); // gives the voting right
@@ -129,7 +110,7 @@ class User {
         return $returnvalue;
       }else {
         // remove delegation from db table
-        $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
         // bind all VALUES
         $this->db->bind(':room_id', $room_id);
         $this->db->bind(':user_id', $user_id); // gives the voting right
@@ -141,7 +122,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         $count_data = intval ($this->db->rowCount());
@@ -194,7 +175,7 @@ class User {
         // everything ok, users and room exists
         // add relation to database (delegation)
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_delegation.' (topic_id, room_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :room_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_delegation.' (topic_id, room_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :room_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
         $this->db->bind(':room_id', $room_id);
@@ -210,7 +191,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
 
@@ -274,7 +255,7 @@ class User {
           $target_user = "user_id_target";
         }
 
-        $stmt = $this->db->query('UPDATE '.$this->au_delegation.' SET status = :status, last_update = NOW() WHERE '.$target_user.' = :user_id'.$room_clause);
+        $stmt = $this->db->query('UPDATE '.$this->db->au_delegation.' SET status = :status, last_update = NOW() WHERE '.$target_user.' = :user_id'.$room_clause);
         // bind all VALUES
         $this->db->bind(':status', $status);
 
@@ -286,7 +267,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         $count_data = intval($this->db->rowCount());
@@ -318,7 +299,7 @@ class User {
       */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_original) WHERE '.$this->au_delegation.'.user_id_target = :id AND '.$this->au_delegation.'.topic_id = :topic_id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_users_basedata.' LEFT JOIN '.$this->db->au_delegation.' ON ('.$this->db->au_users_basedata.'.id = '.$this->db->au_delegation.'.user_id_original) WHERE '.$this->db->au_delegation.'.user_id_target = :id AND '.$this->db->au_delegation.'.topic_id = :topic_id');
       $this->db->bind(':id', $user_id); // bind userid
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $users = $this->db->resultSet();
@@ -347,7 +328,7 @@ class User {
       */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' LEFT JOIN '.$this->au_delegation.' ON ('.$this->au_users_basedata.'.id = '.$this->au_delegation.'.user_id_target) WHERE '.$this->au_delegation.'.user_id_original = :id AND '.$this->au_delegation.'.topic_id = :topic_id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_users_basedata.' LEFT JOIN '.$this->db->au_delegation.' ON ('.$this->db->au_users_basedata.'.id = '.$this->db->au_delegation.'.user_id_target) WHERE '.$this->db->au_delegation.'.user_id_original = :id AND '.$this->db->au_delegation.'.topic_id = :topic_id');
       $this->db->bind(':id', $user_id); // bind userid
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $users = $this->db->resultSet();
@@ -394,7 +375,7 @@ class User {
         $topic_clause = " AND topic_id = ".$topic_id;
       }
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE user_id_target = :user_id_target AND user_id_original = :user_id_original'.$topic_clause);
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE user_id_target = :user_id_target AND user_id_original = :user_id_original'.$topic_clause);
       $this->db->bind (':user_id_target', $user_id_original);
       $this->db->bind (':user_id_original', $user_id_target);
 
@@ -403,7 +384,7 @@ class User {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       if (!$err)
@@ -450,14 +431,14 @@ class User {
         $target_user = "user_id_target";
       }
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE '.$target_user.' = :id'.$topic_clause);
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE '.$target_user.' = :id'.$topic_clause);
       $this->db->bind (':id', $user_id);
       $err=false;
       try {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       $count_data = intval ($this->db->rowCount());
@@ -500,7 +481,7 @@ class User {
         // everything ok, user and room exists
         // add relation to database
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_rel_rooms_users.' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rel_rooms_users.' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
         $this->db->bind(':room_id', $room_id);
@@ -515,7 +496,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
 
@@ -559,7 +540,7 @@ class User {
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE user_id = :userid AND room_id = :roomid' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_rooms_users.' WHERE user_id = :userid AND room_id = :roomid' );
       $this->db->bind(':roomid', $room_id); // bind room id
       $this->db->bind(':userid', $user_id); // bind user id
 
@@ -636,7 +617,7 @@ class User {
         // everything ok, both users exist
         // add relation to database
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_rel_user_user.' (user_id1, user_id2, type, status, created, last_update, updater_id) VALUES (:user_id1, :user_id2, :type, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE user_id1 = :user_id1, user_id2 = :user_id2, type = :type, status = :status, last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rel_user_user.' (user_id1, user_id2, type, status, created, last_update, updater_id) VALUES (:user_id1, :user_id2, :type, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE user_id1 = :user_id1, user_id2 = :user_id2, type = :type, status = :status, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
         $this->db->bind(':user_id1', $user_id);
@@ -652,7 +633,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
 
@@ -696,7 +677,7 @@ class User {
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_user_user.' WHERE user_id1 = :user_id1 AND user_id2 = :user_id2' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_user_user.' WHERE user_id1 = :user_id1 AND user_id2 = :user_id2' );
       $this->db->bind(':user_id1', $user_id); // bind user id
       $this->db->bind(':user_id2', $user_id_target); // bind user id
 
@@ -730,7 +711,7 @@ class User {
       /* deletes a user from a group
       */
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_groups_users.' WHERE user_id = :userid AND group_id = :groupid' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_groups_users.' WHERE user_id = :userid AND group_id = :groupid' );
       $this->db->bind(':groupid', $group_id); // bind room id
       $this->db->bind(':userid', $user_id); // bind user id
 
@@ -772,7 +753,7 @@ class User {
         // everything ok, user and room exists
         // add relation to database
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_rel_groups_users.' (group_id, user_id, status, created, last_update, updater_id) VALUES (:group_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE group_id = :group_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rel_groups_users.' (group_id, user_id, status, created, last_update, updater_id) VALUES (:group_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE group_id = :group_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
         $this->db->bind(':group_id', $group_id);
@@ -786,7 +767,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
 
@@ -831,7 +812,7 @@ class User {
       // create temp blind index
       $bi = md5(strtolower($username));
 
-      $stmt = $this->db->query('SELECT id,username,pw,hash_id FROM '.$this->au_users_basedata.' WHERE bi= :bi');
+      $stmt = $this->db->query('SELECT id,username,pw,hash_id FROM '.$this->db->au_users_basedata.' WHERE bi= :bi');
       $this->db->bind(':bi', $bi); // blind index
       $users = $this->db->resultSet();
 
@@ -945,7 +926,7 @@ class User {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_users_basedata.' WHERE status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_users_basedata.' WHERE status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
 
       if ($limit){
         // only bind if limit is set
@@ -1057,7 +1038,7 @@ class User {
         // generate blind index
         $bi = md5 (strtolower (trim ($username)));
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_users_basedata.' (realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_users_basedata.' (realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
         // bind all VALUES
         $this->db->bind(':username', $this->crypt->encrypt($username));
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -1080,7 +1061,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
 
@@ -1116,7 +1097,7 @@ class User {
         // query('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET realname = :realname , displayname= :displayname, username= :username, email = :email, status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET realname = :realname , displayname= :displayname, username= :username, email = :email, status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':username', $this->crypt->encrypt($username));
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -1133,7 +1114,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1166,7 +1147,7 @@ class User {
         */
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -1179,7 +1160,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1226,7 +1207,7 @@ class User {
       */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->au_users_basedata.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT infinite_votes FROM '.$this->db->au_users_basedata.' WHERE id = :id');
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
@@ -1263,7 +1244,7 @@ class User {
           $infinite = 0;
         }
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET infinite_votes = :infinite, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET infinite_votes = :infinite, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':infinite', $infinite);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -1276,7 +1257,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1348,7 +1329,7 @@ class User {
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
         $userlevel = intval (§userlevel);
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET userlevel= :userlevel, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET userlevel= :userlevel, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':userlevel', $userlevel);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -1361,7 +1342,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1395,7 +1376,7 @@ class User {
 
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET about_me= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET about_me= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':about', $about);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -1408,7 +1389,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1442,7 +1423,7 @@ class User {
 
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET position= :position, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET position= :position, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':position', $userposition);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -1455,7 +1436,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1486,7 +1467,7 @@ class User {
         */
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET realname= :realname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET realname= :realname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
         $this->db->bind(':userid', $user_id); // user that is updated
@@ -1498,7 +1479,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1529,7 +1510,7 @@ class User {
         */
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET displayname= :displayname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET displayname= :displayname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
         $this->db->bind(':userid', $user_id); // user that is updated
@@ -1542,7 +1523,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1573,7 +1554,7 @@ class User {
         */
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET email= :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET email= :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':email', $this->crypt->encrypt($email));
         $this->db->bind(':userid', $user_id); // user that is updated
@@ -1586,7 +1567,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1617,7 +1598,7 @@ class User {
         */
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET pw= :pw, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET pw= :pw, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
 
         // generate pw hash
         $hash = password_hash($pw, PASSWORD_DEFAULT);
@@ -1633,7 +1614,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1666,7 +1647,7 @@ class User {
         */
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_users_basedata.' SET registration_status= :regstatus, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET registration_status= :regstatus, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
 
         // bind all VALUES
         $this->db->bind(':regstatus', $regstatus);
@@ -1680,7 +1661,7 @@ class User {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1710,7 +1691,7 @@ class User {
 
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('DELETE FROM '.$this->au_users_basedata.' WHERE id = :id');
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_users_basedata.' WHERE id = :id');
         $this->db->bind (':id', $user_id);
         $err=false;
         try {
@@ -1718,7 +1699,7 @@ class User {
           $rows_affected = intval ($this->db->rowCount());
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)

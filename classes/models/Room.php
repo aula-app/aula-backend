@@ -19,27 +19,13 @@ class Room {
         $this->syslog = $syslog;
         $this->converters = new Converters ($db); // load converters
 
-        $au_rooms = 'au_rooms';
-        $au_groups = 'au_groups';
-        $au_delegation = 'au_delegation';
-        $au_users_basedata = 'au_users_basedata';
-        $au_rel_rooms_users ='au_rel_rooms_users';
-        $au_rel_groups_users ='au_rel_groups_users';
-
-
-        $this->$au_users_basedata = $au_users_basedata; // table name for user basedata
-        $this->$au_rooms = $au_rooms; // table name for rooms
-        $this->$au_groups = $au_groups; // table name for groups
-        $this->$au_delegation = $au_delegation; // table name for delegations
-        $this->$au_rel_rooms_users = $au_rel_rooms_users; // table name for relations room - user
-        $this->$au_rel_groups_users = $au_rel_groups_users; // table name for relations group - user
     }// end function
 
     public function getRoomBaseData($room_id) {
       /* returns user base data for a specified db id */
       $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_rooms.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_rooms.' WHERE id = :id');
       $this->db->bind(':id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
@@ -65,7 +51,7 @@ class Room {
       /* returns number of users in this room (room_id ) */
       $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('SELECT user_id FROM '.$this->au_rel_rooms_users.' WHERE room_id = :room_id');
+      $stmt = $this->db->query('SELECT user_id FROM '.$this->db->au_rel_rooms_users.' WHERE room_id = :room_id');
       $this->db->bind(':room_id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       $returnvalue['success'] = true; // set return value to false
@@ -81,7 +67,7 @@ class Room {
       /* returns number of topics in this room (room_id ) */
       $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_topics.' WHERE room_id = :room_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE room_id = :room_id');
       $this->db->bind(':room_id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       $returnvalue['success'] = true; // set return value to false
@@ -96,7 +82,7 @@ class Room {
       /* returns number of ideas in this room (room_id ) */
       $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->au_ideas.' WHERE room_id = :room_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_ideas.' WHERE room_id = :room_id');
       $this->db->bind(':room_id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       $returnvalue['success'] = true; // set return value to false
@@ -112,7 +98,7 @@ class Room {
     public function getRoomHashId($room_id) {
       /* returns hash_id of a room for a integer room id
       */
-      $stmt = $this->db->query('SELECT hash_id FROM '.$this->au_rooms.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT hash_id FROM '.$this->db->au_rooms.' WHERE id = :id');
       $this->db->bind(':id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
@@ -139,7 +125,7 @@ class Room {
       */
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('SELECT room_name, id, access_code, hash_id FROM '.$this->au_rooms.' WHERE id= :id');
+      $stmt = $this->db->query('SELECT room_name, id, access_code, hash_id FROM '.$this->db->au_rooms.' WHERE id= :id');
       $this->db->bind(':id', $room_id); // bind room id
 
       $rooms = $this->db->resultSet();
@@ -216,7 +202,7 @@ class Room {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_rooms.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_rooms.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
@@ -247,7 +233,7 @@ class Room {
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
 
-      $stmt = $this->db->query('SELECT '.$this->au_users_basedata.'.realname, '.$this->au_users_basedata.'.displayname, '.$this->au_users_basedata.'.id, '.$this->au_users_basedata.'.username, '.$this->au_users_basedata.'.email FROM '.$this->au_rel_rooms_users.' INNER JOIN '.$this->au_users_basedata.' ON ('.$this->au_rel_rooms_users.'.user_id='.$this->au_users_basedata.'.id) WHERE '.$this->au_rel_rooms_users.'.room_id= :roomid AND '.$this->au_users_basedata.'.status= :status' );
+      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_rooms_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_rooms_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_rooms_users.'.room_id= :roomid AND '.$this->db->au_users_basedata.'.status= :status' );
       $this->db->bind(':roomid', $room_id); // bind room id
       $this->db->bind(':status', $status); // bind status
 
@@ -288,7 +274,7 @@ class Room {
       // dleetes all delegations in a specified room
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE room_id = :room_id' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE room_id = :room_id' );
       $this->db->bind(':room_id', $room_id); // bind room id
 
       $err=false;
@@ -311,7 +297,7 @@ class Room {
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
       $user_id = $this->converters->checkUserId($user_id); // checks room id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_delegation.' WHERE room_id = :room_id AND (user_id_original = :user_id OR user_id_target = :user_id) ' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE room_id = :room_id AND (user_id_original = :user_id OR user_id_target = :user_id) ' );
       $this->db->bind(':room_id', $room_id); // bind room id
       $this->db->bind(':user_id', $user_id); // bind user id
 
@@ -337,7 +323,7 @@ class Room {
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
 
-      $stmt = $this->db->query('DELETE FROM '.$this->au_rel_rooms_users.' WHERE room_id = :roomid' );
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_rooms_users.' WHERE room_id = :roomid' );
       $this->db->bind(':roomid', $room_id); // bind room id
 
       $err=false;
@@ -422,7 +408,7 @@ class Room {
           return $returnvalue;
         }
 
-        $stmt = $this->db->query('INSERT INTO '.$this->au_rooms.' (phase, room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, roomorder) VALUES (:room_phase, :room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rooms.' (phase, room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, roomorder) VALUES (:room_phase, :room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
         // bind all VALUES
 
         $this->db->bind(':room_name', trim ($room_name));
@@ -447,7 +433,7 @@ class Room {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         $insertid = intval($this->db->lastInsertId());
@@ -482,7 +468,7 @@ class Room {
         */
         $room_id = $this->converters->checkRoomId($room_id); // checks room  id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_rooms.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
         // bind all VALUES
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -495,7 +481,7 @@ class Room {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -526,7 +512,7 @@ class Room {
         */
         $room_id = $this->converters->checkRoomId($room_id); // checks room  id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_rooms.' SET phase= :phase, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET phase= :phase, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
         // bind all VALUES
         $this->db->bind(':phase', $phase);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -539,7 +525,7 @@ class Room {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -570,7 +556,7 @@ class Room {
         */
         $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts user id to db room id if necessary (when room hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_rooms.' SET description_public= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET description_public= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
         // bind all VALUES
         $this->db->bind(':about', $about);
         $this->db->bind(':updater_id', $updater_id); // id of the room doing the update (i.e. admin)
@@ -583,7 +569,7 @@ class Room {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -613,7 +599,7 @@ class Room {
         */
         $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts user id to db room id if necessary (when room hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_rooms.' SET description_internal= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET description_internal= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
         // bind all VALUES
         $this->db->bind(':about', $about);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -626,7 +612,7 @@ class Room {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -658,7 +644,7 @@ class Room {
         */
         $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db user id if necessary (when room hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_rooms.' SET room_name= :room_name, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET room_name= :room_name, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
         // bind all VALUES
         $this->db->bind(':room_name', $room_name);
         $this->db->bind(':room_id', $room_id); // room that is updated
@@ -670,7 +656,7 @@ class Room {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -700,7 +686,7 @@ class Room {
         */
         $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->au_rooms.' SET access_code= :access_code, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET access_code= :access_code, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
 
         // generate access code hash
         $hash = password_hash($access_code, PASSWORD_DEFAULT);
@@ -716,7 +702,7 @@ class Room {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -756,7 +742,7 @@ class Room {
         */
         $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
-        $stmt = $this->db->query('DELETE FROM '.$this->au_rooms.' WHERE id = :id');
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_rooms.' WHERE id = :id');
         $this->db->bind (':id', $room_id);
         $err=false;
         try {
@@ -764,7 +750,7 @@ class Room {
           $rowcount =  intval ($this->db->rowCount());
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)

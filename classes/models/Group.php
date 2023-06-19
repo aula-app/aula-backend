@@ -388,7 +388,7 @@ class Group {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         $insertid = intval($this->db->lastInsertId());
@@ -435,7 +435,7 @@ class Group {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -478,7 +478,7 @@ class Group {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -521,7 +521,7 @@ class Group {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -564,7 +564,7 @@ class Group {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -605,7 +605,7 @@ class Group {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -650,7 +650,7 @@ class Group {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -684,7 +684,7 @@ class Group {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
