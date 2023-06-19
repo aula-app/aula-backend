@@ -43,7 +43,7 @@ class Comment {
       }
     }// end function
 
-    public function getCommentsByIdeaId ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $idea_id) {
+    public function getCommentsByIdeaId ($idea_id, $offset=0, $limit=0, $orderby=3, $asc=0, $status=1) {
       /* returns comments list (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -51,7 +51,7 @@ class Comment {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $room_id is the id of the room
       */
-      $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       // init vars
       $orderby_field="";
@@ -105,7 +105,7 @@ class Comment {
         $this->db->bind(':limit', $limit); // bind limit
       }
       $this->db->bind(':status', $status); // bind status
-      $this->db->bind(':idea_id', $room_id); // bind idea id
+      $this->db->bind(':idea_id', $idea_id); // bind idea id
 
       $err=false;
       try {
@@ -236,7 +236,7 @@ class Comment {
       return getComments (0, 0, 3, 0, 2, "", $publish_date, 0, $parent_id, $user_id);
     }
 
-  public function getComments ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $last_update=0, $idea_id=0, ,$parent_id=0, $user_id=0) {
+  public function getComments ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $last_update=0, $idea_id=0, $parent_id=0, $user_id=0) {
       /* returns comments list (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -389,7 +389,8 @@ class Comment {
         /* adds a new comment and returns insert id (comment id) if successful, accepts the above parameters
         content is the comment itself
         parent_id is the id of the comment this refers to (another comment)
-        status = status of the comment (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+        status = status of the comment (0=inactive, 1=active, 2=
+        ed, 3=reported, 4=archived 5= in review)
         updater id specifies the id of the user (i.e. admin) that added this comment
         */
         //sanitize the vars
@@ -417,13 +418,12 @@ class Comment {
         $this->db->bind(':idea_id', $idea_id);
         $this->db->bind(':parent_id', $parent_id);
         $this->db->bind(':status', $status);
-        $this->db->bind(':room_id', $room_id);
         $this->db->bind(':language_id', $language_id);
 
         // generate unique hash for this idea
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
-        $hash_id = md5($headlin.$appendix); // create hash id for this comment
+        $hash_id = md5($content.$appendix); // create hash id for this comment
         $this->db->bind(':hash_id', $hash_id);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 

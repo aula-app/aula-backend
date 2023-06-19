@@ -519,7 +519,7 @@ class Message {
         // generate unique hash for this message
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
-        $hash_id = md5($headlin.$appendix); // create hash id for this message
+        $hash_id = md5($headline.$appendix); // create hash id for this message
         $this->db->bind(':hash_id', $hash_id);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
