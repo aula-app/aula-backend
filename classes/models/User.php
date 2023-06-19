@@ -1290,7 +1290,7 @@ class User {
       }else {
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // db error code
-        $returnvalue ['data'] = $users[0]; // returned data
+        $returnvalue ['data'] = $users[0]['last_login']; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
