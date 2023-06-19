@@ -410,7 +410,7 @@ class Comment {
 
         $status = intval($status);
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_comments.' (user_id, content, idea_id, parent_id, status, hash_id, created, last_update, updater_id, language_id) VALUES (:user_id, :content, :idea_id, :parent_id, :status, :hash_id, NOW(), NOW(), :updater_id, :language_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_comments.' (sum_likes, user_id, content, idea_id, parent_id, status, hash_id, created, last_update, updater_id, language_id) VALUES (0, :user_id, :content, :idea_id, :parent_id, :status, :hash_id, NOW(), NOW(), :updater_id, :language_id)');
         // bind all VALUES
 
         $this->db->bind(':user_id', $user_id);
@@ -459,6 +459,182 @@ class Comment {
         }
 
 
+    }// end function
+
+    public function getLikeStatus ($user_id, $comment_id) {
+      /* Checks if user (user_id) has already liked a specific comment (comment_id)
+      returns 0 if not, returns 1 if yes
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_likes.' WHERE user_id = :user_id AND object_id = :comment_id AND object_type = 2'); // object type = 2 = comment
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->bind(':comment_id', $comment_id); // bind comment id
+
+      $likes = $this->db->resultSet();
+      if (count($likes)<1){
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      }
+    }// end function
+
+    protected function addLikeUser ($user_id, $comment_id) {
+      // add a like into like table for a certain user and idea
+
+      $stmt = $this->db->query('INSERT INTO '.$this->db->au_likes.' (object_type, status, user_id, object_id, last_update, created, hash_id) VALUES (1, 1, :user_id, :comment_id, NOW(), NOW(), :hash_id)');
+      // bind all VALUES
+      $this->db->bind(':comment_id', $comment_id); // idea id
+      $this->db->bind(':user_id', $user_id); // user id
+      // generate unique hash for this vote
+      $testrand = rand (100,10000000);
+      $appendix = microtime(true).$testrand;
+      $hash_id = md5($user_id.$comment_id.$appendix); // create hash id for this vote
+      $this->db->bind(':hash_id', $hash_id); // hash id
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      } else {
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    }
+
+    public function CommentAddLike ($comment_id, $user_id) {
+        /* edits a comment and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         Adds a like to an idea, increments sum_likes of a specific comment to a specific value (likes)
+
+        */
+        $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        // Check if user liked already
+        if ($this->getLikeStatus($user_id, $comment_id)['data']==1){
+          // user has already liked, return without incrementing vote
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 3; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+        }
+        else {
+          // add like to db
+          $this->addLikeUser ($user_id, $comment_id);
+        }
+        $stmt = $this->db->query('UPDATE '.$this->db->au_comments.' SET sum_likes = sum_likes + 1, last_update= NOW() WHERE id= :comment_id');
+        // bind all VALUES
+        $this->db->bind(':comment_id', $comment_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Comment  ".$comment_id." incremented likes", 0, "", 1);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+        } else {
+          $this->syslog->addSystemEvent(1, "Error incrementing likes from comment ".$comment_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+    }// end function
+
+    public function CommentRemoveLike ($comment_id, $user_id) {
+        /* edits a comment and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         Adds a like to a comment, increments sum_likes of a specific comment to a specific value (likes)
+
+        */
+        $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        if ($this->getLikeStatus($user_id, $comment_id)['data']==0){
+          // user has already liked, return without incrementing vote
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 0; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+        }
+        else {
+          // add like to db
+          $this->removeLikeUser ($user_id, $comment_id);
+        }
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_comments.' SET sum_likes = sum_likes - 1, last_update= NOW() WHERE id= :comment_id');
+        // bind all VALUES
+        $this->db->bind(':comment_id', $comment_id); // comment that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Comment  ".$comment_id." decrementing likes", 0, "", 1);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+        } else {
+          $this->syslog->addSystemEvent(1, "Error decrementing likes from comment ".$comment_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
     }// end function
 
     public function reportComment ($comment_id, $user_id, $updater_id, $reason =""){
