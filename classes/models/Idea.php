@@ -325,7 +325,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         $insertid = intval($this->db->lastInsertId());
@@ -440,7 +440,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
 
@@ -506,7 +506,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
 
@@ -1352,7 +1352,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         $insertid = intval($this->db->lastInsertId());
@@ -1399,7 +1399,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1441,7 +1441,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1483,7 +1483,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1525,7 +1525,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1567,7 +1567,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1609,7 +1609,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1651,7 +1651,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1693,7 +1693,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1743,7 +1743,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1797,7 +1797,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1834,11 +1834,23 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
         {
+
+          $stmt = $this->db->query('UPDATE '.$this->db->au_delegation.' SET status = 1, last_update= NOW()');
+
+          $err=false; // set error variable to false
+
+          try {
+            $action = $this->db->execute(); // do the query
+
+          } catch (Exception $e) {
+              echo 'Error occured while setting status: ',  $e->getMessage(), "\n"; // display error
+              $err=true;
+          }
           $stmt = $this->db->query('DELETE FROM '.$this->db->au_votes);
 
           $err=false; // set error variable to false
@@ -1847,7 +1859,7 @@ class Idea {
             $action = $this->db->execute(); // do the query
 
           } catch (Exception $e) {
-              echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
               $err=true;
           }
           $stmt = $this->db->query('DELETE FROM '.$this->db->au_likes);
@@ -1858,7 +1870,7 @@ class Idea {
             $action = $this->db->execute(); // do the query
 
           } catch (Exception $e) {
-              echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
               $err=true;
               $returnvalue['success'] = false; // set return value to false
               $returnvalue['error_code'] = 1; // error code
@@ -1907,7 +1919,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -1952,7 +1964,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -2029,7 +2041,7 @@ class Idea {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       if (!$err)
@@ -2069,7 +2081,7 @@ class Idea {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       if (!$err)
@@ -2115,7 +2127,7 @@ class Idea {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       if (!$err)
@@ -2156,7 +2168,7 @@ class Idea {
         $rows = intval($this->db->rowCount());
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       if (!$err)
@@ -2195,7 +2207,7 @@ class Idea {
         $rows = intval($this->db->rowCount());
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       if (!$err)
@@ -2274,6 +2286,45 @@ class Idea {
       return $returnvalue;
     }
 
+    protected function revokeDelegationToInactive ($original_user, $target_user, $topic_id){
+      // remove delegation from db table
+      $stmt = $this->db->query('UPDATE '.$this->db->au_delegation.' SET status = 0 WHERE user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
+      // bind all VALUES
+      $this->db->bind(':user_id', $original_user); // gives the voting right
+      $this->db->bind(':topic_id', $topic_id); // id of the topic
+      $this->db->bind(':user_id_target', $target_user); // receives the voting right
+
+      $err=false;
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      $count_data = intval ($this->db->rowCount());
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "Delegation deleted for user id ".$user_id." by ".$updater_id, 0, "", 1);
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $count_data; // returned data
+        $returnvalue ['count'] = $count_data; // returned count of datasets
+
+        return $returnvalue;
+
+        return ; // return number of affected rows to calling script
+      } else {
+        $this->syslog->addSystemEvent(1, "Error deleting delegation for user with id ".$user_id." by ".$updater_id, 0, "", 1);
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // no error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    } // end function
+
     public function voteForIdea($idea_id, $vote_value, $user_id) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          idea_id is obvious...accepts db id or hash id
@@ -2335,8 +2386,11 @@ class Idea {
       if ($infinite ['data']==0){
         // user does not have infinite votes
         // check if user has already used up his votes
+        $user_already_voted = 0; // helper var, used for detecting if user already voted (important for delegated votes)
+
         if ($this->checkAvailableVotesUser ($user_id, $idea_id)<1) {
           // votes are not available, user has used all votes
+          $user_already_voted = 1; // user has already voted
           if ($only_voting_once_allowed==1) {
             // voting is only allowed once
             $returnvalue['success'] = false; // set return value to false
@@ -2384,17 +2438,25 @@ class Idea {
           // reduce vote of the target user vote and add one vote
           $vote_value_delegated_array = $this->getVoteValue ($delegated_user, $idea_id); // returns 0 if user has not yet voted
           $vote_value_delegated = $vote_value_delegated_array ['data']; // returns 0 if user has not yet voted
+          //echo ("<br>vote_value_delegated: ".$vote_value_delegated);
 
           $delegation_correction_sum = 0; // correction factor for sum_votes in idea table
 
-          if ($vote_value_delegated > 0 ){
-            $vote_value_delegated--; // decrement vote value for the vote of the user that it was delegated to
-            $delegation_correction_sum = -1; // correction for sum_votes in idea table
+          // check if delegating user has already voted, if yes, then don't do any corrections (do corrections only at first vote of delegating user)
+          //echo ("<br>user (".$user_id.") has voted: ".$user_already_voted);
+          if ($user_already_voted==0) {
+            // user has not voted yet, do correction
+            if ($vote_value_delegated > 0 ){
+              $vote_value_delegated--; // decrement vote value for the vote of the user that it was delegated to
+              $delegation_correction_sum = -1; // correction for sum_votes in idea table
+            }
+            if ($vote_value_delegated < 0 ){
+              $vote_value_delegated++; // increment vote value for the vote of the user that it was delegated to
+              $delegation_correction_sum = 1; // correction for sum_votes in idea table
+            }
+
           }
-          if ($vote_value_delegated < 0 ){
-            $vote_value_delegated++; // increment vote value for the vote of the user that it was delegated to
-            $delegation_correction_sum = 1; // correction for sum_votes in idea table
-          }
+          //echo ("<br>delegation_correction_sum: ".$delegation_correction_sum);
           // add one vote to db for this user
 
           // apply group vote bias
@@ -2407,6 +2469,8 @@ class Idea {
           //echo ("<br>Votes  (from delegations): ".$vote_value. "delegation_correction_sum: ".$delegation_correction_sum);
           // correct vote of the delegated user and update in db
           $this->setVoteUser ($delegated_user, $idea_id, $vote_value_delegated, $number_of_delegations);
+          // revoke the delegation -> set to inactive
+          //$this->revokeDelegationToInactive ($user_id, $delegated_user, $topic_id);
 
         } // end else
       } else {
@@ -2426,7 +2490,7 @@ class Idea {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
           $err=true;
       }
       if (!$err)
@@ -2507,7 +2571,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -2555,7 +2619,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -2582,13 +2646,17 @@ class Idea {
     public function getVoteValue ($user_id, $idea_id) {
       /* Returns vote value for a specified user and idea
       */
+      //echo ("<br>Call get Vote value: ".$user_id);
 
       $stmt = $this->db->query('SELECT vote_value FROM '.$this->db->au_votes.' WHERE user_id = :user_id AND idea_id = :idea_id');
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
 
       $votes = $this->db->resultSet();
+      //print_r ($votes);
+      //echo ("<br>count: ".count ($votes));
       if (count($votes)<1){
+        //echo ("<br>no votes found");
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = 0; // returned data
@@ -2596,6 +2664,7 @@ class Idea {
 
         return $returnvalue;
       }else {
+        //echo ("<br>Vote value for user (".$user_id.") found...".$votes[0]['vote_value']);
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = intval ($votes[0]['vote_value']); // returned data
@@ -2654,7 +2723,7 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
