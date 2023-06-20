@@ -15,5 +15,7 @@ jobs:
       - name: Copy files
         run: |
           cp -vr * /var/www/api
+          /home/actions-runner/recreate_db.sh
+          echo "Database recreated"
         shell: bash
 
