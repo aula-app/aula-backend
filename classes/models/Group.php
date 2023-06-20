@@ -246,6 +246,12 @@ class Group {
 
       $limit_string=" LIMIT :offset , :limit ";
       $limit_active=true;
+     
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+        $limit_active=false;
+      }
 
       switch (intval ($orderby)){
         case 0:
@@ -281,11 +287,13 @@ class Group {
 
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_groups.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
 
-      if ($limit){
+      if ($limit_active){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
         $this->db->bind(':limit', $limit); // bind limit
       }
+
+      $this->db->bind(':status', $status); // bind status
 
       $err=false;
       try {
