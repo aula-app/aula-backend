@@ -97,13 +97,33 @@ $roomdata = $room->getRooms($offset, $limit, 4, 1, 1);
   if offset and limit are both set to 0 then there is no limit applied (whole list is shown)
   parameter set is (offset, limit, orderby field (0=name, 1=order field, 2=created, 3=last update, 4=id), asc(1)/desc(0), status (0=inactive, 1=active, 2=suspended, 3=archived))
 */
-if (!$roomdata){
+if (!$roomdata['data']){
   out ("nothing found!");
 }else {
   // Loop through the results and output them
-  foreach ($roomdata as $result) {
+  foreach ($roomdata['data'] as $result) {
       out ("ID: " . $result['id']);
       out ("Name: " . $result['room_name']);
+      out ("Last Update: " . $result['last_update']);
+      out ("public description: " . $result['description_public']);
+  }
+
+}
+out ("Reading multiple group datasets (only active groups) <br>using Group class with limit 10,".$limit." ordered by id (4) Ascending (1)...",true);
+
+
+$roomdata = $group->getGroups(10, $limit, 4, 1, 1);
+/* reads group list
+  if offset and limit are both set to 0 then there is no limit applied (whole list is shown)
+  parameter set is (offset, limit, orderby field (0=name, 1=order field, 2=created, 3=last update, 4=id), asc(1)/desc(0), status (0=inactive, 1=active, 2=suspended, 3=archived))
+*/
+if (!$roomdata['data']){
+  out ("nothing found!");
+}else {
+  // Loop through the results and output them
+  foreach ($roomdata['data'] as $result) {
+      out ("ID: " . $result['id']);
+      out ("Name: " . $result['group_name']);
       out ("Last Update: " . $result['last_update']);
       out ("public description: " . $result['description_public']);
   }
