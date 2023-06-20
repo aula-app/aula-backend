@@ -1,8 +1,8 @@
 <?php
 
-require_once ('base_config.php');
-require_once ('error_msg.php');
-require ('functions.php');
+require_once ('../base_config.php');
+require_once ('../error_msg.php');
+require ('../functions.php');
 require_once ($baseHelperDir.'Crypt.php');
 require_once ($baseHelperDir.'JWT.php');
 
@@ -23,11 +23,14 @@ header('Content-Type: application/json; charset=utf-8');
 if ($check_jwt) {
   $new_username = $data->username;
   $new_password = $data->password;
-  $inserted_user_id = $user->addUser('real_testuser', 'display_testuser', $new_username, 'admin.@aula.de', $new_password, 1);
-  if (str_contains($inserted_user_id, '0,1')) {
+  $realname = $data->realname;
+  $displayname = $data->displayname;
+  $email = $data->email;
+  $inserted_user = $user->addUser($realname, $displayname, $new_username, $email, $new_password, 1);
+  if ($inserted_user['error_code'] == 2) {
     http_response_code(409);
     echo json_encode(['success' => false, 'error' => 'User already exist']);
-  } else {
+  } else if ($inserted_user['success']){
     http_response_code(201);
     echo json_encode(['success' => true]);
   }
