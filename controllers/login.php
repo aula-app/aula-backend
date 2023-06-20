@@ -22,7 +22,7 @@ $json = file_get_contents('php://input');
 $data = json_decode($json);
 $jwt_token = $jwt->gen_jwt($data->username);
 
-if ($user->checkCredentials($data->username, $data->password)) {
+if ($user->checkLogin($data->username, $data->password)) {
   echo json_encode(['JWT' => $jwt_token, "success" => true]);
 } else {
   echo json_encode(["success" => "false"]);
