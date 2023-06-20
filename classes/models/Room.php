@@ -161,14 +161,19 @@ class Room {
       $orderby_field="";
       $asc_field ="";
 
-      $limit_string=" LIMIT :offset , :limit ";
-      $limit_active=true;
+      $limit_string=" LIMIT ".$offset." , ".$limit;
+
 
       // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
       if ($offset==0 && $limit==0){
         $limit_string="";
-        $limit_active=false;
+
       }
+      if ($offset>0 && $limit==0){
+        $limit_string=" LIMIT ".$offset." , 9999999999999999";
+      }
+
+
 
       switch (intval ($orderby)){
         case 0:
@@ -203,11 +208,6 @@ class Room {
       }
 
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_rooms.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      if ($limit){
-        // only bind if limit is set
-        $this->db->bind(':offset', $offset); // bind limit
-        $this->db->bind(':limit', $limit); // bind limit
-      }
       $this->db->bind(':status', $status); // bind status
 
       $err=false;
@@ -217,13 +217,28 @@ class Room {
       } catch (Exception $e) {
           echo 'Error occured while getting rooms: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($rooms)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $rooms; // return an array (associative) with all the data
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code - db error
+        $returnvalue ['data'] = $rooms; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
 
@@ -273,7 +288,7 @@ class Room {
     public function deleteRoomDelegations ($room_id){
       // dleetes all delegations in a specified room
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
-
+      // get all topics from this room
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE room_id = :room_id' );
       $this->db->bind(':room_id', $room_id); // bind room id
 
@@ -322,7 +337,6 @@ class Room {
       */
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
-
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_rooms_users.' WHERE room_id = :roomid' );
       $this->db->bind(':roomid', $room_id); // bind room id
 
@@ -332,7 +346,7 @@ class Room {
         $room_content_count = $this->db->rowCount();
 
       } catch (Exception $e) {
-          echo 'Error occured while emptying room: ',  $e->getMessage(), "\n"; // display error
+          echo '<br>Error occured while emptying room: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code
@@ -342,6 +356,7 @@ class Room {
           return $returnvalue;
 
       }
+      //remove ideas and delegations from this room
 
       // remove all delegations in this room
       $this->deleteRoomDelegations ($room_id);

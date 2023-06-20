@@ -244,14 +244,18 @@ class Group {
       $orderby_field="";
       $asc_field ="";
 
-      $limit_string=" LIMIT :offset , :limit ";
-      $limit_active=true;
-     
+      $limit_string=" LIMIT ".$offset." , ".$limit;
+
+
       // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
       if ($offset==0 && $limit==0){
         $limit_string="";
-        $limit_active=false;
+
       }
+      if ($offset>0 && $limit==0){
+        $limit_string=" LIMIT ".$offset." , 9999999999999999";
+      }
+
 
       switch (intval ($orderby)){
         case 0:
@@ -286,12 +290,6 @@ class Group {
       }
 
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_groups.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-
-      if ($limit_active){
-        // only bind if limit is set
-        $this->db->bind(':offset', $offset); // bind limit
-        $this->db->bind(':limit', $limit); // bind limit
-      }
 
       $this->db->bind(':status', $status); // bind status
 
@@ -351,7 +349,7 @@ class Group {
       }
     }
 
-    public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $group_order=10, $votes_per_user=1) {
+    public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $group_order=10, $votes_per_user=1, $vote_bias=1) {
         /* adds a new group and returns insert id (group id) if successful, accepts the above parameters
          description_public = actual description of the group, status = status of inserted group (0 = inactive, 1=active)
         */
@@ -374,7 +372,7 @@ class Group {
 
         $hash_access_code = password_hash(trim ($access_code), PASSWORD_DEFAULT); // hash access code
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_groups.' (group_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, group_order) VALUES (:group_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :group_order)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_groups.' (vote_bias, group_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, group_order) VALUES (:vote_bias, :group_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :group_order)');
         // bind all VALUES
         $this->db->bind(':group_name', trim ($group_name));
         $this->db->bind(':description_public', trim ($description_public));
@@ -382,6 +380,7 @@ class Group {
         $this->db->bind(':internal_info', trim ($internal_info));
         $this->db->bind(':access_code', trim ($hash_access_code));
         $this->db->bind(':status', $status);
+        $this->db->bind(':vote_bias', $vote_bias);
         $this->db->bind(':group_order', intval($group_order));
         // generate unique hash for this group
         $testrand = rand (100,10000000);
@@ -465,7 +464,7 @@ class Group {
         }
     }// end function
 
-    public function setGroupVoteBias ($group_id, $vote_bias, $updater_id=0) {
+    public function setGroupVoteBias ($group_id, $vote_bias=1, $updater_id=0) {
         /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          vote_bias = vote bias of  group (number of extra votes a user automatically gets when he is member of this group)
          updater_id is the id of the group that commits the update (i.E. admin )
