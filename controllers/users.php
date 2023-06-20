@@ -17,6 +17,9 @@ $newData = array();
 foreach ($userData['data'] as $user) {
   $user["realname"] = $crypt->decrypt ($user['realname']);
   $user["username"] = $crypt->decrypt ($user['username']);
+  $user["displayname"] = $crypt->decrypt ($user['displayname']);
+  $user["email"] = $crypt->decrypt ($user['email']);
+
   array_push($newData, $user);
   $i = $i + 1;
 }
