@@ -157,6 +157,7 @@ public function __construct($db, $crypt, $syslog)
 public function getGroupBaseData($group_id)
 public function getGroupHashId($group_id)
 public function getGroupVoteBias ($group_id)
+public function setGroupVoteBias ($group_id, $vote_bias, $updater_id=0)
 public function getGroupVoteBiasForUser ($user_id)
 public function checkAccesscode($group_id, $access_code)  // access_code = clear text
 public function getUsersInGroup($group_id, $status=1)
