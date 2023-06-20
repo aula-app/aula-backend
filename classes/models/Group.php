@@ -457,6 +457,49 @@ class Group {
         }
     }// end function
 
+    public function setGroupVoteBias ($group_id, $vote_bias, $updater_id=0) {
+        /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         vote_bias = vote bias of  group (number of extra votes a user automatically gets when he is member of this group)
+         updater_id is the id of the group that commits the update (i.E. admin )
+        */
+        $group_id = $this->converters->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET vote_bias= :vote_bias, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+        // bind all VALUES
+        $this->db->bind(':vote_bias', $vote_bias);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':group_id', $group_id); // group that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Group vote bias changed ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - no matching dataset
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing vote bias of group ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - no matching dataset
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+    }// end function
+
+
 
     public function setGroupVotesPerUser ($group_id, $votes, $updater_id=0) {
         /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory

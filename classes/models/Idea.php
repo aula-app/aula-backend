@@ -1727,7 +1727,12 @@ class Idea {
         // Check if user liked already
         if ($this->getLikeStatus($user_id, $idea_id)['data']==1){
           // user has already liked, return without incrementing vote
-          return "0,1";
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 3; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
         else {
           // add like to db
@@ -1862,7 +1867,7 @@ class Idea {
 
               $err=true;
           }
-          $stmt = $this->db->query('DELETE FROM '.$this->db->au_likes);
+          $stmt = $this->db->query('DELETE FROM '.$this->db->au_likes. " WHERE object_type = 1");
 
           $err=false; // set error variable to false
 
@@ -2065,7 +2070,7 @@ class Idea {
     protected function addLikeUser ($user_id, $idea_id) {
       // add a like into like table for a certain user and idea
 
-      $stmt = $this->db->query('INSERT INTO '.$this->db->au_likes.' (status, user_id, idea_id, last_update, created, hash_id) VALUES (1, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
+      $stmt = $this->db->query('INSERT INTO '.$this->db->au_likes.' (object_type, status, user_id, object_id, last_update, created, hash_id) VALUES (1, 1, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
       // bind all VALUES
       $this->db->bind(':idea_id', $idea_id); // idea id
       $this->db->bind(':user_id', $user_id); // user id
@@ -2194,7 +2199,7 @@ class Idea {
 
       // get vote value for this user on this idea
 
-      $stmt = $this->db->query('DELETE FROM '.$this->db->au_likes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_likes.' WHERE user_id = :user_id AND object_id = :idea_id AND object_type=1');
       // bind all VALUES
 
       $this->db->bind(':idea_id', $idea_id); // idea id
@@ -2679,7 +2684,7 @@ class Idea {
       returns 0 if not, returns 1 if yes
       */
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_likes.' WHERE user_id = :user_id AND idea_id = :idea_id');
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_likes.' WHERE user_id = :user_id AND object_id = :idea_id AND object_type = 1'); // object type = 1 = idea
       $this->db->bind(':user_id', $user_id); // bind user id
       $this->db->bind(':idea_id', $idea_id); // bind idea id
 

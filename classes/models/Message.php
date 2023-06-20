@@ -29,7 +29,7 @@ class Message {
 
 
     public function getMessageHashId($message_id) {
-      /* returns hash_id of an idea for a integer idea id
+      /* returns hash_id of an message for a integer message id
       */
       $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -112,20 +112,113 @@ class Message {
         $messages = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while getting messages for room '.$room_id,  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // database error while executing query
+          $returnvalue ['data'] = false; // returned data is false
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
       }
 
       if (count($messages)<1){
-        return 0; // nothing found, return 0 code
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error while executing query
+        $returnvalue ['data'] = false; // returned data is false
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $messages; // return an array (associative) with all the data
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] =0; // no error while executing query
+        $returnvalue ['data'] = $messages; // returned data is false
+        $returnvalue ['count'] = count ($messages); // returned count of datasets
+
+        return $returnvalue;
+
       }
     }// end function
 
 
-    public function archiveMessage ($message_id, $updater_id){
+    public function reportMessage ($message_id, $user_id, $updater_id, $reason =""){
+      /* sets the status of an message to 3 = reported
+      accepts db id and hash id of comment
+      user_id is the id of the user that reported the comment
+      updater_id is the id of the user that did the update
+      type = 2 in reported table = messages
+      */
+      $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+      // check if idea is existent
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_messages.' WHERE id = :message_id');
+      $this->db->bind(':message_id', $message_id); // bind message id
+      $messages = $this->db->resultSet();
+      if (count($messages)<1){
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      } // else continue processing
+      // check if this user has already reported this message
+      $stmt = $this->db->query('SELECT object_id FROM '.$this->db->au_reported.' WHERE user_id = :user_id AND type = 1 AND object_id = :message_id');
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->bind(':message_id', $message_id); // bind comment id
+      $messages = $this->db->resultSet();
+      if (count($messages)<1){
+        //add this reporting to db
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_reported.' (reason, object_id, type, user_id, status, created, last_update) VALUES (:reason, :message_id, 1, :user_id, 0, NOW(), NOW())');
+        // bind all VALUES
+
+        $this->db->bind(':message_id', $message_id);
+        $this->db->bind(':user_id', $user_id);
+        $this->db->bind(':reason', $reason);
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        $insertid = intval($this->db->lastInsertId());
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added new reporting message (#".$insertid.") ".$content, 0, "", 1);
+          // set idea status to reported
+          $this->setCommentStatus($comment_id, 3, $updater_id=0);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
+        } else {
+          $this->syslog->addSystemEvent(1, "Error reporting message ".$content, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+      }else {
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+
+    } // end function
+
+    public function archiveMessage ($message_id, $updater_id=0){
       /* sets the status of a message to 4 = archived
       accepts db id and hash id
       updater_id is the id of the user that did the update
@@ -133,6 +226,17 @@ class Message {
       $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setMessageStatus($message_id, 4, $updater_id=0);
+
+    }
+
+    public function suspendMessage ($message_id, $updater_id=0){
+      /* sets the status of a message to 4 = archived
+      accepts db id and hash id
+      updater_id is the id of the user that did the update
+      */
+      $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+      return $this->setMessageStatus($message_id, 2, $updater_id=0);
 
     }
 
@@ -164,7 +268,7 @@ class Message {
       */
       $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      return $this->setMessageStatus($message_id, 5, $updater_id=0);
+      return $this->setMessageStatus($message_id, 5, $updater_id);
 
     }
 
@@ -173,7 +277,7 @@ class Message {
       $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_messages.' WHERE id = :id');
-      $this->db->bind(':id', $message_id); // bind idea id
+      $this->db->bind(':id', $message_id); // bind message id
       $messages = $this->db->resultSet();
       if (count($messages)<1){
         $returnvalue['success'] = false; // set return value to false
@@ -195,6 +299,18 @@ class Message {
       // returns all messages for this specific user
       $user_id = $this->converters->checkUserId ($user_id);
       return getMessages (0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0);
+    }
+
+    public function getMessagesToReview ($user_id=0, $publish_date=0){
+      // returns all messages that are due to review, if wanted --for a specific user
+      $user_id = $this->converters->checkUserId ($user_id);
+      return getMessages (0, 0, 3, 1, 5, "", $publish_date, 0, 0, $user_id, 0);
+    }
+
+    public function getSuspendedMessages ($user_id=0, $publish_date=0){
+      // returns all messages that are due to review, if wanted --for a specific user
+      $user_id = $this->converters->checkUserId ($user_id);
+      return getMessages (0, 0, 3, 1, 2, "", $publish_date, 0, 0, $user_id, 0);
     }
 
     public function sendMessageToUser ($user_id, $msg, $publish_date=0){
@@ -256,7 +372,7 @@ class Message {
 
       if (!(intval ($publish_date)==0)){
         // if a publish date is set then add to where clause
-        $extra_where.= " AND publish_date > ".$publish_date;
+        $extra_where.= " AND publish_date > \'".$publish_date."\'";
       }
 
       switch (intval ($orderby)){
@@ -310,7 +426,6 @@ class Message {
 
 
       } catch (Exception $e) {
-          echo 'Error occured while getting messages: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // database error while executing query
@@ -351,7 +466,7 @@ class Message {
     }
 
     public function addMessage ($headline, $body, $msg_type, $publish_date, $creator_id=0, $target_group=0, $target_id=0, $pin_to_top=0, $level_of_detail=1, $only_on_dashboard=0, $status=1, $room_id=0, $updater_id=0, $language_id=0) {
-        /* adds a new message and returns insert id (idea id) if successful, accepts the above parameters
+        /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
         $headline is the headline of the message, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
         target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
         msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user )
@@ -401,10 +516,10 @@ class Message {
         $this->db->bind(':creator_id', $creator_id);
         $this->db->bind(':language_id', $language_id);
 
-        // generate unique hash for this idea
+        // generate unique hash for this message
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
-        $hash_id = md5($headlin.$appendix); // create hash id for this message
+        $hash_id = md5($headline.$appendix); // create hash id for this message
         $this->db->bind(':hash_id', $hash_id);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -414,7 +529,7 @@ class Message {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -464,7 +579,7 @@ class Message {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)
@@ -513,7 +628,7 @@ class Message {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+
             $err=true;
         }
         if (!$err)

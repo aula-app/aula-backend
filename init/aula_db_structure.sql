@@ -7,7 +7,7 @@
 #
 # Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-18 17:46:28 +0000
+# Verarbeitungszeit: 2023-06-19 14:56:37 +0000
 # ************************************************************
 
 
@@ -111,10 +111,10 @@ DROP TABLE IF EXISTS `au_delegation`;
 CREATE TABLE `au_delegation` (
   `user_id_original` int(11) NOT NULL COMMENT 'original user (delegating)',
   `user_id_target` int(11) NOT NULL COMMENT 'receiving user',
-  `room_id` int(11) NOT NULL COMMENT 'room id',
+  `room_id` int(11) DEFAULT 0 COMMENT 'id where the delegation is in',
   `topic_id` int(11) NOT NULL COMMENT 'id of the topic the delegation is for',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive, 1=active, 2=suspended',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the updating user',
+  `updater_id` int(11) DEFAULT 0 COMMENT 'id of the updating user',
   `created` datetime DEFAULT NULL COMMENT 'created date',
   `last_update` datetime DEFAULT NULL COMMENT 'last update',
   PRIMARY KEY (`user_id_original`,`user_id_target`,`topic_id`)
@@ -185,11 +185,12 @@ DROP TABLE IF EXISTS `au_likes`;
 CREATE TABLE `au_likes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL COMMENT 'id of liking user',
-  `idea_id` int(11) DEFAULT NULL COMMENT 'id of liked idea',
+  `object_id` int(11) DEFAULT NULL COMMENT 'id of liked object (idea or comment)',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive, 1=active, temporarily 2=suspended',
   `created` datetime DEFAULT NULL COMMENT 'create date',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'update date',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the like',
+  `object_type` int(11) DEFAULT NULL COMMENT 'type of liked object 1=idea, 2=comment',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 

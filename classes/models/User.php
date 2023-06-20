@@ -19,7 +19,7 @@ class User {
         $this->syslog = $syslog;
         $this->converters = new Converters ($db); // load converters
 
-        
+
     }// end function
 
     private function decrypt ($content){
@@ -83,19 +83,17 @@ class User {
       }
     }// end function
 
-    public function revokeVoteRight($user_id, $user_id_target, $room_id, $topic_id, $updater_id) {
+    public function revokeVoteRight($user_id, $user_id_target, $topic_id, $updater_id) {
       /* Returns Database ID of user when hash_id is provided
       */
       //sanitize variables
-      $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
 
-      $stmt = $this->db->query('SELECT room_id FROM '.$this->db->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
+      $stmt = $this->db->query('SELECT room_id FROM '.$this->db->au_delegation.' WHERE user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
       // bind all VALUES
-      $this->db->bind(':room_id', $room_id);
       $this->db->bind(':user_id', $user_id); // gives the voting right
       $this->db->bind(':topic_id', $topic_id); // id of the topic
       $this->db->bind(':user_id_target', $user_id_target); // receives the voting right
@@ -110,9 +108,8 @@ class User {
         return $returnvalue;
       }else {
         // remove delegation from db table
-        $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE room_id = :room_id AND user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
         // bind all VALUES
-        $this->db->bind(':room_id', $room_id);
         $this->db->bind(':user_id', $user_id); // gives the voting right
         $this->db->bind(':topic_id', $topic_id); // id of the topic
         $this->db->bind(':user_id_target', $user_id_target); // receives the voting right
@@ -157,28 +154,25 @@ class User {
     */
 
 
-    public function delegateVoteRight ($user_id, $user_id_target, $room_id, $topic_id, $updater_id) {
+    public function delegateVoteRight ($user_id, $user_id_target, $topic_id, $updater_id) {
       /* delegates voting rights from one user to another within a room for a certain topic, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
       $topic_id = $this->converters->checkRoomId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       // check if user and room exist
       $user_exist = $this->converters->checkUserExist($user_id);
       $user_exist_target = $this->converters->checkUserExist($user_id_target);
-      $room_exist = $this->converters->checkRoomExist($room_id);
       $data_delegation ['user_exist_target']=$user_exist_target;
 
       if ($user_exist==1 && $room_exist==1 && $user_exist_target==1) {
         // everything ok, users and room exists
         // add relation to database (delegation)
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_delegation.' (topic_id, room_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :room_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_delegation.' (topic_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
-        $this->db->bind(':room_id', $room_id);
         $this->db->bind(':topic_id', $topic_id);
         $this->db->bind(':user_id', $user_id); // gives the voting right
         $this->db->bind(':user_id_target', $user_id_target); // receives the voting right
@@ -232,22 +226,22 @@ class User {
     } // end function
 
 
-    public function setDelegationStatus ($user_id, $status, $room_id = 0, $target = 0) {
+    public function setDelegationStatus ($user_id, $status, $topic_id = 0, $target = 0) {
         /* edits the status of a delegation and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          status = status for delegation (0 = inactive, 1=active, 2 = suspended, 4 = archived)
-         if room_id = 0 all delegations of the user are deleted
+         if topic_id = 0 all delegations of the user are deleted
          target specifies if original or target users are adressed 0 = remove delegations of delegating user (original owner->default) 1= remove delegation of target user
         */
 
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+        $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-        $room_clause = "";
+        $topic_clause = "";
 
-        if ($room_id > 0){
-          // room id is set to >0 -> delete only delegations for this user in the specified room
-          $room_clause = " AND room_id = ".$room_id;
+        if ($topic_id > 0){
+          // topic id is set to >0 -> delete only delegations for this user for the specified topic
+          $topic_clause = " AND topic_id = ".$topic_id;
         }
 
         $target_user = "user_id_original";
@@ -255,7 +249,7 @@ class User {
           $target_user = "user_id_target";
         }
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_delegation.' SET status = :status, last_update = NOW() WHERE '.$target_user.' = :user_id'.$room_clause);
+        $stmt = $this->db->query('UPDATE '.$this->db->au_delegation.' SET status = :status, last_update = NOW() WHERE '.$target_user.' = :user_id'.$topic_clause);
         // bind all VALUES
         $this->db->bind(':status', $status);
 
@@ -803,6 +797,57 @@ class User {
 
     } // end function
 
+    public function checkLogin ($username, $pw){
+
+      $check_credentials = $this->checkCredentials ($username, $pw);
+
+      if ($check_credentials['success']){
+        // credentials are ok, set last login in db
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET last_login = NOW() WHERE id = :user_id');
+        $user_id = $check_credentials['data'];
+        $this->db->bind(':user_id', $user_id); // bind user id
+        $err = false;
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $insertid = intval($this->db->lastInsertId());
+          $this->syslog->addSystemEvent(0, "Successful login user ".$user_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = $user_id; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
+
+        } else {
+          $this->syslog->addSystemEvent(1, "DB Error login user ".$user_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
+        }
+      } else {
+        $this->syslog->addSystemEvent(1, "DB Error login user ".$user_id, 0, "", 1);
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // db error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
+      }// end if
+    } // end function
+
     public function checkCredentials($username, $pw) { // pw = clear text
       /* checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
       username is clear text
@@ -818,7 +863,7 @@ class User {
 
 
       if (count($users)<1){
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1167,9 +1212,9 @@ class User {
         {
           $this->syslog->addSystemEvent(0, "User status of ".$user_id." changed to ".$status." by ".$updater_id, 0, "", 1);
 
-          // set delegations for this user to suspended (delegated voting right and received votign right)
-          $this->setDelegationStatus ($user_id, $status, 0, 0);
-          $this->setDelegationStatus ($user_id, $status, 0, 1);
+          // set delegations for this user to suspended (delegated voting right and received voting right)
+          $this->setDelegationStatus ($user_id, $status, 0, 0); // set status for received delegations
+          $this->setDelegationStatus ($user_id, $status, 0, 1); // set status for target delegations
 
           $returnvalue['success'] = true; // set return value to false
           $returnvalue['error_code'] = 0; // error code
@@ -1221,6 +1266,31 @@ class User {
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      }
+    }// end function
+
+    public function getUserLastLogin($user_id) {
+      /* returns last login of a user for a integer user id
+      */
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      $stmt = $this->db->query('SELECT last_login FROM '.$this->db->au_users_basedata.' WHERE id = :id');
+      $this->db->bind(':id', $user_id); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // db error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = $users[0]['last_login']; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
