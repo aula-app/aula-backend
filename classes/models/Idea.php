@@ -1526,6 +1526,47 @@ class Idea {
         }
     }// end function
 
+    public function moveIdeaBetweenTopics ($idea_id, $topic_id1, $topic_id2, $updater_id) {
+      // moves an idea from topic 1 to topic 2
+      $idea_id = $this->converters->checkIdeaId($idea_id); // auto convert
+      $topic_id1 = $this->converters->checkTopicId($topic_id1); // auto convert
+      $topic_id2 = $this->converters->checkTopicId($topic_id2); // auto convert
+
+      $ret_value = removeUserFromGroup($topic_id1, $idea_id);
+
+      if ($ret_value['success']){
+          // only if removal was successful add to topic 2
+          $ret_value = addUserToGroup ($topic_id2, $idea_id);
+
+          if ($ret_value['success']){
+            $returnvalue['success'] = true; // set return value to false
+            $returnvalue['error_code'] = 0; // error code
+            $returnvalue ['data'] = false; // returned data
+            $returnvalue ['count'] = 1; // returned count of datasets
+
+            return $returnvalue;
+          } else {
+            // error occured while adding to topic 2
+            $returnvalue['success'] = false; // set return value to false
+            $returnvalue['error_code'] = 1; // error code
+            $returnvalue ['data'] = false; // returned data
+            $returnvalue ['count'] = 0; // returned count of datasets
+
+            return $returnvalue;
+
+          }
+
+      }else {
+        // error occured while removing from group 1
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      } // end else
+    } // end function
+
     public function setCategoryStatus($category_id, $status, $updater_id=0) {
         /* edits a category and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          status = status of category (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
