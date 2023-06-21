@@ -7,7 +7,7 @@
 #
 # Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-19 14:56:37 +0000
+# Verarbeitungszeit: 2023-06-21 13:31:26 +0000
 # ************************************************************
 
 
@@ -722,9 +722,9 @@ CREATE TABLE `au_topics` (
   `created` datetime DEFAULT NULL COMMENT 'creation time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the topic',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that does the update',
-  `room_id` int(11) DEFAULT NULL COMMENT 'id of the room the topic is in',
-  `phase_id` int(11) DEFAULT NULL COMMENT 'if o phase the thopic is in',
+  `updater_id` int(11) DEFAULT 0 COMMENT 'id of the user that does the update',
+  `room_id` int(11) DEFAULT 0 COMMENT 'id of the room the topic is in',
+  `phase_id` int(11) DEFAULT 1 COMMENT 'if o phase the thopic is in',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
