@@ -54,6 +54,22 @@ class Converters {
     } // end function
 
 
+    public function checkCommentId ($comment_id) {
+      /* helper function that checks if a comment id is a standard db id (int) or if a hash was passed
+      if a hash was passed, function gets db id and returns db id
+      */
+
+      if (is_int(intval ($comment_id)))
+      {
+        return $comment_id;
+      } else
+      {
+
+        return $this->getCommentIdByHashId ($comment_id);
+      }
+    } // end function
+
+
     public function getUserIdByHashId($hash_id) {
       /* Returns Database ID of user when hash_id is provided
       */
@@ -65,6 +81,20 @@ class Converters {
         return 0; // nothing found, return 0 code
       }else {
         return $users[0]['id']; // return user id
+      }
+    }// end function
+
+    public function getCommentIdByHashId($hash_id) {
+      /* Returns Database ID of comment when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_comments.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind comment id
+      $comments = $this->db->resultSet();
+      if (count($comments)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $comments[0]['id']; // return id
       }
     }// end function
 
@@ -254,7 +284,22 @@ class Converters {
       }
     } // end function
 
-    public function checkUserExist($user_id) {
+    public function checkCategoryExist($category_id) {
+      /* returns 0 if category does not exist, 1 if category exists, accepts database id (int)
+      */
+      $category_id = $this->checkCategoryId($category_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+
+      $stmt = $this->db->query('SELECT status FROM '.$this->db->au_categories.' WHERE id = :id');
+      $this->db->bind(':id', $category_id); // bind topic id
+      $categories = $this->db->resultSet();
+      if (count($categories)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return 1; // topic found, return 1
+      }
+    } // end function
+
+  public function checkUserExist($user_id) {
       /* helper function to check if a user with a certain id exists, returns 0 if user does not exist, 1 if user exists, accepts database (int) or hash id (varchar)
       */
       $user_id = $this->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
