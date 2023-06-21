@@ -51,11 +51,8 @@ class Topic {
       $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      // check if idea is existent
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE id = :topic_id');
-      $this->db->bind(':topic_id', $topic_id); // bind user id
-      $topics = $this->db->resultSet();
-      if (count($topics)<1){
+      // check if topic is existent
+      if ($this->converters->checkTopicExist($topic_id)==0) {
         $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 2; // error code - db error
         $returnvalue ['data'] = false; // returned data
@@ -90,8 +87,8 @@ class Topic {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added new reporting topic (#".$insertid.") ".$content, 0, "", 1);
-          // set idea status to reported
-          $this->setIdeaStatus($idea_id, 3, $updater_id=0);
+          // set topic status to reported
+          $this->setTopicStatus($topic_id, 3, $updater_id=0);
           $returnvalue['success'] = true; // set return value to false
           $returnvalue['error_code'] = 0; // error code - db error
           $returnvalue ['data'] = 1; // returned data
@@ -127,7 +124,7 @@ class Topic {
       */
       $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
-      return $this->setIdeaStatus($topic_id, 4, $updater_id=0);
+      return $this->setTopicStatus($topic_id, 4, $updater_id=0);
 
     }
 
@@ -166,7 +163,7 @@ class Topic {
       $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_topics.' WHERE id = :id');
-      $this->db->bind(':id', $topic_id); // bind idea id
+      $this->db->bind(':id', $topic_id); // bind topic id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
         $returnvalue['success'] = false; // set return value to false
@@ -289,7 +286,7 @@ class Topic {
     }// end function
 
     public function addTopic ($name, $description_internal, $description_public, $status, $order_importance=10, $updater_id=0, $room_id=0) {
-        /* adds a new topic and returns insert id (idea id) if successful, accepts the above parameters
+        /* adds a new topic and returns insert id (topic id) if successful, accepts the above parameters
          name = name of the topic, description_internal = shown only to admins for internal use
          desciption_public = shown in frontend, order_importance = order bias for sorting in the frontend
          status = status of inserted topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
@@ -313,10 +310,10 @@ class Topic {
         $this->db->bind(':description_public', $this->crypt->encrypt($description_public));
         $this->db->bind(':description_internal', $this->crypt->encrypt($description_internal));
         $this->db->bind(':room_id', $room_id);
-        // generate unique hash for this idea
+        // generate unique hash for this topic
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
-        $hash_id = md5($name.$appendix); // create hash id for this idea
+        $hash_id = md5($name.$appendix); // create hash id for this topic
         $this->db->bind(':hash_id', $hash_id);
         $this->db->bind(':order_importance', $order_importance); // order parameter
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -358,8 +355,8 @@ class Topic {
 
     public function setTopicStatus($topic_id, $status, $updater_id = 0) {
         /* edits a topic and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-         status = status of idea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
-         updater_id is the id of the idea that commits the update (i.E. admin )
+         status = status of topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+         updater_id is the id of the topic that commits the update (i.E. admin )
         */
         $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
@@ -401,8 +398,8 @@ class Topic {
 
     public function setTopicOrder($topic_id, $order_importance = 10, $updater_id = 0) {
         /* edits a topic and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-         status = status of idea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
-         updater_id is the id of the idea that commits the update (i.E. admin )
+         status = status of topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+         updater_id is the id of the topic that commits the update (i.E. admin )
         */
         $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
@@ -444,10 +441,10 @@ class Topic {
 
     public function setTopicName($topic_id, $name, $updater_id=0) {
         /* edits a topic and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-         content = content of the idea
+         name = name of the topic
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $idea_id = $this->converters->checkIdeaId($topic_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $topic_id = $this->converters->checkTopicId($topic_id); // checks  id and converts  id to db  id if necessary (when  hash id was passed)
 
         // sanitize
         $name = trim ($name);
@@ -455,9 +452,9 @@ class Topic {
         $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET name= :name, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
         // bind all VALUES
         $this->db->bind(':name', $name);
-        $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
-        $this->db->bind(':topic_id', $idea_id); // idea that is updated
+        $this->db->bind(':topic_id', $topic_id); // topic that is updated
 
         $err=false; // set error variable to false
 
@@ -489,15 +486,125 @@ class Topic {
         }
     }// end function
 
+    public function setTopicProperty ($topic_id, $property, $propvalue, $updater_id=0) {
+        /* edits a topic and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         property = name of db field
+         propvalue = value
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $topic_id = $this->converters->checkTopicId($topic_id); // checks  id and converts  id to db  id if necessary (when  hash id was passed)
+
+        // sanitize
+        $property = trim ($property);
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET '.$property.'= :propvalue, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+        // bind all VALUES
+        $this->db->bind(':propvalue', $propvalue);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':topic_id', $topic_id); // topic that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Topic property ".$property." changed for #".$topic_id." to ".$propvalue." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+          return $returnvalue;
+
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing topic property ".$property." for #".$topic_id." to ".$propvalue." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+    }// end function
+
+    public function setTopicRoom ($topic_id, $room_id, $updater_id=0){
+
+      $room_id = $this->converters->checkRoomId ($room_id); // autoconvert id
+
+      $ret_value = $this->setTopicProperty ($topic_id, "room_id", $room_id, $updater_id);
+
+      if ($ret_value['success']){
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+      } else {
+
+        // error occured
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = $ret_value ['error_code']; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
+      }
+    } // end function
+
+    public function setTopicPhase ($topic_id, $phase_id, $updater_id=0){
+
+      $idea_id = $this->converters->checkIdeaId ($idea_id); // autoconvert id
+
+      // sanitize phase
+      if (intval ($phase_id)<1){
+        $phase_id=1;
+      }
+      if (intval ($phase_id)>4){
+        $phase_id=4;
+      }
+
+      $ret_value = $this->setTopicProperty ($topic_id, "phase_id", $phase_id, $updater_id);
+
+      if ($ret_value['success']){
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+      } else {
+
+        // error occured
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = $ret_value ['error_code']; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
+      }
+    } // end function
+
 
     public function setTopicDescription($topic_id, $description, $type = 0, $updater_id = 0) {
         /* Chenges the descirption of a topic and returns number of rows if successful, accepts the above parameters
-         description = description of the idea
+         description = description of the topic
          type = 0 = desciption_public
          type = 1 = description internal
          updater_id is the id of the user that commits the update (i.E. admin )
         */
-        $idea_id = $this->converters->checkIdeaId($topic_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+        $topic_id = $this->converters->checkTopicId($topic_id); // checks  id and converts id to db id if necessary (when hash id was passed)
         if ($type == 0) {
           $description_appendix = "_public";
         } else {
@@ -509,9 +616,9 @@ class Topic {
         $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET description'.$description_appendix.' = :description, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
         // bind all VALUES
         $this->db->bind(':description', $description);
-        $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
-        $this->db->bind(':topic_id', $idea_id); // idea that is updated
+        $this->db->bind(':topic_id', $topic_id); // topic that is updated
 
         $err=false; // set error variable to false
 
@@ -547,7 +654,7 @@ class Topic {
       $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE topic_id = :id');
-      $this->db->bind (':id', $idea_id);
+      $this->db->bind (':id', $topic_id);
       $err=false;
       try {
         $action = $this->db->execute(); // do the query
@@ -580,13 +687,13 @@ class Topic {
     }
 
     public function deleteTopic($topic_id, $updater_id=0) {
-        /* deletes topic, cleans up and returns the number of rows (int) accepts idea id or idea hash id //
+        /* deletes topic, cleans up and returns the number of rows (int) accepts top id or topic hash id //
 
         */
         $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
         $stmt = $this->db->query('DELETE FROM '.$this->db->au_topics.' WHERE id = :id');
-        $this->db->bind (':id', $idea_id);
+        $this->db->bind (':id', $topic_id);
         $err=false;
         try {
           $action = $this->db->execute(); // do the query
