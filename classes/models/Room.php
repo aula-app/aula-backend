@@ -119,6 +119,104 @@ class Room {
       }
     }// end function
 
+    public function setRoomProperty ($room_id, $property, $prop_value, $updater_id=0) {
+        /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         $property = field name in db
+         $propvalue = value for property
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET '.$property.'= :prop_value, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        // bind all VALUES
+        $this->db->bind(':prop_value', $prop_value);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':room_id', $room_id); // room that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Room property ".$property." changed for id ".$room_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing room property ".$property." for id ".$room_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+    }// end function
+
+    public function setRoomIdeasDisabled ($room_id, $updater_id=0){
+
+      $room_id = $this->converters->checkRoomId ($room_id); // autoconvert id
+
+      $ret_value = $this->setTopicProperty ($room_id, "ideas_enabled", 0, $updater_id);
+
+      if ($ret_value['success']){
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+      } else {
+
+        // error occured
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = $ret_value ['error_code']; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
+      }
+    } // end function
+
+    public function setRoomIdeasEnabled ($room_id, $updater_id=0){
+
+      $room_id = $this->converters->checkRoomId ($room_id); // autoconvert id
+
+      $ret_value = $this->setTopicProperty ($room_id, "ideas_enabled", 1, $updater_id);
+
+      if ($ret_value['success']){
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+      } else {
+
+        // error occured
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = $ret_value ['error_code']; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
+      }
+    } // end function
+
 
     public function checkAccesscode($room_id, $access_code) { // access_code = clear text
       /* checks access code and returns database room id (credentials correct) or 0 (credentials not correct)
@@ -215,7 +313,6 @@ class Room {
         $rooms = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while getting rooms: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
@@ -257,7 +354,6 @@ class Room {
         $rooms = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while getting users in room: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
@@ -298,7 +394,6 @@ class Room {
         $delegations_count = $this->db->rowCount();
 
       } catch (Exception $e) {
-          echo 'Error occured while deleting delegations in room: '.$room_id,  $e->getMessage(), "\n"; // display error
           $this->syslog->addSystemEvent("Error occured while deleting delegations in room: ".$room_id, 0, "", 1);
           $err=true;
           return "0,0";
@@ -322,7 +417,6 @@ class Room {
         $delegations_count = $this->db->rowCount();
 
       } catch (Exception $e) {
-          echo 'Error occured while deleting delegations in room: '.$room_id,  $e->getMessage(), "\n"; // display error
           $this->syslog->addSystemEvent("Error occured while deleting delegations for user ".$user_id." in room: ".$room_id, 0, "", 1);
           $err=true;
           return "0,0";
@@ -332,10 +426,19 @@ class Room {
     } // end function
 
 
-    public function emptyRoom($room_id) {
+    public function emptyRoom($room_id, $idea_delete_option = 0) {
       /* deletes all users from a room
+      $idea_delete_option = 0 = ideas are archived, 1= ideas are deleted
       */
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
+      // sanitize var
+      if ($idea_delete_option < 0){
+        $idea_delete_option = 0;
+      }
+      if ($idea_delete_option > 1){
+        $idea_delete_option = 1;
+      }
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_rooms_users.' WHERE room_id = :roomid' );
       $this->db->bind(':roomid', $room_id); // bind room id
@@ -346,7 +449,6 @@ class Room {
         $room_content_count = $this->db->rowCount();
 
       } catch (Exception $e) {
-          echo '<br>Error occured while emptying room: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code
@@ -354,9 +456,47 @@ class Room {
           $returnvalue ['count'] = 0; // returned count of datasets
 
           return $returnvalue;
+        }
+      if ($idea_delete_option == 0){
+        // set ideas to archived from this room
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET status=4 WHERE room_id = :roomid' ); // set idea status to archived (4)
+        $this->db->bind(':roomid', $room_id); // bind room id
 
+        $err=false;
+        try {
+          $rooms = $this->db->execute(); // do the query
+
+
+        } catch (Exception $e) {
+            $err=true;
+            $returnvalue['success'] = false; // set return value to false
+            $returnvalue['error_code'] = 1; // error code
+            $returnvalue ['data'] = false; // returned data
+            $returnvalue ['count'] = 0; // returned count of datasets
+
+            return $returnvalue;
+          }
+      } else {
+        // delete ideas that are associated with this room
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_ideas.'  WHERE room_id = :roomid' ); // delete ideas in this room
+        $this->db->bind(':roomid', $room_id); // bind room id
+
+        $err=false;
+        try {
+          $rooms = $this->db->execute(); // do the query
+
+
+        } catch (Exception $e) {
+            $err=true;
+            $returnvalue['success'] = false; // set return value to false
+            $returnvalue['error_code'] = 1; // error code
+            $returnvalue ['data'] = false; // returned data
+            $returnvalue ['count'] = 0; // returned count of datasets
+
+            return $returnvalue;
+          }
       }
-      //remove ideas and delegations from this room
+      //remove delegations from this room
 
       // remove all delegations in this room
       $this->deleteRoomDelegations ($room_id);

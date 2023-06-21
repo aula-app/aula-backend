@@ -74,6 +74,50 @@ class Group {
     }
   }// end function
 
+  public function setGroupProperty ($group_id, $property, $prop_value, $updater_id=0) {
+      /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+       $property = field name in db
+       $propvalue = value for property
+       updater_id is the id of the user that commits the update (i.E. admin )
+      */
+      $group_id = $this->converters->checkGroupId($group_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+      $stmt = $this->db->query('UPDATE '.$this->db->au_gropus.' SET '.$property.'= :prop_value, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+      // bind all VALUES
+      $this->db->bind(':prop_value', $prop_value);
+      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+      $this->db->bind(':group_id', $group_id); // group that is updated
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "Group property ".$property." changed for id ".$group_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      } else {
+        $this->syslog->addSystemEvent(1, "Group changing room property ".$property." for id ".$group_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+  }// end function
+
   public function getGroupVoteBias ($group_id) {
     /* returns voting bias for this group for an integer group id
     */
@@ -171,7 +215,6 @@ class Group {
         $groups = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while getting users in group: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
@@ -214,7 +257,6 @@ class Group {
         $groups = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while emptying group: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - no matching dataset
@@ -298,7 +340,6 @@ class Group {
         $groups = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while getting groups: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error

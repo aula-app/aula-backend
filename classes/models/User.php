@@ -83,6 +83,50 @@ class User {
       }
     }// end function
 
+    public function setUserProperty ($user_id, $property, $prop_value, $updater_id=0) {
+        /* edits a user (user_basedata) and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         $property = field name in db
+         $propvalue = value for property
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET '.$property.'= :prop_value, last_update= NOW(), updater_id= :updater_id WHERE id= :user_id');
+        // bind all VALUES
+        $this->db->bind(':prop_value', $prop_value);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':user_id', $user_id); // room that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "User property ".$property." changed for id ".$user_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+        } else {
+          $this->syslog->addSystemEvent(1, "Error changing user property ".$property." for id ".$user_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+    }// end function
+
     public function revokeVoteRight($user_id, $user_id_target, $topic_id, $updater_id) {
       /* Returns Database ID of user when hash_id is provided
       */
@@ -155,20 +199,24 @@ class User {
 
 
     public function delegateVoteRight ($user_id, $user_id_target, $topic_id, $updater_id) {
-      /* delegates voting rights from one user to another within a room for a certain topic, accepts user_id (by hash or id) and room id (by hash or id)
-      returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
+      /* delegates voting rights from one user to another within a room for a certain topic, accepts user_id (by hash or id) and topic id (by hash or id)
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $topic_id = $this->converters->checkRoomId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
+      */
 
-      // check if user and room exist
+      // check if user and topic exist
       $user_exist = $this->converters->checkUserExist($user_id);
       $user_exist_target = $this->converters->checkUserExist($user_id_target);
       $data_delegation ['user_exist_target']=$user_exist_target;
 
-      if ($user_exist==1 && $room_exist==1 && $user_exist_target==1) {
+      if ($user_exist==1 && $topic_exist==1 && $user_exist_target==1) {
         // everything ok, users and room exists
+        // get room id
+
         // add relation to database (delegation)
+
+
 
         $stmt = $this->db->query('INSERT INTO '.$this->db->au_delegation.' (topic_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
 
@@ -201,7 +249,7 @@ class User {
 
 
         } else {
-          $this->syslog->addSystemEvent(0, "Error while adding delegation for user ".$user_id." for topic ".$room_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Error while adding delegation for user ".$user_id." for topic ".$topic_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; //db  error code
           $returnvalue ['data'] = false; // returned data
