@@ -128,7 +128,7 @@ class Group {
     $groups = $this->db->resultSet();
     $return_value = 1; // default value = 1 vote per user
     if (count($groups)>0){
-      $return_value = $groups[0]['votes_per_user']; // return the vote bias for this group
+      $return_value = $groups[0]['vote_bias']; // return the vote bias for this group
     }
     return $return_value;
   }// end function
@@ -143,7 +143,7 @@ class Group {
     $groups = $this->db->resultSet();
     $return_value = 1; // default value = 1 vote per user
     if (count($groups)>0){
-      $return_value = $groups[0]['votes_per_user']; // return the vote bias for this user
+      $return_value = $groups[0]['vote_bias']; // return the vote bias for this user
     }
     return $return_value;
   }// end function
