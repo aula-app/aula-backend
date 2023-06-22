@@ -114,9 +114,9 @@ class Text {
     public function searchInTexts ($searchstring, $status=1){
       // searches for a term / string in texts and returns all texts
       $extra_where = " AND (headline LIKE '%".searchstring."%' OR body LIKE '%".searchstring."%') ";
-      $ret_value = getTexts (0, 0, 3, 0, $status, );
+      $ret_value = getTexts (0, 0, 3, 0, $status);
 
-      return getComments (0, 0, 3, 0, 2, "", $publish_date, 0, $parent_id, $user_id);
+      return $ret_value;
     }
 
     public function getTexts ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $last_update=0, $location=0, $creator_id=0, $user_needs_to_consent=-1, $service_id_consent=-1) {
@@ -151,30 +151,26 @@ class Text {
         $limit_string="";
         $limit_active=false;
       }
-      if ($target_group > 0){
-        // if a target group is set then add to where clause
-        $extra_where.= " AND target_group = ".$target_group;
-      }
 
       if ($location > 0){
         // if a location id is set then add to where clause
         $extra_where.= " AND location = ".$location; // get specific texts for a certain page (page id)
-
+      }
 
       if ($creator_id > 0){
         // if a creator id is set then add to where clause
         $extra_where.= " AND creator_id = ".$creator_id; // get specific texts for a creator / moderator / admin
-
+      }
 
       if ($user_needs_to_consent > -1){
         // if a target user id is set then add to where clause
         $extra_where.= " AND user_needs_to_consent = ".$user_needs_to_consent; // get only texts that need (1)/dont need (0) consent
-
+      }
 
       if ($service_id_consent > -1){
         // if a target user id is set then add to where clause
         $extra_where.= " AND service_id_consent = ".$service_id_consent; // get only texts that are linked to a certain service
-
+      }
 
 
       if (!(intval ($last_update)==0)){
@@ -218,7 +214,6 @@ class Text {
       }
 
       $count_datasets = 0; // number of datasets retrieved
-
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_texts.' WHERE status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
