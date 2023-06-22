@@ -2290,7 +2290,7 @@ class Idea {
       return $actual_votes_available;
     }
 
-    protected function addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations, $vote_bias_group=1) {
+    protected function addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations, $vote_bias_group=1, $comment="") {
       // add a vote into vote table for a certain user and idea
 
       //sanitize
@@ -2309,10 +2309,11 @@ class Idea {
       }
 
 
-      $stmt = $this->db->query('INSERT INTO '.$this->db->au_votes.' (number_of_delegations, vote_weight, status, vote_value, user_id, idea_id, last_update, created, hash_id) VALUES (:number_of_delegations, :vote_weight, 1, :vote_value, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
+      $stmt = $this->db->query('INSERT INTO '.$this->db->au_votes.' (comment, number_of_delegations, vote_weight, status, vote_value, user_id, idea_id, last_update, created, hash_id) VALUES (:comment, :number_of_delegations, :vote_weight, 1, :vote_value, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
       // bind all VALUES
       $this->db->bind(':idea_id', $idea_id); // idea id
       $this->db->bind(':user_id', $user_id); // user id
+      $this->db->bind(':comment', $comment); // user id
       $this->db->bind(':vote_value', $vote_value); // vote value
       $this->db->bind(':vote_weight', $vote_weight); // vote weight
       $this->db->bind(':number_of_delegations', $number_of_delegations); // vote delegations in this vote
@@ -2612,7 +2613,7 @@ class Idea {
       }
     } // end function
 
-    public function voteForIdea($idea_id, $vote_value, $user_id) {
+    public function voteForIdea($idea_id, $vote_value, $user_id, $comment="") {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          idea_id is obvious...accepts db id or hash id
          vote_value is -1, 0 , +1 (depending on positive or negative)
@@ -2725,7 +2726,7 @@ class Idea {
           // apply group vote bias
           $vote_value_final = intval (intval ($vote_value_final) * intval ($group_vote_bias));
 
-          $this->addVoteUser ($user_id, $idea_id, $vote_value_final, $number_of_delegations, $group_vote_bias);
+          $this->addVoteUser ($user_id, $idea_id, $vote_value_final, $number_of_delegations, $group_vote_bias, $comment);
           $sum_votes_correction = $vote_value_final;
           //echo ("<br>user has not delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
@@ -2758,7 +2759,7 @@ class Idea {
           // apply group vote bias
           $vote_value = intval (intval ($vote_value) * intval ($group_vote_bias));
 
-          $this->addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations, $group_vote_bias);
+          $this->addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations, $group_vote_bias, $comment);
           //echo ("<br>user has delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
 
@@ -2774,7 +2775,7 @@ class Idea {
         // user has infinite votes
         $vote_value = intval (intval ($vote_value) * intval ($group_vote_bias)); // appy group vote bias
 
-        $this->addVoteUser ($user_id, $idea_id, $vote_value, 0, $group_vote_bias); // add vote to vote table
+        $this->addVoteUser ($user_id, $idea_id, $vote_value, 0, $group_vote_bias, $comment); // add vote to vote table
         $sum_votes_correction = $vote_value; // set bias value for sum_votes of idea
       }
 
