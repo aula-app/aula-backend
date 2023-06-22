@@ -102,7 +102,7 @@ public function IdeaRemoveLike ($idea_id, $user_id)
 public function resetVotes ()
 public function removeLikeUser ($user_id, $idea_id)
 public function userHasDelegated($user_id, $topic_id)
-public function voteForIdea($idea_id, $vote_value, $user_id)
+public function voteForIdea($idea_id, $vote_value, $user_id, $comment)
 public function RevokeVoteFromIdea($idea_id, $user_id, $updater_id=0)
 public function deleteIdea($idea_id, $updater_id=0)
 
