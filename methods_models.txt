@@ -7,6 +7,7 @@ Getters
 public function getTopicBaseData ($topic_id)
 public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0)
 public function getTopicsByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id)
+public function getTopicPhase ($topic_id)
 
 Setters
 
@@ -119,6 +120,7 @@ public function getReceivedDelegations ($user_id, $topic_id)
 public function getGivenDelegations ($user_id, $topic_id)
 public function getUserInfiniteVotesStatus($user_id)
 public function getUserLastLogin($user_id)
+public function getUserAbsence($user_id)
 
 Setters
 
@@ -133,6 +135,7 @@ public function setUserPW($user_id, $pw, $updater_id=0)
 public function setUserRegStatus($user_id, $regstatus, $updater_id=0)
 public function setUserInfiniteVote($user_id, $infinite, $updater_id=0)
 public function setUserStatus($user_id, $status, $updater_id=0)
+public function setUserAbsence ($user_id, $presence = 1, $absent_until = "", $auto_delegation = 0)
 
 Checkers
 
