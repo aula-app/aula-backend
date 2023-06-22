@@ -304,6 +304,7 @@ public function getCommentsByIdeaId ($idea_id, $offset=0, $limit=0, $orderby=3, 
 Setters
 public function setCommentStatus($comment_id, $status, $updater_id = 0)
 public function setCommenttoReview ($comment_id, $updater_id)
+public function setCommentContent($comment_id, $content, $updater_id = 0)
 
 Checkers
 
