@@ -352,3 +352,30 @@ public function checkIdeaExist($idea_id)
 public function checkCategoryExist($category_id)
 
 Actions
+
+MODEL TEXT
+
+public function __construct($db, $crypt, $syslog)
+
+Getters
+
+public function getTextHashId($text_id)
+public function getTextBaseData ($text_id)
+public function getTexts ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $last_update=0, $location=0, $creator_id=0, $user_needs_to_consent=-1, $service_id_consent=-1)
+
+Setters
+public function setTextToReview ($text_id, $updater_id)
+public function setTextStatus($text_id, $status, $updater_id = 0)
+public function setTextNeedsConsent($text_id, $user_needs_to_consent, $updater_id = 0)
+public function setTextContent($text_id, $headline, $body, $consent_text, $updater_id = 0)
+
+Checkers
+
+Actions
+public function archiveText ($text_id, $updater_id=0)
+public function activateText ($text_id, $updater_id=0)
+public function deactivateText ($text_id, $updater_id)
+public function searchInTexts ($searchstring, $status=1)
+public function addText ($headline, $body="", $consent_text="", $location=0, $creator_id=0, $user_needs_to_consent=0, $service_id_consent=0, $status=1, $updater_id=0, $language_id=0)
+public function linkTextToService ($text_id, $service_id_consent, $updater_id = 0)
+public function deleteText ($text_id, $updater_id=0)
