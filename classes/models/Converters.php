@@ -112,6 +112,20 @@ class Converters {
       }
     }// end function
 
+    public function getTextIdByHashId($text_id) {
+      /* Returns Database ID of text when hash_id is provided
+      */
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_texts.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $texts = $this->db->resultSet();
+      if (count($texts)<1){
+        return 0; // nothing found, return 0 code
+      }else {
+        return $texts[0]['id']; // return idea id
+      }
+    }// end function
+
     public function getTopicIdByHashId($hash_id) {
       /* Returns Database ID of topic when hash_id is provided
       */
@@ -152,6 +166,20 @@ class Converters {
       } else
       {
         return $this->getGroupIdByHashId ($group_id);
+      }
+    } // end function
+
+    public function checkTextId ($text_id) {
+      /* helper function that checks if a text id is a standard db id (int) or if a hash id was passed
+      if a hash was passed, function returns db id
+      */
+
+      if (is_int(intval ($text_id)))
+      {
+        return $text_id;
+      } else
+      {
+        return $this->getTextIdByHashId ($text_id);
       }
     } // end function
 
