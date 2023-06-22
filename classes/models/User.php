@@ -831,7 +831,7 @@ class User {
 
     }// end function
 
-    function removeUserFromGroup($group_id, $user_id) {
+    public function removeUserFromGroup($group_id, $user_id) {
       /* deletes a user from a group
       */
 
@@ -1315,6 +1315,45 @@ class User {
         }
     }// end function
 
+    public function setUserAbsence ($user_id, $presence = 1, $absent_until = "", $auto_delegation = 0){
+      /* sets a user to absent until a specified date
+       $presence = 0 = user is absent 1 = user is present
+       absent_until = date until the user is absent
+       auto_delegation = 0 = auto delegation off, 1= votes for this user are
+      */
+      //sanitize
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $presence = intval ($presence);
+      $auto_delegation = intval ($auto_delegation);
+
+      if ($presence<0){
+        $presence = 0;
+      }
+      if ($presence>1){
+        $presence = 1;
+      }
+
+      $ret_value = $this->setUserProperty ($user_id, "presence", $presence); // set user to present / absent
+      if ($ret_value ['success']){
+        // if setting worked, continue
+        $ret_value = $this->setUserProperty ($user_id, "auto_delegation", $auto_delegation); // set auto delegation
+        $ret_value = $this->setUserProperty ($user_id, "absent_until", $absent_until); // set user until
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = $ret_value['error_code']; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      } // end else
+    } // end function
+
     public function setUserStatus($user_id, $status, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          status = status of inserted user (0 = inactive, 1=active)
@@ -1378,7 +1417,7 @@ class User {
     }
 
     public function getUserInfiniteVotesStatus($user_id) {
-      /* returns hash_id of a user for a integer user id
+      /* returns infinite vote status of a user for user id
       */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -1395,7 +1434,32 @@ class User {
       }else {
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // db error code
-        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['data'] = $users [0]['infinite_votes']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      }
+    }// end function
+
+    public function getUserAbsence($user_id) {
+      /* returns status of absence of a user for a user id
+      */
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      $stmt = $this->db->query('SELECT absence, absent_until, auto_delegation FROM '.$this->db->au_users_basedata.' WHERE id = :id');
+      $this->db->bind(':id', $user_id); // bind userid
+      $users = $this->db->resultSet();
+      if (count($users)<1){
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // db error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue ['data'] = $users[0]; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
