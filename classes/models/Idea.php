@@ -2290,13 +2290,19 @@ class Idea {
       return $actual_votes_available;
     }
 
-    protected function addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations) {
+    protected function addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations, $vote_bias_group=1) {
       // add a vote into vote table for a certain user and idea
+
       //sanitize
       $idea_id = intval ($idea_id);
+      $vote_value = intval ($vote_value);
+
       $number_of_delegations = intval ($number_of_delegations);
+
       // get absolute value for vote value
-      $vote_weight = abs ($vote_value);
+      $vote_weight = intval (abs ($vote_value) / $vote_bias_group); // compensate group bias for vote weight
+
+
       // compensate for neutral votes
       if ($vote_weight == 0){
         $vote_weight = intval (1 + $number_of_delegations); // in this case add delegations since value is 0
@@ -2645,7 +2651,7 @@ class Idea {
       $topic_id = $this->getIdeaTopic ($idea_id)['data']; // get topic id for idea
       $room_id = $idea_basedata['room_id'];
 
-      // check if user is member of the room
+      // check if user is member of the group
 
       if ($status_idea == 0 || $status_idea >1) {
         // idea does not exist/inactive or status >1 (suspended or archived)
@@ -2663,6 +2669,13 @@ class Idea {
 
       // check if user has infinite votes, if yes - disable everything
       $infinite = $this->getUserInfiniteVotesStatus($user_id);
+
+      $group_vote_bias = $this->group->getGroupVoteBiasForUser ($user_id); // get group vote bias
+
+      // sanitize
+      if ($group_vote_bias<1){
+        $group_vote_bias = 1;
+      }
 
       if ($infinite ['data']==0){
         // user does not have infinite votes
@@ -2690,7 +2703,7 @@ class Idea {
             //echo ("<br>current sum: ".$current_sum);
             // echo ("<br>current sum: ".$current_sum." vote value original: ".$vote_value_original);
             $new_vote_value = intval (intval ($current_sum)-intval ($vote_value_original)); // calculate difference votes
-            $this->IdeaSetVotes ($idea_id, $new_vote_value); // adjust sum_votes in idea
+            $this->IdeaSetVotes ($idea_id, $new_vote_value); // adjust sum_votes in idea (note - group bias is already in calculation)
 
           }
         } // else continue processing
@@ -2710,7 +2723,9 @@ class Idea {
           // addVoteUser ($user_id, $idea_id, $vote_value, $updater_id, $original_user_id)
 
           // apply group vote bias
-          $this->addVoteUser ($user_id, $idea_id, $vote_value_final, $number_of_delegations);
+          $vote_value_final = intval (intval ($vote_value_final) * intval ($group_vote_bias));
+
+          $this->addVoteUser ($user_id, $idea_id, $vote_value_final, $number_of_delegations, $group_vote_bias);
           $sum_votes_correction = $vote_value_final;
           //echo ("<br>user has not delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
@@ -2741,8 +2756,9 @@ class Idea {
           // add one vote to db for this user
 
           // apply group vote bias
+          $vote_value = intval (intval ($vote_value) * intval ($group_vote_bias));
 
-          $this->addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations);
+          $this->addVoteUser ($user_id, $idea_id, $vote_value, $number_of_delegations, $group_vote_bias);
           //echo ("<br>user has delegated, correction ".$sum_votes_correction." vote value final: ".$vote_value_final);
 
 
@@ -2756,7 +2772,9 @@ class Idea {
         } // end else
       } else {
         // user has infinite votes
-        $this->addVoteUser ($user_id, $idea_id, $vote_value, 0); // add vote to vote table
+        $vote_value = intval (intval ($vote_value) * intval ($group_vote_bias)); // appy group vote bias
+
+        $this->addVoteUser ($user_id, $idea_id, $vote_value, 0, $group_vote_bias); // add vote to vote table
         $sum_votes_correction = $vote_value; // set bias value for sum_votes of idea
       }
 
