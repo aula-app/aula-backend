@@ -414,7 +414,7 @@ class Comment {
         // bind all VALUES
 
         $this->db->bind(':user_id', $user_id);
-        $this->db->bind(':content', $content);
+        $this->db->bind(':content', $this->crypt->encrypt($content));
         $this->db->bind(':idea_id', $idea_id);
         $this->db->bind(':parent_id', $parent_id);
         $this->db->bind(':status', $status);
@@ -752,6 +752,53 @@ class Comment {
 
           return $returnvalue; // return number of affected rows to calling script
         } else {
+          $returnvalue ['success'] = false; // set return value
+          $returnvalue ['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+          return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
+    public function setCommentContent($comment_id, $content, $updater_id = 0) {
+        /* edits a comment and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         content = content  of comment
+         updater_id is the id of the user that does the update (i.E. admin )
+        */
+        $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        $content = trim ($content);
+        $stmt = $this->db->query('UPDATE '.$this->db->au_comments.' SET content= :content, last_update= NOW(), updater_id= :updater_id WHERE id= :comment_id');
+        // bind all VALUES
+        $this->db->bind(':content', $this->crypt->encrypt ($content));
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':comment_id', $comment_id); // comment that is updated
+
+        $err=false; // set error variable to false
+        $count_datasets = 0; // init row count
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $count_datasets = intval($this->db->rowCount());
+          $this->syslog->addSystemEvent(0, "Comment content changed ".$comment_id." by ".$updater_id, 0, "", 1);
+          $returnvalue ['success'] = true; // set return value
+          $returnvalue ['error_code'] = 0; // error code
+          $returnvalue ['data'] = $count_datasets; // returned data
+          $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+
+          return $returnvalue; // return number of affected rows to calling script
+        } else {
+          $this->syslog->addSystemEvent(0, "Error while changing content of Comment".$comment_id." by ".$updater_id, 0, "", 1);
           $returnvalue ['success'] = false; // set return value
           $returnvalue ['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data

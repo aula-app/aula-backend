@@ -502,8 +502,8 @@ class Message {
         $stmt = $this->db->query('INSERT INTO '.$this->db->au_messages.' (creator_id, headline, body, target_group, target_id, pin_to_top, msg_type, publish_date, level_of_detail, only_on_dashboard, status, room_id, hash_id, created, last_update, updater_id, language_id) VALUES (:creator_id, :headline, :body, :target_group, :target_id, :pin_to_top, :msg_type, :publish_date, :level_of_detail, :only_on_dashboard, :status, :room_id, :hash_id, NOW(), NOW(), :updater_id, :language_id)');
         // bind all VALUES
 
-        $this->db->bind(':headline', $headline);
-        $this->db->bind(':body', $body);
+        $this->db->bind(':headline', $this->crypt->encrypt($headline));
+        $this->db->bind(':body', $this->crypt->encrypt($body));
         $this->db->bind(':target_id', $target_id);
         $this->db->bind(':target_group', $target_group);
         $this->db->bind(':pin_to_top', $pin_to_top);
@@ -568,6 +568,57 @@ class Message {
         $stmt = $this->db->query('UPDATE '.$this->db->au_messages.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :message_id');
         // bind all VALUES
         $this->db->bind(':status', $status);
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $this->db->bind(':message_id', $message_id); // message that is updated
+
+        $err=false; // set error variable to false
+        $count_datasets = 0; // init row count
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $count_datasets = intval($this->db->rowCount());
+          $this->syslog->addSystemEvent(0, "Message status changed ".$message_id." by ".$updater_id, 0, "", 1);
+          $returnvalue ['success'] = true; // set return value
+          $returnvalue ['error_code'] = 0; // error code
+          $returnvalue ['data'] = $count_datasets; // returned data
+          $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+
+          return $returnvalue; // return number of affected rows to calling script
+        } else {
+          $returnvalue ['success'] = false; // set return value
+          $returnvalue ['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+          return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
+        }
+    }// end function
+
+    public function setMessageContent($message_id, $headline="", $body="", $updater_id = 0) {
+        /* edits a message and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+         status = status of message (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+         updater_id is the id of the user that does the update (i.E. admin )
+        */
+        $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        // sanitize
+        $headline = trim ($headline);
+        $body = trim ($body);
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_messages.' SET headline= :headline, body = :body, last_update= NOW(), updater_id= :updater_id WHERE id= :message_id');
+        // bind all VALUES
+        $this->db->bind(':headline', $this->crypt->encrypt ($headline));
+        $this->db->bind(':body', $this->crypt->encrypt ($body));
+
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $this->db->bind(':message_id', $message_id); // message that is updated
