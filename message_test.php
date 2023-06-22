@@ -114,8 +114,8 @@ out ("found ".$messagedata['count']." messages!");
 foreach ($data as $result) {
   //  $votes_made = $idea->getIdeaNumberVotes($result['id']);
     echo ('<form action="" method ="_POST">');
-    echo ("<h2>".$result['id'].".". $result['headline']."</h2>");
-    echo ("<b>Body: " . ($result['body']).", publish date: " . ($result['publish_date']));
+    echo ("<h2>".$result['id'].".". $crypt->decrypt ($result['headline'])."</h2>");
+    echo ("<b>Body: " . $crypt->decrypt ($result['body']).", publish date: " . ($result['publish_date']));
     echo ("<br><small>Last Update: " . $result['last_update']."</small>");
     echo ("<input type='hidden' name='id' value='". intval (trim ($result['id']))."'><br><button type=submit name='delete'>DELETE</button></form>");
     /*echo ('<form action="" method ="_POST">');

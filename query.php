@@ -149,7 +149,8 @@ $user_id = 12;
 // check credentials for a user
 $username = $crypt->decrypt("QOzPiMqW9IxM3Gb4hSBLXuJCA8xRDFAKxdZMNfrMSTeU/riZEMZ55p6f+5/727stKRWqtMb4vQ====");
 out ("checking credentials for user  ".$username." (DB ID: ".$user_id.") using standard pw aula ...", true);
-$userdata = $user->checkCredentials( $username,"aula"); // read base data from user id, aula is the standard pw i wrote into the db, $username is the username in clear text
+$userdata = $user->checkLogin ( $username,"aula"); // read base data from user id, aula is the standard pw i wrote into the db, $username is the username in clear text
+
 if (!$userdata['success']){
   out ("User is not authorized!");
 } else {
@@ -184,6 +185,18 @@ if (!$userdata['success']){
   out ("User not found!");
 } else {
   out ("User display name changed: No. of datasets affected: ".$userdata['data']);
+}
+
+$user_id = 8;
+out ("Set User ".$user_id." to absent",true);
+$today = new DateTime();
+$today = $today->format('Y-m-d H:i:s');
+
+$userdata = $user->setUserAbsence($user_id, 1, $today, 1); // set absence
+if (!$userdata['success']){
+  out ("User not found!");
+} else {
+  out ("User absence name set to absent: Status ->".$userdata['data']);
 }
 
 out ("Change real name of user#100 to DANIEL",true);
@@ -271,6 +284,7 @@ $groupid = 2;
 $userid = 3;
 out ("Adding User ".$userid." to Group ".$groupid, true);
 $userdata = $user->addUserToGroup ($userid,$groupid, 1,44); // 1=active (could also be set to suspended or inactive), 44 = updater id of the user doing the update
+print_r ($userdata);
 out ("USER Class returned: ".$userdata['data']);
 
 $roomid = 1;

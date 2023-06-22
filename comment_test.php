@@ -62,7 +62,7 @@ if (isset ($_REQUEST['addmsg']))
 
 
   // voteForIdea($idea_id, $vote_value, $user_id)
-  $msg.= ("<br>Adding comment: ".$headline." to DB");
+  $msg.= ("<br>Adding comment: ".$crypt->decrypt ($headline)." to DB");
   // addComment ($content, $user_id, $idea_id=0, $parent_id=0, $status=1, $updater_id=0, $language_id=0)
   $return_value = $comment->addComment ($body, 42, 1, 0);
   $msg.= ("<br>Returning value: ".$return_value ['data']);
@@ -119,7 +119,7 @@ if (!$data) {
   foreach ($data as $result) {
     //  $votes_made = $idea->getIdeaNumberVotes($result['id']);
       echo ('<form action="" method ="_POST">');
-      echo ("<h2>".$result['id'].". ".$result['content']."</h2>");
+      echo ("<h2>".$result['id'].". ".$crypt->decrypt ($result['content'])."</h2>");
       echo ("<br><small>Last Update: " . $result['last_update']."</small>");
       echo ("<input type='hidden' name='id' value='". intval (trim ($result['id']))."'><br><button type=submit name='delete'>DELETE</button></form>");
       /*echo ('<form action="" method ="_POST">');
