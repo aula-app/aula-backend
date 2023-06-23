@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-23 07:23:02 +0000
+# Verarbeitungszeit: 2023-06-23 07:35:58 +0000
 # ************************************************************
 
 
@@ -109,17 +109,16 @@ CREATE TABLE `au_comments` (
 DROP TABLE IF EXISTS `au_consent`;
 
 CREATE TABLE `au_consent` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) DEFAULT NULL COMMENT 'id of user',
-  `text_id` int(1) DEFAULT 0 COMMENT 'id of text',
-  `consent` tinyint(1) DEFAULT 0 COMMENT '1= user consented to privacy',
+  `user_id` int(11) NOT NULL COMMENT 'id of user',
+  `text_id` int(1) NOT NULL DEFAULT 0 COMMENT 'id of text',
+  `consent` tinyint(1) DEFAULT 0 COMMENT '1= user consented 0= user didnt consent 2=user revoked consent',
   `date_consent` datetime DEFAULT NULL COMMENT 'date of consent to terms',
   `date_revoke` datetime DEFAULT NULL COMMENT 'date of revocation',
   `created` datetime DEFAULT NULL COMMENT 'create time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `status` int(11) DEFAULT NULL COMMENT 'status of consent',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`user_id`,`text_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 

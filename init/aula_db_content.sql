@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-23 07:23:26 +0000
+# Verarbeitungszeit: 2023-06-23 07:36:17 +0000
 # ************************************************************
 
 
@@ -119,17 +119,16 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `au_consent`;
 
 CREATE TABLE `au_consent` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) DEFAULT NULL COMMENT 'id of user',
-  `text_id` int(1) DEFAULT 0 COMMENT 'id of text',
-  `consent` tinyint(1) DEFAULT 0 COMMENT '1= user consented to privacy',
+  `user_id` int(11) NOT NULL COMMENT 'id of user',
+  `text_id` int(1) NOT NULL DEFAULT 0 COMMENT 'id of text',
+  `consent` tinyint(1) DEFAULT 0 COMMENT '1= user consented 0= user didnt consent 2=user revoked consent',
   `date_consent` datetime DEFAULT NULL COMMENT 'date of consent to terms',
   `date_revoke` datetime DEFAULT NULL COMMENT 'date of revocation',
   `created` datetime DEFAULT NULL COMMENT 'create time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `status` int(11) DEFAULT NULL COMMENT 'status of consent',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`user_id`,`text_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 
@@ -9132,7 +9131,8 @@ VALUES
 	(7816,0,'Resetting all votes',0,'','2023-06-19 15:03:50','2023-06-19 15:03:50',NULL),
 	(7817,0,'Idea  1 incremented likes',0,'','2023-06-19 15:03:53','2023-06-19 15:03:53',NULL),
 	(7818,0,'Idea  1 decrementing likes',0,'','2023-06-19 15:03:56','2023-06-19 15:03:56',NULL),
-	(7819,0,'Idea  1 incremented likes',0,'','2023-06-19 15:03:59','2023-06-19 15:03:59',NULL);
+	(7819,0,'Idea  1 incremented likes',0,'','2023-06-19 15:03:59','2023-06-19 15:03:59',NULL),
+	(7820,0,'Added new text (#1) creator: 0',0,'','2023-06-23 07:24:36','2023-06-23 07:24:36',NULL);
 
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -9161,6 +9161,15 @@ CREATE TABLE `au_texts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_texts` WRITE;
+/*!40000 ALTER TABLE `au_texts` DISABLE KEYS */;
+
+INSERT INTO `au_texts` (`id`, `creator_id`, `headline`, `body`, `user_needs_to_consent`, `service_id_consent`, `consent_text`, `language_id`, `location`, `created`, `last_update`, `updater_id`, `hash_id`, `status`)
+VALUES
+	(1,0,'terms of service','These are the terms of service',0,0,'yes, i agree to the terms',0,NULL,'2023-06-23 07:24:36','2023-06-23 07:24:36',0,'af9c04ac8d12a133e83aa7a1d416ac48',1);
+
+/*!40000 ALTER TABLE `au_texts` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_topics
