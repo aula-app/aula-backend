@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-23 07:35:58 +0000
+# Verarbeitungszeit: 2023-06-23 09:34:35 +0000
 # ************************************************************
 
 
@@ -589,14 +589,13 @@ CREATE TABLE `au_rooms` (
   `description_internal` text DEFAULT NULL COMMENT 'info, only visible to admins',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active 2= suspended, 3=archived',
   `restrict_to_roomusers_only` tinyint(1) DEFAULT NULL COMMENT '1=yes, only users that are part of this room can view and vote',
-  `roomorder` int(11) DEFAULT NULL COMMENT 'order - useable for display purposes or logical operations',
+  `order_importance` int(11) DEFAULT NULL COMMENT 'order - useable for display purposes or logical operations',
   `created` datetime DEFAULT NULL COMMENT 'Date time when room was created',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'Last update of room',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user_id of the updater',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hashed id of the room',
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set, user needs access code to access room',
   `internal_info` text DEFAULT NULL COMMENT 'internal info and notes on this room',
-  `phase` int(11) DEFAULT NULL COMMENT 'phase the room is in',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -709,7 +708,7 @@ CREATE TABLE `au_systemlog` (
 DROP TABLE IF EXISTS `au_texts`;
 
 CREATE TABLE `au_texts` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
   `creator_id` int(11) DEFAULT NULL COMMENT 'user id of the creator',
   `headline` varchar(1024) DEFAULT NULL COMMENT 'headline of the text',
   `body` text DEFAULT NULL COMMENT 'the actual text',
@@ -811,6 +810,10 @@ CREATE TABLE `au_users_basedata` (
   `userlevel` int(11) DEFAULT NULL COMMENT 'level of the user (access rights)',
   `infinite_votes` int(11) DEFAULT NULL COMMENT '0=inactive 1= active (this user has infinite votes)',
   `last_login` datetime DEFAULT NULL COMMENT 'date of last login',
+  `presence` int(11) DEFAULT 1 COMMENT '0 = user is absent, 1= user is present',
+  `absent_until` datetime DEFAULT NULL COMMENT 'date until the user is absent',
+  `auto_delegation` int(11) DEFAULT 0 COMMENT '1=on, 0=off - if user is absent, votes are  ',
+  `trustee_id` int(11) DEFAULT NULL COMMENT 'id othe the trusted user the votes are delegated to when user is absent (only when auto delegation is on)',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
