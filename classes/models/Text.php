@@ -34,12 +34,42 @@ class Text {
       $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $stmt = $this->db->query('SELECT hash_id FROM '.$this->db->au_texts.' WHERE id = :id');
-      $this->db->bind(':id', $text_id); // bind comment id
+      $this->db->bind(':id', $text_id); // bind text id
       $texts = $this->db->resultSet();
       if (count($texts)<1){
         return "0,0"; // nothing found, return 0 code
       }else {
         return "1,".$texts[0]['hash_id']; // return hash id
+      }
+    }// end function
+
+    public function getTextConsentStatus ($text_id, $user_id) {
+      /* returns the consent status for this text for a specific user
+      */
+      $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+      $stmt = $this->db->query('SELECT consent FROM '.$this->db->au_consent.' WHERE text_id = :text_id AND user_id = :user_id');
+      $this->db->bind(':text_id', $text_id); // bind text id
+      $this->db->bind(':user_id', $user_id); // bind user id
+
+      $texts = $this->db->resultSet();
+      if (count($texts)<1){
+        // no consent found
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        // consent found
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $texts [0][consent]; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
 
@@ -95,7 +125,7 @@ class Text {
       $texts = $this->db->resultSet();
       if (count($comments)<1){
         $returnvalue['success'] = false; // set return value to false
-        $returnvalue['error_code'] = 2; // no error code
+        $returnvalue['error_code'] = 2; //  error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -212,7 +242,6 @@ class Text {
         default:
         $asc_field = "DESC";
       }
-
       $count_datasets = 0; // number of datasets retrieved
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_texts.' WHERE status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
@@ -270,11 +299,16 @@ class Text {
     public function addText ($headline, $body="", $consent_text="", $location=0, $creator_id=0, $user_needs_to_consent=0, $service_id_consent=0, $status=1, $updater_id=0, $language_id=0) {
         /* adds a new text and returns insert id (comment id) if successful, accepts the above parameters
         content is the comment itself
-        parent_id is the id of the comment this refers to (another comment)
+        headline, body is the content
+        consent_text = text that is displayed next to the checkbox for the user consent
+        creator_id is the original author of the text
+        location is the page this consent is displayed on
+        user_needs_to_consent = 0 = display only, no checkbox, no need to consent, 1= consent needed (if consented, checkbox doesnt display anmymore), checkbox displayed, 2= needs to be consented (first) to use aula
         status = status of the comment (0=inactive, 1=active, 2=
         ed, 3=reported, 4=archived 5= in review)
         updater id specifies the id of the user (i.e. admin) that added this comment
         */
+
         //sanitize the vars
         $body = trim ($body);
         $headline = trim ($headline);
@@ -283,6 +317,7 @@ class Text {
         $creator_id = $this->converters->checkUserId($creator_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
         $status = intval($status);
+        $language_id = intval($language_id);
 
         $stmt = $this->db->query('INSERT INTO '.$this->db->au_texts.' (headline, body, consent_text, creator_id, user_needs_to_consent, service_id_consent, status, hash_id, created, last_update, updater_id, language_id) VALUES (:headline, :body, :consent_text, :creator_id, :user_needs_to_consent, :service_id_consent, :status, :hash_id, NOW(), NOW(), :updater_id, :language_id)');
         // bind all VALUES

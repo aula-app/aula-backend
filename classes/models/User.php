@@ -96,7 +96,7 @@ class User {
         $this->db->bind(':prop_value', $prop_value);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
-        $this->db->bind(':user_id', $user_id); // room that is updated
+        $this->db->bind(':user_id', $user_id); // user that is updated
 
         $err=false; // set error variable to false
 
@@ -136,7 +136,7 @@ class User {
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
 
-      $stmt = $this->db->query('SELECT room_id FROM '.$this->db->au_delegation.' WHERE user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
+      $stmt = $this->db->query('SELECT topic_id FROM '.$this->db->au_delegation.' WHERE user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
       // bind all VALUES
       $this->db->bind(':user_id', $user_id); // gives the voting right
       $this->db->bind(':topic_id', $topic_id); // id of the topic
@@ -199,11 +199,11 @@ class User {
 
 
     public function delegateVoteRight ($user_id, $user_id_target, $topic_id, $updater_id) {
-      /* delegates voting rights from one user to another within a room for a certain topic, accepts user_id (by hash or id) and topic id (by hash or id)
+      /* delegates voting rights from one user to another within a topic, accepts user_id (by hash or id) and topic id (by hash or id)
+      */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $topic_id = $this->converters->checkRoomId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
-      */
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
       // check if user and topic exist
       $user_exist = $this->converters->checkUserExist($user_id);
@@ -211,14 +211,11 @@ class User {
       $data_delegation ['user_exist_target']=$user_exist_target;
 
       if ($user_exist==1 && $topic_exist==1 && $user_exist_target==1) {
-        // everything ok, users and room exists
-        // get room id
+        // everything ok, users and topic exists
 
         // add relation to database (delegation)
 
-
-
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_delegation.' (topic_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_delegation.' (topic_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
         $this->db->bind(':topic_id', $topic_id);
@@ -249,7 +246,6 @@ class User {
 
 
         } else {
-          $this->syslog->addSystemEvent(0, "Error while adding delegation for user ".$user_id." for topic ".$topic_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; //db  error code
           $returnvalue ['data'] = false; // returned data
@@ -262,14 +258,82 @@ class User {
       }else {
         $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 2; //db  error code
-        $returnvalue ['data'] = $user_exist.$user_exist_target.$room_exist; // returned data
+        $returnvalue ['data'] = $user_exist.$user_exist_target; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
 
       }
 
+    } // end function
 
+    public function giveConsent ($user_id, $text_id, $consent_value = 1, $updater_id = 0) {
+      /*
+      User gives consent to a certain text (i.e. terms of use, privacy terms etc.), coming from text table
+      This is usually the first method called when a text is shown the first time . user decides if he wants to comply or reject
+      */
+      // auto convert
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $text_id = $this->converters->checkTextId($text_id);
+
+      // check if user and topic exist
+      $user_exist = $this->converters->checkUserExist($user_id);
+      $text_exist = $this->converters->checkTextExist($text_id);
+
+      if ($user_exist==1 && $text_exist==1) {
+        // everything ok, users and text exists
+
+        // add relation to database (consent)
+
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_consent.' (user_id, text_id, consent, status, created, last_update, date_consent, updater_id) VALUES (:user_id, :text_id, :consent, 1, NOW(), NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE user_id = :user_id, text_id = :text_id, consent = :consent, status = 1, last_update = NOW(), updater_id = :updater_id');
+
+        // bind all VALUES
+        $this->db->bind(':text_id', $text_id); // id of the text that the user consents to
+        $this->db->bind(':user_id', $user_id); // gives consent
+        $this->db->bind(':consent', $consent_value); // consent type 0 = no consent, 1 = consent given
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Added consent for user ".$user_id." for text ".$text_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; //db  error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
+
+        } else {
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; //db  error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
+        }
+
+      }else {
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; //db  error code
+        $returnvalue ['data'] = $user_exist.$text_exist; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
+      }
 
     } // end function
 
@@ -337,7 +401,7 @@ class User {
     }// end function
 
     public function getReceivedDelegations ($user_id, $topic_id) {
-      /* returns received delegations for a specific user (user_id) in the room
+      /* returns received delegations for a specific user (user_id) in the topic
       */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -366,7 +430,7 @@ class User {
 
 
     public function getGivenDelegations ($user_id, $topic_id) {
-      /* returns received delegations for a specific user (user_id) in the room
+      /* returns received delegations for a specific user (user_id) for the topic
       */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -391,20 +455,46 @@ class User {
       }
     } // end function
 
+    public function getGivenConsents ($user_id) {
+      /* returns all given consents to texts / terms
+      returns ids of the texts, headline and body of the text
+      */
+      $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+      $stmt = $this->db->query('SELECT '.$this->db->au_texts.'.id, '.$this->db->au_texts.'.headline, '.$this->db->au_texts.'.body, '.$this->db->au_texts.'.consent_text, '.$this->db->au_texts.'.status, '.$this->db->au_texts.'.user_needs_to_consent, '.$this->db->au_texts.'.service_id_consent, '.$this->db->au_consent.'.date_consent ,'.$this->db->au_consent.'.consent , '.$this->db->au_consent.'.date_revoke FROM '.$this->db->au_texts.' LEFT JOIN '.$this->db->au_consent.' ON ('.$this->db->au_texts.'.id = '.$this->db->au_consent.'.text_id) WHERE '.$this->db->au_consent.'.usr_id = :user_id');
+      $this->db->bind(':id', $user_id); // bind userid
+      $consents = $this->db->resultSet();
+      if (count($consents)<1){
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $consensts; // returned data
+        $returnvalue ['count'] = count ($consents); // returned count of datasets
+
+        return $returnvalue;
+      }
+    } // end function
+
 
     public function giveBackAllDelegations ($user_id, $topic_id = 0){
-      // give back all delegations for a) a certain room (room id>0) or all delegations (room_id=0)
+      // give back all delegations for a) a certain topic (topic id>0) or all delegations (topic_id=0)
       return $this->removeUserDelegations ($user_id, $topic, 1); // 1 at the end indicates that target user is meant
     }
 
     public function giveBackDelegation ($my_user_id, $user_id_original, $topic_id = 0){
-      // give back delegations from a certain user ($user_id_original) for a) a certain room (room id>0) or all delegations (room_id=0)
+      // give back delegations from a certain user ($user_id_original) for a) a certain topic (topic id>0) or all delegations (topic=0)
       return $this->removeSpecificDelegation ($my_user_id, $user_id_original, $topic_id); // 1 at the end indicates that target user is meant
     }
 
     public function removeSpecificDelegation ($user_id_target, $user_id_original, $topic_id = 0){
       /* remove delegation from a specific user A (user_id_original) to a specific user B (user_id_target) for
-      a) a certain room (room id>0) or all delegations (room_id=0), defaults to all rooms
+      a) a certain topic (topic id>0) or all delegations (topic=0), defaults to all topics
       */
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $user_id_original = $this->converters->checkUserId($user_id_original); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -413,7 +503,7 @@ class User {
       $topic_clause = "";
 
       if ($topic_id > 0){
-        // room id is set to >0 -> delete only delegations for this user in the specified room
+        // topic id is set to >0 -> delete only delegations for this user in the specified topic
         $topic_clause = " AND topic_id = ".$topic_id;
       }
 
@@ -453,8 +543,8 @@ class User {
 
     public function removeUserDelegations ($user_id, $topic_id = 0, $target = 0)
     {
-      /* removes all delegations of a specified user (user id) for a specified room, accepts db id or hash id
-       if room_id = 0 all delegations of the user are deleted
+      /* removes all delegations of a specified user (user id) for a specified topic, accepts db id or hash id
+       if topic_id = 0 all delegations of the user are deleted
        target specifies if original or target users are adressed 0 = remove delegations of delegating user (original owner->default) 1= remove delegation of target
       */
 
@@ -464,7 +554,7 @@ class User {
       $topic_clause = "";
 
       if ($topic_id > 0){
-        // room id is set to >0 -> delete only delegations for this user in the specified room
+        // topic id is set to >0 -> delete only delegations for this user in the specified topic
         $topic_clause = " AND topic_id = ".$topic_id;
       }
 
@@ -510,7 +600,7 @@ class User {
     } // end function
 
 
-    public function addUserToRoom($user_id, $room_id, $status, $updater_id) {
+    public function addUserToRoom($user_id, $room_id, $status=1, $updater_id=0) {
       /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -733,7 +823,7 @@ class User {
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      // check if user and room exist
+      // check if users exist
       $user_exist = $this->converters->checkUserExist($user_id);
       $user_exist_target = $this->converters->checkUserExist($user_id_target);
 
@@ -836,7 +926,7 @@ class User {
       */
 
       $stmt = $this->db->query('DELETE FROM '.$this->db->au_rel_groups_users.' WHERE user_id = :userid AND group_id = :groupid' );
-      $this->db->bind(':groupid', $group_id); // bind room id
+      $this->db->bind(':groupid', $group_id); // bind group id
       $this->db->bind(':userid', $user_id); // bind user id
 
       $err=false;
@@ -865,16 +955,16 @@ class User {
     }// end function
 
     public function addUserToGroup($user_id, $group_id, $status, $updater_id) {
-      /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
+      /* adds a user to a group, accepts user_id (by hash or id) and group id (by hash or id)
       returns 1,1 = ok, 0,1 = user id not in db 0,2 group id not in db 0,3 user id not in db group id not in db */
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts room id to db room id if necessary (when room hash id was passed)
-      // check if user and room exist
+      $group_id = $this->converters->checkGroupId($group_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      // check if user and group exist
       $user_exist = $this->converters->checkUserExist($user_id);
       $group_exist = $this->converters->checkGroupExist($group_id);
 
       if ($user_exist==1 && $group_exist==1) {
-        // everything ok, user and room exists
+        // everything ok, user and group exists
         // add relation to database
 
         $stmt = $this->db->query('INSERT INTO '.$this->db->au_rel_groups_users.' (group_id, user_id, status, created, last_update, updater_id) VALUES (:group_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE group_id = :group_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
@@ -1213,7 +1303,7 @@ class User {
         // generate blind index
         $bi = md5 (strtolower (trim ($username)));
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_users_basedata.' (realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_users_basedata.' (presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
         // bind all VALUES
         $this->db->bind(':username', $this->crypt->encrypt($username));
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -1394,6 +1484,101 @@ class User {
 
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of user ".$user_id." to ".$status." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
+        }
+    }// end function
+
+    public function revokeConsent ($user_id, $text_id){
+      // revoke a previousely given consent to a cretain text (text_id)
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $this->converters->checkTextId($text_id);
+      $stmt = $this->db->query('UPDATE '.$this->db->au_consent.' SET consent= 2, last_update= NOW(), updater_id= :updater_id, date_revoke = NOW() WHERE user_id= :userid AND text_id= : text_id');
+      // bind all VALUES
+      $this->db->bind(':userid', $user_id);
+      $this->db->bind(':text_id', $text_id);
+
+      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "User consent of ".$user_id." changed to ".$consent." by ".$updater_id, 0, "", 1);
+
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+      } else {
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
+      }
+
+    } // end function
+
+    public function setUserConsent ($user_id, $text_id, $consent, $status=1, $updater_id=0) {
+        /* edits the consent of a user and returns number of rows if successful, accepts the above parameters, not all parameters are mandatory
+         status = status of consent (0 = inactive, 1=active)
+         consent = value that consent field is set to 0=not given, 1=given, 2=revoked
+         text_id = id of the text this applies to
+         updater_id is the id of the user that commits the update (i.E. admin )
+        */
+        $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $this->converters->checkTextId($text_id);
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_consent.' SET status= :status, consent= :consent, last_update= NOW(), updater_id= :updater_id WHERE user_id= :userid AND text_id= : text_id');
+        // bind all VALUES
+        $this->db->bind(':status', $status);
+        $this->db->bind(':userid', $user_id);
+        $this->db->bind(':text_id', $text_id);
+        $this->db->bind(':consent', $consent);
+
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "User consent of ".$user_id." changed to ".$consent." by ".$updater_id, 0, "", 1);
+
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
+        } else {
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data

@@ -278,7 +278,7 @@ class Room {
         $orderby_field = "room_name";
         break;
         case 1:
-        $orderby_field = "order";
+        $orderby_field = "order_importance";
         break;
         case 2:
         $orderby_field = "created";
@@ -339,11 +339,116 @@ class Room {
       }
     }// end function
 
+    public function getRoomsByUser($user_id, $offset=0, $limit=0, $orderby=3, $asc=0, $status=1) {
+      /* returns roomlist (associative array) with start and limit provided
+      if start and limit are set to 0, then the whole list is read (without limit)
+      orderby is the field (int, see switch), defaults to last_update (3)
+      asc (smallint), is either ascending (1) or descending (0), defaults to descending
+      $status (int) 0=inactive, 1=active, 2=susepended, 3=archived, defaults to active (1)
+      */
+
+      // sanitize
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+      $offset = intval ($offset);
+      $limit = intval ($limit);
+      $orderby = intval ($orderby);
+      $asc = intval ($asc);
+      $status = intval ($status);
+
+
+      // init vars
+      $orderby_field="";
+      $asc_field ="";
+
+      $limit_string=" LIMIT ".$offset." , ".$limit;
+
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+
+      }
+
+      if ($offset>0 && $limit==0){
+        $limit_string=" LIMIT ".$offset." , 9999999999999999";
+      }
+
+
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = "room_name";
+        break;
+        case 1:
+        $orderby_field = "order_importance";
+        break;
+        case 2:
+        $orderby_field = "created";
+        break;
+        case 3:
+        $orderby_field = "last_update";
+        break;
+        case 4:
+        $orderby_field = "id";
+        break;
+
+        default:
+        $orderby_field = "last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+
+      $stmt = $this->db->query('SELECT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE '.$this->db->au_rel_rooms_users.'.user_id = :user_id AND '.$this->db->au_rooms.'.status= :status ORDER BY '.$this->db->au_rooms.'.'.$orderby_field.' '.$asc_field.' '.$limit_string);
+
+      $this->db->bind(':status', $status); // bind status
+      $this->db->bind(':user_id', $user_id); // bind user id
+
+      $err=false;
+      try {
+        $rooms = $this->db->resultSet();
+
+      } catch (Exception $e) {
+          $err=true;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+      }
+
+      if (count($rooms)<1){
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 2; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code - db error
+        $returnvalue ['data'] = $rooms; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    }// end function
+
 
     public function getUsersInRoom($room_id, $status=1) {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
+      $room_id  = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_rooms_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_rooms_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_rooms_users.'.room_id= :roomid AND '.$this->db->au_users_basedata.'.status= :status' );
       $this->db->bind(':roomid', $room_id); // bind room id
@@ -537,11 +642,12 @@ class Room {
     }
 
 
-    public function addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $room_order=10, $updater_id=0, $room_phase=0) {
+    public function addRoom($room_name, $description_public="", $description_internal="", $internal_info="", $status=1, $access_code="", $restricted=1, $room_order=10, $updater_id=0) {
         /* adds a new room and returns insert id (room id) if successful, accepts the above parameters
          description_public = actual description of the room, status = status of inserted room (0 = inactive, 1=active)
         */
 
+        $access_code = trim ($access_code);
         $hash_access_code = password_hash(trim ($access_code), PASSWORD_DEFAULT); // hash access code
         //sanitize in vars
         $restricted = intval($restricted);
@@ -563,7 +669,7 @@ class Room {
           return $returnvalue;
         }
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rooms.' (phase, room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, roomorder) VALUES (:room_phase, :room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rooms.' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
         // bind all VALUES
 
         $this->db->bind(':room_name', trim ($room_name));
@@ -571,7 +677,6 @@ class Room {
         $this->db->bind(':description_internal', trim ($description_internal));
         $this->db->bind(':internal_info', trim ($internal_info));
         $this->db->bind(':access_code', $hash_access_code);
-        $this->db->bind(':room_phase', $room_phase);
         $this->db->bind(':status', $status);
         $this->db->bind(':restricted', $restricted);
         // generate unique hash for this user
@@ -645,50 +750,6 @@ class Room {
           $returnvalue['success'] = true; // set return value to false
           $returnvalue['error_code'] = 0; // error code - db error
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
-          $returnvalue ['count'] = 1; // returned count of datasets
-
-          return $returnvalue;
-
-        } else {
-          $this->syslog->addSystemEvent(1, "Error changing status of room ".$room_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
-          $returnvalue ['data'] = false; // returned data
-          $returnvalue ['count'] = 0; // returned count of datasets
-
-          return $returnvalue;
-        }
-    }// end function
-
-    public function setRoomPhase($room_id, $phase, $updater_id=0) {
-        /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-         status = status of inserted room (0 = inactive, 1=active)
-         updater_id is the id of the room that commits the update (i.E. admin )
-        */
-        $room_id = $this->converters->checkRoomId($room_id); // checks room  id and converts user id to db user id if necessary (when user hash id was passed)
-
-        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET phase= :phase, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
-        // bind all VALUES
-        $this->db->bind(':phase', $phase);
-        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-        $this->db->bind(':room_id', $room_id); // room that is updated
-
-        $err=false; // set error variable to false
-
-        try {
-          $action = $this->db->execute(); // do the query
-
-        } catch (Exception $e) {
-
-            $err=true;
-        }
-        if (!$err)
-        {
-          $this->syslog->addSystemEvent(0, "Room status changed ".$room_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
-          $returnvalue['error_code'] = 0; // error code - db error
-          $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
@@ -789,9 +850,6 @@ class Room {
           return $returnvalue;
         }
     }// end function
-
-
-
 
     public function setRoomname($room_id, $room_name, $updater_id=0) {
         /* edits a room and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
