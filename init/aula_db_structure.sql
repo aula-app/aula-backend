@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-23 09:34:35 +0000
+# Verarbeitungszeit: 2023-06-23 09:52:20 +0000
 # ************************************************************
 
 
