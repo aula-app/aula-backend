@@ -345,6 +345,7 @@ class Room {
       orderby is the field (int, see switch), defaults to last_update (3)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending
       $status (int) 0=inactive, 1=active, 2=susepended, 3=archived, defaults to active (1)
+      All rooms are returned that the user is member of OR that dont have user restriction (open rooms)
       */
 
       // sanitize
@@ -407,7 +408,7 @@ class Room {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE '.$this->db->au_rel_rooms_users.'.user_id = :user_id AND '.$this->db->au_rooms.'.status= :status ORDER BY '.$this->db->au_rooms.'.'.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT DISTINCT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE ('.$this->db->au_rel_rooms_users.'.user_id = :user_id OR '.$this->db->au_rooms.'.restrict_to_roomusers_only = 0) AND '.$this->db->au_rooms.'.status= :status ORDER BY '.$this->db->au_rooms.'.'.$orderby_field.' '.$asc_field.' '.$limit_string);
 
       $this->db->bind(':status', $status); // bind status
       $this->db->bind(':user_id', $user_id); // bind user id
