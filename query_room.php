@@ -129,6 +129,27 @@ if (!$roomdata['data']){
   }
 
 }
+
+out ("Reading Rooms for user #4 (only active rooms) <br>using room class",true);
+
+$roomdata = $room->getRoomsByUser(4);
+/* reads group list
+  if offset and limit are both set to 0 then there is no limit applied (whole list is shown)
+  parameter set is (offset, limit, orderby field (0=name, 1=order field, 2=created, 3=last update, 4=id), asc(1)/desc(0), status (0=inactive, 1=active, 2=suspended, 3=archived))
+*/
+//print_r ($roomdata);
+if (!$roomdata['data']){
+  out ("nothing found!");
+}else {
+  // Loop through the results and output them
+  foreach ($roomdata['data'] as $result) {
+      out ("ID: " . $result['id']);
+      out ("Name: " . $result['room_name']);
+      out ("Last Update: " . $result['last_update']);
+      out ("public description: " . $result['description_public']);
+  }
+
+}
 /*
 // delete single dataset that was previously added....
 out ("Deleting the dataset (".$inserted_user_id.") that was just added...", true);
