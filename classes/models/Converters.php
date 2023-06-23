@@ -18,6 +18,11 @@ class Converters {
         // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
         $this->db = $db;
 
+        $this->cache = new Memcached();
+        $this->cache->addServer('localhost', 11211) or die ("Could not connect");
+        $this->caching_time = 30; // time in seconds for caching (variable data)
+        $this->long_caching_time = 300; // time in seconds for long caching (persistent data)
+
     }// end function
 
     protected function buildCacheHash ($key) {
@@ -73,13 +78,26 @@ class Converters {
     public function getUserIdByHashId($hash_id) {
       /* Returns Database ID of user when hash_id is provided
       */
-
+      $check_hash = $this->buildCacheHash ("getUserIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_users_basedata.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
         return 0; // nothing found, return 0 code
       }else {
+        $this->cache->set($check_hash, $users[0]['id'], $this->long_caching_time);
+
         return $users[0]['id']; // return user id
       }
     }// end function
@@ -87,13 +105,26 @@ class Converters {
     public function getCommentIdByHashId($hash_id) {
       /* Returns Database ID of comment when hash_id is provided
       */
+      $check_hash = $this->buildCacheHash ("getCommentIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_comments.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind comment id
       $comments = $this->db->resultSet();
       if (count($comments)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
         return 0; // nothing found, return 0 code
       }else {
+        $this->cache->set($check_hash, $comments[0]['id'], $this->long_caching_time);
         return $comments[0]['id']; // return id
       }
     }// end function
@@ -101,13 +132,26 @@ class Converters {
     public function getIdeaIdByHashId($hash_id) {
       /* Returns Database ID of idea when hash_id is provided
       */
+      $check_hash = $this->buildCacheHash ("getIdeaIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_ideas.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
+        $this->cache->set($check_hash,0, $this->long_caching_time);
         return 0; // nothing found, return 0 code
       }else {
+        $this->cache->set($check_hash, $ideas[0]['id'], $this->long_caching_time);
         return $ideas[0]['id']; // return idea id
       }
     }// end function
@@ -115,13 +159,26 @@ class Converters {
     public function getTextIdByHashId($text_id) {
       /* Returns Database ID of text when hash_id is provided
       */
+      $check_hash = $this->buildCacheHash ("getTextIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_texts.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $texts = $this->db->resultSet();
       if (count($texts)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
         return 0; // nothing found, return 0 code
       }else {
+        $this->cache->set($check_hash, $texts[0]['id'], $this->long_caching_time);
         return $texts[0]['id']; // return idea id
       }
     }// end function
@@ -129,13 +186,28 @@ class Converters {
     public function getTopicIdByHashId($hash_id) {
       /* Returns Database ID of topic when hash_id is provided
       */
+      $check_hash = $this->buildCacheHash ("getTopicIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
+
         return 0; // nothing found, return 0 code
       }else {
+        $this->cache->set($check_hash, $topics[0]['id'], $this->long_caching_time);
+
         return $topics[0]['id']; // return topic id
       }
     }// end function
@@ -143,13 +215,26 @@ class Converters {
     public function getMessageIdByHashId($hash_id) {
       /* Returns Database ID of Message when hash_id is provided
       */
+      $check_hash = $this->buildCacheHash ("getMessageIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_messages.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $messages = $this->db->resultSet();
       if (count($messages)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
         return 0; // nothing found, return 0 code
       }else {
+        $this->cache->set($check_hash, $messages[0]['id'], $this->long_caching_time);
         return $messages[0]['id']; // return message id
       }
     }// end function
@@ -186,13 +271,28 @@ class Converters {
     public function getGroupIdByHashId($hash_id) {
         /* Returns Database ID of group when hash_id is provided
         */
+        $check_hash = $this->buildCacheHash ("getGroupIdByHashId".$hash_id);
+        // check if hash is in cache
+        try {
+          if($this->cache->get($check_hash) != null) {
+            $data = $this->cache->get($check_hash);
+            // echo ("Using cache for ".$hash_id." data = ".$data);
+            return $data;
+          }
+        } catch (Exception $e) {
+          // cache error
+        }
 
         $stmt = $this->db->query('SELECT id FROM '.$this->db->au_groups.' WHERE hash_id = :hash_id');
         $this->db->bind(':hash_id', $hash_id); // bind hash id
         $groups = $this->db->resultSet();
         if (count($groups)<1){
+          $this->cache->set($check_hash, 0, $this->long_caching_time);
+
           return 0; // nothing found, return 0 code
         }else {
+          $this->cache->set($check_hash, $groups[0]['id'], $this->long_caching_time);
+
           return $groups[0]['id']; // return group id
         }
       }// end function
@@ -258,13 +358,26 @@ class Converters {
     public function getRoomIdByHashId($hash_id) {
       /* Returns Database ID of room when hash_id is provided
       */
+      $check_hash = $this->buildCacheHash ("getRoomIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_rooms.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
         return 0; // nothing found, return 0 code
       }else {
+        $this->cache->set($check_hash, $rooms[0]['id'], $this->long_caching_time);
         return $rooms[0]['id']; // return room id
       }
     }// end function
@@ -286,13 +399,27 @@ class Converters {
     public function getCategoryIdByHashId($hash_id) {
       /* Returns Database ID of category when hash_id is provided
       */
+      $check_hash = $this->buildCacheHash ("getCategoryIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
+
 
       $stmt = $this->db->query('SELECT id FROM '.$this->db->au_categories.' WHERE hash_id = :hash_id');
       $this->db->bind(':hash_id', $hash_id); // bind hash id
       $categories = $this->db->resultSet();
       if (count($categories)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
         return 0; // nothing found, return 0 code
       }else {
+        $this->cache->set($check_hash, $categories[0]['id'], $this->long_caching_time);
         return $categories[0]['id']; // return category id
       }
     }// end function
@@ -341,6 +468,21 @@ class Converters {
         return 1; // user found, return 1
       }
     } // end function
+
+    public function checkTextExist($text_id) {
+        /* helper function to check if a text with a certain id exists, returns 0 if text does not exist, 1 if text exists, accepts database (int) or hash id (varchar)
+        */
+        $text_id = $this->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        $stmt = $this->db->query('SELECT id FROM '.$this->db->au_texts.' WHERE id = :id');
+        $this->db->bind(':id', $text_id); // bind text id
+        $texts = $this->db->resultSet();
+        if (count($texts)<1){
+          return 0; // nothing found, return 0 code
+        }else {
+          return 1; // user found, return 1
+        }
+      } // end function
 
     public function checkGroupExist($group_id) {
       /* returns 0 if group does not exist, 1 if group exists, accepts databse id (int)
