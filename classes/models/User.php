@@ -466,7 +466,7 @@ class User {
       $consents = $this->db->resultSet();
       if (count($consents)<1){
         $returnvalue['success'] = true; // set return value
-        $returnvalue['error_code'] = 0; // error code
+        $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -478,6 +478,131 @@ class User {
         $returnvalue ['count'] = count ($consents); // returned count of datasets
 
         return $returnvalue;
+      }
+    } // end function
+
+    public function getNecessaryConsents () {
+      // gets consents that are necessary to use the system
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_texts.' WHERE status = 1 AND user_needs_to_consent = 2');
+
+      $texts = $this->db->resultSet();
+      $needed_consents = count ($texts);
+
+      if (count($texts)<1){
+        // no texts that need consent present
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 2 ; // error code
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 2 ; // error code
+        $returnvalue ['data'] =  $texts; // returned data
+        $returnvalue ['count'] = $needed_consents; // returned count of datasets
+
+        return $returnvalue;
+
+      }
+    } // end function
+
+    public function getMissingConsents ($user_id) {
+      // returns all the missing consents that this user has not yet consented to
+      $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      // first get all the mandatory consents for this user already given (consent =1)
+
+      $stmt = $this->db->query('SELECT '.$this->db->au_texts.'.id FROM '.$this->db->au_texts.' INNER JOIN '.$this->db->au_consent.' ON ('.$this->db->au_consent.'.text_id = '.$this->db->au_texts.'.id) WHERE ('.$this->db->au_consent.'.user_id = :user_id AND '.$this->db->au_consent.'.consent = 1) AND '.$this->db->au_texts.'.status = 1 AND '.$this->db->au_texts.'.user_needs_to_consent  = 2');
+      $this->db->bind(':user_id', $user_id); // bind userid
+
+      $consents = $this->db->resultSet();
+      $given_consents = count ($consents);
+
+      $i=0;
+      $ids[0] = 0;
+
+      foreach ($consents as $key) {
+        $ids[$i] = $key['id'];
+        $i++;
+      }
+
+      $stmt = $this->db->query('SELECT id, headline, body, consent_text FROM '.$this->db->au_texts.' WHERE id NOT IN ('.implode(",", $ids).') AND user_needs_to_consent = 2');
+
+      $texts = $this->db->resultSet();
+      $missing_consents = count ($texts);
+      if ($missing_consents<1){
+        // no consents missing...
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+      // everything ok, return 1
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue ['data'] = $texts; // returned data
+      $returnvalue ['count'] = $missing_consents; // returned count of datasets
+
+      return $returnvalue;
+
+    } // end function
+
+    public function checkHasUserGivenConsentsForUsage ($user_id) {
+      /* returns 1 if user has consented to all necessary texts
+      that are needed for aula usage 0, if not
+      */
+
+      $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      // first get all the texts that need consents that are crucial for system usage
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_texts.' WHERE status = 1 AND user_needs_to_consent = 2');
+
+      $texts = $this->db->resultSet();
+      $needed_consents = count ($texts);
+
+      if (count($texts)<1){
+        // no texts that need consent present
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 2 ; // error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        // There are texts that need consent - now check if user has given all necessary consents
+        $i=0;
+        $ids[0] = 0;
+
+        foreach ($texts as $key) {
+          $ids[$i] = $key['id'];
+          $i++;
+        }
+        //echo ("<br>IDs: ".implode(",", $ids));
+
+        $stmt = $this->db->query('SELECT text_id FROM '.$this->db->au_consent.' WHERE user_id = :user_id AND text_id IN ('.implode(",", $ids).') AND consent = 1');
+        //echo ('<br>SELECT text_id FROM '.$this->db->au_consent.' WHERE user_id = :user_id AND text_id IN ('.implode(",", $ids).') AND consent = 1');
+        $this->db->bind(':user_id', $user_id); // bind userid
+
+        $consents = $this->db->resultSet();
+        $given_consents = count ($consents);
+        if ($given_consents < $needed_consents){
+          // not every necessary consent given yet, return 0
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 0; // returned data
+          $returnvalue ['count'] = $given_consents; // returned count of datasets
+
+          return $returnvalue;
+        }
+          // everything ok, return 1
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = $given_consents; // returned count of datasets
+
+          return $returnvalue;
       }
     } // end function
 
@@ -598,6 +723,8 @@ class User {
       }
 
     } // end function
+
+
 
 
     public function addUserToRoom($user_id, $room_id, $status=1, $updater_id=0) {
