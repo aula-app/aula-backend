@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-23 09:52:20 +0000
+# Verarbeitungszeit: 2023-06-23 12:31:15 +0000
 # ************************************************************
 
 
@@ -117,7 +117,7 @@ CREATE TABLE `au_consent` (
   `created` datetime DEFAULT NULL COMMENT 'create time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
-  `status` int(11) DEFAULT NULL COMMENT 'status of consent',
+  `status` int(11) DEFAULT 1 COMMENT 'status of consent',
   PRIMARY KEY (`user_id`,`text_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 

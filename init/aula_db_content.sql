@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-23 09:52:38 +0000
+# Verarbeitungszeit: 2023-06-23 12:30:54 +0000
 # ************************************************************
 
 
@@ -127,10 +127,20 @@ CREATE TABLE `au_consent` (
   `created` datetime DEFAULT NULL COMMENT 'create time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
-  `status` int(11) DEFAULT NULL COMMENT 'status of consent',
+  `status` int(11) DEFAULT 1 COMMENT 'status of consent',
   PRIMARY KEY (`user_id`,`text_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_consent` WRITE;
+/*!40000 ALTER TABLE `au_consent` DISABLE KEYS */;
+
+INSERT INTO `au_consent` (`user_id`, `text_id`, `consent`, `date_consent`, `date_revoke`, `created`, `last_update`, `updater_id`, `status`)
+VALUES
+	(4,1,1,NULL,NULL,NULL,NULL,NULL,1),
+	(4,5,1,NULL,NULL,NULL,NULL,NULL,1);
+
+/*!40000 ALTER TABLE `au_consent` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_delegation
@@ -375,7 +385,9 @@ VALUES
 	(180,'testgroup1687513433.3041612','Public description of the group..','Internal description of the group..',1,'internal info','2023-06-23 09:43:53','2023-06-23 09:43:53',1,'1e3c7916cf61c7ec1bde65bffdf784e4','$2y$10$GmNnfWzIxvN046fcW.08mu.vzNJAo21piSdn3dwQRlR6JhLEZg512',290,1),
 	(181,'testgroup1687513513.0481320','Public description of the group..','Internal description of the group..',1,'internal info','2023-06-23 09:45:13','2023-06-23 09:45:13',1,'f9f5135bd260d9778c8c57af76fe339c','$2y$10$79SpH6PXdEnc5Qhd7H5OX.CKxYNsWW2eeFD73GrnkuSwZgYbWYLoK',171,1),
 	(182,'testgroup1687513553.9317105','Public description of the group..','Internal description of the group..',1,'internal info','2023-06-23 09:45:53','2023-06-23 09:45:53',1,'3cdc30808d2d37199a04b10f6c1ab39f','$2y$10$biY4DWZOZYFGdG0sm9LFFOEc2IHeswjirMDn5ipPF1ndmw.1IUUA2',67,1),
-	(183,'testgroup1687513810.6569463','Public description of the group..','Internal description of the group..',1,'internal info','2023-06-23 09:50:10','2023-06-23 09:50:10',1,'e3ae4cab2b9832a75cbf9686c2639121','$2y$10$Lk3BZQC.dCx0fmyX1F7S9OnqnTM8T/uwclMBqlGgkNgd6j5eKJ1Qy',184,1);
+	(183,'testgroup1687513810.6569463','Public description of the group..','Internal description of the group..',1,'internal info','2023-06-23 09:50:10','2023-06-23 09:50:10',1,'e3ae4cab2b9832a75cbf9686c2639121','$2y$10$Lk3BZQC.dCx0fmyX1F7S9OnqnTM8T/uwclMBqlGgkNgd6j5eKJ1Qy',184,1),
+	(184,'testgroup1687516871.0062893','Public description of the group..','Internal description of the group..',1,'internal info','2023-06-23 10:41:11','2023-06-23 10:41:11',1,'2046e9ba714d649e03468598fc5b5375','$2y$10$QnWty/gpBGzaCS94gbRo4eJj8ne8zBxZibeCXUbCTzg/55GetRm0S',485,1),
+	(185,'testgroup1687516897.8984545','Public description of the group..','Internal description of the group..',1,'internal info','2023-06-23 10:41:37','2023-06-23 10:41:37',1,'267305ba05132c020e06ec79fcebb827','$2y$10$FZuJjwEiroCZ85SVMrEO5.siGcI8N1YMJrpDGKFGpiQpHW46yToqC',445,1);
 
 /*!40000 ALTER TABLE `au_groups` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -1218,7 +1230,9 @@ VALUES
 	(95,'testroom1687513433.4501545','Public description of the room..','Internal description of the room..',1,1,323,'2023-06-23 09:43:53','2023-06-23 09:44:52',1,'aab7bf421d0de607c4ec33ace33327fa','$2y$10$s.sjVMRsvyFsMhld4zO/QO4e.w5qAvnDBhZaJHdyJ3qBx4Q0TMZOC','internal info'),
 	(96,'testroom1687513513.1893130','Public description of the room..','Internal description of the room..',1,0,145,'2023-06-23 09:45:13','2023-06-23 09:45:13',1,'904388377f4e491a04013cbdc46d412a','$2y$10$TjsnJFzWECH931KLeL8Cz.hjtFcXxY2GMJIVZg5bHIIsYSa0tmlty','internal info'),
 	(97,'testroom1687513554.0592194','Public description of the room..','Internal description of the room..',1,0,72,'2023-06-23 09:45:54','2023-06-23 09:45:54',1,'5b9ce66fcf2c0f897310c341560df23e','$2y$10$1x8YAwYvDjfgYhrLmx5lzOSz1DVhIc580KG5f0rXa9U0hEB794VKW','internal info'),
-	(98,'testroom1687513810.79326','Public description of the room..','Internal description of the room..',1,0,74,'2023-06-23 09:50:10','2023-06-23 09:50:10',1,'9d118e2d0382787e6ad36f6cff40d5d6','$2y$10$EDfK10hlsjHrEt/L72NEoOfimgpkB8tQrmKjw6WU.lHlYutQ8SZNC','internal info');
+	(98,'testroom1687513810.79326','Public description of the room..','Internal description of the room..',1,0,74,'2023-06-23 09:50:10','2023-06-23 09:50:10',1,'9d118e2d0382787e6ad36f6cff40d5d6','$2y$10$EDfK10hlsjHrEt/L72NEoOfimgpkB8tQrmKjw6WU.lHlYutQ8SZNC','internal info'),
+	(99,'testroom1687516871.1099628','Public description of the room..','Internal description of the room..',1,0,275,'2023-06-23 10:41:11','2023-06-23 10:41:11',1,'578636770323e2ab92f6b06717fc03b5','$2y$10$wbWlYrvQdoyK/YKAS2IPZeGIO9UN9MWTCEHE.1EqrANgcDntfIMPi','internal info'),
+	(100,'testroom1687516898.0426119','Public description of the room..','Internal description of the room..',1,0,481,'2023-06-23 10:41:38','2023-06-23 10:41:38',1,'47563784d838d4ad7404805fb5dfef57','$2y$10$liMq66Ja2WyKQJ.v1BjTEuV.3uLMSDov.6H9H6169Pqe1.SHEjxwu','internal info');
 
 /*!40000 ALTER TABLE `au_rooms` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -9252,7 +9266,42 @@ VALUES
 	(7913,0,'Added new group (#182) testgroup1687513553.9317105',0,'','2023-06-23 09:45:54','2023-06-23 09:45:54',NULL),
 	(7914,0,'Added new room (#97) testroom1687513554.0592194',0,'','2023-06-23 09:45:54','2023-06-23 09:45:54',NULL),
 	(7915,0,'Added new group (#183) testgroup1687513810.6569463',0,'','2023-06-23 09:50:10','2023-06-23 09:50:10',NULL),
-	(7916,0,'Added new room (#98) testroom1687513810.79326',0,'','2023-06-23 09:50:10','2023-06-23 09:50:10',NULL);
+	(7916,0,'Added new room (#98) testroom1687513810.79326',0,'','2023-06-23 09:50:10','2023-06-23 09:50:10',NULL),
+	(7917,0,'Added new text (#2) creator: 0',0,'','2023-06-23 10:06:33','2023-06-23 10:06:33',NULL),
+	(7918,0,'Added new text (#3) creator: 0',0,'','2023-06-23 10:07:06','2023-06-23 10:07:06',NULL),
+	(7919,0,'Added new text (#4) creator: 0',0,'','2023-06-23 10:07:25','2023-06-23 10:07:25',NULL),
+	(7920,0,'Added new group (#184) testgroup1687516871.0062893',0,'','2023-06-23 10:41:11','2023-06-23 10:41:11',NULL),
+	(7921,0,'Added new room (#99) testroom1687516871.1099628',0,'','2023-06-23 10:41:11','2023-06-23 10:41:11',NULL),
+	(7922,0,'Added new group (#185) testgroup1687516897.8984545',0,'','2023-06-23 10:41:38','2023-06-23 10:41:38',NULL),
+	(7923,0,'Added new room (#100) testroom1687516898.0426119',0,'','2023-06-23 10:41:38','2023-06-23 10:41:38',NULL),
+	(7924,0,'Added new text (#5) creator: 0',0,'','2023-06-23 10:48:26','2023-06-23 10:48:26',NULL),
+	(7925,0,'Added new text (#6) creator: 0',0,'','2023-06-23 10:52:37','2023-06-23 10:52:37',NULL),
+	(7926,0,'Added new text (#7) creator: 0',0,'','2023-06-23 10:57:39','2023-06-23 10:57:39',NULL),
+	(7927,0,'Added new text (#8) creator: 0',0,'','2023-06-23 10:58:28','2023-06-23 10:58:28',NULL),
+	(7928,0,'Added new text (#9) creator: 0',0,'','2023-06-23 10:58:30','2023-06-23 10:58:30',NULL),
+	(7929,0,'Added new text (#10) creator: 0',0,'','2023-06-23 10:59:23','2023-06-23 10:59:23',NULL),
+	(7930,0,'Added new text (#11) creator: 0',0,'','2023-06-23 11:01:50','2023-06-23 11:01:50',NULL),
+	(7931,0,'Added new text (#12) creator: 0',0,'','2023-06-23 11:03:15','2023-06-23 11:03:15',NULL),
+	(7932,0,'Added new text (#13) creator: 0',0,'','2023-06-23 11:11:22','2023-06-23 11:11:22',NULL),
+	(7933,0,'Added new text (#14) creator: 0',0,'','2023-06-23 11:13:10','2023-06-23 11:13:10',NULL),
+	(7934,0,'Added new text (#15) creator: 0',0,'','2023-06-23 11:15:56','2023-06-23 11:15:56',NULL),
+	(7935,0,'Added new text (#16) creator: 0',0,'','2023-06-23 11:19:48','2023-06-23 11:19:48',NULL),
+	(7936,0,'Added new text (#17) creator: 0',0,'','2023-06-23 11:22:12','2023-06-23 11:22:12',NULL),
+	(7937,0,'Added new text (#18) creator: 0',0,'','2023-06-23 11:22:14','2023-06-23 11:22:14',NULL),
+	(7938,0,'Added new text (#19) creator: 0',0,'','2023-06-23 11:22:25','2023-06-23 11:22:25',NULL),
+	(7939,0,'Added new text (#20) creator: 0',0,'','2023-06-23 11:22:56','2023-06-23 11:22:56',NULL),
+	(7940,0,'Added new text (#21) creator: 0',0,'','2023-06-23 11:24:21','2023-06-23 11:24:21',NULL),
+	(7941,0,'Added new text (#22) creator: 0',0,'','2023-06-23 11:25:09','2023-06-23 11:25:09',NULL),
+	(7942,0,'Added new text (#23) creator: 0',0,'','2023-06-23 11:25:19','2023-06-23 11:25:19',NULL),
+	(7943,0,'Added new text (#24) creator: 0',0,'','2023-06-23 11:32:22','2023-06-23 11:32:22',NULL),
+	(7944,0,'Added new text (#25) creator: 0',0,'','2023-06-23 11:32:48','2023-06-23 11:32:48',NULL),
+	(7945,0,'Added new text (#26) creator: 0',0,'','2023-06-23 11:34:30','2023-06-23 11:34:30',NULL),
+	(7946,0,'Added new text (#27) creator: 0',0,'','2023-06-23 11:34:55','2023-06-23 11:34:55',NULL),
+	(7947,0,'Added new text (#28) creator: 0',0,'','2023-06-23 11:35:15','2023-06-23 11:35:15',NULL),
+	(7948,0,'Added new text (#29) creator: 0',0,'','2023-06-23 11:35:33','2023-06-23 11:35:33',NULL),
+	(7949,0,'Added new text (#30) creator: 0',0,'','2023-06-23 11:35:51','2023-06-23 11:35:51',NULL),
+	(7950,0,'Added new text (#31) creator: 0',0,'','2023-06-23 11:36:44','2023-06-23 11:36:44',NULL),
+	(7951,0,'Added new text (#32) creator: 0',0,'','2023-06-23 11:37:04','2023-06-23 11:37:04',NULL);
 
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -9286,7 +9335,12 @@ LOCK TABLES `au_texts` WRITE;
 
 INSERT INTO `au_texts` (`id`, `creator_id`, `headline`, `body`, `user_needs_to_consent`, `service_id_consent`, `consent_text`, `language_id`, `location`, `created`, `last_update`, `updater_id`, `hash_id`, `status`)
 VALUES
-	(1,0,'terms of service','These are the terms of service',0,0,'yes, i agree to the terms',0,NULL,'2023-06-23 07:24:36','2023-06-23 07:24:36',0,'af9c04ac8d12a133e83aa7a1d416ac48',1);
+	(1,0,'terms of service','These are the terms of service',2,0,'yes, i agree to the terms',0,NULL,'2023-06-23 07:24:36','2023-06-23 10:05:11',0,'af9c04ac8d12a133e83aa7a1d416ac48',1),
+	(2,0,'Terms of privacy','These are the terms explaining everything about privacy...',1,0,'I agree with the privacy terms',0,NULL,'2023-06-23 10:06:33','2023-06-23 10:06:43',0,'bc30e0973166dba551b481f78d444c8c',1),
+	(3,0,'Introduction Text','intro text body',0,0,'',0,NULL,'2023-06-23 10:07:06','2023-06-23 10:07:06',0,'3e7d8447c97ec296a767088f490a22cc',1),
+	(4,0,'Explanantion test','body of explanation text',0,0,'',0,NULL,'2023-06-23 10:07:25','2023-06-23 10:07:25',0,'b1d85a70a37f918831aae8f21d924a8c',1),
+	(5,0,'Very important terms','needed for usage of the system',2,0,'yes, i agree',0,NULL,'2023-06-23 10:48:26','2023-06-23 10:48:41',0,'68314ed412c96e6a91135ba21d2b7439',1),
+	(24,0,'Also important terms','body for also important terms',2,0,'yes, do agree',0,NULL,'2023-06-23 11:32:22','2023-06-23 12:08:13',0,'b15ed31e2b1d21f899bdc165c6422104',1);
 
 /*!40000 ALTER TABLE `au_texts` ENABLE KEYS */;
 UNLOCK TABLES;
