@@ -189,6 +189,7 @@ public function getNumberOfTopics($room_id)
 public function getNumberOfIdeas($room_id)
 public function getRoomHashId($room_id)
 public function getRooms($offset, $limit, $orderby=3, $asc=0, $status=1)
+public function getRoomsByUser($user_id, $offset=0, $limit=0, $orderby=3, $asc=0, $status=1)
 public function getUsersInRoom($room_id, $status=1)
 
 Setters
@@ -197,7 +198,6 @@ public function setRoomProperty ($room_id, $property, $prop_value, $updater_id=0
 public function setRoomIdeasDisabled ($room_id, $updater_id=0)
 public function setRoomIdeasEnabled ($room_id, $updater_id=0)
 public function setRoomStatus($room_id, $status, $updater_id=0)
-public function setRoomPhase($room_id, $phase, $updater_id=0)
 public function setRoomDescriptionPublic($room_id, $about, $updater_id=0)
 public function setRoomDescriptionInternal($room_id, $about, $updater_id=0)
 public function setRoomname($room_id, $room_name, $updater_id=0)
@@ -213,7 +213,7 @@ Action
 public function deleteRoomDelegations ($room_id)
 public function deleteRoomUserDelegations ($room_id, $user_id)
 public function emptyRoom($room_id)
-public function addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $room_order=10, $updater_id=0, $room_phase=0)
+public function addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $room_order=10, $updater_id=0)
 public function deleteRoom($room_id, $mode=0, $msg="", $updater_id=0)
 
 
