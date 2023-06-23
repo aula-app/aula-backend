@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-21 13:31:06 +0000
+# Verarbeitungszeit: 2023-06-23 07:23:26 +0000
 # ************************************************************
 
 
@@ -111,6 +111,27 @@ VALUES
 
 /*!40000 ALTER TABLE `au_comments` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+# Tabellen-Dump au_consent
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `au_consent`;
+
+CREATE TABLE `au_consent` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL COMMENT 'id of user',
+  `text_id` int(1) DEFAULT 0 COMMENT 'id of text',
+  `consent` tinyint(1) DEFAULT 0 COMMENT '1= user consented to privacy',
+  `date_consent` datetime DEFAULT NULL COMMENT 'date of consent to terms',
+  `date_revoke` datetime DEFAULT NULL COMMENT 'date of revocation',
+  `created` datetime DEFAULT NULL COMMENT 'create time',
+  `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
+  `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
+  `status` int(11) DEFAULT NULL COMMENT 'status of consent',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
 
 
 # Tabellen-Dump au_delegation
@@ -9127,7 +9148,7 @@ CREATE TABLE `au_texts` (
   `creator_id` int(11) DEFAULT NULL COMMENT 'user id of the creator',
   `headline` varchar(1024) DEFAULT NULL COMMENT 'headline of the text',
   `body` text DEFAULT NULL COMMENT 'the actual text',
-  `user_needs_to_consent` tinyint(1) DEFAULT NULL COMMENT '0=no consent is necessary / pure display 1= consent is necessary to use app (strict) 2= consent is necessary to use specific service (service id) 3=user needs to give consent so that the text is not displayed anymore',
+  `user_needs_to_consent` tinyint(1) DEFAULT NULL COMMENT '0=no consent is necessary / pure display 1= consent is necessary to use app (strict) 2= consent is necessary to use specific service (service id) 3=user needs to give consent so that the text is not displayed anymore 2= user needs to consent to use aula',
   `service_id_consent` int(11) DEFAULT NULL COMMENT 'id of the service that the consent applies to',
   `consent_text` varchar(512) DEFAULT NULL COMMENT 'text that is displayed to user for consent (i.e. please consentz to the upper terms)',
   `language_id` int(11) DEFAULT NULL COMMENT 'id_of the language (0=default)',
@@ -9136,6 +9157,7 @@ CREATE TABLE `au_texts` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last_update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user_id of updater',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash_id of the text',
+  `status` int(11) DEFAULT NULL COMMENT '0=inactive',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -9757,30 +9779,6 @@ VALUES
 
 /*!40000 ALTER TABLE `au_users_basedata` ENABLE KEYS */;
 UNLOCK TABLES;
-
-
-# Tabellen-Dump au_users_consent
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_users_consent`;
-
-CREATE TABLE `au_users_consent` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) DEFAULT NULL COMMENT 'id of user',
-  `consent_terms` tinyint(1) DEFAULT 0 COMMENT '1=user gave consent to terms of use, 0=user retracts consent',
-  `consent_privacy` tinyint(1) DEFAULT 0 COMMENT '1= user consented to privacy',
-  `consent_push_notifications` tinyint(1) DEFAULT NULL COMMENT '1=user gave consent to app push notifications',
-  `consent_realname` tinyint(1) DEFAULT 1 COMMENT '1=consent to diplay realname',
-  `date_consent_terms` datetime DEFAULT NULL COMMENT 'date of consent to terms',
-  `date_consent_privacy` datetime DEFAULT NULL COMMENT 'date of consent to privacy',
-  `date_consent_push` datetime DEFAULT NULL COMMENT 'date of consent to push',
-  `date_consent_retract_privacy` datetime DEFAULT NULL COMMENT 'date when the consent was retracted',
-  `created` datetime DEFAULT NULL COMMENT 'create time',
-  `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
 
 
 # Tabellen-Dump au_users_settings
