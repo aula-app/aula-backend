@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-23 12:30:54 +0000
+# Verarbeitungszeit: 2023-06-24 08:34:51 +0000
 # ************************************************************
 
 
@@ -669,8 +669,9 @@ DROP TABLE IF EXISTS `au_media`;
 CREATE TABLE `au_media` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `type` int(11) DEFAULT NULL COMMENT 'type of media (1=picture, 2=video, 3= audio 4=pdf etc. etc)',
-  `url` varchar(2048) DEFAULT NULL COMMENT 'Url to media',
+  `url` varchar(2048) DEFAULT NULL COMMENT 'URL to media (i.e. https://...)',
   `system_type` int(11) DEFAULT NULL COMMENT '0=default, 1=custom',
+  `path` varchar(2048) DEFAULT NULL COMMENT 'system path to the file (i.e. /var/www/files/...)',
   `status` tinyint(1) DEFAULT NULL COMMENT '0=inactive, 1=active 2= reported 3=archived',
   `info` varchar(2028) DEFAULT NULL COMMENT 'description',
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of medium (other than filename)',
@@ -678,7 +679,7 @@ CREATE TABLE `au_media` (
   `created` datetime DEFAULT NULL COMMENT 'creation date',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash_id of the media',
-  `updater_id` int(11) DEFAULT NULL,
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that uploaded',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
