@@ -1,4 +1,5 @@
 <?php
+require_once ("./base_config.php");
 
     class Database {
 
@@ -27,6 +28,8 @@
         $this->au_rooms = $config['au_rooms'];
         $this->au_votes = $config['au_votes'];
         $this->au_likes = $config['au_likes'];
+        $this->au_topics = $config['au_topics'];
+        $this->au_consent = $config['au_consent'];
         $this->au_delegation = $config['au_delegation'];
         $this->au_media = $config['au_media'];
         $this->au_messages = $config['au_messages'];
