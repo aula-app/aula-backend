@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-24 08:34:33 +0000
+# Verarbeitungszeit: 2023-06-24 11:42:35 +0000
 # ************************************************************
 
 
@@ -602,16 +602,17 @@ CREATE TABLE `au_rooms` (
 
 
 
-# Tabellen-Dump au_services_config
+# Tabellen-Dump au_services
 # ------------------------------------------------------------
 
-DROP TABLE IF EXISTS `au_services_config`;
+DROP TABLE IF EXISTS `au_services`;
 
-CREATE TABLE `au_services_config` (
+CREATE TABLE `au_services` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of the service',
   `type` int(11) DEFAULT NULL COMMENT 'type of service (0=authentication, 1=push notification etc.)',
   `url` text DEFAULT NULL COMMENT 'URL to service',
+  `return_url` text DEFAULT NULL COMMENT 'return url to main system',
   `api_secret` varchar(4096) DEFAULT NULL COMMENT 'secret used for service',
   `api_key` text DEFAULT NULL COMMENT 'public key used',
   `api_tok` text DEFAULT NULL COMMENT 'token for api if necessary',
