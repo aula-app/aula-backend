@@ -111,6 +111,7 @@ MODEL USER
 
 public function __construct($db, $crypt, $syslog)
 
+
 Getters
 
 public function getUserBaseData($user_id)
@@ -121,6 +122,9 @@ public function getGivenDelegations ($user_id, $topic_id)
 public function getUserInfiniteVotesStatus($user_id)
 public function getUserLastLogin($user_id)
 public function getUserAbsence($user_id)
+public function getGivenConsents ($user_id)
+public function getNecessaryConsents ()
+public function getMissingConsents ($user_id)
 
 Setters
 
@@ -145,6 +149,7 @@ public function setDelegationStatus ($user_id, $status, $topic_id = 0, $target =
 public function checkLogin ($username, $pw)
 public function checkCredentials($username, $pw)  // pw = clear text
 public function checkUserExistsByUsername($username)
+public function checkHasUserGivenConsentsForUsage ($user_id)
 
 Actions
 
@@ -175,6 +180,11 @@ public function activateUser ($user_id, $updater_id=0)
 public function deactivateUser ($user_id, $updater_id=0)
 public function archiveUser ($user_id, $updater_id=0)
 public function deleteUser($user_id, $updater_id=0)
+public function setUserAbsence ($user_id, $presence = 1, $absent_until = "", $auto_delegation = 0)
+public function giveConsent ($user_id, $text_id, $consent_value = 1, $updater_id = 0)
+public function revokeConsent ($user_id, $text_id)
+public function setUserConsent ($user_id, $text_id, $consent, $status=1, $updater_id=0)
+
 
 
 MODEL ROOM
@@ -379,3 +389,31 @@ public function searchInTexts ($searchstring, $status=1)
 public function addText ($headline, $body="", $consent_text="", $location=0, $creator_id=0, $user_needs_to_consent=0, $service_id_consent=0, $status=1, $updater_id=0, $language_id=0)
 public function linkTextToService ($text_id, $service_id_consent, $updater_id = 0)
 public function deleteText ($text_id, $updater_id=0)
+
+MODEL MEDIA
+
+public function __construct($db, $crypt, $syslog)
+
+Getters
+public function getMediaHashId($media_id)
+public function getMediaStatus ($media_id)
+public function getMediaBaseData ($media_id)
+public function getMedia ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $last_update=0, $location=0, $updater_id=0)
+
+
+Setters
+public function setMediaToReview ($media_id, $updater_id)
+public function setMediaStatus($media_id, $status, $updater_id = 0)
+public function setMediaContent($media_id, $name, $description, $updater_id = 0)
+
+
+Checkers
+
+
+Actions
+public function archiveMedia ($media_id, $updater_id=0)
+public function activateMedia ($media_id, $updater_id=0)
+public function deactivateMedia ($media_id, $updater_id)
+public function searchInMedia ($searchstring, $status=1)
+public function addMedia ($name, $url, $path, $type, $system_type, $filename, $description="", $status=1, $updater_id=0)
+public function deleteMedia ($media_id, $updater_id=0)
