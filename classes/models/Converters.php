@@ -58,6 +58,21 @@ class Converters {
       }
     } // end function
 
+    public function checkServiceId ($service_id) {
+      /* helper function that checks if a service id is a standard db id (int) or if a hash id was passed
+      if a hash was passed, function returns db id
+      */
+
+      if (is_int(intval ($service_id)))
+      {
+        return $service_id;
+      } else
+      {
+
+        return $this->getUserIdByHashId ($service_id);
+      }
+    } // end function
+
 
     public function checkCommentId ($comment_id) {
       /* helper function that checks if a comment id is a standard db id (int) or if a hash was passed
@@ -99,6 +114,34 @@ class Converters {
         $this->cache->set($check_hash, $users[0]['id'], $this->long_caching_time);
 
         return $users[0]['id']; // return user id
+      }
+    }// end function
+
+
+    public function getServiceIdByHashId($hash_id) {
+      /* Returns Database ID of user when hash_id is provided
+      */
+      $check_hash = $this->buildCacheHash ("getServiceIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_services.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind service id
+      $services = $this->db->resultSet();
+      if (count($services)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
+        return 0; // nothing found, return 0 code
+      }else {
+        $this->cache->set($check_hash, $services[0]['id'], $this->long_caching_time);
+
+        return $services[0]['id']; // return service id
       }
     }// end function
 
@@ -239,6 +282,33 @@ class Converters {
       }
     }// end function
 
+    public function getMediaIdByHashId($hash_id) {
+      /* Returns Database ID of medium when hash_id is provided
+      */
+      $check_hash = $this->buildCacheHash ("getMediaIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
+
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_media.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind hash id
+      $media = $this->db->resultSet();
+      if (count($media)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
+        return 0; // nothing found, return 0 code
+      }else {
+        $this->cache->set($check_hash, $media[0]['id'], $this->long_caching_time);
+        return $media[0]['id']; // return media id
+      }
+    }// end function
+
 
     public function checkGroupId ($group_id) {
       /* helper function that checks if a group id is a standard db id (int) or if a hash group id was passed
@@ -352,6 +422,20 @@ class Converters {
       } else
       {
         return $this->getMessageIdByHashId ($message_id);
+      }
+    } // end function
+
+    public function checkMediaId ($media_id) {
+      /* helper function that checks if a medium id is a standard db id (int) or if a hash id was passed
+      if a hash was passed, function returns db id
+      */
+
+      if (is_int(intval ($media_id)))
+      {
+        return $media_id;
+      } else
+      {
+        return $this->getMediaIdByHashId ($media_id);
       }
     } // end function
 
