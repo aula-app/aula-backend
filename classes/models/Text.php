@@ -66,7 +66,7 @@ class Text {
         // consent found
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // no error code
-        $returnvalue ['data'] = $texts [0][consent]; // returned data
+        $returnvalue ['data'] = $texts [0]['consent']; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
