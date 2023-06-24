@@ -29,7 +29,7 @@ class Text {
 
 
     public function getTextHashId($text_id) {
-      /* returns hash_id of a comment for a integer id
+      /* returns hash_id of a text for a integer id
       */
       $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -78,7 +78,7 @@ class Text {
       accepts db id and hash id
       updater_id is the id of the user that did the update
       */
-      $text_id = $this->converters->checkCommentId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setTextStatus($text_id, 4, $updater_id);
 
@@ -89,7 +89,7 @@ class Text {
       accepts db id and hash id
       updater_id is the id of the user that did the update
       */
-      $text_id = $this->converters->checkCommentId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setTextStatus($text_id, 1, $updater_id);
 
@@ -100,7 +100,7 @@ class Text {
       accepts db id and hash id
       updater_id is the id of the user that did the update
       */
-      $text_id = $this->converters->checkCommentId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setTextStatus($text_id, 0, $updater_id);
     }
@@ -110,20 +110,20 @@ class Text {
       accepts db id and hash id
       updater_id is the id of the user that did the update
       */
-      $text_id = $this->converters->checkCommentId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       return $this->setTextStatus($text_id, 5, $updater_id);
 
     }
 
     public function getTextBaseData ($text_id) {
-      /* returns comment base data for a specified db id */
+      /* returns text base data for a specified db id */
       $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
       $stmt = $this->db->query('SELECT * FROM '.$this->db->au_texts.' WHERE id = :id');
-      $this->db->bind(':id', $text_id); // bind comment id
+      $this->db->bind(':id', $text_id); // bind text id
       $texts = $this->db->resultSet();
-      if (count($comments)<1){
+      if (count($texts)<1){
         $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 2; //  error code
         $returnvalue ['data'] = 1; // returned data
@@ -155,7 +155,7 @@ class Text {
       orderby is the field (int, see switch), defaults to last_update (3)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending
       status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 5= in review defaults to active (1)
-      last_update = date that specifies comments younger than last_update date (if set to 0, gets all comments)
+      last_update = date that specifies texts younger than last_update date (if set to 0, gets all texts)
       extra_where = extra parameters for where clause, synthax " AND XY=4"
       creator_id = specifies a certain user that wrote the text (author), if set to 0, all texts are displayed
       user_needs_to_consent specifies texts that need (1) or dont need (0) a consent by the user (set to -1, if all texts shoud be shown)
@@ -297,16 +297,17 @@ class Text {
     }
 
     public function addText ($headline, $body="", $consent_text="", $location=0, $creator_id=0, $user_needs_to_consent=0, $service_id_consent=0, $status=1, $updater_id=0, $language_id=0) {
-        /* adds a new text and returns insert id (comment id) if successful, accepts the above parameters
-        content is the comment itself
+        /* adds a new text and returns insert id (text id) if successful, accepts the above parameters
+        content is the text itself
         headline, body is the content
         consent_text = text that is displayed next to the checkbox for the user consent
         creator_id is the original author of the text
         location is the page this consent is displayed on
         user_needs_to_consent = 0 = display only, no checkbox, no need to consent, 1= consent needed (if consented, checkbox doesnt display anmymore), checkbox displayed, 2= needs to be consented (first) to use aula
-        status = status of the comment (0=inactive, 1=active, 2=
+        status = status of the text (0=inactive, 1=active, 2=
         ed, 3=reported, 4=archived 5= in review)
-        updater id specifies the id of the user (i.e. admin) that added this comment
+        updater id specifies the id of the user (i.e. admin) that added this text
+
         */
 
         //sanitize the vars
@@ -336,7 +337,7 @@ class Text {
         // generate unique hash for this idea
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
-        $hash_id = md5($headline.$appendix); // create hash id for this comment
+        $hash_id = md5($headline.$appendix); // create hash id for this text
         $this->db->bind(':hash_id', $hash_id);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -513,10 +514,10 @@ class Text {
          headline, body, consent_text  = content  of text
          updater_id is the id of the user that does the update (i.E. admin )
         */
-        $comment_id = $this->converters->checkTextId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+        $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
         $content = trim ($content);
-        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET headline= :headline, body= :body, consent_text= :consent_text,  last_update= NOW(), updater_id= :updater_id WHERE id= :comment_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET headline= :headline, body= :body, consent_text= :consent_text,  last_update= NOW(), updater_id= :updater_id WHERE id= :text_id');
         // bind all VALUES
         $this->db->bind(':headline', $headline);
         $this->db->bind(':body', $body);
@@ -558,10 +559,10 @@ class Text {
 
 
     public function deleteText ($text_id, $updater_id=0) {
-        /* deletes texts, accepts comment_id (hash (varchar) or db id (int))
+        /* deletes texts, accepts text id (hash (varchar) or db id (int))
 
         */
-        $text_id = $this->converters->checkCommentId($text_id); // checks id and converts id to db  id if necessary (when hash id was passed)
+        $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db  id if necessary (when hash id was passed)
 
         $stmt = $this->db->query('DELETE FROM '.$this->db->au_texts.' WHERE id = :id');
         $this->db->bind (':id', $text_id);
