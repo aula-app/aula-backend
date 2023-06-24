@@ -577,7 +577,7 @@ class Text {
         if (!$err)
         {
           $count_datasets = intval($this->db->rowCount());
-          $this->syslog->addSystemEvent(0, "Text deleted, id=".$comment_id." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Text deleted, id=".$text_id." by ".$updater_id, 0, "", 1);
           $returnvalue ['success'] = true; // set return value
           $returnvalue ['error_code'] = 0; // error code
           $returnvalue ['data'] =  $count_datasets; // returned data
