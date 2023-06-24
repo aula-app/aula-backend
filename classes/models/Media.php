@@ -142,7 +142,7 @@ class Media {
     public function searchInMedia ($searchstring, $status=1){
       // searches for a term / string in texts and returns all texts
       $extra_where = " AND (name LIKE '%".searchstring."%' OR description LIKE '%".searchstring."%' OR filename LIKE '%".searchstring."%') ";
-      $ret_value = getTexts (0, 0, 3, 0, $status, $extra_where);
+      $ret_value = getMedia (0, 0, 3, 0, $status, $extra_where);
 
       return $ret_value;
     }
