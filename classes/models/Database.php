@@ -30,6 +30,7 @@ require_once ("./base_config.php");
         $this->au_likes = $config['au_likes'];
         $this->au_topics = $config['au_topics'];
         $this->au_consent = $config['au_consent'];
+        $this->au_services = $config['au_services'];
         $this->au_delegation = $config['au_delegation'];
         $this->au_media = $config['au_media'];
         $this->au_messages = $config['au_messages'];
@@ -47,6 +48,9 @@ require_once ("./base_config.php");
         $this->au_rel_topics_media = $config['au_rel_topics_media'];
         $this->au_rel_groups_users = $config['au_rel_groups_users'];
         $this->au_rel_categories_ideas = $config['au_rel_categories_ideas'];
+        $this->au_rel_users_messages = $config['au_rel_users_messages'];
+        $this->au_rel_users_services = $config['au_rel_users_services'];
+
 
 
 
