@@ -35,7 +35,7 @@ class User {
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -48,7 +48,7 @@ class User {
         $users[0]['username'] = $this->decrypt ($users[0]['username']);
         $users[0]['email'] = $this->decrypt ($users[0]['email']);*/
 
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users[0]; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -65,7 +65,7 @@ class User {
       $users = $this->db->resultSet();
       if (count($users)<1){
 
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -73,7 +73,7 @@ class User {
         return $returnvalue;
       }else {
 
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users[0]['hash_id']; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -110,7 +110,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User property ".$property." changed for id ".$user_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -118,7 +118,7 @@ class User {
           return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing user property ".$property." for id ".$user_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -144,7 +144,7 @@ class User {
 
       $users = $this->db->resultSet();
       if (count($users)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // no error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -170,7 +170,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Delegation deleted for user id ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // no error code
           $returnvalue ['data'] = $count_data; // returned data
           $returnvalue ['count'] = $count_data; // returned count of datasets
@@ -179,8 +179,8 @@ class User {
 
           return ; // return number of affected rows to calling script
         } else {
-          $this->syslog->addSystemEvent(1, "Error deleting delegation for user with id ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error deleting delegation for user with id ".$user_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // no error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -191,7 +191,7 @@ class User {
       }
     }// end function
     /*
-    $returnvalue['success'] = true; // set return value to false
+    $returnvalue['success'] = true; // set return value
     $returnvalue['error_code'] = 0; // no error code
     $returnvalue ['data'] = $messages; // returned data
     $returnvalue ['count'] = $count_datasets; // returned count of datasets
@@ -237,7 +237,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added delegation for user ".$user_id." for topic ".$topic_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; //db  error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -246,7 +246,7 @@ class User {
 
 
         } else {
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; //db  error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -256,8 +256,8 @@ class User {
         }
 
       }else {
-        $returnvalue['success'] = false; // set return value to false
-        $returnvalue['error_code'] = 2; //db  error code
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 2; //  error code
         $returnvalue ['data'] = $user_exist.$user_exist_target; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -307,7 +307,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added consent for user ".$user_id." for text ".$text_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; //db  error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -316,7 +316,7 @@ class User {
 
 
         } else {
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; //db  error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -326,7 +326,7 @@ class User {
         }
 
       }else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; //db  error code
         $returnvalue ['data'] = $user_exist.$text_exist; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -381,7 +381,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Delegation status changed ".$user_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = $count_data; // returned data
           $returnvalue ['count'] = $count_data; // returned count of datasets
@@ -390,7 +390,7 @@ class User {
 
         } else {
           $this->syslog->addSystemEvent(1, "Error changing delegation status of user ".$user_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 2; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -411,7 +411,7 @@ class User {
       $users = $this->db->resultSet();
       if (count($users)<1){
 
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -419,7 +419,7 @@ class User {
         return $returnvalue;
       }else {
 
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users; // returned data
         $returnvalue ['count'] = count ($users); // returned count of datasets
@@ -439,14 +439,14 @@ class User {
       $this->db->bind(':topic_id', $topic_id); // bind topic id
       $users = $this->db->resultSet();
       if (count($users)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users; // returned data
         $returnvalue ['count'] = count ($users); // returned count of datasets
@@ -472,7 +472,7 @@ class User {
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $consensts; // returned data
         $returnvalue ['count'] = count ($consents); // returned count of datasets
@@ -532,7 +532,7 @@ class User {
       $missing_consents = count ($texts);
       if ($missing_consents<1){
         // no consents missing...
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = 0; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -540,7 +540,7 @@ class User {
         return $returnvalue;
       }
       // everything ok, return 1
-      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue ['data'] = $texts; // returned data
       $returnvalue ['count'] = $missing_consents; // returned count of datasets
@@ -589,7 +589,7 @@ class User {
         $given_consents = count ($consents);
         if ($given_consents < $needed_consents){
           // not every necessary consent given yet, return 0
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 0; // returned data
           $returnvalue ['count'] = $given_consents; // returned count of datasets
@@ -597,7 +597,7 @@ class User {
           return $returnvalue;
         }
           // everything ok, return 1
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = $given_consents; // returned count of datasets
@@ -647,7 +647,7 @@ class User {
       if (!$err)
       {
         $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for topic ".$topic_id, 0, "", 1);
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users; // returned data
         $returnvalue ['count'] = intval ($this->db->rowCount()); // returned count of datasets
@@ -656,7 +656,7 @@ class User {
 
       } else {
         $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for topic ".$topicid, 0, "", 1);
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -703,7 +703,7 @@ class User {
       if (!$err)
       {
         $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for topic ".$topic_id, 0, "", 1);
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $count_data; // returned data
         $returnvalue ['count'] = $count_data; // returned count of datasets
@@ -712,7 +712,7 @@ class User {
 
       } else {
         $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for topic ".$topic_id, 0, "", 1);
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -764,7 +764,7 @@ class User {
           $insertid = intval($this->db->lastInsertId());
           $this->syslog->addSystemEvent(0, "Added user ".$user_id." to room ".$room_id, 0, "", 1);
 
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = $insertid; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -774,7 +774,7 @@ class User {
         } else {
           $this->syslog->addSystemEvent(0, "Error while adding user ".$user_id." to room ".$room_id, 0, "", 1);
 
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -783,7 +783,7 @@ class User {
         }
 
       }else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -806,7 +806,7 @@ class User {
           $ret_value = addUserToRoom ($room_id2, $user_id);
 
           if ($ret_value['success']){
-            $returnvalue['success'] = true; // set return value to false
+            $returnvalue['success'] = true; // set return value
             $returnvalue['error_code'] = 0; // error code
             $returnvalue ['data'] = false; // returned data
             $returnvalue ['count'] = 1; // returned count of datasets
@@ -814,7 +814,7 @@ class User {
             return $returnvalue;
           } else {
             // error occured while adding to room 2
-            $returnvalue['success'] = false; // set return value to false
+            $returnvalue['success'] = false; // set return value
             $returnvalue['error_code'] = 1; // error code
             $returnvalue ['data'] = false; // returned data
             $returnvalue ['count'] = 0; // returned count of datasets
@@ -825,7 +825,7 @@ class User {
 
       }else {
         // error occured while removing from room 1
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -847,7 +847,7 @@ class User {
           $ret_value = addUserToGroup ($group_id2, $user_id);
 
           if ($ret_value['success']){
-            $returnvalue['success'] = true; // set return value to false
+            $returnvalue['success'] = true; // set return value
             $returnvalue['error_code'] = 0; // error code
             $returnvalue ['data'] = false; // returned data
             $returnvalue ['count'] = 1; // returned count of datasets
@@ -855,7 +855,7 @@ class User {
             return $returnvalue;
           } else {
             // error occured while adding to group 2
-            $returnvalue['success'] = false; // set return value to false
+            $returnvalue['success'] = false; // set return value
             $returnvalue['error_code'] = 1; // error code
             $returnvalue ['data'] = false; // returned data
             $returnvalue ['count'] = 0; // returned count of datasets
@@ -866,7 +866,7 @@ class User {
 
       }else {
         // error occured while removing from group 1
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -893,7 +893,7 @@ class User {
       } catch (Exception $e) {
           echo 'Error occured while deleting user '.$user_id.' from room: '.$room_id,  $e->getMessage(), "\n"; // display error
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -909,7 +909,7 @@ class User {
       $this->removeUserDelegations ($user_id, 0, 1); // passive delegations (target user)
 
 
-      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue ['data'] = false; // returned data
       $returnvalue ['count'] = 1; // returned count of datasets
@@ -982,7 +982,7 @@ class User {
         {
           $this->syslog->addSystemEvent(0, "Added user relation (type:".$type.") ".$user_id."-".$user_id_target, 0, "", 1);
           $insertid = intval($this->db->lastInsertId());
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = $insertid; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -993,7 +993,7 @@ class User {
           $this->syslog->addSystemEvent(0, "Error while adding user relation (type:".$type.") ".$user_id, 0, "", 1);
 
           $this->syslog->addSystemEvent(0, "Added user relation (type:".$type.") ".$user_id."-".$user_id_target, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1002,7 +1002,7 @@ class User {
         }
 
       }else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1029,9 +1029,9 @@ class User {
 
       } catch (Exception $e) {
           echo 'Error occured while removing relation between user '.$user_id.' and user '.$user_id_target,  $e->getMessage(), "\n"; // display error
-          $this->syslog->addSystemEvent(0, "Error while removing user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
+          //$this->syslog->addSystemEvent(0, "Error while removing user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1039,7 +1039,7 @@ class User {
           return $returnvalue;
       }
       $this->syslog->addSystemEvent(0, "Removed user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
-      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue ['data'] = 1; // returned data
       $returnvalue ['count'] = 1; // returned count of datasets
@@ -1061,10 +1061,10 @@ class User {
         $groups = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while removing user from group: ',  $e->getMessage(), "\n"; // display error
+          //echo 'Error occured while removing user from group: ',  $e->getMessage(), "\n"; // display error
           $err=true;
 
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1072,7 +1072,7 @@ class User {
           return $returnvalue;
       }
 
-      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue ['data'] = $this->db->rowCount(); // returned data
       $returnvalue ['count'] = $this->db->rowCount(); // returned count of datasets
@@ -1115,7 +1115,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added user ".$user_id." to group ".$group_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -1125,7 +1125,7 @@ class User {
         } else {
           $this->syslog->addSystemEvent(0, "Error while adding user ".$user_id." to group ".$group_id, 0, "", 1);
 
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1134,7 +1134,7 @@ class User {
         }
 
       }else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1165,7 +1165,7 @@ class User {
         {
           $insertid = intval($this->db->lastInsertId());
           $this->syslog->addSystemEvent(0, "Successful login user ".$user_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = $user_id; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -1175,7 +1175,7 @@ class User {
 
         } else {
           $this->syslog->addSystemEvent(1, "DB Error login user ".$user_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // db error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1185,7 +1185,7 @@ class User {
         }
       } else {
         $this->syslog->addSystemEvent(1, "DB Error login user ".$user_id, 0, "", 1);
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = truex; // set return value
         $returnvalue['error_code'] = 2; // db error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1210,7 +1210,7 @@ class User {
 
 
       if (count($users)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1223,7 +1223,7 @@ class User {
       // check PASSWORD
       if (password_verify($pw, $dbpw))
       {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users[0]['id']; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1232,7 +1232,7 @@ class User {
 
       }else {
 
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 3; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1334,7 +1334,7 @@ class User {
       } catch (Exception $e) {
           echo 'Error occured while getting users: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // db error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1346,7 +1346,7 @@ class User {
       $count_data = count ($users);
 
       if ($count_data<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1355,7 +1355,7 @@ class User {
 
 
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users; // returned data
         $returnvalue ['count'] = $count_data; // returned count of datasets
@@ -1375,7 +1375,7 @@ class User {
       $this->db->bind(':bi', $bi); // bind blind index
       $users = $this->db->resultSet();
       if (count($users)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1384,7 +1384,7 @@ class User {
 
       }else {
         $user_id = $users[0]['id']; // get user id from db
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $user_id; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -1417,7 +1417,7 @@ class User {
         $temp_user_id = $temp_user ['data']; // get id from array
 
         if ($temp_user_id>0){
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 2; // db error code
           $returnvalue ['data'] = $temp_user_id; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1462,7 +1462,7 @@ class User {
         {
           $insertid = intval($this->db->lastInsertId());
           $this->syslog->addSystemEvent(0, "Added new user ".$insertid, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = $insertid; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -1472,7 +1472,7 @@ class User {
 
         } else {
           $this->syslog->addSystemEvent(1, "Error adding user ", 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // db error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1512,7 +1512,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Edited user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -1522,7 +1522,7 @@ class User {
 
         } else {
           $this->syslog->addSystemEvent(1, "Error while editing user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1555,14 +1555,14 @@ class User {
         // if setting worked, continue
         $ret_value = $this->setUserProperty ($user_id, "auto_delegation", $auto_delegation); // set auto delegation
         $ret_value = $this->setUserProperty ($user_id, "absent_until", $absent_until); // set user until
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = $ret_value['error_code']; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1602,7 +1602,7 @@ class User {
           $this->setDelegationStatus ($user_id, $status, 0, 0); // set status for received delegations
           $this->setDelegationStatus ($user_id, $status, 0, 1); // set status for target delegations
 
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -1611,7 +1611,7 @@ class User {
 
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of user ".$user_id." to ".$status." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1646,7 +1646,7 @@ class User {
       {
         $this->syslog->addSystemEvent(0, "User consent of ".$user_id." changed to ".$consent." by ".$updater_id, 0, "", 1);
 
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -1654,7 +1654,7 @@ class User {
         return $returnvalue;
 
       } else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1698,7 +1698,7 @@ class User {
         {
           $this->syslog->addSystemEvent(0, "User consent of ".$user_id." changed to ".$consent." by ".$updater_id, 0, "", 1);
 
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -1706,7 +1706,7 @@ class User {
           return $returnvalue;
 
         } else {
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1737,14 +1737,14 @@ class User {
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // db error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = $users [0]['infinite_votes']; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -1762,14 +1762,14 @@ class User {
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // db error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = $users[0]; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -1787,14 +1787,14 @@ class User {
       $this->db->bind(':id', $user_id); // bind userid
       $users = $this->db->resultSet();
       if (count($users)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // db error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = $users[0]['last_login']; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -1848,7 +1848,7 @@ class User {
           }
 
           $row_count = intval($this->db->rowCount());
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // db error code
           $returnvalue ['data'] = $row_count; // returned data
           $returnvalue ['count'] = $row_count; // returned count of datasets
@@ -1856,7 +1856,7 @@ class User {
           return $returnvalue;
         } else {
           $this->syslog->addSystemEvent(1, "Error changing infinite status of user ".$user_id." to ".$infinite." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // db error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1927,7 +1927,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User status changed ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -1936,7 +1936,7 @@ class User {
 
         } else {
           $this->syslog->addSystemEvent(1, "Error changing status of user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -1974,7 +1974,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User abouttext changed ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -1982,8 +1982,8 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing abouttext of user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing abouttext of user ".$user_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -2021,7 +2021,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User field position changed ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -2029,8 +2029,8 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing position of user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing position of user ".$user_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -2064,7 +2064,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User real name changed ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -2072,8 +2072,8 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing real name of user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing real name of user ".$user_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -2108,7 +2108,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User display name changed ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -2116,8 +2116,8 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing display name of user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing display name of user ".$user_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -2152,7 +2152,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User email changed ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -2160,8 +2160,8 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing email of user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing email of user ".$user_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -2199,7 +2199,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User pw changed ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -2207,8 +2207,8 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing pw of user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing pw of user ".$user_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -2246,7 +2246,7 @@ class User {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "User reg status changed ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -2254,8 +2254,8 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing reg status of user ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing reg status of user ".$user_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -2301,7 +2301,7 @@ class User {
 
             } catch (Exception $e) {
 
-              $returnvalue['success'] = false; // set return value to false
+              $returnvalue['success'] = false; // set return value
               $returnvalue['error_code'] = 1; // error code
               $returnvalue ['data'] = false; // returned data
               $returnvalue ['count'] = 0; // returned count of datasets
@@ -2317,7 +2317,7 @@ class User {
 
             } catch (Exception $e) {
 
-              $returnvalue['success'] = false; // set return value to false
+              $returnvalue['success'] = false; // set return value
               $returnvalue['error_code'] = 1; // error code
               $returnvalue ['data'] = false; // returned data
               $returnvalue ['count'] = 0; // returned count of datasets
@@ -2333,7 +2333,7 @@ class User {
 
             } catch (Exception $e) {
 
-              $returnvalue['success'] = false; // set return value to false
+              $returnvalue['success'] = false; // set return value
               $returnvalue['error_code'] = 1; // error code
               $returnvalue ['data'] = false; // returned data
               $returnvalue ['count'] = 0; // returned count of datasets
@@ -2346,7 +2346,7 @@ class User {
 
           $this->syslog->addSystemEvent(0, "User deleted with id ".$user_id." by ".$updater_id, 0, "", 1);
 
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = $rows_affected; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -2355,7 +2355,7 @@ class User {
 
         } else {
           //$this->syslog->addSystemEvent(1, "Error deleting user with id ".$user_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
