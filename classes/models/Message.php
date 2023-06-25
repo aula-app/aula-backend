@@ -113,7 +113,7 @@ class Message {
 
       } catch (Exception $e) {
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // database error while executing query
           $returnvalue ['data'] = false; // returned data is false
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -122,7 +122,7 @@ class Message {
       }
 
       if (count($messages)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error while executing query
         $returnvalue ['data'] = false; // returned data is false
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -155,7 +155,7 @@ class Message {
       $this->db->bind(':message_id', $message_id); // bind message id
       $messages = $this->db->resultSet();
       if (count($messages)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -191,7 +191,7 @@ class Message {
           $this->syslog->addSystemEvent(0, "Added new reporting message (#".$insertid.") ".$content, 0, "", 1);
           // set idea status to reported
           $this->setCommentStatus($comment_id, 3, $updater_id=0);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -199,8 +199,8 @@ class Message {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error reporting message ".$content, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error reporting message ".$content, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -208,7 +208,7 @@ class Message {
           return $returnvalue;
         }
       }else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -280,14 +280,14 @@ class Message {
       $this->db->bind(':id', $message_id); // bind message id
       $messages = $this->db->resultSet();
       if (count($messages)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // no error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue; // nothing found, return 0 code
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // no error code
         $returnvalue ['data'] = $messages[0]; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -427,7 +427,7 @@ class Message {
 
       } catch (Exception $e) {
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // database error while executing query
           $returnvalue ['data'] = false; // returned data is false
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -437,14 +437,14 @@ class Message {
       $count_datasets = count ($messages);
 
       if ($count_datasets<1){
-        $returnvalue['success'] = false; // set success value
+        $returnvalue['success'] = true; // set success value
         $returnvalue['error_code'] = 2; // no data found
         $returnvalue ['data'] = false; // returned data is false
         $returnvalue ['count'] = $count_datasets; // returned count of datasets
 
         return $returnvalue; // nothing found, return 0 code
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // no error code
         $returnvalue ['data'] = $messages; // returned data
         $returnvalue ['count'] = $count_datasets; // returned count of datasets
