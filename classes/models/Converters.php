@@ -617,6 +617,26 @@ class Converters {
       }
     } // end function
 
+    public function getTotalDatasets ($table, $tablefield, $extra_where=""){
+      /* returns the total number of rows with
+      extra_where parameter (i.e. $extra_where = "status = 1 AND id >50");
+      $tablefield(varchar) = field (i.e. id) that exists in the destination table $table (i.e. ideas)
+      */
+      $extra_where = trim ($extra_where);
+      $tablefield = trim ($tablefield);
 
+      if (strlen ($extra_where)>0){
+        $extra_where = " WHERE ".$extra_where;
+      }
+      if (strlen ($tablefield)<1){
+        // tablefield undefined, return error
+        return 0;
+      }
+      $stmt = $this->db->query('SELECT '.$tablefield.' FROM '.$table.$extra_where);
+      $res = $this->db->resultSet();
+      $total_rows = count ($res);
+      return $total_rows;
+
+    }
 } // end class
 ?>
