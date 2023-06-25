@@ -113,8 +113,8 @@ class Comment {
 
       } catch (Exception $e) {
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // database error while executing query
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data is false
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -122,15 +122,15 @@ class Comment {
       }
 
       if (count($comments)<1){
-        $returnvalue['success'] = false; // set return value to false
-        $returnvalue['error_code'] = 2; // error while executing query
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data is false
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
         $returnvalue['success'] = true; // set return value
-        $returnvalue['error_code'] =0; // no error while executing query
+        $returnvalue['error_code'] =0; // no error code
         $returnvalue ['data'] = $comments; // returned data is false
         $returnvalue ['count'] = count ($comments); // returned count of datasets
 
@@ -201,14 +201,14 @@ class Comment {
       $this->db->bind(':id', $comment_id); // bind comment id
       $comments = $this->db->resultSet();
       if (count($comments)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // no error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue; // nothing found, return 0 code
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // no error code
         $returnvalue ['data'] = $comments[0]; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -347,8 +347,8 @@ class Comment {
 
       } catch (Exception $e) {
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // database error while executing query
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // database error code
           $returnvalue ['data'] = false; // returned data is false
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -357,14 +357,14 @@ class Comment {
       $count_datasets = count ($comments);
 
       if ($count_datasets<1){
-        $returnvalue['success'] = false; // set success value
+        $returnvalue['success'] = true; // set success value
         $returnvalue['error_code'] = 2; // no data found
         $returnvalue ['data'] = false; // returned data is false
         $returnvalue ['count'] = $count_datasets; // returned count of datasets
 
         return $returnvalue; // nothing found, return 0 code
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // no error code
         $returnvalue ['data'] = $comments; // returned data
         $returnvalue ['count'] = $count_datasets; // returned count of datasets
@@ -472,14 +472,14 @@ class Comment {
 
       $likes = $this->db->resultSet();
       if (count($likes)<1){
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = 0; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -512,14 +512,14 @@ class Comment {
       }
       if (!$err)
       {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
       } else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -539,7 +539,7 @@ class Comment {
         // Check if user liked already
         if ($this->getLikeStatus($user_id, $comment_id)['data']==1){
           // user has already liked, return without incrementing vote
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 3; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -566,15 +566,15 @@ class Comment {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Comment  ".$comment_id." incremented likes", 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error incrementing likes from comment ".$comment_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error incrementing likes from comment ".$comment_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -592,7 +592,7 @@ class Comment {
 
         if ($this->getLikeStatus($user_id, $comment_id)['data']==0){
           // user has already liked, return without incrementing vote
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 0; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -620,15 +620,15 @@ class Comment {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Comment  ".$comment_id." decrementing likes", 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error decrementing likes from comment ".$comment_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error decrementing likes from comment ".$comment_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -652,7 +652,7 @@ class Comment {
       $this->db->bind(':comment_id', $comment_id); // bind comment id
       $comments = $this->db->resultSet();
       if (count($comments)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -688,7 +688,7 @@ class Comment {
           $this->syslog->addSystemEvent(0, "Added new reporting comment (#".$insertid.") ".$content, 0, "", 1);
           // set idea status to reported
           $this->setCommentStatus($comment_id, 3, $updater_id=0);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -696,8 +696,8 @@ class Comment {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error reporting comment ".$content, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error reporting comment ".$content, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -705,7 +705,7 @@ class Comment {
           return $returnvalue;
         }
       }else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
