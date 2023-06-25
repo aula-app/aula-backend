@@ -208,6 +208,8 @@ class User {
       // check if user and topic exist
       $user_exist = $this->converters->checkUserExist($user_id);
       $user_exist_target = $this->converters->checkUserExist($user_id_target);
+      $topic_exist = $this->converters->checkTopicExist($topic_id);
+      
       $data_delegation ['user_exist_target']=$user_exist_target;
 
       if ($user_exist==1 && $topic_exist==1 && $user_exist_target==1) {
