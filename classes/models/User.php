@@ -1888,11 +1888,14 @@ class User {
       return setUserStatus ($user_id, 0, $updater_id);
     }
 
-    public function archiveUser ($user_id, $updater_id=0){
-      // set user status to 3 = archived
-      // set delegations for this user to suspended (delegated voting right and received votign right)
+    public function archiveUser ($user_id, $archive_mode=0, $updater_id=0){
+      /* set user status to 4 = archived
+        user_id = id of the user that will be archived
+        archive_mode = 0 = only the user will be set to archived 1= associated data will also be archived (ideas, comments, messages, media)
+       set delegations for this user to suspended (delegated voting right and received votign right)
+       */
 
-      return setUserStatus ($user_id, 3, $updater_id);
+      return setUserStatus ($user_id, 4, $updater_id);
     }
 
 
@@ -2262,8 +2265,11 @@ class User {
         }
     }// end function
 
-    public function deleteUser($user_id, $updater_id=0) {
-        /* deletes user and returns the number of rows (int) accepts user id or user hash id // */
+    public function deleteUser($user_id, $delete_mode=0, $updater_id=0) {
+        /* deletes user and returns the number of rows (int) accepts user id or user hash id
+        user id = id of the user, either hash id or db id
+        delete_mode = 0 = delete user only 1= also delete all associated data with this user (ideas, comment, messages, media), votes are preserved
+         */
 
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -2284,6 +2290,60 @@ class User {
           $this->removeUserDelegations ($user_id, 0, 0); // active delegations (original user)
           $this->removeUserDelegations ($user_id, 0, 1); // passive delegations (target user)
 
+          // delete associated data if option delete_mode is set
+          if ($delete_mode==1){
+            $stmt = $this->db->query('DELETE FROM '.$this->db->au_ideas.' WHERE user_id = :id');
+            $this->db->bind (':id', $user_id);
+            $err=false;
+            try {
+              $action = $this->db->execute(); // do the query
+              $rows_affected = intval ($this->db->rowCount());
+
+            } catch (Exception $e) {
+
+              $returnvalue['success'] = false; // set return value to false
+              $returnvalue['error_code'] = 1; // error code
+              $returnvalue ['data'] = false; // returned data
+              $returnvalue ['count'] = 0; // returned count of datasets
+
+              return $returnvalue;
+            }
+            $stmt = $this->db->query('DELETE FROM '.$this->db->au_comments.' WHERE user_id = :id');
+            $this->db->bind (':id', $user_id);
+            $err=false;
+            try {
+              $action = $this->db->execute(); // do the query
+              $rows_affected = intval ($this->db->rowCount());
+
+            } catch (Exception $e) {
+
+              $returnvalue['success'] = false; // set return value to false
+              $returnvalue['error_code'] = 1; // error code
+              $returnvalue ['data'] = false; // returned data
+              $returnvalue ['count'] = 0; // returned count of datasets
+
+              return $returnvalue;
+            }
+            $stmt = $this->db->query('DELETE FROM '.$this->db->au_messages.' WHERE creator_id = :id');
+            $this->db->bind (':id', $user_id);
+            $err=false;
+            try {
+              $action = $this->db->execute(); // do the query
+              $rows_affected = intval ($this->db->rowCount());
+
+            } catch (Exception $e) {
+
+              $returnvalue['success'] = false; // set return value to false
+              $returnvalue['error_code'] = 1; // error code
+              $returnvalue ['data'] = false; // returned data
+              $returnvalue ['count'] = 0; // returned count of datasets
+
+              return $returnvalue;
+            }
+
+          } //end if
+
+
           $this->syslog->addSystemEvent(0, "User deleted with id ".$user_id." by ".$updater_id, 0, "", 1);
 
           $returnvalue['success'] = true; // set return value to false
@@ -2294,7 +2354,7 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error deleting user with id ".$user_id." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error deleting user with id ".$user_id." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
