@@ -676,7 +676,7 @@ class Idea {
 
     }// end function
 
-  public function getIdeasByTopic ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id) {
+  public function getIdeasByTopic ($offset, $limit, $orderby=3, $asc=0, $status=-1, $topic_id) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -698,25 +698,33 @@ class Idea {
         $limit_active=false;
       }
 
+      // additional conditions for the WHERE clause
+      $extra_where ="";
+
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
+      }
+
       switch (intval ($orderby)){
         case 0:
-        $orderby_field = $this->db->au_ideas."status";
+        $orderby_field = $this->db->au_ideas.".status";
         break;
         case 1:
-        $orderby_field = $this->db->au_ideas."order_importance";
+        $orderby_field = $this->db->au_ideas.".order_importance";
         break;
         case 2:
-        $orderby_field = $this->db->au_ideas."created";
+        $orderby_field = $this->db->au_ideas.".created";
         break;
         case 3:
-        $orderby_field = $this->db->au_ideas."last_update";
+        $orderby_field = $this->db->au_ideas.".last_update";
         break;
         case 4:
-        $orderby_field = $this->db->au_ideas."id";
+        $orderby_field = $this->db->au_ideas.".id";
         break;
 
         default:
-        $orderby_field = $this->db->au_ideas."last_update";
+        $orderby_field = $this->db->au_ideas.".last_update";
       }
 
       switch (intval ($asc)){
@@ -731,14 +739,14 @@ class Idea {
       }
       $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
       $join =  'INNER JOIN '.$this->db->au_rel_topics_ideas.' ON ('.$this->db->au_rel_topics_ideas.'.idea_id='.$this->db->au_ideas.'.id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
-      $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_rel_topics_ideas.'.topic_id= :topic_id ';
+      $where = ' WHERE '.$this->db->au_ideas.'.id > 0 AND '.$this->db->au_rel_topics_ideas.'.topic_id= :topic_id '.$extra_where;
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      if ($limit){
+      if ($limit_active){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
         $this->db->bind(':limit', $limit); // bind limit
       }
-      $this->db->bind(':status', $status); // bind status
+      //$this->db->bind(':status', $status); // bind status
       $this->db->bind(':topic_id', $topic_id); // bind group id
 
       $err=false;
@@ -770,7 +778,7 @@ class Idea {
     }// end function
 
 
-    public function getIdeasByCategory ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id) {
+    public function getIdeasByCategory ($offset, $limit, $orderby=3, $asc=0, $status=-1, $topic_id) {
         /* returns category list (associative array) with start and limit provided
         if start and limit are set to 0, then the whole list is read (without limit)
         orderby is the field (int, see switch), defaults to last_update (3)
@@ -792,25 +800,33 @@ class Idea {
           $limit_active=false;
         }
 
+        // additional conditions for the WHERE clause
+        $extra_where ="";
+
+        if ($status > -1){
+          // specific status selected / -1 = get all status values
+          $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
+        }
+
         switch (intval ($orderby)){
           case 0:
-          $orderby_field = $this->db->au_ideas."status";
+          $orderby_field = $this->db->au_ideas.".status";
           break;
           case 1:
-          $orderby_field = $this->db->au_ideas."order_importance";
+          $orderby_field = $this->db->au_ideas.".order_importance";
           break;
           case 2:
-          $orderby_field = $this->db->au_ideas."created";
+          $orderby_field = $this->db->au_ideas.".created";
           break;
           case 3:
-          $orderby_field = $this->db->au_ideas."last_update";
+          $orderby_field = $this->db->au_ideas.".last_update";
           break;
           case 4:
-          $orderby_field = $this->db->au_ideas."id";
+          $orderby_field = $this->db->au_ideas.".id";
           break;
 
           default:
-          $orderby_field = $this->db->au_ideas."last_update";
+          $orderby_field = $this->db->au_ideas.".last_update";
         }
 
         switch (intval ($asc)){
@@ -825,14 +841,14 @@ class Idea {
         }
         $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
         $join =  'INNER JOIN '.$this->db->au_rel_categories_ideas.' ON ('.$this->db->au_rel_categories_ideas.'.idea_id='.$this->db->au_ideas.'.id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
-        $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_rel_categories_ideas.'.category_id= :category_id ';
+        $where = ' WHERE '.$this->db->au_ideas.'.id > 0 AND '.$this->db->au_rel_categories_ideas.'.category_id= :category_id '.$extra_where;
         $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-        if ($limit){
+        if ($limit_active){
           // only bind if limit is set
           $this->db->bind(':offset', $offset); // bind limit
           $this->db->bind(':limit', $limit); // bind limit
         }
-        $this->db->bind(':status', $status); // bind status
+        //$this->db->bind(':status', $status); // bind status
         $this->db->bind(':category_id', $category_id); // bind category_id
 
         $err=false;
@@ -908,7 +924,7 @@ class Idea {
     } // end function
 
 
-    public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0) {
+    public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=-1, $extra_where="", $room_id=0) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -930,8 +946,14 @@ class Idea {
         $limit_active=false;
       }
 
+      // check if a status was set (status > -1 default value)
+      if ($status>-1){
+        $extra_where.= " AND ".$this->db->au_ideas.".status = ".$status;
+      }
+
       if ($room_id > 0){
         // if a room id is set then add to where clause
+        $room_id = $this->converters->checkRoomId ($room_id); // auto convert id
         $extra_where.= " AND room_id = ".$room_id; // get specific topics to a room
       }
 
@@ -973,13 +995,12 @@ class Idea {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      if ($limit){
+      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      if ($limit_active){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
         $this->db->bind(':limit', $limit); // bind limit
       }
-      $this->db->bind(':status', $status); // bind status
 
       $err=false;
       try {
@@ -1006,10 +1027,12 @@ class Idea {
         return $returnvalue;
 
       }else {
+        // determine total number of datasets without pagination limits
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, "id", " status=".$status.$extra_where);
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = $ideas; // returned data
-        $returnvalue ['count'] = count ($ideas); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets with pagination or $total_datasets returns all datasets (without pagination)
 
         return $returnvalue;
 
@@ -1017,12 +1040,12 @@ class Idea {
     }// end function
 
 
-    public function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id) {
+    public function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=-1, $room_id) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending
-      $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+      $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1) -1 = get all datasets with status values 0-4
       $room_id is the id of the room
       */
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
@@ -1038,6 +1061,14 @@ class Idea {
       if ($offset==0 && $limit==0){
         $limit_string="";
         $limit_active=false;
+      }
+
+      // additional conditions for the WHERE clause
+      $extra_where ="";
+
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
       }
 
       switch (intval ($orderby)){
@@ -1073,14 +1104,14 @@ class Idea {
       }
       $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
       $join =  'INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
-      $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_ideas.'.room_id= :room_id ';
-      $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      if ($limit){
+      $where = $this->db->au_ideas.'.id > 0 AND '.$this->db->au_ideas.'.room_id= :room_id '.$extra_where;
+      $stmt = $this->db->query($select_part.' '.$join.' WHERE '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      if ($limit_active){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
         $this->db->bind(':limit', $limit); // bind limit
       }
-      $this->db->bind(':status', $status); // bind status
+      //$this->db->bind(':status', $status); // bind status
       $this->db->bind(':room_id', $room_id); // bind room id
 
       $err=false;
@@ -1106,17 +1137,20 @@ class Idea {
 
         return $returnvalue;
       }else {
+        // determine total number of datasets without pagination limits
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, "id", $where);
+
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $ideas; // returned data
-        $returnvalue ['count'] = count ($ideas); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
 
       }
     }// end function
 
-    public function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status=1, $group_id) {
+    public function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status=-1, $group_id) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -1137,6 +1171,15 @@ class Idea {
         $limit_string="";
         $limit_active=false;
       }
+
+      // additional conditions for the WHERE clause
+      $extra_where ="";
+
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
+      }
+
 
       switch (intval ($orderby)){
         case 0:
@@ -1171,14 +1214,14 @@ class Idea {
       }
       $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
       $join =  'INNER JOIN '.$this->db->au_rel_groups_users.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_ideas.'.user_id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
-      $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_rel_groups_users.'.group_id= :group_id ';
+      $where = ' WHERE '.$this->db->au_ideas.'.id > 0 AND '.$this->db->au_rel_groups_users.'.group_id= :group_id '.$extra_where;
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      if ($limit){
+      if ($limit_active){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
         $this->db->bind(':limit', $limit); // bind limit
       }
-      $this->db->bind(':status', $status); // bind status
+      //$this->db->bind(':status', $status); // bind status
       $this->db->bind(':group_id', $group_id); // bind group id
 
       $err=false;
@@ -1204,6 +1247,8 @@ class Idea {
 
         return $returnvalue;
       }else {
+
+        // get count without pagination limits (total datasets)
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $ideas; // returned data
@@ -1213,7 +1258,7 @@ class Idea {
       }
     }// end function
 
-    public function getIdeasByUser ($offset, $limit, $orderby=3, $asc=0, $status=1, $user_id) {
+    public function getIdeasByUser ($offset, $limit, $orderby=3, $asc=0, $status=-1, $user_id) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -1234,6 +1279,13 @@ class Idea {
       if ($offset==0 && $limit==0){
         $limit_string="";
         $limit_active=false;
+      }
+      // additional conditions for the WHERE clause
+      $extra_where ="";
+
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
       }
 
       switch (intval ($orderby)){
@@ -1269,14 +1321,14 @@ class Idea {
       }
       $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update,  '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
       $join =  'INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
-      $where = ' WHERE '.$this->db->au_ideas.'.status= :status AND '.$this->db->au_ideas.'.user_id= :user_id ';
+      $where = ' WHERE '.$this->db->au_ideas.'.id > 0 AND '.$this->db->au_ideas.'.user_id= :user_id '.$extra_where;
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      if ($limit){
+      if ($limit_active){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
         $this->db->bind(':limit', $limit); // bind limit
       }
-      $this->db->bind(':status', $status); // bind status
+      //$this->db->bind(':status', $status); // bind status
       $this->db->bind(':user_id', $user_id); // bind room id
 
       $err=false;
