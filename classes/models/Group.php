@@ -30,7 +30,7 @@ class Group {
       $this->db->bind(':id', $group_id); // bind group id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -38,7 +38,7 @@ class Group {
         return $returnvalue;
 
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $groups[0]; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
@@ -56,7 +56,7 @@ class Group {
     $this->db->bind(':id', $group_id); // bind group id
     $groups = $this->db->resultSet();
     if (count($groups)<1){
-      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
       $returnvalue ['data'] = false; // returned data
       $returnvalue ['count'] = 0; // returned count of datasets
@@ -64,7 +64,7 @@ class Group {
       return $returnvalue;
 
     }else {
-      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue ['data'] =  $groups[0]['hash_id']; // returned data
       $returnvalue ['count'] = 1; // returned count of datasets
@@ -101,15 +101,15 @@ class Group {
       if (!$err)
       {
         $this->syslog->addSystemEvent(0, "Group property ".$property." changed for id ".$group_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
       } else {
-        $this->syslog->addSystemEvent(1, "Group changing room property ".$property." for id ".$group_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
-        $returnvalue['success'] = false; // set return value to false
+        //$this->syslog->addSystemEvent(1, "Group changing room property ".$property." for id ".$group_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -159,7 +159,7 @@ class Group {
       $groups = $this->db->resultSet();
 
       if (count($groups)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - group not found
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -172,7 +172,7 @@ class Group {
           $db_access_code = $group['access_code'];
           if (password_verify($access_code, $db_access_code))
           {
-            $returnvalue['success'] = true; // set return value to false
+            $returnvalue['success'] = true; // set return value
             $returnvalue['error_code'] = 0; // error code - no error
             $returnvalue ['data'] = $group ['id']; // returned data
             $returnvalue ['count'] = 1; // returned count of datasets
@@ -180,7 +180,7 @@ class Group {
             return $returnvalue;
 
           }else {
-            $returnvalue['success'] = false; // set return value to false
+            $returnvalue['success'] = true; // set return value
             $returnvalue['error_code'] = 3; // error code - pw mismatch
             $returnvalue ['data'] = false; // returned data
             $returnvalue ['count'] = 0; // returned count of datasets
@@ -189,8 +189,8 @@ class Group {
             $this->syslog->addSystemEvent("Group access code incorrect: ".$group['group_name'], 0, "", 1);
           }
       } // end foreach
-        $this->syslog->addSystemEvent("Group access code incorrect: ".$group['group_name'], 0, "", 1);
-        $returnvalue['success'] = false; // set return value to false
+        //$this->syslog->addSystemEvent("Group access code incorrect: ".$group['group_name'], 0, "", 1);
+        $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 4; // error code - no matching dataset
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -216,8 +216,8 @@ class Group {
 
       } catch (Exception $e) {
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -225,14 +225,14 @@ class Group {
       }
 
       if (count($groups)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - group not found
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code - no matching dataset
         $returnvalue ['data'] = $groups; // returned data
         $returnvalue ['count'] = count ($groups); // returned count of datasets
@@ -258,7 +258,7 @@ class Group {
 
       } catch (Exception $e) {
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code - no matching dataset
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -266,7 +266,7 @@ class Group {
           return $returnvalue;
 
       }
-      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code - no matching dataset
       $returnvalue ['data'] = $this->db->rowCount(); // returned data
       $returnvalue ['count'] = $this->db->rowCount(); // returned count of datasets
@@ -341,8 +341,8 @@ class Group {
 
       } catch (Exception $e) {
           $err=true;
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -350,15 +350,15 @@ class Group {
       }
 
       if (count($groups)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - no matching dataset
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
-        $returnvalue['error_code'] = 0; // error code - no matching dataset
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $groups; // returned data
         $returnvalue ['count'] = count($groups); // returned count of datasets
 
@@ -374,14 +374,14 @@ class Group {
       $this->db->bind(':group_name', $group_name); // bind room id
       $groups = $this->db->resultSet();
       if (count($groups)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - no matching dataset
         $returnvalue ['data'] = 0; // returned data
         $returnvalue ['count'] = count ($groups); // returned count of datasets
 
         return $returnvalue;
       }else {
-        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code - no matching dataset
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -402,7 +402,7 @@ class Group {
 
         // check if group name is still available
         if ($this->checkGroupExistsByName($group_name)['data']>0){
-          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 2; // error code - no matching dataset
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -443,7 +443,7 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Added new group (#".$insertid.") ".$group_name, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code - no matching dataset
           $returnvalue ['data'] = $insertid; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
@@ -452,8 +452,8 @@ class Group {
 
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error adding group ".$group_name, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error adding group ".$group_name, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code - no matching dataset
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -489,14 +489,14 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group status changed ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code - no matching dataset
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing status of group ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing status of group ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code - no matching dataset
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -531,14 +531,14 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group vote bias changed ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code - no matching dataset
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing vote bias of group ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
+          //$this->syslog->addSystemEvent(1, "Error changing vote bias of group ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code - no matching dataset
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
@@ -575,16 +575,16 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group votes per user changed ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code - no error
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing votes per user of group ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
+          //$this->syslog->addSystemEvent(1, "Error changing votes per user of group ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -618,16 +618,16 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group description public changed ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
-          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing description public ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
+          //$this->syslog->addSystemEvent(1, "Error changing description public ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -661,16 +661,16 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group description internal changed ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
-          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing description internal of group ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
+          //$this->syslog->addSystemEvent(1, "Error changing description internal of group ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -702,16 +702,16 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group name changed ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
-          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing name of group ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
+          //$this->syslog->addSystemEvent(1, "Error changing name of group ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -747,16 +747,16 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group Access Code changed ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
-          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing access code of group ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
+          //$this->syslog->addSystemEvent(1, "Error changing access code of group ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
 
@@ -781,16 +781,16 @@ class Group {
         if (!$err)
         {
           $this->syslog->addSystemEvent(0, "Group deleted with id ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = true; // set return value to false
-          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = 1; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error deleting group with id ".$group_id." by ".$updater_id, 0, "", 1);
-          $returnvalue['success'] = false; // set return value to false
-          $returnvalue['error_code'] = 1; // error code - db error
+          //$this->syslog->addSystemEvent(1, "Error deleting group with id ".$group_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
           $returnvalue ['count'] = 0; // returned count of datasets
 
