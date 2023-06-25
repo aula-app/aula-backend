@@ -53,7 +53,7 @@ class Topic {
 
       // check if topic is existent
       if ($this->converters->checkTopicExist($topic_id)==0) {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 2; // error code - db error
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -97,7 +97,7 @@ class Topic {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error reporting topic ".$content, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error reporting topic ".$content, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
           $returnvalue ['data'] = false; // returned data
@@ -106,7 +106,7 @@ class Topic {
           return $returnvalue;
         }
       }else {
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 2; // error code - db error
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -158,6 +158,27 @@ class Topic {
 
     }
 
+    public function getTopicPhase ($topic_id) {
+      // returns the phase of the topic
+      $ret_value = getTopicBaseData($topic_id);
+      if ($ret_value['success']){
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $ret_value['data']['phase_id']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+      }else {
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = $ret_value ['error_code']; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    } // end function
+
     public function getTopicBaseData ($topic_id) {
       /* returns topic base data for a specified db id */
       $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -166,7 +187,7 @@ class Topic {
       $this->db->bind(':id', $topic_id); // bind topic id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 2; // error code - db error
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -268,7 +289,7 @@ class Topic {
       }
 
       if (count($topics)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 2; // error code - db error
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -340,7 +361,7 @@ class Topic {
 
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error adding topic ".$name, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error adding topic ".$name, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
           $returnvalue ['data'] = false; // returned data
@@ -386,7 +407,7 @@ class Topic {
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing status of topic ".$topic_id." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error changing status of topic ".$topic_id." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
           $returnvalue ['data'] = false; // returned data
@@ -429,7 +450,7 @@ class Topic {
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing order of topic ".$topic_id." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error changing order of topic ".$topic_id." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
           $returnvalue ['data'] = false; // returned data
@@ -476,7 +497,7 @@ class Topic {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing topic name ".$topic_id." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error changing topic name ".$topic_id." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
           $returnvalue ['data'] = false; // returned data
@@ -524,7 +545,7 @@ class Topic {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing topic property ".$property." for #".$topic_id." to ".$propvalue." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error changing topic property ".$property." for #".$topic_id." to ".$propvalue." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
           $returnvalue ['data'] = false; // returned data
@@ -639,7 +660,7 @@ class Topic {
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing topic description ".$topic_id." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error changing topic description ".$topic_id." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
           $returnvalue ['data'] = false; // returned data
@@ -676,7 +697,7 @@ class Topic {
 
         return $returnvalue;
       } else {
-        $this->syslog->addSystemEvent(1, "Error deleting delegations for topic with id ".$topic_id, 0, "", 1);
+        //$this->syslog->addSystemEvent(1, "Error deleting delegations for topic with id ".$topic_id, 0, "", 1);
         $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 1; // error code - db error
         $returnvalue ['data'] = false; // returned data
@@ -717,7 +738,7 @@ class Topic {
 
           return $returnvalue;
         } else {
-          $this->syslog->addSystemEvent(1, "Error deleting topic with id ".$topic_id." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error deleting topic with id ".$topic_id." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; // error code - db error
           $returnvalue ['data'] = false; // returned data

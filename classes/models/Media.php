@@ -122,7 +122,7 @@ class Media {
       $this->db->bind(':id', $media_id); // bind text id
       $media = $this->db->resultSet();
       if (count($media)<1){
-        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 2; //  error code
         $returnvalue ['data'] = 1; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -248,7 +248,7 @@ class Media {
       $count_datasets = count ($media);
 
       if ($count_datasets<1){
-        $returnvalue['success'] = false; // set success value
+        $returnvalue['success'] = true; // set success value
         $returnvalue['error_code'] = 2; // no data found
         $returnvalue ['data'] = false; // returned data is false
         $returnvalue ['count'] = $count_datasets; // returned count of datasets
