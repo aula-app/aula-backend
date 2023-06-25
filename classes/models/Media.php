@@ -147,7 +147,7 @@ class Media {
       return $ret_value;
     }
 
-    public function getMedia ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $last_update=0, $location=0, $updater_id=0) {
+    public function getMedia ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $last_update=0, $updater_id=0) {
       /* returns media list (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -299,7 +299,7 @@ class Media {
         $type = intval($type);
         $system_type = intval($system_type);
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_media.' (name, description, type, system_type, url, path, filename, status, hash_id, created, last_update, updater_id) VALUES (:headline, :body, :consent_text, :creator_id, :user_needs_to_consent, :service_id_consent, :status, :hash_id, NOW(), NOW(), :updater_id, :language_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_media.' (name, description, type, system_type, url, path, filename, status, hash_id, created, last_update, updater_id) VALUES (:name, :description, :type, :system_type, :url, :path, :filename, :status, :hash_id, NOW(), NOW(), :updater_id)');
         // bind all VALUES
 
         $this->db->bind(':name', $name);
@@ -391,7 +391,7 @@ class Media {
           $returnvalue ['success'] = false; // set return value
           $returnvalue ['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
-          $returnvalue ['count'] = $count_datasets; // returned count of datasets
+          $returnvalue ['count'] = 0; // returned count of datasets
 
           return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
         }
