@@ -247,7 +247,7 @@ class Room {
     }// end function
 
 
-    public function getRooms($offset, $limit, $orderby=3, $asc=0, $status=1) {
+    public function getRooms($offset, $limit, $orderby=3, $asc=0, $status=-1, $extra_where="") {
       /* returns roomlist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -271,7 +271,10 @@ class Room {
         $limit_string=" LIMIT ".$offset." , 9999999999999999";
       }
 
-
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND status = ".$status;
+      }
 
       switch (intval ($orderby)){
         case 0:
@@ -305,8 +308,8 @@ class Room {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_rooms.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      $this->db->bind(':status', $status); // bind status
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_rooms.' WHERE id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      //$this->db->bind(':status', $status); // bind status
 
       $err=false;
       try {
@@ -330,16 +333,17 @@ class Room {
 
         return $returnvalue;
       }else {
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_rooms, $extra_where);
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue ['data'] = $rooms; // returned data
-        $returnvalue ['count'] = count ($rooms); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
       }
     }// end function
 
-    public function getRoomsByUser($user_id, $offset=0, $limit=0, $orderby=3, $asc=0, $status=1) {
+    public function getRoomsByUser($user_id, $offset=0, $limit=0, $orderby=3, $asc=0, $status=-1) {
       /* returns roomlist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -445,15 +449,72 @@ class Room {
     }// end function
 
 
-    public function getUsersInRoom($room_id, $status=1) {
+    public function getUsersInRoom($room_id, $status=-1, $offset=0, $limit=0, $orderby=3, $asc=0) {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
       $room_id  = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_rooms_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_rooms_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_rooms_users.'.room_id= :roomid AND '.$this->db->au_users_basedata.'.status= :status' );
+
+      $orderby_field="";
+      $asc_field ="";
+      $extra_where ="";
+
+      $limit_string=" LIMIT ".$offset." , ".$limit;
+
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+
+      }
+      if ($offset>0 && $limit==0){
+        $limit_string=" LIMIT ".$offset." , 9999999999999999";
+      }
+
+
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+
+        $extra_where .= " AND ".$this->db->au_users_basedata.".status = ".$status;
+      }
+
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = $this->db->au_users_basedata.".status";
+        break;
+        case 1:
+        $orderby_field = $this->db->au_users_basedata.".updater_id";
+        break;
+        case 2:
+        $orderby_field = $this->db->au_users_basedata.".created";
+        break;
+        case 3:
+        $orderby_field = $this->db->au_users_basedata.".last_update";
+        break;
+        case 4:
+        $orderby_field = $this->db->au_users_basedata.".id";
+        break;
+
+        default:
+        $orderby_field = $this->db->au_users_basedata.".last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+
+      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_rooms_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_rooms_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_rooms_users.'.room_id= :roomid '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string );
       $this->db->bind(':roomid', $room_id); // bind room id
-      $this->db->bind(':status', $status); // bind status
+      //$this->db->bind(':status', $status); // bind status
 
       $err=false;
       try {
