@@ -209,7 +209,7 @@ class User {
       $user_exist = $this->converters->checkUserExist($user_id);
       $user_exist_target = $this->converters->checkUserExist($user_id_target);
       $topic_exist = $this->converters->checkTopicExist($topic_id);
-      
+
       $data_delegation ['user_exist_target']=$user_exist_target;
 
       if ($user_exist==1 && $topic_exist==1 && $user_exist_target==1) {
@@ -1265,7 +1265,7 @@ class User {
     }// end function
 
 
-    public function getUsers($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
+    public function getUsers($offset, $limit, $orderby=3, $asc=0, $status=-1, $extra_where="") {
       /* returns userlist (associative array) with start and limit provided
       extra_where = SQL Clause that can be added to where in the query like AND status = 1
       */
@@ -1281,6 +1281,12 @@ class User {
         $limit_string="";
         $limit_active=false;
       }
+
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
+      }
+
 
       switch (intval ($orderby)){
         case 0:
@@ -1357,10 +1363,12 @@ class User {
 
 
       }else {
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_users_basedata, $extra_where);
+
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users; // returned data
-        $returnvalue ['count'] = $count_data; // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
 
@@ -1484,18 +1492,20 @@ class User {
         }
     }// end function
 
-    public function editUserData($user_id, $realname, $displayname, $username, $email, $status, $updater_id=0) {
+    public function editUserData($user_id, $realname, $displayname, $username, $email, $about_me="", $position="", $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
         */
         // query('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET realname = :realname , displayname= :displayname, username= :username, email = :email, status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':username', $this->crypt->encrypt($username));
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
+        $this->db->bind(':about_me', $this->crypt->encrypt($about_me));
         $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
+        $this->db->bind(':position', $this->crypt->encrypt($position));
         $this->db->bind(':email', $this->crypt->encrypt($email));
         $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -1754,6 +1764,7 @@ class User {
         return $returnvalue;
       }
     }// end function
+
 
     public function getUserAbsence($user_id) {
       /* returns status of absence of a user for a user id
