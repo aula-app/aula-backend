@@ -670,7 +670,6 @@ class Converters {
         $extra_where = " WHERE ".$extra_where;
       }
       $stmt = $this->db->query('SELECT COUNT(*) as total FROM '.$table.$extra_where);
-      echo 'SELECT COUNT(*) as total FROM '.$table.$extra_where;
       $res = $this->db->resultSet();
       $total_rows = $res[0]['total'];
       return $total_rows;
