@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-26 06:10:16 +0000
+# Verarbeitungszeit: 2023-06-26 14:30:50 +0000
 # ************************************************************
 
 
@@ -162,7 +162,7 @@ CREATE TABLE `au_groups` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the group',
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set then access code is needed to join group',
-  `group_order` int(11) DEFAULT NULL COMMENT 'order htat groups are shown (used for display)',
+  `order_importance` int(11) DEFAULT NULL COMMENT 'order htat groups are shown (used for display)',
   `vote_bias` int(11) DEFAULT NULL COMMENT 'votes weight per user in this group',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;

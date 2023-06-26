@@ -1265,7 +1265,7 @@ class User {
     }// end function
 
 
-    public function getUsers($offset, $limit, $orderby=3, $asc=0, $status=-1, $extra_where="") {
+    public function getUsers($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="") {
       /* returns userlist (associative array) with start and limit provided
       extra_where = SQL Clause that can be added to where in the query like AND status = 1
       */
@@ -1281,12 +1281,6 @@ class User {
         $limit_string="";
         $limit_active=false;
       }
-
-      if ($status > -1){
-        // specific status selected / -1 = get all status values
-        $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
-      }
-
 
       switch (intval ($orderby)){
         case 0:
@@ -1363,12 +1357,10 @@ class User {
 
 
       }else {
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_users_basedata, $extra_where);
-
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users; // returned data
-        $returnvalue ['count'] = $total_datasets; // returned count of datasets
+        $returnvalue ['count'] = $count_data; // returned count of datasets
 
         return $returnvalue;
 

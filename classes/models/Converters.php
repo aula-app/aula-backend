@@ -73,6 +73,21 @@ class Converters {
       }
     } // end function
 
+    public function checkCommandId ($command_id) {
+      /* helper function that checks if a command id is a standard db id (int) or if a hash id was passed
+      if a hash was passed, function returns db id
+      */
+
+      if (is_int(intval ($command_id)))
+      {
+        return $command_id;
+      } else
+      {
+
+        return $this->getUserIdByHashId ($command_id);
+      }
+    } // end function
+
 
     public function checkCommentId ($comment_id) {
       /* helper function that checks if a comment id is a standard db id (int) or if a hash was passed
@@ -114,6 +129,33 @@ class Converters {
         $this->cache->set($check_hash, $users[0]['id'], $this->long_caching_time);
 
         return $users[0]['id']; // return user id
+      }
+    }// end function
+
+    public function getCommandIdByHashId($hash_id) {
+      /* Returns Database ID of user when hash_id is provided
+      */
+      $check_hash = $this->buildCacheHash ("getCommandIdByHashId".$hash_id);
+      // check if hash is in cache
+      try {
+        if($this->cache->get($check_hash) != null) {
+          $data = $this->cache->get($check_hash);
+          // echo ("Using cache for ".$hash_id." data = ".$data);
+          return $data;
+        }
+      } catch (Exception $e) {
+        // cache error
+      }
+      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_commands.' WHERE hash_id = :hash_id');
+      $this->db->bind(':hash_id', $hash_id); // bind userid
+      $commands = $this->db->resultSet();
+      if (count($commands)<1){
+        $this->cache->set($check_hash, 0, $this->long_caching_time);
+        return 0; // nothing found, return 0 code
+      }else {
+        $this->cache->set($check_hash, $commands[0]['id'], $this->long_caching_time);
+
+        return $commands[0]['id']; // return command id
       }
     }// end function
 
@@ -617,7 +659,7 @@ class Converters {
       }
     } // end function
 
-    public function getTotalDatasets ($table, $tablefield, $extra_where=""){
+    public function getTotalDatasets ($table, $extra_where=""){
       /* returns the total number of rows with
       extra_where parameter (i.e. $extra_where = "status = 1 AND id >50");
       $tablefield(varchar) = field (i.e. id) that exists in the destination table $table (i.e. ideas)
@@ -632,9 +674,9 @@ class Converters {
         // tablefield undefined, return error
         return 0;
       }
-      $stmt = $this->db->query('SELECT '.$tablefield.' FROM '.$table.$extra_where);
+      $stmt = $this->db->query('SELECT COUNT(*) as total FROM '.$table.$extra_where);
       $res = $this->db->resultSet();
-      $total_rows = count ($res);
+      $total_rows = $res[0]['total'];
       return $total_rows;
 
     }

@@ -82,7 +82,7 @@ class Group {
       */
       $group_id = $this->converters->checkGroupId($group_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $stmt = $this->db->query('UPDATE '.$this->db->au_gropus.' SET '.$property.'= :prop_value, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+      $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET '.$property.'= :prop_value, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
       // bind all VALUES
       $this->db->bind(':prop_value', $prop_value);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -200,21 +200,79 @@ class Group {
     }// end function
 
 
-    public function getUsersInGroup($group_id, $status=1) {
+    public function getUsersInGroup($group_id, $status=-1, $offset=0, $limit=0, $orderby=3, $asc=0) {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
       $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_groups_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_groups_users.'.group_id= :groupid AND '.$this->db->au_users_basedata.'.status= :status' );
+      $orderby_field="";
+      $asc_field ="";
+      $extra_where ="";
+
+      $limit_string=" LIMIT ".$offset." , ".$limit;
+
+
+      // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+      if ($offset==0 && $limit==0){
+        $limit_string="";
+
+      }
+      if ($offset>0 && $limit==0){
+        $limit_string=" LIMIT ".$offset." , 9999999999999999";
+      }
+
+
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+
+        $extra_where .= " AND ".$this->db->au_users_basedata.".status = ".$status;
+      }
+
+
+      switch (intval ($orderby)){
+        case 0:
+        $orderby_field = $this->db->au_users_basedata.".status";
+        break;
+        case 1:
+        $orderby_field = $this->db->au_users_basedata.".updater_id";
+        break;
+        case 2:
+        $orderby_field = $this->db->au_users_basedata.".created";
+        break;
+        case 3:
+        $orderby_field = $this->db->au_users_basedata.".last_update";
+        break;
+        case 4:
+        $orderby_field = $this->db->au_users_basedata.".id";
+        break;
+
+        default:
+        $orderby_field = $this->db->au_users_basedata.".last_update";
+      }
+
+      switch (intval ($asc)){
+        case 0:
+        $asc_field = "DESC";
+        break;
+        case 1:
+        $asc_field = "ASC";
+        break;
+        default:
+        $asc_field = "DESC";
+      }
+
+
+      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_groups_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_groups_users.'.group_id= :groupid '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       $this->db->bind(':groupid', $group_id); // bind group id
-      $this->db->bind(':status', $status); // bind status
+      //$this->db->bind(':status', $status); // bind status
 
       $err=false;
       try {
         $groups = $this->db->resultSet();
 
       } catch (Exception $e) {
+
           $err=true;
           $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
@@ -225,6 +283,7 @@ class Group {
       }
 
       if (count($groups)<1){
+        echo ("no users found");
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - group not found
         $returnvalue ['data'] = false; // returned data
@@ -232,6 +291,8 @@ class Group {
 
         return $returnvalue;
       }else {
+        // $total_datasets = $this->converters->getTotalDatasets ($this->db->au_users_basedata, $extra_where);
+
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code - no matching dataset
         $returnvalue ['data'] = $groups; // returned data
@@ -277,7 +338,7 @@ class Group {
 
 
 
-    public function getGroups($offset, $limit, $orderby, $asc, $status=1) {
+    public function getGroups ($offset, $limit, $orderby, $asc, $status=-1, $extra_where="") {
       /* returns group list (associative array) with start and limit provided
       orderby is the field (int, see switch), defaults to last_update (3)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending
@@ -299,12 +360,18 @@ class Group {
       }
 
 
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND status = ".$status;
+      }
+
+
       switch (intval ($orderby)){
         case 0:
         $orderby_field = "group_name";
         break;
         case 1:
-        $orderby_field = "order";
+        $orderby_field = "order_importance";
         break;
         case 2:
         $orderby_field = "created";
@@ -331,9 +398,9 @@ class Group {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_groups.' WHERE status= :status ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_groups.' WHERE id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
 
-      $this->db->bind(':status', $status); // bind status
+      //$this->db->bind(':status', $status); // bind status
 
       $err=false;
       try {
@@ -357,10 +424,11 @@ class Group {
 
         return $returnvalue;
       }else {
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_groups, $extra_where);
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $groups; // returned data
-        $returnvalue ['count'] = count($groups); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
       }
@@ -377,14 +445,14 @@ class Group {
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - no matching dataset
         $returnvalue ['data'] = 0; // returned data
-        $returnvalue ['count'] = count ($groups); // returned count of datasets
+        $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
       }else {
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code - no matching dataset
         $returnvalue ['data'] = 1; // returned data
-        $returnvalue ['count'] = 0; // returned count of datasets
+        $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
       }
