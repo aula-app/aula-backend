@@ -1028,7 +1028,7 @@ class Idea {
 
       }else {
         // determine total number of datasets without pagination limits
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, "id", " status=".$status.$extra_where);
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, $status.$extra_where);
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = $ideas; // returned data
@@ -1138,7 +1138,7 @@ class Idea {
         return $returnvalue;
       }else {
         // determine total number of datasets without pagination limits
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, "id", $where);
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, $where);
 
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
