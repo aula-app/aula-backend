@@ -1284,7 +1284,7 @@ class User {
 
       if ($status > -1){
         // specific status selected / -1 = get all status values
-        $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
+        $extra_where .= " AND ".$this->db->au_users_basedata.".status = ".$status;
       }
 
 
