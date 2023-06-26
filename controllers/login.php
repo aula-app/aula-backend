@@ -14,15 +14,15 @@ $user = new User($db, $crypt, $syslog);
 $jwt = new JWT($jwtKeyFile);
 
 
-
 header('Content-Type: application/json; charset=utf-8');
 $json = file_get_contents('php://input');
 
 // Converts it into a PHP object
 $data = json_decode($json);
-$jwt_token = $jwt->gen_jwt($data->username);
 
-if ($user->checkLogin($data->username, $data->password)) {
+$loginResult = $user->checkLogin($data->username, $data->password);
+if ($loginResult["success"]) {
+  $jwt_token = $jwt->gen_jwt($loginResult["data"]);
   echo json_encode(['JWT' => $jwt_token, "success" => true]);
 } else {
   echo json_encode(["success" => "false"]);

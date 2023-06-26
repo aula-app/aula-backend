@@ -12,7 +12,7 @@ class JWT {
         $this->key = str_replace(PHP_EOL, '', $this->key);
     }
 
-    public function gen_jwt($username):String {
+    public function gen_jwt($user_id):String {
         $header = [ 
             "alg" => "HS512", 
             "typ" => "JWT" 
@@ -20,7 +20,7 @@ class JWT {
         $header = base64_url_encode(json_encode($header));
         $payload =  [
             "exp" => 0,
-            "username" => $username
+            "user_id" => $user_id
         ];
         $payload = base64_url_encode(json_encode($payload));
         $signature = base64_url_encode(hash_hmac('sha512', "$header.$payload", $this->key, true));
@@ -51,6 +51,22 @@ class JWT {
           return $signature_provided == $base64_url_signature;
         } else {
           return false;
+        }
+      }
+    }
+
+    public function payload() {
+      $secret = $this->key;
+      $headers = apache_request_headers();
+    
+      if ($this->check_jwt()) {
+        $matches = array();
+        preg_match('/Bearer (.*)/', $headers['Authorization'], $matches);
+        if (isset($matches[1])){
+          $token = $matches[1];
+          $tokenParts = explode('.', $token);
+          $payload = base64_decode($tokenParts[1]);
+          return $payload;
         }
       }
     }
