@@ -424,7 +424,7 @@ class Group {
 
         return $returnvalue;
       }else {
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_groups, $extra_where);
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_groups, "id>0".$extra_where);
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $groups; // returned data

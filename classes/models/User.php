@@ -1284,7 +1284,7 @@ class User {
 
       if ($status > -1){
         // specific status selected / -1 = get all status values
-        $extra_where .= " AND ".$this->db->au_users_basedata.".status = ".$status;
+        $extra_where .= " AND status = ".$status;
       }
 
 
@@ -1326,14 +1326,14 @@ class User {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_users_basedata.' WHERE status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_users_basedata.' WHERE id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
 
       if ($limit){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
         $this->db->bind(':limit', $limit); // bind limit
       }
-      $this->db->bind(':status', $status); // bind status
+      // $this->db->bind(':status', $status); // bind status
 
       $err=false;
       try {
@@ -1363,7 +1363,7 @@ class User {
 
 
       }else {
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_users_basedata, $extra_where);
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_users_basedata, "id > 0".$extra_where);
 
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code

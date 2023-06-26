@@ -333,7 +333,7 @@ class Room {
 
         return $returnvalue;
       }else {
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_rooms, $extra_where);
+        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_rooms, "id > 0".$extra_where);
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue ['data'] = $rooms; // returned data
@@ -377,28 +377,30 @@ class Room {
       if ($offset>0 && $limit==0){
         $limit_string=" LIMIT ".$offset." , 9999999999999999";
       }
-
-
+      if ($status > -1){
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND ".$this->db->au_users_basedata.".status = ".$status;
+      }
 
       switch (intval ($orderby)){
         case 0:
-        $orderby_field = "room_name";
+        $orderby_field = $this->db->au_rooms.".room_name";
         break;
         case 1:
-        $orderby_field = "order_importance";
+        $orderby_field = $this->db->au_rooms.".order_importance";
         break;
         case 2:
-        $orderby_field = "created";
+        $orderby_field = $this->db->au_rooms.".created";
         break;
         case 3:
-        $orderby_field = "last_update";
+        $orderby_field = $this->db->au_rooms.".last_update";
         break;
         case 4:
-        $orderby_field = "id";
+        $orderby_field = $this->db->au_rooms.".id";
         break;
 
         default:
-        $orderby_field = "last_update";
+        $orderby_field = "$this->db->au_rooms."."last_update";
       }
 
       switch (intval ($asc)){
@@ -412,9 +414,9 @@ class Room {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT DISTINCT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE ('.$this->db->au_rel_rooms_users.'.user_id = :user_id OR '.$this->db->au_rooms.'.restrict_to_roomusers_only = 0) AND '.$this->db->au_rooms.'.status= :status ORDER BY '.$this->db->au_rooms.'.'.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT DISTINCT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE ('.$this->db->au_rel_rooms_users.'.user_id = :user_id OR '.$this->db->au_rooms.'.restrict_to_roomusers_only = 0) '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
 
-      $this->db->bind(':status', $status); // bind status
+      //$this->db->bind(':status', $status); // bind status
       $this->db->bind(':user_id', $user_id); // bind user id
 
       $err=false;
