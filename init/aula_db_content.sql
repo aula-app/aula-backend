@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-24 11:42:12 +0000
+# Verarbeitungszeit: 2023-06-26 06:09:55 +0000
 # ************************************************************
 
 
@@ -66,7 +66,10 @@ DROP TABLE IF EXISTS `au_commands`;
 CREATE TABLE `au_commands` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `cmd_id` int(11) DEFAULT NULL COMMENT 'command id (i.e. 1=delete user, 2=suspend user, 3=unsuspend user 4=vacation_on, 5=vacation_off etc.))',
+  `command` varchar(1024) DEFAULT NULL COMMENT 'command in text form',
+  `parameters` int(11) DEFAULT NULL COMMENT 'parameters for the command',
   `date_start` datetime DEFAULT NULL COMMENT 'Date and time, when command is executed',
+  `date_end` datetime DEFAULT NULL COMMENT 'Date and time, when command execution ends',
   `active` tinyint(1) DEFAULT NULL COMMENT '0=inactive, 1=active',
   `status` int(11) DEFAULT NULL COMMENT '0=not executed yet, 1=executed, 2=executed with error',
   `info` varchar(1024) DEFAULT NULL COMMENT 'contains comment of person that entered command',
@@ -166,7 +169,7 @@ LOCK TABLES `au_delegation` WRITE;
 INSERT INTO `au_delegation` (`user_id_original`, `user_id_target`, `room_id`, `topic_id`, `status`, `updater_id`, `created`, `last_update`)
 VALUES
 	(3,4,NULL,4,1,0,NULL,'2023-06-19 15:03:50'),
-	(3,15,NULL,4,1,0,'2023-06-05 19:27:39','2023-06-19 15:03:50'),
+	(3,15,NULL,4,1,4,'2023-06-05 19:27:39','2023-06-25 18:25:43'),
 	(10,7,NULL,55,0,0,NULL,'2023-06-23 09:24:36'),
 	(17,4,NULL,4,1,0,NULL,'2023-06-19 15:03:50'),
 	(43,9,NULL,55,1,0,NULL,'2023-06-19 15:03:50'),
@@ -428,7 +431,7 @@ LOCK TABLES `au_ideas` WRITE;
 INSERT INTO `au_ideas` (`id`, `content`, `sum_likes`, `sum_votes`, `number_of_votes`, `user_id`, `votes_available_per_user`, `status`, `language_id`, `created`, `last_update`, `hash_id`, `order_importance`, `info`, `updater_id`, `room_id`, `is_winner`, `approved`, `approval_comment`, `topic_id`)
 VALUES
 	(1,'dhGeooMu0+VeVgJ7/yri74pk1653diZoI64CtvFt1jI3mtjwXeukt6DBiQRq8ZgGMQGPj7dRZzL3LKLWi7LINQ==',2,1,1,1,1,1,0,'2023-06-02 13:33:07','2023-06-23 08:01:00','de343bde7f0c3247bfb943f5886e5fbf',10,'',0,1,NULL,NULL,NULL,NULL),
-	(2,'DE40Bo8GtCWfbJ4y/Ogcs+7P+YT0vcSlVBWqoLRGcs9U6ynEGOYwBMmjviKUg60Ya3AVnmM6H/+hPC3JfLsOLg==',0,0,2,2,1,1,0,'2023-06-02 13:33:07','2023-06-19 15:03:50','82866fb99b2bf8415fbffec238dd906f',10,'',0,1,NULL,NULL,NULL,NULL),
+	(2,'DE40Bo8GtCWfbJ4y/Ogcs+7P+YT0vcSlVBWqoLRGcs9U6ynEGOYwBMmjviKUg60Ya3AVnmM6H/+hPC3JfLsOLg==',1,0,2,2,1,1,0,'2023-06-02 13:33:07','2023-06-25 19:47:38','82866fb99b2bf8415fbffec238dd906f',10,'',0,1,NULL,NULL,NULL,NULL),
 	(3,'GAfRtyNOyv97naaUaQgnma6a2qTOJ5FU37d+/tlN6fp2gapPFNY0CazAbsDa+Vr8OB80FguGgVao3IMcKf7j1R9w',0,0,2,3,1,1,0,'2023-06-02 13:33:07','2023-06-19 15:03:50','11f2939e2682fd73c588e8753f010dcf',10,'',0,1,NULL,NULL,NULL,NULL),
 	(4,'E/+s+WC+HObNV7ipATuuNoeBhvbbSs6vSWwIsuL9dTZMxYvIcWqHH2wFtxzF6G4pg/iXgdegXGinThj+CJY3Q1RBaQ==',0,0,2,4,1,1,0,'2023-06-02 13:33:07','2023-06-19 15:03:50','1cc37def1d33e136fe4954b6af603b53',10,'',0,1,NULL,NULL,NULL,NULL),
 	(5,'ThJ7arH0peSjyDPEvLDKFKQFRHnii/dlUtm8wd+vXwrdsUkRof6mXd93GdmogSrx58jsSavq1F91R0eLgYn8gA==',0,0,1,5,1,1,0,'2023-06-02 13:33:07','2023-06-19 15:03:50','c3ff280a489f9e7d5b8de30058cb350c',10,'',0,1,NULL,NULL,NULL,NULL),
@@ -655,7 +658,8 @@ LOCK TABLES `au_likes` WRITE;
 INSERT INTO `au_likes` (`id`, `user_id`, `object_id`, `status`, `created`, `last_update`, `hash_id`, `object_type`)
 VALUES
 	(25,7,1,1,'2023-06-19 15:03:59','2023-06-19 15:03:59','7670c5d2e05b8d0c4634344d7e261941',1),
-	(26,5,1,1,'2023-06-23 07:55:06','2023-06-23 07:55:06','6307a8eb9e10b1b711cd0a12b69c41af',1);
+	(26,5,1,1,'2023-06-23 07:55:06','2023-06-23 07:55:06','6307a8eb9e10b1b711cd0a12b69c41af',1),
+	(27,5,2,1,'2023-06-25 19:47:38','2023-06-25 19:47:38','66113cc0c51a0661ca4da583b8eb514d',1);
 
 /*!40000 ALTER TABLE `au_likes` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -731,7 +735,8 @@ VALUES
 	(19,44,'new test1','test1 body','2023-06-17 10:25:44',0,0,1,0,'2023-06-17 10:48:51','2023-06-17 10:48:51',0,'b20d368bbc91f02bc7e6d7b7d78908dd',0,1,1,0,0),
 	(20,44,'new test1','test1 body','2023-06-17 10:25:44',0,0,1,0,'2023-06-17 10:49:24','2023-06-17 10:49:24',0,'53730fcc0f2bfbb179c6ea7d7026597d',0,1,1,0,0),
 	(21,44,'new test1','test1 body','2023-06-17 10:25:44',0,0,1,0,'2023-06-17 10:58:13','2023-06-17 10:58:13',0,'cd2ed8891ff5581e2c8e54246ec9656e',0,1,1,0,0),
-	(22,44,'new test1','test1 body','2023-06-17 10:25:44',0,0,1,0,'2023-06-17 11:47:34','2023-06-17 11:47:34',0,'375ed56025b99bc43de310f114eab31d',0,1,1,0,0);
+	(22,44,'new test1','test1 body','2023-06-17 10:25:44',0,0,1,0,'2023-06-17 11:47:34','2023-06-17 11:47:34',0,'375ed56025b99bc43de310f114eab31d',0,1,1,0,0),
+	(23,44,'W/6AYJmgJ2D+G3s5Gm7IPaLzKLEVIpnezUb+3B1ixhU/JOtVYXkEkO7CQBni/Q==','5wBieE4ymT/5PTJpidDAkshvBZufDsipu/8vwoZIjYFl3MZOH1a2aOcB','2023-06-25 16:27:07',0,0,1,0,'2023-06-25 16:27:38','2023-06-25 16:27:38',0,'3338f59ab634ff8190b7d535c1d243c3',0,1,1,0,0);
 
 /*!40000 ALTER TABLE `au_messages` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -1016,7 +1021,7 @@ LOCK TABLES `au_rel_user_user` WRITE;
 
 INSERT INTO `au_rel_user_user` (`user_id1`, `user_id2`, `type`, `status`, `created`, `last_update`, `updater_id`)
 VALUES
-	(4,15,0,1,'2023-06-06 13:21:47','2023-06-18 18:24:33',0);
+	(4,15,0,1,'2023-06-06 13:21:47','2023-06-25 18:25:43',0);
 
 /*!40000 ALTER TABLE `au_rel_user_user` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -9303,7 +9308,46 @@ VALUES
 	(7948,0,'Added new text (#29) creator: 0',0,'','2023-06-23 11:35:33','2023-06-23 11:35:33',NULL),
 	(7949,0,'Added new text (#30) creator: 0',0,'','2023-06-23 11:35:51','2023-06-23 11:35:51',NULL),
 	(7950,0,'Added new text (#31) creator: 0',0,'','2023-06-23 11:36:44','2023-06-23 11:36:44',NULL),
-	(7951,0,'Added new text (#32) creator: 0',0,'','2023-06-23 11:37:04','2023-06-23 11:37:04',NULL);
+	(7951,0,'Added new text (#32) creator: 0',0,'','2023-06-23 11:37:04','2023-06-23 11:37:04',NULL),
+	(7952,0,'User delegation(s) deleted with id 2 for topic 0',0,'','2023-06-25 16:24:37','2023-06-25 16:24:37',NULL),
+	(7953,0,'User delegation(s) deleted with id 2 for topic 0',0,'','2023-06-25 16:24:37','2023-06-25 16:24:37',NULL),
+	(7954,0,'User deleted with id 2 by 0',0,'','2023-06-25 16:24:37','2023-06-25 16:24:37',NULL),
+	(7955,0,'Added new message (#23) encrypted headline',0,'','2023-06-25 16:27:38','2023-06-25 16:27:38',NULL),
+	(7956,0,'Successful login user 165',0,'','2023-06-25 16:34:02','2023-06-25 16:34:02',NULL),
+	(7957,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 16:53:53','2023-06-25 16:53:53',NULL),
+	(7958,0,'Delegation deleted for user id 3 by 4',0,'','2023-06-25 16:53:53','2023-06-25 16:53:53',NULL),
+	(7959,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 16:53:53','2023-06-25 16:53:53',NULL),
+	(7960,0,'Added user relation (type:1) 3-15',0,'','2023-06-25 16:53:53','2023-06-25 16:53:53',NULL),
+	(7961,0,'Added user relation (type:0) 4-15',0,'','2023-06-25 16:53:53','2023-06-25 16:53:53',NULL),
+	(7962,0,'Removed user relation (delete from db) 3-15',0,'','2023-06-25 16:53:53','2023-06-25 16:53:53',NULL),
+	(7963,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 18:21:43','2023-06-25 18:21:43',NULL),
+	(7964,0,'Delegation deleted for user id 3 by 4',0,'','2023-06-25 18:21:43','2023-06-25 18:21:43',NULL),
+	(7965,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 18:21:43','2023-06-25 18:21:43',NULL),
+	(7966,0,'Added user relation (type:1) 3-15',0,'','2023-06-25 18:21:43','2023-06-25 18:21:43',NULL),
+	(7967,0,'Added user relation (type:0) 4-15',0,'','2023-06-25 18:21:43','2023-06-25 18:21:43',NULL),
+	(7968,0,'Removed user relation (delete from db) 3-15',0,'','2023-06-25 18:21:43','2023-06-25 18:21:43',NULL),
+	(7969,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 18:23:50','2023-06-25 18:23:50',NULL),
+	(7970,0,'Delegation deleted for user id 3 by 4',0,'','2023-06-25 18:23:50','2023-06-25 18:23:50',NULL),
+	(7971,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 18:23:50','2023-06-25 18:23:50',NULL),
+	(7972,0,'Added user relation (type:1) 3-15',0,'','2023-06-25 18:23:50','2023-06-25 18:23:50',NULL),
+	(7973,0,'Added user relation (type:0) 4-15',0,'','2023-06-25 18:23:50','2023-06-25 18:23:50',NULL),
+	(7974,0,'Removed user relation (delete from db) 3-15',0,'','2023-06-25 18:23:50','2023-06-25 18:23:50',NULL),
+	(7975,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 18:24:11','2023-06-25 18:24:11',NULL),
+	(7976,0,'Delegation deleted for user id 3 by 4',0,'','2023-06-25 18:24:11','2023-06-25 18:24:11',NULL),
+	(7977,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 18:24:11','2023-06-25 18:24:11',NULL),
+	(7978,0,'Added user relation (type:1) 3-15',0,'','2023-06-25 18:24:11','2023-06-25 18:24:11',NULL),
+	(7979,0,'Added user relation (type:0) 4-15',0,'','2023-06-25 18:24:11','2023-06-25 18:24:11',NULL),
+	(7980,0,'Removed user relation (delete from db) 3-15',0,'','2023-06-25 18:24:11','2023-06-25 18:24:11',NULL),
+	(7981,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 18:25:43','2023-06-25 18:25:43',NULL),
+	(7982,0,'Delegation deleted for user id 3 by 4',0,'','2023-06-25 18:25:43','2023-06-25 18:25:43',NULL),
+	(7983,0,'Added delegation for user 3 for topic 4',0,'','2023-06-25 18:25:43','2023-06-25 18:25:43',NULL),
+	(7984,0,'Added user relation (type:1) 3-15',0,'','2023-06-25 18:25:43','2023-06-25 18:25:43',NULL),
+	(7985,0,'Added user relation (type:0) 4-15',0,'','2023-06-25 18:25:43','2023-06-25 18:25:43',NULL),
+	(7986,0,'Removed user relation (delete from db) 3-15',0,'','2023-06-25 18:25:43','2023-06-25 18:25:43',NULL),
+	(7987,0,'Idea  2 incremented likes',0,'','2023-06-25 19:47:38','2023-06-25 19:47:38',NULL),
+	(7988,0,'User delegation(s) deleted with id 52 for topic 0',0,'','2023-06-26 04:56:34','2023-06-26 04:56:34',NULL),
+	(7989,0,'User delegation(s) deleted with id 52 for topic 0',0,'','2023-06-26 04:56:35','2023-06-26 04:56:35',NULL),
+	(7990,0,'User deleted with id 52 by 0',0,'','2023-06-26 04:56:35','2023-06-26 04:56:35',NULL);
 
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -9726,7 +9770,6 @@ LOCK TABLES `au_users_basedata` WRITE;
 INSERT INTO `au_users_basedata` (`id`, `realname`, `displayname`, `username`, `email`, `pw`, `position`, `hash_id`, `about_me`, `registration_status`, `status`, `created`, `last_update`, `updater_id`, `bi`, `userlevel`, `infinite_votes`, `last_login`, `presence`, `absent_until`, `auto_delegation`, `trustee_id`)
 VALUES
 	(1,'rTFCfAQDj1CZlq28rRfW1bR7PnSg9q7LItShTC+jP6j5Oy7z8mqN3epE8AlTIHL3lZLAxVwbemorwTg=','3uKvy8vBL5g1KOzhC5sOp3raJKZ1C6w4hdUmN7/xEubyECZe7U1om/hf4MhN+Vwn9X+YC2g0kGqybbgfUgc=','TFmMezx2/EhyaNugT1v+xmCxlbDikuWg+yKBsduHyTAGCNmfBrCZVf7SlhKi3X7urk9BCbWOSA==','NtcYfdhhFw1bZa+hwmrAvReTr+rLPgtx+Y25EA2PyWEEomHUVRKKEOVr2YdTgXYZpUnzwgZfDRQQM7tYSNUM','$2y$10$OIzvrrLzj1nHeurOhZgwjOgeECv.HzHVDK/BUyNC1piUEvwegX6eC',NULL,'bcd0baefa114a49f49fd6a514309cd83',NULL,NULL,1,'2023-05-25 16:29:49','2023-05-25 16:29:49',0,'290db519ddc77aa55757ff90ad3cdce0',NULL,NULL,NULL,NULL,NULL,0,NULL),
-	(2,'E9qh0WfGGzsOYQsT5Krj3mE1UPUYFyuCW3JZ0xNAXzmdkMa/t5KJySnL07Oqqe1pSCJUSlKbBgZ6PQ==','mhEjB5TfHnwEecHkeCPHeuYXeTYMgvZ+S36JzFCBKrRaFsYFMfMyuzlGRYWkOSKP6DmnYBXFhpXRJKMwSw==','XDvcVFB4TIli+wEdexcd/01Xe9rOg4zBRNElOf7dRco/NZY5SDMNpNfpm96vOFVueuHHysvB','6oSxaeVbjq2hQ6WsYCWsxHK271DHizio4x2p9SvBVGGs4I56Ppi7NOuUfZynZ9hPJqAc8dPV54P7tzu2rsQ=','$2y$10$PBNAaZmfJ3ioRaPtK2pY0eSuWZuedY0HR6cp.8/Hg6KrgwIX3JFLW',NULL,'250a4663ffe1e6595b412000dd22bc96',NULL,NULL,1,'2023-05-25 16:29:50','2023-05-25 16:29:50',0,'a59c28c335bf44cf5ca8225fd857693f',NULL,NULL,NULL,NULL,NULL,0,NULL),
 	(3,'vr52O1gmWBwKZ35fUiMubi4qfVqnhLyuWBMU5TjS53UVyyqSAaCV3sX4Hag7rdIr7Q7SNUcdYaMpLaA=','tfLN/2wkxFJklMf4LAQL0Ll8gLIek8E3n+vV9LxofZSsNY7Ev7zAhSAvj463sWd/RRfgvY/uirPcngvTu4M=','9DMTWgYUy6iLhQHuTrvyHj9U5mmqi1gZSFI3mt9sxHK5HcSdKbF8VKDuo2+xg7BucNomOEMzng==','id2kpzu1wbF5u+JvxaO6AOGZ/NdvFm/aZ6dNq4suBhONpNIc3el7dcEDYZcxhyNW0UzpmmxX6atGCiaMPL+t','$2y$10$rZzUIt/LaYX6sOmNug.B2uH2p2TdRw90TzDqUjbGSPbxIo9if3ZhG',NULL,'d2beda5597177e2144e5100b771d5d3f',NULL,NULL,1,'2023-05-25 16:29:50','2023-05-25 16:29:50',0,'68b0a7442b7f86546590f207d3160acc',NULL,NULL,NULL,NULL,NULL,0,NULL),
 	(4,'NTN3efR/0SMYa3rmpzg/yQDWIHYhq/Pr4ZSOmZLIPXOczpk8RrZpEx5Y2sPa0rjJAS9CpAMgVrqw4yc=','RbAwRdqfy+B5nibK4FKrmvNnbon90TOi8V/AeMseUvBo0oajrC/ihS3CeWZbvLeyeaPzBAymLE5NmYdGULE=','I8yJj9dgNvEUaKmQoODBs/tjQlW/9gfh8zLlN8bF+ZEUhtMXOduDNnjDFAKXnKmqjrWktm7f5A==','k4/8aVv0wqzv6RZd1ec1NljnzdSbfZYSxuL+8QQNp11/0/2NIqTsUgQ5IEQ9Z82BBPnDkraypQkDNU7iUC8D','$2y$10$c0pczF1iyOCokuIOpDlpV..XDBiY/KEUx54PJR.b5FLv19fFxkFLq',NULL,'eee26e36837a64181a9264754097553e',NULL,2,1,'2023-05-25 16:29:50','2023-06-16 15:31:24',0,'459098b8017d8da67122f2da79377278',NULL,NULL,NULL,NULL,NULL,0,NULL),
 	(5,'mFU//GDcNsdZDzuPrtV4ztrOg9GHssryb7Tsjshp33QAveZVBJ+zYdk8jcorZumwzPhuFa7tiAVtf3Q=','va4Y0gMJcaeMsfcIdITIH9IK2eJ8/CNq5c+Lat9JcgAU2yBblbuS+09wGYZXrJeqGbxbq9aS64H0recjEX8=','px23kLiyznglZ0A0XwKjgeYuiPtlBlbB/J0eT1ysgPzhyjJhpPGlkXR8y+D2PNZqPVK2c0Fqag==','8YYvXZWa4wAmvTFxN8lZnhqFNQAyGXASW3RfHHwUX5Q0P8TZkjFExozy9LEmSNwFDguQdnHJ7a2gDz0maRrX','$2y$10$yASnceOhprXKPTwHasPv7O2l9spfYYtGQgDj/MPoluypt5Ms8LJiC',NULL,'5a157c68040110709333be2cae7286b2',NULL,NULL,1,'2023-05-25 16:29:51','2023-05-25 16:29:51',0,'0f2628991a2a7449c0789944b296d109',NULL,NULL,NULL,NULL,NULL,0,NULL),
@@ -9776,7 +9819,6 @@ VALUES
 	(49,'5UxK17t9Rb49hZu5ZHZZa/Vvj9fMZUTRuuTIb9PQ12pZtQQcqPg989L9gttcOQSAQhCOPQYUMEv106E=','9lGdGw/zBB/yPaZBLiDl3sdYlTwyNJZjwilsUOsWdAMADEpu/6/I3goGXyIO53CU6xRYOq43nrhWYD+JJ+0=','+oK2eevJsDTHhUh1HfUyDLpxSbGCjBkQhg+Ga6qdA2kzy6jE4to3S0dYSKFLP1vkjPQkAgVEpw==','fz5gxM24HC1FaLpFxtM9N9hNGIAK7dAA0+v+wPqg/mYYn8yJfC5Ii0deCaQYjdixMw2kyF4M0HeMNIqZTv6M','$2y$10$zWKUgLODRsnuBI.u/FIBwOLq7pdkI4.m6iX5UdtrMXStAmPNm6Bee',NULL,'7327fe9a48d191701a9a8c110c8971fb',NULL,NULL,1,'2023-05-26 13:22:02','2023-05-26 13:22:02',0,'4ec941a9665220efbade3f4ba759d445',NULL,NULL,NULL,NULL,NULL,0,NULL),
 	(50,'yU48Vpkn700COLnFD4gzEIjPDIYshN5VUBgg3WKv1kj/RnreW9Cpmul3RhtDkSN0foTdClgZxV9VGps=','L7cbmaiT5xXQsyesVKpRbaxLqgailD+EUZOqfvGqzlfwjQeuK+aU2itTaCvSIlYFlMM18pgsoJRJ3U2A4fc=','H7CslsgOZ/ke7c5t9lcugJB1tru5tgK/2+F3ET78w4ziW130KBZ2rOfB98pca30pO2x/IkLBUw==','t8FnPs0S7AFmQ8NiqiBX59YHXkaN0VHfEBMEd/gdNl5BFX/UTzQTFPxquj/32rvIBSuw2ltakuueT1OqCEJA','$2y$10$LLdMCFwuDZ104zCXjNqfZuFXyV9HLQAMvgKIu.LHT8gzpNsF7S83i',NULL,'20eb615a02c59b72cae91a69e215145a',NULL,NULL,1,'2023-05-26 13:31:07','2023-05-26 13:31:07',0,'5d9dd203378d3781363bcea3d07cff6b',NULL,NULL,NULL,NULL,NULL,0,NULL),
 	(51,'A7ANGGEXOJPA8psnW2lK2eEmUgf8tSfCDVCfv08ofJQ7I0ah7xT8dHLCznIP5s/Jk2iWa9BAkGRb7sg=','S2RcmH3u33FBh63FB6+hAIfxIaP9X/SDvzYMTjpi+o7gdk6Jwbl1kRHIe7fdB7UHuymNXp6gTAsCJgl7B1I=','0vgk+yvlPhyNpjhcNAtWaWQQv4hLX3DRsdJe+HWoyiJj3iRFsFe+KVdqbCLMfZygTvxCAzD44g==','s+efeFZ6pjpFzLcMsOtECk2Z5SUsbVk9sVcvflZJMYN+E6d4IQZ3j6xOHDehBu5oqkWLNtNel3mXMshdH3Q0','$2y$10$mSfJg3ml/YKRqKi5kGgc1e7jVxXBECPKHpdQ37V71NCtcF7IRWIJy',NULL,'feb37e38b57e2dadae4ad0a5db4497f0',NULL,NULL,1,'2023-05-26 13:32:31','2023-05-26 13:32:31',0,'6fb96d32cb4a0249bfcd412a9af77fc8',NULL,NULL,NULL,NULL,NULL,0,NULL),
-	(52,'sW3cWnxnOU8YZkTiR2s/unlqpWTs/rAG2WQJK7jMOdz6cawsrOrdLm1s0CYoaSBBr1LohFme+fe4z6k=','Nw50gFZq77olTwRivnFhGYSHb+g5stpdPqd4U7ttlwneuPzm/Orzhi2X21aM/mK94IAbcF0Tu4T4h3eRvo0=','yIZxLJnEUswKwdiYwWRS5geqFl3mhLn4oaNrrGdOixLktqX9MdFR4tpFudhj7IPcscfXM9bjrw==','RI0EvLPK8/wSqySrW3lHk0hwhybP8fAIUjotzHKnzr7IIEFRgjrE+RvlpV+EttanPvDBMgPJ473E/XziRO13','$2y$10$ZgjLXakTe4EtV4lN7orbn.FLej.IHR/YouhTr2DMGrOeoNSOVYElK',NULL,'5c82383dfe9d8d3720068d97cda96cf4',NULL,NULL,1,'2023-05-26 13:35:20','2023-05-26 13:35:20',0,'dc38487d9721d2e70f632cc3eeb41568',NULL,NULL,NULL,NULL,NULL,0,NULL),
 	(53,'eQrnWUV6bM3PudHp5UIDrjOodhrtVZ/xq/8bLh6jWJkh64mQPXm5dgshu2zHAmiLW1LTZLeBCdmZ/dM=','CDxzOVjzbv/tgGLAtV1SvVy0da8cqyCH3ALM0E3P/o4BaAB6HtirXdk5G/pKEO8Z5U4AqcHCq54Zb4N73Do=','jhnTBGGMLjvrxKEAw5unOHNFiuI4p5fBmVaA3IOWbpF5ZBNPRFpEVw7u/RoFpLM7XSajcWMYkQ==','CZtDDLwV9YAb1igVbB9+7JamXn1IRkOb1CeILmL8dET4owIfR4bKTR12/6I1IzK821Sys6RJoRrtk/FlRgYJ','$2y$10$UyR0BpGwjkvRcKKiFvMKiuySUGZ9U6bxnCINwW36gR5GE3v3rxaxS',NULL,'744bf0c14e279dd36e3f04092cbbb9a1',NULL,NULL,1,'2023-05-26 13:36:15','2023-05-26 13:36:15',0,'070b94a28c6c207c93168f31e74bccff',NULL,NULL,NULL,NULL,NULL,0,NULL),
 	(54,'IUwNY4NEyPXJWwMoLkMlrltFva48bvNW0T7i/9FC3hMQ6WPNvO6N4QB9SeHfbtuWwgOSPXgDOcNVMds=','tvBaVc+1f4BuvOLu191O4WR+P5MTzCOPOBnLErXL4W52XoqvsFqa3wuGmQ5Vfpd4VFVWtXrfyQxqsH9Num8=','e9Yt+zRG0I5yrnTWhJ5ftGvQHy/Xs+LK4omwNPnSD6Q9cWCWCmXyKReSYQfJe7BJPZDN6tnX6g==','4AmEL/9w5NopvdMLzVRU6Nuw1Qz1HZHcBLoVDODB/dTrmFM9lVXQMt1v1jGEZ5ABiTUKYjxosk7WSr57rw2O','$2y$10$zB85qSwMcxDJlQtv4kJOuerKpefmhVeuHwF6M6fboTBKe0/C8h.H6',NULL,'0f7d81dd32e3a1a534207c769281af56',NULL,NULL,1,'2023-05-26 13:39:03','2023-05-26 13:39:03',0,'f17794ae9a9b49ee4d51bb7e30aae459',NULL,NULL,NULL,NULL,NULL,0,NULL),
 	(55,'jO6PMi6RMmalTMvmjNBV+iYEtWuEfpYWJ7QQP2sVHY7ZvMY6ycGmglBkRsHIGNqlz+Qcdr2Qieba304=','mkRJswHgwhhc32i8TkD8PIt3/cuI18wlXVuyBxr2H8Llf2de2/dJl/HduQ9DyJIt1mOkpgWv44UFQLN62+0=','gngIOxwYEJuwqAEDPD64JfevxBAOpJsDeRqSdJjXm5tqnZbOIp9ivoIysQMiRwWKn5YHoMhKxw==','d3f8UPpwhb6r3zv1ymo1lo3E8bzWoR7LUc7wPaDXgFsg9D9e9p4cNgX+uCtZQ/sOGYuK9KQYYojV9t54naAk','$2y$10$db8qNA7ZLXwAvIXMXfzzgeYtZvacUWUBDDH3LDGY.YJ0y8NMZGpH2',NULL,'5ced360fb73eff379bad88f982310e97',NULL,NULL,1,'2023-05-26 13:39:50','2023-05-26 13:39:50',0,'fe7125c6e49a5bbf0b5eefd06ffd4705',NULL,NULL,NULL,NULL,NULL,0,NULL),
@@ -9889,7 +9931,7 @@ VALUES
 	(162,'aACxv4rk18EnJDaRoJeSrz+RefU+bkimuQOADNhZQaCnf5LFu16ixpOaVW9spzpPgosT7F82kfwDnjg=','EELfjUPfj8ejVKRdq5DaF4wWxm+iMPPmNjOPk4Gr7uNLdpvCCMxuR6ysw4OvAWU01fkikIDKkk4WWHBgyCY=','qemNLHDwRr+bmOCNjXRFUkYoKY4XbpX8Mw6qiX6ZXuIC7Lz7E682CWdLdfaD2ZzV7tj30bBBCA==','Y2pPyo8nt78tva46b6oJOVhW3LqFt7UlRc88dK5nzYg+Y3I3x2wmSAi/DbIV4lxjTRgvVX6NR1/drY0VeX8+','$2y$10$a9XSfocT6gYBDAdFKTDcGOXLIXibdQ4yXn/1qajSCHfisTBhasyhO',NULL,'e3b96039b7ec7af573df87b92f0875de',NULL,NULL,1,'2023-06-16 10:35:13','2023-06-16 10:35:13',0,'0ec94e3cf7eacd501399528bcd628dc0',10,NULL,NULL,NULL,NULL,0,NULL),
 	(163,'vn1pnAO5AKJc+sPbRmBPLenRXZRnCpmVO524IVfT2WTSx0Q3X7nNEYUJmLarj728vRdRDLgQC9OlKEQ=','ZfC/ULkOuB6kyZ9pN5BI0sMB0q4wtehsrAHS1ErkKzYF55SI1PqmLriar60m3+nCzZoXZT7btuXGD2E03Zs=','TG/q9eUg1mwEcb5vQqW9MlEiNJEsUYwcyvb0BAw+RUg0xsoKMrT/L0K8C9km565l6JTUVHs2ng==','YpPEYMj3i5y2Gq4FgHOlotkyamlQoiEc1vSCRGTvW6J7tCZ9yKMllN7jLUHzHMDBD+gE7fgLc9IYLmFWEfVw','$2y$10$7inK2vnbkAOYgG8pvbkyde42E8AWiyMt75kAuhUiv0WtCW8r95G92',NULL,'3b24942a76fac9455e8a51e5ed37e197',NULL,NULL,1,'2023-06-16 15:30:53','2023-06-16 15:30:53',0,'2bf5bd956c1642750b8eddfe9a321d3d',10,NULL,NULL,NULL,NULL,0,NULL),
 	(164,'s4BulF9Za0SUjcXAmKoJwtIruqCUt9CjJg+lnklOU+rFauGx8XORAZTJvRVRjQ5Mg9USAJH5rlAdb3w=','J/XCOkg2icIVamN9EIaxEgV6VDi2Q1bi8BO1Wllr5djklsT4Q9OjLIUH42Se9LsfVRnsi3hJSrqpGrQajrM=','7qTuvO7fEIbdjzOLaay9jW767mnuj5M/yJQA2sD2BaOGKUBVuVmywVHP/38hEtTx44a1mhTJ/Q==','jlbQl3H+tbmN6aCYM2je9T0/1KXsW2+yJptHglJh+SQqS7omR2bRyAoI9TYYzlKUrfGt7hUSAPmSde5jhsNR','$2y$10$dV7jums2sjF9ZA9bhDuktuOT213e1VtQEX4lS/r.I5i54Le2owKcy',NULL,'fe272b2f207b85e8e0f9c9b321039c09',NULL,NULL,1,'2023-06-16 15:31:24','2023-06-16 15:31:24',0,'0b2fa6e087e21749fb15d29c2fe7ed4b',10,NULL,NULL,NULL,NULL,0,NULL),
-	(165,'pl440f943b1lhTYTPf4nwCr84bCBN3oXBAwveHNknsUUq4zgJ3ln65c=','kH77bQwaJeSejuqACmVq6tYCrRtv+cEy8EE8UPXQmvBat/DIY14qvJ60k84=','TmlcKnkgZ5WSvg/XXM9JG8X6A1nNGWabnz+DTVqS65fL','aseV1uoi0iilDcRqZmT9mygXDWEhxQG39N7c5n78BAMbmU1YhJWhEBnO','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK',NULL,'3ca2a93f5f309431f65c6770194d1dc6',NULL,NULL,1,'2023-06-17 14:58:43','2023-06-17 14:58:43',0,'21232f297a57a5a743894a0e4a801fc3',10,NULL,NULL,NULL,NULL,0,NULL),
+	(165,'pl440f943b1lhTYTPf4nwCr84bCBN3oXBAwveHNknsUUq4zgJ3ln65c=','kH77bQwaJeSejuqACmVq6tYCrRtv+cEy8EE8UPXQmvBat/DIY14qvJ60k84=','TmlcKnkgZ5WSvg/XXM9JG8X6A1nNGWabnz+DTVqS65fL','aseV1uoi0iilDcRqZmT9mygXDWEhxQG39N7c5n78BAMbmU1YhJWhEBnO','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK',NULL,'3ca2a93f5f309431f65c6770194d1dc6',NULL,NULL,1,'2023-06-17 14:58:43','2023-06-25 16:34:02',0,'21232f297a57a5a743894a0e4a801fc3',10,NULL,'2023-06-25 16:34:02',NULL,NULL,0,NULL),
 	(166,'2dVufTRx4ah5kg9Eov+ri7XXaYEYB7TmPRitJTFh7kYoaQj0msW5B8U=','IHBLoda4rvzv1VYevGhCMJ7uKlYPF8fDtndGvlGNuGHlpYgsRB+ykiP2eqo=','SxSUeCFfHJ/jrF+kflPDPvjmd8Xq3UDqaDxcxr2zktEN3j0=','wsBetWKQvRG02cLO4Gr6bfYqHkhe00lYgbpaY3mKR6+7+qt+7nL4HqCX','$2y$10$Ew1YciE1BgktYQhnNQljyeXGwoSJ1urM3B6CNMYPMtV7xVRsUYfmW',NULL,'d38e9bc2bfe873a9c7ee294a59183000',NULL,NULL,1,'2023-06-17 14:59:11','2023-06-17 14:59:11',0,'cd73502828457d15655bbd7a63fb0bc8',10,NULL,NULL,NULL,NULL,0,NULL),
 	(167,'UtNQSi0q/OsGETgLNkyRJp4n+6j//uYM1JkYneySRRpi57FIeMgxD9M=','N6B/hmax+s4LEuIgADeaszFgPDDz9tse5erwEvP8Y6IYCqpLQEReiSD9LpQ=','7PuYUHk7ndX7GMwM8/Ii2zCLdTSEVznatjRgCqS6pu46n6E=','mh802l7OG1LDoSsIUSuGOMzqj+lZFEdr+tCqe+cjhSM1FFSUIWCkBVYb','$2y$10$aDfmQCWdox/GclO2ivSCBewLqAO7B831Yap8D2NHIwg2r2iuRDZcS',NULL,'c04272ec8ac37695900d9225346c963b',NULL,NULL,1,'2023-06-17 15:00:09','2023-06-17 15:00:09',0,'8d788385431273d11e8b43bb78f3aa41',10,NULL,NULL,NULL,NULL,0,NULL),
 	(168,'8MpbgLEJSvzv77W5lVly+wRPMZp75yWNPvsdFHVEiYn0+cLeJ4EjzOo=','0QQSw3E0Z4Qmog+jckip1BuyeARVcF6QgyXcYBbu5n0Q3ZLaIjRr0dGZQy0=','U7eI+s7zx4YKiqcWp8BZCzRqIwTjkYTFob4dJDM9W97L','vXu+TPCMkjdocFAga8mhw2IVDKSABNf0ikV6d+DpNjuu9OUzJo2hIDY+','$2y$10$IPVhTyc/mGoLM7YlvsUOYeBCzII7U6c0HN/bihj0Rbs0ePJZIJXhu',NULL,'b691e8f2f6fe8171172f723677ca1c44',NULL,NULL,1,'2023-06-17 15:05:10','2023-06-17 15:05:10',0,'6b1d24ff83a319070db95c6c84b9be31',10,NULL,NULL,NULL,NULL,0,NULL),

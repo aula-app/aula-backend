@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-24 11:42:35 +0000
+# Verarbeitungszeit: 2023-06-26 06:10:16 +0000
 # ************************************************************
 
 
@@ -66,7 +66,10 @@ DROP TABLE IF EXISTS `au_commands`;
 CREATE TABLE `au_commands` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `cmd_id` int(11) DEFAULT NULL COMMENT 'command id (i.e. 1=delete user, 2=suspend user, 3=unsuspend user 4=vacation_on, 5=vacation_off etc.))',
+  `command` varchar(1024) DEFAULT NULL COMMENT 'command in text form',
+  `parameters` int(11) DEFAULT NULL COMMENT 'parameters for the command',
   `date_start` datetime DEFAULT NULL COMMENT 'Date and time, when command is executed',
+  `date_end` datetime DEFAULT NULL COMMENT 'Date and time, when command execution ends',
   `active` tinyint(1) DEFAULT NULL COMMENT '0=inactive, 1=active',
   `status` int(11) DEFAULT NULL COMMENT '0=not executed yet, 1=executed, 2=executed with error',
   `info` varchar(1024) DEFAULT NULL COMMENT 'contains comment of person that entered command',
