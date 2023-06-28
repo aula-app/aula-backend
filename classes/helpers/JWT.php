@@ -66,7 +66,7 @@ class JWT {
           $token = $matches[1];
           $tokenParts = explode('.', $token);
           $payload = base64_decode($tokenParts[1]);
-          return $payload;
+          return json_decode($payload);
         }
       }
     }

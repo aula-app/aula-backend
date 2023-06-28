@@ -22,18 +22,21 @@ header('Content-Type: application/json; charset=utf-8');
 
 if ($check_jwt) {
   $jwt_payload = $jwt->payload();
+  $user_id = $data->user_id;
   $new_username = $data->username;
-  $new_password = $data->password;
   $realname = $data->realname;
   $displayname = $data->displayname;
+  $about_me = $data->about_me;
   $email = $data->email;
   $userlevel = $data->userlevel;
+  $position = $data->position;
 
-  $inserted_user = $user->addUser($realname, $displayname, $new_username, $email, $new_password, 1, $jwt_payload->user_id, $userlevel);
-  if ($inserted_user['error_code'] == 2) {
-    http_response_code(409);
-    echo json_encode(['success' => false, 'error' => 'User already exist']);
-  } else if ($inserted_user['success']){
+  $updated_user = $user->editUserData($user_id, $realname, $displayname, $new_username, $email, $about_me, $position, $userlevel, $jwt_payload->user_id);
+  
+  if ($updated_user['error_code'] == 1) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Error updating user']);
+  } else if ($updated_user['success']){
     http_response_code(201);
     echo json_encode(['success' => true]);
   }
@@ -42,7 +45,5 @@ if ($check_jwt) {
   http_response_code(401);
   echo json_encode(['success' => false]);
 }
-
-
 
 ?>
