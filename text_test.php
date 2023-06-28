@@ -54,18 +54,21 @@ if (isset ($_REQUEST['likevalue']))
   $like_value = intval ($_REQUEST['likevalue']);
 }
 
+$userconsentval = 0;
+
 if (isset ($_REQUEST['addmsg']))
 {
   $headline = $_REQUEST['headline'];
   $body = $_REQUEST['body'];
   $consent_text = $_REQUEST['consent_text'];
   $publish_date = $_REQUEST['publish_date'];
+  $userconsentval = $_REQUEST['userconsentval'];
 
 
   // voteForIdea($idea_id, $vote_value, $user_id)
   $msg.= ("<br>Adding Text: ".$headline." to DB");
   // public function addText ($headline, $body="", $consent_text="", $location=0, $creator_id=0, $user_needs_to_consent=0, $service_id_consent=0, $status=1, $updater_id=0, $language_id=0) {
-  $return_value = $text->addText ($headline, $body, $consent_text);
+  $return_value = $text->addText ($headline, $body, $consent_text,0,0,$userconsentval);
   $msg.= ("<br>Returning value: ".$return_value['data']);
 } // end if
 
@@ -163,6 +166,7 @@ $messagedata = $text->getTexts ($offset, $limit, 4, 1, 1);
 out ("--------------");
 out ("Listing Texts from database",true);
 $data = $messagedata ['data'];
+//print_r ($messagedata);
 // idea list:
 out ("<br>Found ".$messagedata['count']." Text(s)!");
 
