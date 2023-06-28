@@ -1405,7 +1405,7 @@ class User {
     }
 
 
-    public function addUser($realname, $displayname, $username, $email, $password, $status, $updater_id=0, $userlevel=10) {
+    public function addUser($realname, $displayname, $username, $email, $password, $status,  $about_me="", $updater_id=0, $userlevel=10) {
         /* adds a user and returns insert id (userid) if successful, accepts the above parameters
          realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
          userlevel = Rights level for the user 10=guest, 20 = standard, 30 =moderator 40 = super mod 50 = admin 60 = tech admin
@@ -1416,6 +1416,7 @@ class User {
         $displayname = trim ($displayname);
         $username = trim ($username);
         $email = trim ($email);
+        $about_me = trim ($about_me);
         $password = trim ($password);
         $updater_id = intval ($updater_id);
         $status = intval($status);
@@ -1440,12 +1441,13 @@ class User {
         // generate blind index
         $bi = md5 (strtolower (trim ($username)));
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_users_basedata.' (presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_users_basedata.' (about_me, presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (about_me, 1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
         // bind all VALUES
         $this->db->bind(':username', $this->crypt->encrypt($username));
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
         $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
         $this->db->bind(':email', $this->crypt->encrypt($email));
+        $this->db->bind(':about_me', $this->crypt->encrypt($about_me));
         $this->db->bind(':password', $hash);
         $this->db->bind(':bi', $bi);
         $this->db->bind(':userlevel', $userlevel);
@@ -1492,14 +1494,14 @@ class User {
         }
     }// end function
 
-    public function editUserData($user_id, $realname, $displayname, $username, $email, $about_me="", $position="", $userlevel="", $updater_id=0) {
+    public function editUserData($user_id, $realname, $displayname, $username, $email, $about_me="", $position="", $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
         */
         // query('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, userlevel = :userlevel, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
         $this->db->bind(':username', $this->crypt->encrypt($username));
         $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -1507,7 +1509,7 @@ class User {
         $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
         $this->db->bind(':position', $this->crypt->encrypt($position));
         $this->db->bind(':email', $this->crypt->encrypt($email));
-        $this->db->bind(':userlevel', $userlevel);
+        $this->db->bind(':status', $status);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $this->db->bind(':userid', $user_id); // user that is updated
