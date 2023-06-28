@@ -1921,7 +1921,7 @@ class User {
          updater_id is the id of the user that commits the update (i.E. admin )
         */
         $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-        $userlevel = intval (§userlevel);
+        $userlevel = intval ($userlevel);
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET userlevel= :userlevel, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
         // bind all VALUES
