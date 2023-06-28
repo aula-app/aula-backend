@@ -27,9 +27,11 @@ if ($check_jwt) {
   $realname = $data->realname;
   $displayname = $data->displayname;
   $email = $data->email;
+  $about_me = $data->about_me;
   $userlevel = $data->userlevel;
 
-  $inserted_user = $user->addUser($realname, $displayname, $new_username, $email, $new_password, 1, $jwt_payload->user_id, $userlevel);
+  $inserted_user = $user->addUser($realname, $displayname, $new_username, $email, $new_password, 1, $about_me, $jwt_payload->user_id, $userlevel);
+  
   if ($inserted_user['error_code'] == 2) {
     http_response_code(409);
     echo json_encode(['success' => false, 'error' => 'User already exist']);
