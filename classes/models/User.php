@@ -1535,7 +1535,7 @@ class User {
 
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error while editing user ".$user_id." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error while editing user ".$user_id." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data
@@ -1624,7 +1624,7 @@ class User {
           return $returnvalue;
 
         } else {
-          $this->syslog->addSystemEvent(1, "Error changing status of user ".$user_id." to ".$status." by ".$updater_id, 0, "", 1);
+          //$this->syslog->addSystemEvent(1, "Error changing status of user ".$user_id." to ".$status." by ".$updater_id, 0, "", 1);
           $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
           $returnvalue ['data'] = false; // returned data

@@ -351,7 +351,7 @@ class Room {
       $status (int) 0=inactive, 1=active, 2=susepended, 3=archived, defaults to active (1)
       All rooms are returned that the user is member of OR that dont have user restriction (open rooms)
       */
-
+      $extra_where="";
       // sanitize
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
       $offset = intval ($offset);
@@ -414,7 +414,7 @@ class Room {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT DISTINCT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE ('.$this->db->au_rel_rooms_users.'.user_id = :user_id OR '.$this->db->au_rooms.'.restrict_to_roomusers_only = 0) '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT DISTINCT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.last_update, '.$this->db->au_rooms.'.created FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE ('.$this->db->au_rel_rooms_users.'.user_id = :user_id OR '.$this->db->au_rooms.'.restrict_to_roomusers_only = 0) '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
 
       //$this->db->bind(':status', $status); // bind status
       $this->db->bind(':user_id', $user_id); // bind user id
@@ -706,7 +706,70 @@ class Room {
     }
 
 
-    public function addRoom($room_name, $description_public="", $description_internal="", $internal_info="", $status=1, $access_code="", $restricted=1, $room_order=10, $updater_id=0) {
+    public function editRoom ($room_id, $room_name, $description_public="", $description_internal="", $internal_info="", $status=1, $access_code="", $restricted=1, $order_importance= 10, $updater_id=0) {
+        /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+
+        */
+        // sanitize
+        $room_name = trim ($room_name);
+        $description_public = trim ($description_public);
+        $description_internal = trim ($description_internal);
+        $internal_info = trim ($internal_info);
+        $access_code = trim ($access_code);
+        $status = intval ($status);
+        $restricted = intval ($restricted);
+        $order_importance = intval ($order_importance);
+
+        $updater_id = $this->converters->checkUserId ($updater_id); // autoconvert
+        $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_rooms.' SET room_name = :room_name, description_public = :description_public , description_internal= :description_internal, internal_info= :internal_info, status= :status, access_code= :access_code, restricted = :restricted, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+        // bind all VALUES
+        $this->db->bind(':room_name', $room_name); // name of the room
+        $this->db->bind(':description_public', $description_internal); // shown in frontend
+        $this->db->bind(':description_internal', $description_internal); // only shown in backend admin
+        $this->db->bind(':internal_info', $internal_info); // extra internal info, only visible in backend
+        $this->db->bind(':status', $status); // status of the room (0=inactive, 1=active, 4=archived)
+        $this->db->bind(':access_code', $access_code); // optional access code for room access
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+        $this->db->bind(':restricted', $restricted); // room restricted to associated users only
+        $this->db->bind(':order_importance', $order_importance); // order for display in frontend
+
+        $this->db->bind(':room_id', $room_id); // room that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Edited room ".$room_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
+
+        } else {
+          //$this->syslog->addSystemEvent(1, "Error while editing room ".$room_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
+        }
+    }// end function
+
+    public function addRoom($room_name, $description_public="", $description_internal="", $internal_info="", $status=1, $access_code="", $restricted=1, $order_importance=10, $updater_id=0) {
         /* adds a new room and returns insert id (room id) if successful, accepts the above parameters
          description_public = actual description of the room, status = status of inserted room (0 = inactive, 1=active)
         */
@@ -717,7 +780,7 @@ class Room {
         $restricted = intval($restricted);
         $updater_id = intval ($updater_id);
         $status = intval($status);
-        $room_order = intval ($room_order);
+        $order_importance = intval ($order_importance);
         $room_name = trim ($room_name);
         if ($restricted>0){
           $restricted=1;
@@ -733,7 +796,7 @@ class Room {
           return $returnvalue;
         }
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rooms.' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :roomorder)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rooms.' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :order_importance)');
         // bind all VALUES
 
         $this->db->bind(':room_name', trim ($room_name));
@@ -748,7 +811,7 @@ class Room {
         $appendix = microtime(true).$testrand;
         $hash_id = md5($room_name.$appendix); // create hash id for this user
         $this->db->bind(':hash_id', $hash_id);
-        $this->db->bind(':roomorder', $room_order); // order parameter
+        $this->db->bind(':order_importance', $order_importance); // order parameter
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $err=false; // set error variable to false

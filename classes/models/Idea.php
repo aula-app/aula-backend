@@ -1364,6 +1364,70 @@ class Idea {
       }
     }// end function
 
+    //public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
+
+
+    public function editidea ($idea_id, $user_id, $content, $status=1, $votes_available_per_user=1, $info="", $order_importance=10, $room_id=0, $updater_id=0) {
+        /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+
+        */
+        // sanitize
+        $content = trim ($content);
+        $info = trim ($info);
+        $status = intval ($status);
+        $order_importance = intval ($order_importance);
+        $votes_available_per_user = intval ($votes_available_per_user);
+
+        $updater_id = $this->converters->checkUserId ($updater_id); // autoconvert
+        $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
+        $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+        $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET user_id = :user_id, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        // bind all VALUES
+        $this->db->bind(':content', $content); // the actual idea
+        $this->db->bind(':info', $info); // info only shown in backend
+        $this->db->bind(':votes_available_per_user', $description_internal); // only shown in backend admin
+        $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
+        $this->db->bind(':room_id', $room_id); // room id
+        $this->db->bind(':user_id', $user_id); // id of the user that had the idea (author)
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+        $this->db->bind(':order_importance', $order_importance); // order for display in frontend
+
+        $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Edited idea ".$idea_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
+
+        } else {
+          //$this->syslog->addSystemEvent(1, "Error while editing idea ".$idea_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
+        }
+    }// end function
 
     public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
         /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters

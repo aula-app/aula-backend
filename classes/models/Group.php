@@ -458,7 +458,71 @@ class Group {
       }
     }
 
-    public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $group_order=10, $votes_per_user=1, $vote_bias=1) {
+    public function editGroup ($group_id, $group_name, $description_public="", $description_internal="", $internal_info="", $status=1, $access_code="", $vote_bias=1, $order_importance=10, $updater_id=0) {
+        /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+
+        */
+        // sanitize
+        $group_name = trim ($group_name);
+        $description_public = trim ($description_public);
+        $description_internal = trim ($description_internal);
+        $internal_info = trim ($internal_info);
+        $access_code = trim ($access_code);
+        $status = intval ($status);
+        $order_importance = intval ($order_importance);
+        $vote_bias = intval ($vote_bias);
+
+        $updater_id = $this->converters->checkUserId ($updater_id); // autoconvert
+        $group_id = $this->converters->checkRoomId($group_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_groups.' SET group_name = :group_name, description_public = :description_public , description_internal= :description_internal, internal_info= :internal_info, status= :status, access_code= :access_code, vote_bias = :vote_bias, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
+        // bind all VALUES
+        $this->db->bind(':room_name', $room_name); // name of the room
+        $this->db->bind(':description_public', $description_internal); // shown in frontend
+        $this->db->bind(':description_internal', $description_internal); // only shown in backend admin
+        $this->db->bind(':internal_info', $internal_info); // extra internal info, only visible in backend
+        $this->db->bind(':status', $status); // status of the room (0=inactive, 1=active, 4=archived)
+        $this->db->bind(':access_code', $access_code); // optional access code for room access
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+        $this->db->bind(':vote_bias', $vote_bias); // vote bias for all users in this group
+        $this->db->bind(':order_importance', $order_importance); // order for display in frontend
+
+        $this->db->bind(':group_id', $group_id); // group that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Edited group ".$room_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = intval($this->db->rowCount()); // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
+
+        } else {
+          //$this->syslog->addSystemEvent(1, "Error while editing group ".$room_id." by ".$updater_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
+        }
+    }// end function
+
+    public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $order_importance=10, $vote_bias=1) {
         /* adds a new group and returns insert id (group id) if successful, accepts the above parameters
          description_public = actual description of the group, status = status of inserted group (0 = inactive, 1=active)
         */
@@ -466,6 +530,7 @@ class Group {
         $group_order = intval ($group_order);
         $updater_id = intval ($updater_id);
         $status = intval($status);
+        $vote_bias = intval ($vote_bias);
 
 
         // check if group name is still available
@@ -481,7 +546,7 @@ class Group {
 
         $hash_access_code = password_hash(trim ($access_code), PASSWORD_DEFAULT); // hash access code
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_groups.' (vote_bias, group_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, group_order) VALUES (:vote_bias, :group_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :group_order)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_groups.' (vote_bias, group_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, order_importance) VALUES (:vote_bias, :group_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :order_importance)');
         // bind all VALUES
         $this->db->bind(':group_name', trim ($group_name));
         $this->db->bind(':description_public', trim ($description_public));
@@ -490,7 +555,7 @@ class Group {
         $this->db->bind(':access_code', trim ($hash_access_code));
         $this->db->bind(':status', $status);
         $this->db->bind(':vote_bias', $vote_bias);
-        $this->db->bind(':group_order', intval($group_order));
+        $this->db->bind(':order_importance', intval($order_importance));
         // generate unique hash for this group
         $testrand = rand (100,10000000);
         $appendix = microtime(true).$testrand;
