@@ -1367,7 +1367,7 @@ class Idea {
     //public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
 
 
-    public function editidea ($idea_id, $user_id, $content, $status=1, $votes_available_per_user=1, $info="", $order_importance=10, $room_id=0, $updater_id=0) {
+    public function editIdea ($idea_id, $user_id, $content, $status=1, $votes_available_per_user=1, $info="", $order_importance=10, $room_id=0, $updater_id=0) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
 
         */
