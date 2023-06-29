@@ -91,6 +91,7 @@ public function removeIdeaFromCategory($category_id, $idea_id)
 public function removeAllIdeasFromTopic ($topic_id)
 public function removeAllIdeasFromCategory ($category_id)
 public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0)
+public function editIdea ($idea_id, $content, $status=1, $votes_available_per_user=1, $info="", $order_importance=10, $room_id=0, $updater_id=0)
 public function addCategory ($name, $description_public, $description_internal, $status, $order_importance=10, $room_id=0, $updater_id=0)
 public function removeCategory ($category_id, $updater_id)
 public function approveIdea ($idea_id, $updater_id=0)
@@ -168,11 +169,11 @@ public function unblockUser ($user_id, $user_id_target)
 public function relateUser($user_id, $user_id_target, $status=1, $updater_id=0, $type=1)
 public function removeUserRelation($user_id, $user_id_target)
 public function addUserToGroup($user_id, $group_id, $status, $updater_id)
-public function addUser($realname, $displayname, $username, $email, $password, $status, $updater_id=0, $userlevel=10)
+public function addUser($realname, $displayname, $username, $email, $password, $status=1,  $about_me="", $updater_id=0, $userlevel=10)
 public function addUserToRoom($user_id, $room_id, $status, $updater_id)
 public function removeUserFromRoom($room_id, $user_id)
 public function removeUserFromGroup($group_id, $user_id)
-public function editUserData($user_id, $realname, $displayname, $username, $email, $status, $updater_id=0)
+public function editUserData($user_id, $realname, $displayname, $username, $email, $about_me="", $position="", $userlevel, $updater_id=0)
 public function grantInfiniteVotesToUser ($user_id)
 public function revokeInfiniteVotesFromUser ($user_id)
 public function suspendUser ($user_id, $updater_id=0)
@@ -223,7 +224,8 @@ Action
 public function deleteRoomDelegations ($room_id)
 public function deleteRoomUserDelegations ($room_id, $user_id)
 public function emptyRoom($room_id)
-public function addRoom($room_name, $description_public, $description_internal, $internal_info, $status, $access_code, $restricted, $room_order=10, $updater_id=0)
+public function addRoom($room_name, $description_public="", $description_internal="", $internal_info="", $status=1, $access_code="", $restricted=1, $order_importance=10, $updater_id=0)
+public function editRoom ($room_id, $room_name, $description_public="", $description_internal="", $internal_info="", $status=1, $access_code="", $restricted=1, $order_importance= 10, $updater_id=0)
 public function deleteRoom($room_id, $mode=0, $msg="", $updater_id=0)
 
 
@@ -258,7 +260,8 @@ public function checkAccesscode($group_id, $access_code)// access_code = clear t
 Actions
 
 public function emptyGroup($group_id)
-public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $group_order=10, $votes_per_user=1, $vote_bias=1)
+public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $order_importance=10, $vote_bias=1)
+public function editGroup ($group_id, $group_name, $description_public="", $description_internal="", $internal_info="", $status=1, $access_code="", $vote_bias=1, $order_importance=10, $updater_id=0)
 public function deleteGroup($group_id, $updater_id=0)
 
 
