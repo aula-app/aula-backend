@@ -669,9 +669,23 @@ class Converters {
       if (strlen ($extra_where)>0){
         $extra_where = " WHERE ".$extra_where;
       }
+
       $stmt = $this->db->query('SELECT COUNT(*) as total FROM '.$table.$extra_where);
       $res = $this->db->resultSet();
       $total_rows = $res[0]['total'];
+      return $total_rows;
+
+    }
+
+    public function getTotalDatasetsFree ($query){
+      /* returns the total number of rows with
+      $query being the query string without select
+      */
+      $extra_where = trim ($extra_where);
+
+      $stmt = $this->db->query($query);
+      $res = $this->db->resultSet();
+      $total_rows = count ($res);
       return $total_rows;
 
     }
