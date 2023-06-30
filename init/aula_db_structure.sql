@@ -7,7 +7,7 @@
 #
 # Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-26 14:30:50 +0000
+# Verarbeitungszeit: 2023-06-30 13:16:47 +0000
 # ************************************************************
 
 
@@ -819,6 +819,9 @@ CREATE TABLE `au_users_basedata` (
   `absent_until` datetime DEFAULT NULL COMMENT 'date until the user is absent',
   `auto_delegation` int(11) DEFAULT 0 COMMENT '1=on, 0=off - if user is absent, votes are  ',
   `trustee_id` int(11) DEFAULT NULL COMMENT 'id othe the trusted user the votes are delegated to when user is absent (only when auto delegation is on)',
+  `o1` int(11) DEFAULT NULL,
+  `o2` int(11) DEFAULT NULL,
+  `o3` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
