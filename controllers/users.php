@@ -19,13 +19,39 @@ $check_jwt = $jwt->check_jwt();
 if ($check_jwt) {
   $offset = $request_data->offset; 
   $limit = $request_data->limit;
+  $sort_field = $request_data->sort_field;
+  $sort_order = $request_data->sort;
+  $sort_param = 3;
+  $sort_order_param = 0;
+
   if (!$offset) {
     $offset = 0;
   }
   if (!$limit) {
     $limit = 0;
   }
-  $userData = $user->getUsers($offset, $limit, 4, 1, 1);
+  switch ($sort_field) {
+  case 'realname':
+    $sort_param = 1;
+    break;
+  case 'username':
+    $sort_param = 5;
+    break;
+  case 'displayname':
+    $sort_param = 5;
+    break;
+  default:
+    $sort_param = 3;
+    break;
+  }
+
+  if ($sort_order == 'asc') {
+    $sort_order_param = 1;
+  } else {
+    $sort_order_param = 0;
+  } 
+
+  $userData = $user->getUsers($offset, $limit, $sort_param, $sort_order_param, 1);
   $i = 0;
   $newData = array();
   foreach ($userData['data'] as $user) {
