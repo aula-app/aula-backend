@@ -1310,6 +1310,15 @@ class User {
         case 6:
         $orderby_field = "status";
         break;
+        case 7:
+        $orderby_field = "o1";
+        break;
+        case 8:
+        $orderby_field = "o2";
+        break;
+        case 9:
+        $orderby_field = "o3";
+        break;
 
         default:
         $orderby_field = "last_update";
