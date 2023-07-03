@@ -262,9 +262,9 @@ class Group {
         $asc_field = "DESC";
       }
 
-
-      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_groups_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_groups_users.'.group_id= :groupid '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-      $this->db->bind(':groupid', $group_id); // bind group id
+      $query = 'SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_groups_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_groups_users.'.group_id= :group_id ';
+      $stmt = $this->db->query($query.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $this->db->bind(':group_id', $group_id); // bind group id
       //$this->db->bind(':status', $status); // bind status
 
       $err=false;
@@ -282,7 +282,9 @@ class Group {
           return $returnvalue;
       }
 
-      if (count($groups)<1){
+      $total_datasets = count ($groups);
+
+      if ($total_datasets < 1){
         echo ("no users found");
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - group not found
@@ -291,15 +293,18 @@ class Group {
 
         return $returnvalue;
       }else {
-        // $total_datasets = $this->converters->getTotalDatasets ($this->db->au_users_basedata, $extra_where);
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace (":group_id", $group_id, $query.$extra_where));
+        }
 
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code - no matching dataset
         $returnvalue ['data'] = $groups; // returned data
-        $returnvalue ['count'] = count ($groups); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
-        return $groups; // return an array (associative) with all the data
+
       }
     }// end function
 
@@ -348,11 +353,12 @@ class Group {
       $asc_field ="";
 
       $limit_string=" LIMIT ".$offset." , ".$limit;
-
+      $limit_active = true;
 
       // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
       if ($offset==0 && $limit==0){
         $limit_string="";
+        $limit_active = false;
 
       }
       if ($offset>0 && $limit==0){
@@ -416,7 +422,9 @@ class Group {
           return $returnvalue;
       }
 
-      if (count($groups)<1){
+      $total_datasets = count ($groups);
+
+      if ($total_datasets < 1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - no matching dataset
         $returnvalue ['data'] = false; // returned data
@@ -424,7 +432,10 @@ class Group {
 
         return $returnvalue;
       }else {
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_groups, "id>0".$extra_where);
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasets ($this->db->au_groups, "id>0".$extra_where);
+        }
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $groups; // returned data

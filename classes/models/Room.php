@@ -258,6 +258,7 @@ class Room {
       // init vars
       $orderby_field="";
       $asc_field ="";
+      $limit_active = true;
 
       $limit_string=" LIMIT ".$offset." , ".$limit;
 
@@ -265,6 +266,7 @@ class Room {
       // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
       if ($offset==0 && $limit==0){
         $limit_string="";
+        $limit_active = false; // limit not set
 
       }
       if ($offset>0 && $limit==0){
@@ -324,8 +326,9 @@ class Room {
 
           return $returnvalue;
       }
+      $total_datasets = count ($rooms);
 
-      if (count($rooms)<1){
+      if ($total_datasets < 1){
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 2; // error code - db error
         $returnvalue ['data'] = false; // returned data
@@ -333,7 +336,9 @@ class Room {
 
         return $returnvalue;
       }else {
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_rooms, "id > 0".$extra_where);
+        if ($limit_active){
+          $total_datasets = $this->converters->getTotalDatasets ($this->db->au_rooms, "id > 0".$extra_where);
+        }
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue ['data'] = $rooms; // returned data
@@ -354,6 +359,7 @@ class Room {
       $extra_where="";
       // sanitize
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
       $offset = intval ($offset);
       $limit = intval ($limit);
       $orderby = intval ($orderby);
