@@ -366,16 +366,19 @@ class Room {
       $asc_field ="";
 
       $limit_string=" LIMIT ".$offset." , ".$limit;
+      $limit_active = true;
 
 
       // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
       if ($offset==0 && $limit==0){
         $limit_string="";
+        $limit_active= false;
 
       }
 
       if ($offset>0 && $limit==0){
         $limit_string=" LIMIT ".$offset." , 9999999999999999";
+
       }
       if ($status > -1){
         // specific status selected / -1 = get all status values
@@ -414,7 +417,9 @@ class Room {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT DISTINCT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.last_update, '.$this->db->au_rooms.'.created FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE ('.$this->db->au_rel_rooms_users.'.user_id = :user_id OR '.$this->db->au_rooms.'.restrict_to_roomusers_only = 0) '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $query = 'SELECT DISTINCT '.$this->db->au_rooms.'.id, '.$this->db->au_rooms.'.hash_id, '.$this->db->au_rooms.'.room_name, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.description_internal, '.$this->db->au_rooms.'.description_public, '.$this->db->au_rooms.'.last_update, '.$this->db->au_rooms.'.created FROM '.$this->db->au_rooms.' INNER JOIN '.$this->db->au_rel_rooms_users.' ON ('.$this->db->au_rooms.'.id = '.$this->db->au_rel_rooms_users.'.room_id) WHERE ('.$this->db->au_rel_rooms_users.'.user_id = :user_id OR '.$this->db->au_rooms.'.restrict_to_roomusers_only = 0) ';
+
+      $stmt = $this->db->query($query.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
 
       //$this->db->bind(':status', $status); // bind status
       $this->db->bind(':user_id', $user_id); // bind user id
@@ -433,7 +438,9 @@ class Room {
           return $returnvalue;
       }
 
-      if (count($rooms)<1){
+      $total_datasets = count ($rooms);
+
+      if ($total_datasets < 1){
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
@@ -441,10 +448,15 @@ class Room {
 
         return $returnvalue;
       }else {
+        // get count
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace (":user_id", $user_id, $query.$extra_where));
+        }
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $rooms; // returned data
-        $returnvalue ['count'] = count ($rooms); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
       }
@@ -455,6 +467,12 @@ class Room {
       /* returns users (associative array)
       $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       */
+      $offset = intval ($offset);
+      $limit = intval ($limit);
+      $orderby = intval ($orderby);
+      $asc = intval ($asc);
+      $status = intval ($status);
+
       $room_id  = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
 
@@ -462,12 +480,14 @@ class Room {
       $asc_field ="";
       $extra_where ="";
 
-      $limit_string=" LIMIT ".$offset." , ".$limit;
+      $limit_string =" LIMIT ".$offset." , ".$limit;
+      $limit_active = true; // default limit to true
 
 
       // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
       if ($offset==0 && $limit==0){
         $limit_string="";
+        $limit_active = false;
 
       }
       if ($offset>0 && $limit==0){
@@ -476,8 +496,7 @@ class Room {
 
 
       if ($status > -1){
-        // specific status selected / -1 = get all status values
-
+        // specific status selected / -1 = get all status valuess
         $extra_where .= " AND ".$this->db->au_users_basedata.".status = ".$status;
       }
 
@@ -514,8 +533,10 @@ class Room {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_rooms_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_rooms_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_rooms_users.'.room_id= :roomid '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string );
-      $this->db->bind(':roomid', $room_id); // bind room id
+      $query = 'SELECT '.$this->db->au_users_basedata.'.realname, '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_users_basedata.'.id, '.$this->db->au_users_basedata.'.username, '.$this->db->au_users_basedata.'.email FROM '.$this->db->au_rel_rooms_users.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_rel_rooms_users.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_rel_rooms_users.'.room_id= :room_id '.$extra_where;
+
+      $stmt = $this->db->query($query.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string );
+      $this->db->bind(':room_id', $room_id); // bind room id
       //$this->db->bind(':status', $status); // bind status
 
       $err=false;
@@ -531,8 +552,9 @@ class Room {
 
           return $returnvalue;
       }
+      $total_datasets = count ($rooms);
 
-      if (count($rooms)<1){
+      if ($total_datasets < 1){
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 2; // error code - db error
         $returnvalue ['data'] = false; // returned data
@@ -540,10 +562,16 @@ class Room {
 
         return $returnvalue;
       }else {
+        // get count
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace (":room_id", $room_id, $query.$extra_where));
+        }
+
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue ['data'] = $rooms; // returned data
-        $returnvalue ['count'] = count ($rooms); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
       }
