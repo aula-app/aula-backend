@@ -356,7 +356,7 @@ class User {
         if (!$err)
         {
           // set consent cache value in db - increment
-          if ($this->converters->getTextConsentValue ($text_id) == 2){
+          if ($this->converters->getTextConsentValue ($text_id) == 2 && $consent_value == 1){
             $this->changeGivenConsent ($user_id, 1);
           }
 
