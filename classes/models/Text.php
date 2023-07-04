@@ -426,9 +426,9 @@ class Text {
         */
         $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET $user_needs_to_consent= :$user_needs_to_consent, last_update= NOW(), updater_id= :updater_id WHERE id= :text_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET user_needs_to_consent= :user_needs_to_consent, last_update= NOW(), updater_id= :updater_id WHERE id= :text_id');
         // bind all VALUES
-        $this->db->bind(':$user_needs_to_consent', $$user_needs_to_consent);
+        $this->db->bind(':user_needs_to_consent', $user_needs_to_consent);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $this->db->bind(':text_id', $text_id); // text that is updated
