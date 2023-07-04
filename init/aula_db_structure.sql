@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-06-30 13:16:47 +0000
+# Verarbeitungszeit: 2023-07-04 19:40:15 +0000
 # ************************************************************
 
 
@@ -822,6 +822,8 @@ CREATE TABLE `au_users_basedata` (
   `o1` int(11) DEFAULT NULL,
   `o2` int(11) DEFAULT NULL,
   `o3` int(11) DEFAULT NULL,
+  `consents_given` int(11) DEFAULT 0 COMMENT 'consents given',
+  `consents_needed` int(11) DEFAULT NULL COMMENT 'needed consents',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
