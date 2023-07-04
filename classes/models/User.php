@@ -269,6 +269,53 @@ class User {
 
     } // end function
 
+    public function changeGivenConsent ($user_id, $inc_value = 1){
+      // increments or decrements (depending on inc_value = 1 / -1) the cache field in table user_basedata
+
+      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+      $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET consents_given = consents_given + :inc_value, last_update =  NOW() WHERE id = :user_id');
+
+      // bind all VALUES
+      $this->db->bind(':inc_value', $inc_value); // inc/dec value
+      $this->db->bind(':user_id', $user_id); // gives consent
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+
+      if (!$err)
+      {
+        // set consent cache value in db
+
+        $this->syslog->addSystemEvent(0, "Set consent for user ".$user_id, 0, "", 1);
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; //db  error code
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+
+      } else {
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 1; //db  error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+
+      }
+
+
+    }// end function
+
     public function giveConsent ($user_id, $text_id, $consent_value = 1, $updater_id = 0) {
       /*
       User gives consent to a certain text (i.e. terms of use, privacy terms etc.), coming from text table
@@ -308,6 +355,11 @@ class User {
 
         if (!$err)
         {
+          // set consent cache value in db - increment
+          if ($this->converters->getTextConsentValue ($text_id) == 2){
+            $this->changeGivenConsent ($user_id, 1);
+          }
+
           $this->syslog->addSystemEvent(0, "Added consent for user ".$user_id." for text ".$text_id, 0, "", 1);
           $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; //db  error code
@@ -1269,6 +1321,13 @@ class User {
       /* returns userlist (associative array) with start and limit provided
       extra_where = SQL Clause that can be added to where in the query like AND status = 1
       */
+      // sanitize
+      $offset = intval ($offset);
+      $limit = intval ($limit);
+      $orderby = intval ($orderby);
+      $asc = intval ($asc);
+      $status= intval ($status);
+
       // init vars
       $orderby_field="";
       $asc_field ="";
@@ -1362,7 +1421,7 @@ class User {
 
       $count_data = count ($users);
 
-      if ($count_data<1){
+      if ($count_data < 1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
@@ -1373,7 +1432,6 @@ class User {
 
       }else {
         $total_datasets = $this->converters->getTotalDatasets ($this->db->au_users_basedata, "id > 0".$extra_where);
-
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users; // returned data
@@ -1675,6 +1733,9 @@ class User {
       }
       if (!$err)
       {
+        // set consent cache value in db - increment
+        $this->changeGivenConsent ($user_id, -1);
+
         $this->syslog->addSystemEvent(0, "User consent of ".$user_id." changed to ".$consent." by ".$updater_id, 0, "", 1);
 
         $returnvalue['success'] = true; // set return value
