@@ -338,7 +338,6 @@ class Text {
 
     private function updateConsentsUsers ($consent_value) {
       // update the consents needed for the individual users depending on consent_value (increment or decrement)
-      echo ("<br>UPDATING consent values:".$consent_value);
       $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET consents_needed = consents_needed + :consent_value, last_update= NOW()');
       // bind all VALUES
       $this->db->bind(':consent_value', $consent_value);

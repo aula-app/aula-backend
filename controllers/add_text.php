@@ -29,10 +29,7 @@ if ($check_jwt) {
   $consent_text = $data->consent_text;
   $user_needs_to_consent = $data->user_needs_to_consent;
 
-  // $inserted_user = $user->addUser($realname, $displayname, $new_username, $email, $new_password, 1, $about_me, $jwt_payload->user_id, $userlevel);
   $inserted_text = $text->addText($headline, $body, $consent_text, 0, $user_id, $user_needs_to_consent);
-   //    public function addText ($headline, $body="", $consent_text="", $location=0, $creator_id=0, $user_needs_to_consent=0, $service_id_consent=0, $status=1, $updater_id=0, $language_id=0) {
- 
   
   if ($inserted_text['error_code'] == 1) {
     http_response_code(409);
