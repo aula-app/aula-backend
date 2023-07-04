@@ -37,11 +37,51 @@ class Text {
       $this->db->bind(':id', $text_id); // bind text id
       $texts = $this->db->resultSet();
       if (count($texts)<1){
-        return "0,0"; // nothing found, return 0 code
+        // no consent found
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return "1,".$texts[0]['hash_id']; // return hash id
+        // consent found
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $texts [0]['hash_id']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
+
+    public function getTextStatus($text_id) {
+      /* returns status of a text for a integer id
+      */
+      $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+      $stmt = $this->db->query('SELECT status FROM '.$this->db->au_texts.' WHERE id = :id');
+      $this->db->bind(':id', $text_id); // bind text id
+      $texts = $this->db->resultSet();
+      if (count($texts)<1){
+        // no consent found
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = 0; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }else {
+        // consent found
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $texts [0]['status']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      }
+    }// end function
+
 
     public function getTextConsentStatus ($text_id, $user_id) {
       /* returns the consent status for this text for a specific user
@@ -144,7 +184,7 @@ class Text {
     public function searchInTexts ($searchstring, $status=1){
       // searches for a term / string in texts and returns all texts
       $extra_where = " AND (headline LIKE '%".searchstring."%' OR body LIKE '%".searchstring."%') ";
-      $ret_value = getTexts (0, 0, 3, 0, $status);
+      $ret_value = getTexts (0, 0, 3, 0, $status, $extra_where);
 
       return $ret_value;
     }
@@ -296,6 +336,45 @@ class Text {
       return $val;
     }
 
+    private function updateConsentsUsers ($consent_value) {
+      // update the consents needed for the individual users depending on consent_value (increment or decrement)
+      echo ("<br>UPDATING consent values:".$consent_value);
+      $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET consents_needed = consents_needed + :consent_value, last_update= NOW()');
+      // bind all VALUES
+      $this->db->bind(':consent_value', $consent_value);
+
+      $err=false; // set error variable to false
+      $count_datasets = 0; // init row count
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $count_datasets = intval($this->db->rowCount());
+        $this->syslog->addSystemEvent(0, "Consent values updated by value ".$consent_value, 0, "", 1);
+        $returnvalue ['success'] = true; // set return value
+        $returnvalue ['error_code'] = 0; // error code
+        $returnvalue ['data'] = $count_datasets; // returned data
+        $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+
+        return $returnvalue; // return number of affected rows to calling script
+      } else {
+        $returnvalue ['success'] = false; // set return value
+        $returnvalue ['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+        return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
+      }
+
+    } // end function
+
     public function addText ($headline, $body="", $consent_text="", $location=0, $creator_id=0, $user_needs_to_consent=0, $service_id_consent=0, $status=1, $updater_id=0, $language_id=0) {
         /* adds a new text and returns insert id (text id) if successful, accepts the above parameters
         content is the text itself
@@ -360,6 +439,12 @@ class Text {
           $returnvalue ['data'] = $insertid; // returned data
           $returnvalue ['count'] = 1; // returned count of datasets
 
+          // update all users - needed consent field
+          if ($user_needs_to_consent == 2){
+            // onyl update if consent is mandatory
+            $this->updateConsentsUsers(1);
+          }
+
           return $returnvalue; // return insert id to calling script
 
         } else {
@@ -381,6 +466,8 @@ class Text {
         */
         $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
+        $current_status = $this->getTextStatus ($text_id);
+
         $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :text_id');
         // bind all VALUES
         $this->db->bind(':status', $status);
@@ -401,6 +488,17 @@ class Text {
         if (!$err)
         {
           $count_datasets = intval($this->db->rowCount());
+
+          // check if text was deactivated or archived before and is now activated, if yes then update all users consent count
+          if (!($current_status == 1) && $status == 1){
+            // now activated, so increment consent counter for users
+            $this->updateConsentsUsers (1);
+          }
+          if ($current_status == 1 && !($status == 1)){
+            // now deactivated, so decrement consent counter for users
+            $this->updateConsentsUsers (-1);
+          }
+
           $this->syslog->addSystemEvent(0, "Text status changed ".$text_id." by ".$updater_id, 0, "", 1);
           $returnvalue ['success'] = true; // set return value
           $returnvalue ['error_code'] = 0; // error code
@@ -421,10 +519,11 @@ class Text {
 
     public function setTextNeedsConsent($text_id, $user_needs_to_consent, $updater_id = 0) {
         /* edits a text and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-         $user_needs_to_consent = user needs (1) or doesnt need to consent to this text
+         $user_needs_to_consent = user needs (1) or doesnt need to consent to this text (0) or consent is mandatory (2)
          updater_id is the id of the user that does the update (i.E. admin )
         */
         $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+        $current_consent_value = $this->converters->getTextConsentValue ($text_id);
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET user_needs_to_consent= :user_needs_to_consent, last_update= NOW(), updater_id= :updater_id WHERE id= :text_id');
         // bind all VALUES
@@ -446,6 +545,16 @@ class Text {
         if (!$err)
         {
           $count_datasets = intval($this->db->rowCount());
+
+          // update user consent values
+          if (intval ($consent_value) < intval ($current_consent_value)){
+            $this->updateConsentsUsers (-1); // decrement users needed consents (consent value was lowered)
+          } else {
+            if (intval ($consent_value) > intval ($current_consent_value) && intval ($consent_value)==2) {
+              $this->updateConsentsUsers (1); // increment users needed consents (consent value was set to 2 and is higher than before)
+            }
+          } // end else
+
           $this->syslog->addSystemEvent(0, "Text status changed ".$text_id." by ".$updater_id, 0, "", 1);
           $returnvalue ['success'] = true; // set return value
           $returnvalue ['error_code'] = 0; // error code
@@ -578,6 +687,9 @@ class Text {
         if (!$err)
         {
           $count_datasets = intval($this->db->rowCount());
+          // update all users - needed consent field
+          $this->updateConsentsUsers(-1);
+
           $this->syslog->addSystemEvent(0, "Text deleted, id=".$text_id." by ".$updater_id, 0, "", 1);
           $returnvalue ['success'] = true; // set return value
           $returnvalue ['error_code'] = 0; // error code

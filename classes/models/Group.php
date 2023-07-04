@@ -209,6 +209,7 @@ class Group {
       $orderby_field="";
       $asc_field ="";
       $extra_where ="";
+      $limit_active = true;
 
       $limit_string=" LIMIT ".$offset." , ".$limit;
 
@@ -216,6 +217,7 @@ class Group {
       // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
       if ($offset==0 && $limit==0){
         $limit_string="";
+        $limit_active = false;
 
       }
       if ($offset>0 && $limit==0){
