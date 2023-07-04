@@ -681,12 +681,20 @@ class Converters {
       /* returns the total number of rows with
       $query being the query string without select
       */
-      $extra_where = trim ($extra_where);
+      $total_rows = 0;
 
-      $stmt = $this->db->query($query);
-      $res = $this->db->resultSet();
-      $total_rows = count ($res);
-      return $total_rows;
+      $query = trim ($query);
+
+      try {
+        $stmt = $this->db->query($query);
+        $res = $this->db->resultSet();
+        $total_rows = count ($res);
+
+      } catch (Exception $e) {
+
+          return -1;
+      }
+      return intval ($total_rows);
 
     }
 } // end class

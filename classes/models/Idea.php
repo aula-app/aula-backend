@@ -684,6 +684,14 @@ class Idea {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $room_id is the id of the room
       */
+      //sanitize
+      $offset = intval ($offset);
+      $limit = intval ($limit);
+      $orderby = intval ($orderby);
+      $asc = intval ($asc);
+      $status= intval ($status);
+
+      $topic_id = $this->converters->checkTopicId ($topic_id); // auto convert
 
       // init vars
       $orderby_field="";
@@ -722,6 +730,9 @@ class Idea {
         case 4:
         $orderby_field = $this->db->au_ideas.".id";
         break;
+        case 5:
+        $orderby_field = $this->db->au_ideas.".content";
+        break;
 
         default:
         $orderby_field = $this->db->au_ideas.".last_update";
@@ -759,7 +770,9 @@ class Idea {
           return 0;
       }
 
-      if (count($ideas)<1){
+      $total_datasets = count ($ideas);
+
+      if ($total_datasets < 1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
@@ -767,10 +780,15 @@ class Idea {
 
         return $returnvalue;
       }else {
+        // get count
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace (":topic_id", $topic_id, $select_part.' '.$join.' '.$where));
+        }
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $ideas; // returned data
-        $returnvalue ['count'] = 1; // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
 
@@ -778,7 +796,7 @@ class Idea {
     }// end function
 
 
-    public function getIdeasByCategory ($offset, $limit, $orderby=3, $asc=0, $status=-1, $topic_id) {
+    public function getIdeasByCategory ($offset, $limit, $orderby=3, $asc=0, $status=-1, $category_id) {
         /* returns category list (associative array) with start and limit provided
         if start and limit are set to 0, then the whole list is read (without limit)
         orderby is the field (int, see switch), defaults to last_update (3)
@@ -786,6 +804,14 @@ class Idea {
         $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
         $room_id is the id of the room
         */
+        // sanitize
+        $offset = intval ($offset);
+        $limit = intval ($limit);
+        $orderby = intval ($orderby);
+        $asc = intval ($asc);
+        $status= intval ($status);
+
+        $category_id = checkCategoryId ($category_id); // auto convert
 
         // init vars
         $orderby_field="";
@@ -861,7 +887,9 @@ class Idea {
             return 0;
         }
 
-        if (count($ideas)<1){
+        $total_datasets = count ($ideas);
+
+        if ($total_datasets < 1){
           $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 2; // error code
           $returnvalue ['data'] = false; // returned data
@@ -869,10 +897,15 @@ class Idea {
 
           return $returnvalue;
         }else {
+          // get count
+          if ($limit_active){
+            // only newly calculate datasets if limits are active
+            $total_datasets = $this->converters->getTotalDatasetsFree(str_replace (":category_id", $category_id, $select_part.' '.$join.' '.$where));
+          }
           $returnvalue['success'] = true; // set return value
           $returnvalue['error_code'] = 0; // error code
           $returnvalue ['data'] = $ideas; // returned data
-          $returnvalue ['count'] = 1; // returned count of datasets
+          $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
           return $returnvalue;
 
@@ -932,6 +965,15 @@ class Idea {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       extra_where = extra parameters for where clause, synthax " AND XY=4"
       */
+
+      // sanitize
+      $offset = intval ($offset);
+      $limit = intval ($limit);
+      $orderby = intval ($orderby);
+      $asc = intval ($asc);
+      $status= intval ($status);
+
+      $room_id = $this->converters->checkRoomId($room_id);
 
       // init vars
       $orderby_field="";
@@ -1018,7 +1060,9 @@ class Idea {
 
       }
 
-      if (count($ideas)<1){
+      $total_datasets = count ($ideas);
+
+      if ($total_datasets < 1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // db error code
         $returnvalue ['data'] = false; // returned data
@@ -1028,7 +1072,11 @@ class Idea {
 
       }else {
         // determine total number of datasets without pagination limits
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, $status.$extra_where);
+        // get count
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, $status.$extra_where);
+        }
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = $ideas; // returned data
@@ -1048,6 +1096,13 @@ class Idea {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1) -1 = get all datasets with status values 0-4
       $room_id is the id of the room
       */
+      // sanitize
+      $offset = intval ($offset);
+      $limit = intval ($limit);
+      $orderby = intval ($orderby);
+      $asc = intval ($asc);
+      $status= intval ($status);
+
       $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
       // init vars
@@ -1128,8 +1183,9 @@ class Idea {
 
           return $returnvalue;
       }
+      $total_datasets = count ($ideas);
 
-      if (count($ideas)<1){
+      if ($total_datasets<1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
@@ -1137,9 +1193,11 @@ class Idea {
 
         return $returnvalue;
       }else {
-        // determine total number of datasets without pagination limits
-        $total_datasets = $this->converters->getTotalDatasets ($this->db->au_ideas, $where);
-
+        // get count
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace (":room_id", $room_id, $select_part.' '.$join.' '.$where));
+        }
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $ideas; // returned data
@@ -1158,6 +1216,14 @@ class Idea {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $$group_id is the id of the group
       */
+      // sanitize
+      $offset = intval ($offset);
+      $limit = intval ($limit);
+      $orderby = intval ($orderby);
+      $asc = intval ($asc);
+      $status= intval ($status);
+
+      $group_id = $this->converters->checkGroupId ($group_id); // auto convert
 
       // init vars
       $orderby_field="";
@@ -1229,7 +1295,7 @@ class Idea {
         $ideas = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
+          //echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
           $err=true;
           $returnvalue['success'] = false; // set return value
           $returnvalue['error_code'] = 1; // error code
@@ -1239,7 +1305,9 @@ class Idea {
           return $returnvalue;
       }
 
-      if (count($ideas)<1){
+      $total_datasets = count ($ideas);
+
+      if ($total_datasets < 1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
@@ -1247,12 +1315,15 @@ class Idea {
 
         return $returnvalue;
       }else {
-
-        // get count without pagination limits (total datasets)
+        // get count
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace (":group_id", $group_id, $select_part.' '.$join.' '.$where));
+        }
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $ideas; // returned data
-        $returnvalue ['count'] = count ($ideas); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
       }
@@ -1266,6 +1337,12 @@ class Idea {
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $$user_id is the id of the user
       */
+      $offset = intval ($offset);
+      $limit = intval ($limit);
+      $orderby = intval ($orderby);
+      $asc = intval ($asc);
+      $status= intval ($status);
+
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
       // init vars
@@ -1345,8 +1422,9 @@ class Idea {
 
           return $returnvalue;
       }
+      $total_datasets = count ($ideas);
 
-      if (count($ideas)<1){
+      if ($total_datasets < 1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
         $returnvalue ['data'] = false; // returned data
@@ -1354,6 +1432,11 @@ class Idea {
 
         return $returnvalue;
       }else {
+        // get count
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace (":user_id", $user_id, $select_part.' '.$join.' '.$where));
+        }
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $ideas; // returned data
