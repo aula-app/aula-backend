@@ -33,7 +33,7 @@ class Converters {
       /* returns hash_id of an idea for a integer text id
       */
       $stmt = $this->db->query('SELECT user_needs_to_consent FROM '.$this->db->au_texts.' WHERE id = :text_id');
-      $this->db->bind(':id', $text_id); // bind text_id
+      $this->db->bind(':text_id', $text_id); // bind text_id
       $texts = $this->db->resultSet();
 
       return "1,".$texts[0]['user_needs_to_consent']; // return consent value id for the text
