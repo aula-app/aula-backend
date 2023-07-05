@@ -97,6 +97,8 @@ $roomdata = $room->getRooms($offset, $limit, 4, 1, 1);
   if offset and limit are both set to 0 then there is no limit applied (whole list is shown)
   parameter set is (offset, limit, orderby field (0=name, 1=order field, 2=created, 3=last update, 4=id), asc(1)/desc(0), status (0=inactive, 1=active, 2=suspended, 3=archived))
 */
+out ("total datasets: ".$roomdata['count']);
+
 if (!$roomdata['data']){
   out ("nothing found!");
 }else {
@@ -117,6 +119,8 @@ $roomdata = $group->getGroups(10, $limit, 4, 1, 1);
   if offset and limit are both set to 0 then there is no limit applied (whole list is shown)
   parameter set is (offset, limit, orderby field (0=name, 1=order field, 2=created, 3=last update, 4=id), asc(1)/desc(0), status (0=inactive, 1=active, 2=suspended, 3=archived))
 */
+out ("total datasets: ".$roomdata['count']);
+
 if (!$roomdata['data']){
   out ("nothing found!");
 }else {
@@ -137,6 +141,8 @@ $roomdata = $room->getRoomsByUser(4);
   if offset and limit are both set to 0 then there is no limit applied (whole list is shown)
   parameter set is (offset, limit, orderby field (0=name, 1=order field, 2=created, 3=last update, 4=id), asc(1)/desc(0), status (0=inactive, 1=active, 2=suspended, 3=archived))
 */
+out ("total datasets: ".$roomdata['count']);
+
 //print_r ($roomdata);
 if (!$roomdata['data']){
   out ("nothing found!");
@@ -247,6 +253,8 @@ $appendix = microtime(true).$testrand;
 $group_name ="testgroup".$appendix;
 out ("Adding a new group", true);
 
+
+// public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id=0, $order_importance=10, $vote_bias=1) {
 
 $inserted_group_id = $group->addGroup($group_name, $description_public, $description_internal, 'internal info', 1, 'aula', 1, $grouporder);
 

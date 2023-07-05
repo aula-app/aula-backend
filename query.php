@@ -140,7 +140,9 @@ out ("Getting the hash id for user id ".$user_id,true);
 $user_data = $user->getUserHashId($user_id);
 out ("hash id for user ".$user_id." = ".$user_data ['data']);
 
-$hash_id="5790bd186ff18db1bed495b3f6411ba3";
+$hash_id="250a4663ffe1e6595b412000dd22bc96";
+$hash_id="eee26e36837a64181a9264754097553e";
+$hash_id = "5a157c68040110709333be2cae7286b2";
 out ("Getting the database id for a hash id...".$hash_id,true);
 $user_id = $converters->getUserIdByHashId($hash_id);
 out ("id for user with hash ".$hash_id." = ".$user_id);
@@ -315,7 +317,7 @@ $userid = 1;
 out ("Getting Userlist (only active users status = 1) from group ".$groupid, true);
 $userdata = $group->getUsersInGroup ($groupid, 1); // 1=active (could also be set to suspended or inactive)
 
-if (!$userdata){
+if (!$userdata || !$userdata ['data']){
   out ("nothing found!");
 }else {
   // Loop through the results and output them

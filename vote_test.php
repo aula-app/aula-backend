@@ -94,7 +94,7 @@ if (isset ($_REQUEST['like']))
   } else {
     $return_value = $idea->IdeaAddLike ($idea_id, $_SESSION ['user_id']);
   }
-  $msg.= ("<br>Returning value: ".$return_value);
+  $msg.= ("<br>Returning value: ".$return_value['data']);
 } // end if
 
 ?>

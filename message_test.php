@@ -86,7 +86,7 @@ if (isset ($_REQUEST['delete']))
 
 $offset = 0; // set start at dataset #10
 $limit = 50; // get 10 datasets
-echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4).")</h2>");
+echo ("<h2>Reading 5 message datasets </h2>");
 
 ?>
 
@@ -107,7 +107,7 @@ echo ("<h2>Reading 5 idea datasets (".$room->getNumberOfUsers(4).")</h2>");
 <?php
 // getMessages ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $publish_date, $target_group, $room_id)
 $messagedata = $message->getMessages ($offset, $limit, 4, 1, 1);
-
+//print_r ($messagedata);
 $data = $messagedata ['data'];
 // idea list:
 out ("found ".$messagedata['count']." messages!");

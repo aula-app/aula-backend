@@ -206,6 +206,7 @@ $limit = 5; // get 10 datasets
 out ("Reading multiple idea datasets (only active, status = 1) <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
 $ideadata = $idea->getIdeas($offset, $limit, 4, 1, 1);
 // idea list:
+echo ("found a total of ".$ideadata['count']." datasets.");
 foreach ($ideadata['data'] as $result) {
     out ("ID: " . $result['id']);
     out ("Name: " . $crypt->decrypt ($result['displayname']));
@@ -221,6 +222,7 @@ $room_id = 2;
 // function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id)
 out ("Reading multiple idea datasets (of a certain room#".$room_id.") <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
 $ideadata = $idea->getIdeasByRoom($offset, $limit, 4, 1, 1, $room_id);
+out ("Total datasets: ".$ideadata ['count']);
 // idea list:
 if ($ideadata['success']){
   foreach ($ideadata['data'] as $result) {
@@ -241,6 +243,7 @@ $user_id = 1;
 // function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id)
 out ("Reading multiple idea datasets (of a certain user#".$user_id.") <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
 $ideadata = $idea->getIdeasByUser($offset, $limit, 4, 1, 1, $user_id);
+out ("Total datasets: ".$ideadata ['count']);
 // idea list:
 foreach ($ideadata['data'] as $result) {
     out ("ID: " . $result['id']);
@@ -260,6 +263,7 @@ $group_id = 9;
 out ("Reading multiple idea datasets (of a certain group#".$group_id.") <br>using Idea class with limit ".$offset.",".$limit." ordered by id (4) Ascending (1)...",true);
 $ideadata = $idea->getIdeasByGroup($offset, $limit, 4, 1, 1, $group_id);
 // idea list:
+out ("Total datasets: ".$ideadata ['count']);
 foreach ($ideadata['data'] as $result) {
     out ("ID: " . $result['id']);
     out ("Name: " . $crypt->decrypt ($result['displayname']));
