@@ -580,7 +580,7 @@ class User {
         $i++;
       }
 
-      $stmt = $this->db->query('SELECT id, headline, body, consent_text FROM '.$this->db->au_texts.' WHERE id NOT IN ('.implode(",", $ids).') AND user_needs_to_consent = 2');
+      $stmt = $this->db->query('SELECT '.$this->db->au_texts.'.id, '.$this->db->au_texts.'.headline, '.$this->db->au_texts.'.body, '.$this->db->au_texts.'.consent_text, '.$this->db->au_consent.'.consent FROM '.$this->db->au_texts.' INNER JOIN '.$this->db->au_consent.' ON ('.$this->db->au_consent.'.text_id = '.$this->db->au_texts.'.id) WHERE '.$this->db->au_texts.'.id NOT IN ('.implode(",", $ids).') AND '.$this->db->au_texts.'.user_needs_to_consent = 2');
 
       $texts = $this->db->resultSet();
       $missing_consents = count ($texts);
@@ -1844,6 +1844,12 @@ class User {
         return $returnvalue;
       }
     }// end function
+
+    public function getUserGDPRData ($user_id){
+      //retrieves all data associated to a certain user and returns it
+
+      return $user_data;
+    }
 
 
     public function getUserAbsence($user_id) {

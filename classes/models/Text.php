@@ -617,7 +617,7 @@ class Text {
         }
     }// end function
 
-    public function setTextContent($text_id, $headline, $body, $consent_text, $updater_id = 0) {
+    public function setTextContent($text_id, $headline, $body, $consent_text, $user_needs_to_consent = 0, $updater_id = 0) {
         /* edits a text and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          headline, body, consent_text  = content  of text
          updater_id is the id of the user that does the update (i.E. admin )
@@ -625,10 +625,11 @@ class Text {
         $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
         $content = trim ($content);
-        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET headline= :headline, body= :body, consent_text= :consent_text,  last_update= NOW(), updater_id= :updater_id WHERE id= :text_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET headline= :headline, body= :body, consent_text= :consent_text,  last_update= NOW(), updater_id= :updater_id, user_needs_to_consent = :user_needs_to_consent WHERE id= :text_id');
         // bind all VALUES
         $this->db->bind(':headline', $headline);
         $this->db->bind(':body', $body);
+        $this->db->bind(':user_needs_to_consent', $user_needs_to_consent);
         $this->db->bind(':consent_text', $consent_text);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
