@@ -1202,7 +1202,7 @@ class User {
 
       $check_credentials = $this->checkCredentials ($username, $pw);
 
-      if ($check_credentials['success']){
+      if ($check_credentials['success'] && $check_credentials['data'] && $check_credentials['count']==1 && $check_credentials['error_code']==0){
         // credentials are ok, set last login in db
         $stmt = $this->db->query('UPDATE '.$this->db->au_users_basedata.' SET last_login = NOW() WHERE id = :user_id');
         $user_id = $check_credentials['data'];
@@ -1280,7 +1280,7 @@ class User {
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
         $returnvalue ['data'] = $users[0]['id']; // returned data
-        $returnvalue ['count'] = 0; // returned count of datasets
+        $returnvalue ['count'] = 1; // returned count of datasets
 
         return $returnvalue;
 
