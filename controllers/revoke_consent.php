@@ -20,7 +20,7 @@ if ($check_jwt) {
   $text_id = $data->text_id;
   $payload = $jwt->payload();
   $user_id = $payload->user_id;
-  $revoke_consent = $user->setUserConsent($user_id, $text_id, 0);
+  $revoke_consent = $user->giveConsent($user_id, $text_id, 2);
   echo json_encode($revoke_consent);
 }
 
