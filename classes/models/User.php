@@ -1239,7 +1239,7 @@ class User {
         }
       } else {
         $this->syslog->addSystemEvent(1, "DB Error login user ".$user_id, 0, "", 1);
-        $returnvalue['success'] = truex; // set return value
+        $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // db error code
         $returnvalue ['data'] = false; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
@@ -1266,7 +1266,7 @@ class User {
       if (count($users)<1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code
-        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['data'] = 9999; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
@@ -1288,7 +1288,7 @@ class User {
 
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 3; // error code
-        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['data'] = 8888; // returned data
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
