@@ -17,8 +17,6 @@ class Systemlog {
         // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
         $this->db = $db;
 
-        $au_systemlog = 'au_systemlog';
-        $this->$au_systemlog = $au_systemlog; // table name for user basedata
     }// end function
 
     private function getGroupId ($user_id) {
@@ -48,9 +46,8 @@ class Systemlog {
 
       // userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed) // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('INSERT INTO '.$this->au_systemlog.' (type, message, usergroup, url, created, last_update) VALUES (:type, :message, :group, :url, NOW(), NOW())');
+      $stmt = $this->db->query('INSERT INTO '.$this->db->au_systemlog.' (type, message, usergroup, url, created, last_update) VALUES (:type, :message, :group, :url, NOW(), NOW())');
       // bind all VALUES
-      //echo ("INSERT INTO ".$this->au_systemlog." (type, message, usergroup, url, created, last_update) VALUES (".$type.", ".$msg.", ".$group_id.", ".$url.", NOW(), NOW())");
       $this->db->bind(':type', $type);
       $this->db->bind(':message', $msg);
       $this->db->bind(':group', $group_id);
@@ -68,9 +65,20 @@ class Systemlog {
       }
       if (!$err)
       {
-        return $this->db->lastInsertId(); // return insert id to calling script
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; //  error code
+        $returnvalue ['data'] = $this->db->lastInsertId(); // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+        
       } else {
-        return 0; // return 0 to indicate that there was an error executing the statement
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; //  error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }
     }// end function
 
@@ -78,7 +86,7 @@ class Systemlog {
     function getSystemlog($date_start, $date_end) {
       /* returns userlist (associative array) with start and limit provided
       */
-      $stmt = $this->db->query('SELECT * FROM '.$this->au_systemlog.' WHERE last_update> :date_start AND last_update < :date_end');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_systemlog.' WHERE last_update> :date_start AND last_update < :date_end');
       $this->db->bind(':date_start', $date_start); // bind date start
       $this->db->bind(':date_end', $date_end); // bind date_start
       $err=false;
@@ -88,40 +96,38 @@ class Systemlog {
       } catch (Exception $e) {
           echo 'Error occured while getting system log: ',  $e->getMessage(), "\n"; // display error
           $err=true;
-          return 0;
-      }
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; //  error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
 
+          return $returnvalue;
+      }
       if (count($entries)<1){
-        return 0; // nothing found, return 0 code
+        // no entries found
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 2; //  error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
       }else {
-        return $entries; // return an array (associative) with all the data
+        // entries found
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; //  error code
+        $returnvalue ['data'] = $entries; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
       }
+
     }// end function
-
-
-
-    private function checkUserId ($userid) {
-      /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
-      if a hash was passed, function gets db user id and returns db id
-      */
-
-      if (is_int($userid))
-      {
-        return $userid;
-      } else
-      {
-        return $this->getUserIdByHashId ($userid);
-      }
-    } // end function
-
 
 
     public function deleteSyslogEntry($entry_id) {
         /* deletes system log entry and returns the number of rows (int) accepts entry id */
 
-        $userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-
-        $stmt = $this->db->query('DELETE FROM '.$this->au_systemlog.' WHERE id = :id');
+        $stmt = $this->db->query('DELETE FROM '.$this->db->au_systemlog.' WHERE id = :id');
         $this->db->bind (':id', $entry_id);
         $err=false;
         try {
@@ -133,9 +139,19 @@ class Systemlog {
         }
         if (!$err)
         {
-          return $this->db->rowCount(); // return row count of deleted
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; //  error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
         } else {
-          return 0; // return 0 to indicate that there was an error executing the statement
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; //  error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
         }
 
     }// end function
