@@ -16,6 +16,7 @@ class Systemlog {
     public function __construct($db) {
         // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
         $this->db = $db;
+        $this->converters = new Converters ($db);
 
     }// end function
 
@@ -30,7 +31,7 @@ class Systemlog {
       return $group_id;
     }
 
-    public function addSystemEvent($type, $msg, $id=0, $url="-", $id_type) {
+    public function addSystemEvent($type, $msg, $id=0, $url="-", $id_type, $updater_id=0) {
       /* adds an event to the system php_log
       $type (int) 0=standard, 1=warning, 2=error 3=nuke error
       $msg (text) entry message / error message
@@ -46,9 +47,10 @@ class Systemlog {
 
       // userid = $this->checkUserId($userid); // checks user id and converts user id to db user id if necessary (when user hash id was passed) // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-      $stmt = $this->db->query('INSERT INTO '.$this->db->au_systemlog.' (type, message, usergroup, url, created, last_update) VALUES (:type, :message, :group, :url, NOW(), NOW())');
+      $stmt = $this->db->query('INSERT INTO '.$this->db->au_systemlog.' (type, message, usergroup, url, created, last_update, updater_id) VALUES (:type, :message, :group, :url, NOW(), NOW(), :updater_id)');
       // bind all VALUES
       $this->db->bind(':type', $type);
+      $this->db->bind(':updater_id', $updater_id);
       $this->db->bind(':message', $msg);
       $this->db->bind(':group', $group_id);
       $this->db->bind(':url', $url);
@@ -71,7 +73,7 @@ class Systemlog {
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
-        
+
       } else {
         $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 1; //  error code
