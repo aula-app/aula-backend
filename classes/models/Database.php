@@ -36,7 +36,7 @@ require_once ("./base_config.php");
         $this->au_messages = $config['au_messages'];
         $this->au_comments = $config['au_comments'];
         $this->au_commands = $config['au_commands'];
-        $this->au_commands = $config['au_systemlog'];
+        $this->au_systemlog = $config['au_systemlog'];
         $this->au_texts = $config['au_texts'];
         $this->au_reported = $config['au_reported'];
         $this->au_categories = $config['au_categories'];
