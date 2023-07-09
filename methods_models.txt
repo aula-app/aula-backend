@@ -22,6 +22,7 @@ public function setTopictoReview ($topic_id, $updater_id)
 public function setTopicDescription($topic_id, $description, $type = 0, $updater_id = 0)
 public function setTopicPhaseDurations ($topic_id, $phase_duration_0 = -1, $phase_duration_1 = -1, $phase_duration_2 = -1, $phase_duration_3 = -1, $phase_duration_4 = -1, $updater_id = 0)
 public function setSpecificTopicPhaseDuration ($topic_id, $phase_duration_id, $duration, $updater_id = 0)
+public function setTopicToVotingOnly ($topic_id, $phase_duration, $updater_id = 0)
 
 Checkers
 
