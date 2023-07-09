@@ -1,5 +1,5 @@
 <?php
-require_once ("./base_config.php");
+require_once ("../base_config.php");
 
     class Database {
 
@@ -42,6 +42,11 @@ require_once ("./base_config.php");
         $this->au_categories = $config['au_categories'];
         $this->au_activitylog = $config['au_activitylog'];
         $this->au_users_basedata = $config['au_users_basedata'];
+        $this->au_users_settings = $config['au_users_settings'];
+        $this->au_user_levels = $config['au_user_levels'];
+        $this->au_system_current_state = $config['au_system_current_state'];
+        $this->au_system_global_config = $config['au_system_global_config'];
+        $this->au_phases_global_config = $config ['au_phases_global_config'];
 
         $this->au_rel_user_user = $config['au_rel_user_user'];
         $this->au_rel_rooms_users = $config['au_rel_rooms_users'];
@@ -51,11 +56,6 @@ require_once ("./base_config.php");
         $this->au_rel_categories_ideas = $config['au_rel_categories_ideas'];
         $this->au_rel_users_messages = $config['au_rel_users_messages'];
         $this->au_rel_users_services = $config['au_rel_users_services'];
-
-
-
-
-
 
         // Set up a PDO connection
         $dsn = "mysql:host=$this->host;dbname=$this->dbname";
@@ -67,7 +67,7 @@ require_once ("./base_config.php");
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch(PDOException $e) {
             $this->error = $e->getMessage();
-            echo ("<br><br>ERROR occured: ".$e->getMessage());
+            //echo ("<br><br>ERROR occured: ".$e->getMessage());
         }
     }
 
