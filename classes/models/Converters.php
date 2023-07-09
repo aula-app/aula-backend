@@ -22,6 +22,7 @@ class Converters {
         $this->cache->addServer('localhost', 11211) or die ("Could not connect");
         $this->caching_time = 30; // time in seconds for caching (variable data)
         $this->long_caching_time = 300; // time in seconds for long caching (persistent data)
+        $this->global_default_phase_duration = 14; // default phase duration if globals are not set in db
 
     }// end function
 
@@ -39,6 +40,31 @@ class Converters {
       return "1,".$texts[0]['user_needs_to_consent']; // return consent value id for the text
 
     }// end function
+
+    public function getGlobalPhaseDurations () {
+        // returns the global settings for duration of all phases
+        $stmt = $this->db->query('SELECT * FROM '.$this->db->au_phases_global_config.' ORDER BY phase_id ASC LIMIT 0,5');
+        $global_config_phases = $this->db->resultSet();
+        $total_datasets = count ($global_config_phases);
+
+        if ($total_datasets < 1){
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 2; // error code - db error
+          $returnvalue ['data'] = $global_config_phases; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+
+        }else {
+          $returnvalue['success'] = true; // set return value to false
+          $returnvalue['error_code'] = 0; // error code - db error
+          $returnvalue ['data'] = $global_config_phases; // returned data
+          $returnvalue ['count'] = $total_datasets; // returned count of datasets
+
+          return $returnvalue;
+
+        }
+    }
 
 
     public function getIdeaHashId($idea_id) {
@@ -169,6 +195,123 @@ class Converters {
         return $commands[0]['id']; // return command id
       }
     }// end function
+
+    public function setSpecificGlobalPhaseDuration ($phase_id, $duration, $updater_id = 0) {
+      // sets topic specific single  phase duration‚ returns success and error code 0 if everything is ok
+
+      // sanitize
+      $phase_id = intval ($phase_id);
+      $duration = intval ($duration);
+
+      if ($duration < 0){
+        $duration = 0;
+      }
+
+      $updater_id = $this->checkUserId ($updater_id);
+
+
+      $stmt = $this->db->query('UPDATE '.$this->db->au_phases_global_config.' SET duration = :duration, last_update= NOW(), updater_id= :updater_id WHERE phase_id = :phase_id');
+      // bind all VALUES
+      $this->db->bind(':duration', $duration);
+
+      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+      $this->db->bind(':phase_id', $phase_id); // phase that is updated
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $this->syslog->addSystemEvent(0, "Global phase duration of phase #".$phase_id." duration changed to ".$duration." by ".$updater_id, 0, "", 1);
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+        return $returnvalue;
+      } else {
+        //$this->syslog->addSystemEvent(1, "Error changing status of topic ".$topic_id." by ".$updater_id, 0, "", 1);
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+      return 0;
+
+  }
+
+  public function editSpecificGlobalPhase ($phase_id, $duration, $name, $description_internal, $description_public, $time_scale = 0, $status = 1, $updater_id = 0) {
+    // sets topic specific single  phase duration‚ returns success and error code 0 if everything is ok
+
+    // sanitize
+    $phase_id = intval ($phase_id);
+    $duration = intval ($duration);
+    $name = trim ($name);
+    $description_internal = trim ($description_internal);
+    $description_public = trim ($description_public);
+    $time_scale = intval ($time_scale);
+    $status = intval ($status);
+
+    if ($duration < 0){
+      $duration = 0;
+    }
+
+    $updater_id = $this->checkUserId ($updater_id);
+
+
+    $stmt = $this->db->query('UPDATE '.$this->db->au_phases_global_config.' SET time_scale = :time_scale, duration = :duration, name = :name, status = :status, description_internal = :description_internal, description_public = :description_public, last_update= NOW(), updater_id= :updater_id WHERE phase_id = :phase_id');
+    // bind all VALUES
+    $this->db->bind(':duration', $duration);
+    $this->db->bind(':name', $name);
+    $this->db->bind(':status', $status);
+    $this->db->bind(':description_internal', $description_internal);
+    $this->db->bind(':description_public', $description_public);
+    $this->db->bind(':time_scale', $time_scale);
+
+
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+    $this->db->bind(':phase_id', $phase_id); // phase that is updated
+
+    $err=false; // set error variable to false
+
+    try {
+      $action = $this->db->execute(); // do the query
+
+    } catch (Exception $e) {
+
+        $err=true;
+    }
+    if (!$err)
+    {
+      $this->syslog->addSystemEvent(0, "Global phase editet, phase #".$phase_id." values changed by ".$updater_id, 0, "", 1);
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue ['data'] = 1; // returned data
+      $returnvalue ['count'] = intval($this->db->rowCount()); // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      //$this->syslog->addSystemEvent(1, "Error changing status of topic ".$topic_id." by ".$updater_id, 0, "", 1);
+      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['error_code'] = 1; // error code - db error
+      $returnvalue ['data'] = false; // returned data
+      $returnvalue ['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+    return 0;
+
+}
 
 
     public function getServiceIdByHashId($hash_id) {
