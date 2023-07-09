@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-07-07 09:59:20 +0000
+# Verarbeitungszeit: 2023-07-09 09:39:41 +0000
 # ************************************************************
 
 
@@ -290,30 +290,6 @@ CREATE TABLE `au_phases_global_config` (
   `created` datetime DEFAULT NULL COMMENT 'time of creation',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'time of last update',
   `updater_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
-
-
-# Tabellen-Dump au_phases_topic_config
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_phases_topic_config`;
-
-CREATE TABLE `au_phases_topic_config` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id of dataset',
-  `name` varchar(1024) DEFAULT NULL COMMENT 'name of phase',
-  `phase_id` int(11) DEFAULT NULL COMMENT '0=wild idea 10=workphase 20=approval 30=voting 40=implemtation',
-  `duration` int(11) DEFAULT NULL COMMENT 'default duration of phase',
-  `time_scale` int(11) DEFAULT NULL COMMENT 'timescale of default duration (0=hours, 1=days, 2=months)',
-  `description_public` varchar(4096) DEFAULT NULL COMMENT 'public description of phase',
-  `description_internal` varchar(4096) DEFAULT NULL COMMENT 'description only seen by admins',
-  `status` tinyint(1) DEFAULT 0 COMMENT '0=inactive, 1=active',
-  `type` int(11) DEFAULT NULL COMMENT 'phase type, 0=voting enabled, 1=voting+likes enabled, 2=likes enabled, 3=no votes, no likes etc.)',
-  `created` datetime DEFAULT NULL COMMENT 'datetime of creation',
-  `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of specific phase',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the updateing user',
-  `topic_id` int(11) DEFAULT NULL COMMENT 'id of the topic',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -676,7 +652,7 @@ CREATE TABLE `au_system_global_config` (
   `last_workday_week` int(11) DEFAULT NULL COMMENT 'id for the last workday (1=monday, 2=tuesday etc.)',
   `start_time` datetime DEFAULT NULL COMMENT 'regular starting time',
   `daily_end_time` datetime DEFAULT NULL COMMENT 'regular end_time',
-  `allow_regisitration` tinyint(1) DEFAULT NULL COMMENT '0=no 1=yes',
+  `allow_registration` tinyint(1) DEFAULT NULL COMMENT '0=no 1=yes',
   `default_role_for_registration` int(11) DEFAULT NULL COMMENT 'role id for new self registered users',
   `default_email_address` varchar(1024) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin DEFAULT NULL COMMENT 'default fallback e-mail adress',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
@@ -752,6 +728,11 @@ CREATE TABLE `au_topics` (
   `phase_id` int(11) DEFAULT 1 COMMENT 'Number of phase the topic is in (0=wild idea 1=work 2=approval 3=voting 4=implemenation',
   `wild_ideas_enabled` int(11) DEFAULT 1 COMMENT '1=enabled 0=disabled',
   `publishing_date` datetime DEFAULT NULL COMMENT 'Date, when the topic is active (Phases start working)',
+  `phase_duration_0` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
+  `phase_duration_1` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
+  `phase_duration_2` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
+  `phase_duration_3` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
+  `phase_duration_4` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -866,45 +847,6 @@ CREATE TABLE `au_votes` (
   `vote_weight` int(11) DEFAULT NULL COMMENT 'absolute value for given votes,  neutral = 1 or =vote_value',
   `number_of_delegations` int(11) DEFAULT NULL COMMENT 'number of delegated votes included',
   `comment` varchar(2048) DEFAULT NULL COMMENT 'Comment that the user added to a vote he did',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
-
-
-# Tabellen-Dump au_votes_available
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_votes_available`;
-
-CREATE TABLE `au_votes_available` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `idea_id` int(11) DEFAULT NULL COMMENT 'id of the idea',
-  `original_user_id` int(11) DEFAULT NULL COMMENT 'id of the original user',
-  `current_user_id` int(11) DEFAULT NULL COMMENT 'id of the current user in ownership of the vote',
-  `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active 2=suspended 3=archived',
-  `state` int(11) DEFAULT NULL COMMENT '0=not used 1=used (no longer available)',
-  `created` datetime DEFAULT NULL COMMENT 'creation date (usually idea creation date)',
-  `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'user_id of the updater',
-  `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the vote',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
-
-
-# Tabellen-Dump au_votes_tracking
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_votes_tracking`;
-
-CREATE TABLE `au_votes_tracking` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `vote_id` int(11) DEFAULT NULL COMMENT 'id of the vote',
-  `current_owner_id` int(11) DEFAULT NULL COMMENT 'id of current owner',
-  `previous_owner_id` int(11) DEFAULT NULL COMMENT 'if of previous owner',
-  `iteration` int(11) DEFAULT NULL COMMENT 'step of delegation (1st, 2nd, 3rd)',
-  `idea_id` int(11) DEFAULT NULL COMMENT 'id of the id',
-  `last_update` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
