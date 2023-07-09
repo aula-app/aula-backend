@@ -5,8 +5,9 @@ public function __construct($db, $crypt, $syslog)
 Getters
 
 public function getTopicBaseData ($topic_id)
-public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0)
+public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0, $phase_id = -1)
 public function getTopicsByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id)
+public function getTopicsByPhase ($offset, $limit, $orderby=3, $asc=0, $status=1, $phase_id, $room_id = 0)
 public function getTopicPhase ($topic_id)
 
 Setters
@@ -17,17 +18,20 @@ public function setTopicName($topic_id, $name, $updater_id=0)
 public function setTopicProperty ($topic_id, $property, $propvalue, $updater_id=0)
 public function setTopicRoom ($topic_id, $room_id, $updater_id=0)
 public function setTopicPhase ($topic_id, $phase_id, $updater_id=0)
+public function setTopictoReview ($topic_id, $updater_id)
 public function setTopicDescription($topic_id, $description, $type = 0, $updater_id = 0)
+public function setTopicPhaseDurations ($topic_id, $phase_duration_0 = -1, $phase_duration_1 = -1, $phase_duration_2 = -1, $phase_duration_3 = -1, $phase_duration_4 = -1, $updater_id = 0)
+public function setSpecificTopicPhaseDuration ($topic_id, $phase_duration_id, $duration, $updater_id = 0)
 
 Checkers
 
 Actions
 
+public function editTopic ($name, $description_internal, $description_public, $status = 1, $order_importance=10, $updater_id=0, $room_id=0, $wild_ideas_enabled = 1, $phase_id = -1, $phase_duration_0= -1,  $phase_duration_1= -1, $phase_duration_2 = -1, $phase_duration_3 = -1, $phase_duration_4 = -1)
 public function reportTopic ($topic_id, $user_id, $updater_id, $reason ="")
 public function archiveTopic ($topic_id, $updater_id)
 public function activateTopic ($topic_id, $updater_id)
 public function deactivateTopic ($topic_id, $updater_id)
-public function setTopictoReview ($topic_id, $updater_id)
 public function addTopic ($name, $description_internal, $description_public, $status, $order_importance=10, $updater_id=0, $room_id=0)
 public function removeDelegationsTopic ($topic_id)
 public function deleteTopic($topic_id, $updater_id=0)
@@ -345,6 +349,14 @@ public function getMessageIdByHashId($hash_id)
 public function getRoomIdByHashId($hash_id)
 public function getGroupIdByHashId($hash_id)
 public function getCategoryIdByHashId($hash_id)
+public function getTotalDatasets ($table, $extra_where="")
+public function getTotalDatasetsFree ($query)
+public function getServiceIdByHashId($hash_id)
+public function getCommentIdByHashId($hash_id)
+public function getTextIdByHashId($text_id)
+public function getTextConsentValue ($text_id)
+public function getGlobalPhaseDurations ()
+public function getMediaIdByHashId($hash_id)
 
 Setters
 
@@ -355,6 +367,8 @@ public function checkGroupId ($group_id)
 public function checkIdeaId ($idea_id)
 public function checkRoomId ($room_id)
 public function checkTopicId ($topic_id)
+public function checkTextId ($text_id)
+public function checkMediaId ($media_id)
 public function checkMessageId ($message_id)
 public function checkCategoryId ($category_id)
 public function checkTopicExist($topic_id)
@@ -365,6 +379,8 @@ public function checkIdeaExist($idea_id)
 public function checkCategoryExist($category_id)
 
 Actions
+public function setSpecificGlobalPhaseDuration ($phase_id, $duration, $updater_id = 0)
+public function editSpecificGlobalPhase ($phase_id, $duration, $name, $description_internal, $description_public, $time_scale = 0, $status = 1, $updater_id = 0)
 
 MODEL TEXT
 
