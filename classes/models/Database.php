@@ -1,5 +1,4 @@
 <?php
-require_once ("../base_config.php");
 
     class Database {
 
