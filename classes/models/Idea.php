@@ -1208,7 +1208,7 @@ class Idea {
       }
     }// end function
 
-    public function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status=-1, $group_id) {
+    public function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status = -1, $group_id, $room_id = -1) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -1244,6 +1244,12 @@ class Idea {
       if ($status > -1){
         // specific status selected / -1 = get all status values
         $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
+      }
+
+      if ($room_id > -1){
+        // specific status selected / -1 = get all status values
+        $room_id = $this->converters->checkRoomId ($room_id); // auto convert id
+        $extra_where .= " AND ".$this->db->au_ideas.".room_id = ".$room_id;
       }
 
 
@@ -1329,7 +1335,7 @@ class Idea {
       }
     }// end function
 
-    public function getIdeasByUser ($offset, $limit, $orderby=3, $asc=0, $status=-1, $user_id) {
+    public function getIdeasByUser ($offset, $limit, $orderby=3, $asc=0, $status=-1, $user_id, $room_id=-1) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -1365,6 +1371,12 @@ class Idea {
         $extra_where .= " AND ".$this->db->au_ideas.".status = ".$status;
       }
 
+      if ($room_id > -1){
+        $room_id = $this->converters->checkRoomId ($room_id); // auto convert id
+        // specific status selected / -1 = get all status values
+        $extra_where .= " AND ".$this->db->au_ideas.".room_id = ".$room_id;
+      }
+
       switch (intval ($orderby)){
         case 0:
         $orderby_field = "status";
@@ -1380,6 +1392,9 @@ class Idea {
         break;
         case 4:
         $orderby_field = "id";
+        break;
+        case 5:
+        $orderby_field = "room_id";
         break;
 
         default:
