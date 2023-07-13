@@ -58,8 +58,8 @@ public function getIdeasByTopic ($offset, $limit, $orderby=3, $asc=0, $status=1,
 public function getIdeasByCategory ($offset, $limit, $orderby=3, $asc=0, $status=1, $topic_id)
 public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0)
 public function getIdeasByRoom ($offset, $limit, $orderby=3, $asc=0, $status=1, $room_id)
-public function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status=1, $group_id)
-public function getIdeasByUser ($offset, $limit, $orderby=3, $asc=0, $status=1, $user_id)
+public function getIdeasByGroup ($offset, $limit, $orderby=3, $asc=0, $status = -1, $group_id, $room_id = -1)
+public function getIdeasByUser ($offset, $limit, $orderby=3, $asc=0, $status=-1, $user_id, $room_id=-1
 public function getVoteValue ($user_id, $idea_id)
 public function getLikeStatus ($user_id, $idea_id)
 public function getUserInfiniteVotesStatus($user_id)
@@ -358,6 +358,7 @@ public function getTextIdByHashId($text_id)
 public function getTextConsentValue ($text_id)
 public function getGlobalPhaseDurations ()
 public function getMediaIdByHashId($hash_id)
+public function getLastDataChange ()
 
 Setters
 
@@ -378,6 +379,7 @@ public function checkGroupExist($group_id)
 public function checkRoomExist($room_id)
 public function checkIdeaExist($idea_id)
 public function checkCategoryExist($category_id)
+public function setLastDataChange ()
 
 Actions
 public function setSpecificGlobalPhaseDuration ($phase_id, $duration, $updater_id = 0)
