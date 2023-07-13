@@ -5,9 +5,9 @@
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
-# Host: backupserver.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
+# Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-07-09 09:39:41 +0000
+# Verarbeitungszeit: 2023-07-13 12:12:29 +0000
 # ************************************************************
 
 
@@ -659,6 +659,7 @@ CREATE TABLE `au_system_global_config` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of updater',
   `archive_after` int(11) DEFAULT NULL COMMENT 'number of days after which content is automatically archived',
   `organisation_type` int(11) DEFAULT NULL COMMENT '0=school, 1=other organisation - for term set',
+  `last_data_change` datetime DEFAULT NULL COMMENT 'last time any user relvant data was changed ',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
