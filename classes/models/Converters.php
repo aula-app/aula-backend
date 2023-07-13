@@ -41,6 +41,72 @@ class Converters {
 
     }// end function
 
+    public function getLastDataChange () {
+      /* returns hash_id of an idea for a integer text id
+      */
+      $stmt = $this->db->query('SELECT last_data_change FROM '.$this->db->au_system_global_config.'  LIMIT 1');
+      try {
+        $field = $this->db->resultSet(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = $field[0]['last_data_change']; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      } else {
+        //$this->syslog->addSystemEvent(1, "Error changing last data change, 0, "", 1);
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+
+      return "1,".$texts[0]['user_needs_to_consent']; // return consent value id for the text
+
+    }// end function
+
+    public function setLastDataChange () {
+      // sets the field last data change to now in global settings table
+      $stmt = $this->db->query('UPDATE '.$this->db->au_system_global_config.' SET last_data_change = NOW()');
+      // bind all VALUES
+        $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue ['data'] = 1; // returned data
+        $returnvalue ['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      } else {
+        //$this->syslog->addSystemEvent(1, "Error changing last data change, 0, "", 1);
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code - db error
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+
+    }
+
     public function getGlobalPhaseDurations () {
         // returns the global settings for duration of all phases
         $stmt = $this->db->query('SELECT * FROM '.$this->db->au_phases_global_config.' ORDER BY phase_id ASC LIMIT 0,5');
@@ -245,7 +311,7 @@ class Converters {
 
         return $returnvalue;
       }
-      return 0;
+
 
   }
 
