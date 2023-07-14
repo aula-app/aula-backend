@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2023-07-13 12:12:29 +0000
+# Verarbeitungszeit: 2023-07-14 06:32:25 +0000
 # ************************************************************
 
 
@@ -126,6 +126,29 @@ CREATE TABLE `au_consent` (
 
 
 
+# Tabellen-Dump au_daily_stats
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `au_daily_stats`;
+
+CREATE TABLE `au_daily_stats` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `stat_date` datetime DEFAULT NULL COMMENT 'Date of stat',
+  `sum_ideas` int(11) DEFAULT NULL COMMENT 'number of ideas',
+  `sum_votes` int(11) DEFAULT NULL COMMENT 'number of votes',
+  `sum_users` int(11) DEFAULT NULL COMMENT 'number of users',
+  `sum_rooms` int(11) DEFAULT NULL COMMENT 'number_of rooms',
+  `sum_topics` int(11) DEFAULT NULL COMMENT 'number of topics',
+  `room_id` int(11) DEFAULT NULL COMMENT '0=complete/all or room_id',
+  `created` datetime DEFAULT NULL COMMENT 'create date',
+  `last_update` datetime DEFAULT NULL COMMENT 'last update',
+  `status` int(11) DEFAULT 1 COMMENT 'status',
+  `info` varchar(2048) DEFAULT NULL COMMENT 'extra info',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
 # Tabellen-Dump au_delegation
 # ------------------------------------------------------------
 
@@ -164,6 +187,9 @@ CREATE TABLE `au_groups` (
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set then access code is needed to join group',
   `order_importance` int(11) DEFAULT NULL COMMENT 'order htat groups are shown (used for display)',
   `vote_bias` int(11) DEFAULT NULL COMMENT 'votes weight per user in this group',
+  `sum_users` int(11) DEFAULT NULL COMMENT 'Number of users in group cache',
+  `sum_ideas` int(11) DEFAULT NULL COMMENT 'Number of ideas in group cache',
+  `sum_topics` int(11) DEFAULT NULL COMMENT 'Number of topics in the group',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -576,6 +602,9 @@ CREATE TABLE `au_rooms` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hashed id of the room',
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set, user needs access code to access room',
   `internal_info` text DEFAULT NULL COMMENT 'internal info and notes on this room',
+  `sum_users` int(11) DEFAULT NULL COMMENT 'number of users cache',
+  `sum_ideas` int(11) DEFAULT NULL COMMENT 'number_of_ideas cache',
+  `sum_topics` int(11) DEFAULT NULL COMMENT 'number of topics cache',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -660,6 +689,7 @@ CREATE TABLE `au_system_global_config` (
   `archive_after` int(11) DEFAULT NULL COMMENT 'number of days after which content is automatically archived',
   `organisation_type` int(11) DEFAULT NULL COMMENT '0=school, 1=other organisation - for term set',
   `last_data_change` datetime DEFAULT NULL COMMENT 'last time any user relvant data was changed ',
+  `cron_active` int(11) DEFAULT NULL COMMENT '0 = cron inactive 1= cron active',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -734,6 +764,7 @@ CREATE TABLE `au_topics` (
   `phase_duration_2` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   `phase_duration_3` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   `phase_duration_4` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
+  `sum_ideas` int(11) DEFAULT NULL COMMENT 'number of ideas',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -803,9 +834,9 @@ CREATE TABLE `au_users_basedata` (
   `absent_until` datetime DEFAULT NULL COMMENT 'date until the user is absent',
   `auto_delegation` int(11) DEFAULT 0 COMMENT '1=on, 0=off - if user is absent, votes are  ',
   `trustee_id` int(11) DEFAULT NULL COMMENT 'id othe the trusted user the votes are delegated to when user is absent (only when auto delegation is on)',
-  `o1` int(11) DEFAULT NULL,
-  `o2` int(11) DEFAULT NULL,
-  `o3` int(11) DEFAULT NULL,
+  `o1` int(11) DEFAULT NULL COMMENT 'order blind index 1',
+  `o2` int(11) DEFAULT NULL COMMENT 'order blind index 2',
+  `o3` int(11) DEFAULT NULL COMMENT 'order blind index 3',
   `consents_given` int(11) DEFAULT 0 COMMENT 'consents given',
   `consents_needed` int(11) DEFAULT 0 COMMENT 'needed consents',
   PRIMARY KEY (`id`)
