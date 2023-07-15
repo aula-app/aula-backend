@@ -440,7 +440,7 @@ class Text {
 
           // update all users - needed consent field
           if ($user_needs_to_consent == 2){
-            // onyl update if consent is mandatory
+            // only update if consent is mandatory
             $this->updateConsentsUsers(1);
           }
 
@@ -690,7 +690,26 @@ class Text {
           // update all users - needed consent field
           $this->updateConsentsUsers(-1);
 
-          $this->syslog->addSystemEvent(0, "Text deleted, id=".$text_id." by ".$updater_id, 0, "", 1);
+          // clean up table consent
+          $stmt = $this->db->query('DELETE FROM '.$this->db->au_consent.' WHERE text_id = :id');
+          $this->db->bind (':id', $text_id);
+
+          try {
+            $action = $this->db->execute(); // do the query
+
+          } catch (Exception $e) {
+
+              $err=true;
+              $returnvalue ['success'] = false; // set return value
+              $returnvalue ['error_code'] = 1; // error code
+              $returnvalue ['data'] = false; // returned data
+              $returnvalue ['count'] = 0; // returned count of datasets
+
+
+              return $returnvalue;
+          }
+
+          $this->syslog->addSystemEvent(0, "Text deleted, id = ".$text_id." by ".$updater_id, 0, "", 1);
           $returnvalue ['success'] = true; // set return value
           $returnvalue ['error_code'] = 0; // error code
           $returnvalue ['data'] =  $count_datasets; // returned data
