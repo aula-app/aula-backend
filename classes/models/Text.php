@@ -458,6 +458,81 @@ class Text {
 
     }// end function
 
+    public function editText ($text_id, $headline, $body, $consent_text, $location, $creator_id, $user_needs_to_consent, $service_id_consent, $status, $updater_id=0, $language_id=0) {
+        /* edits a  text and returns insert id (text id) if successful, accepts the above parameters
+        headline, body is the content
+        consent_text = text that is displayed next to the checkbox for the user consent
+        creator_id is the original author of the text
+        location is the page this consent is displayed on
+        user_needs_to_consent = 0 = display only, no checkbox, no need to consent, 1= consent needed (if consented, checkbox doesnt display anmymore), checkbox displayed, 2= needs to be consented (first) to use aula
+        status = status of the text (0=inactive, 1=active, 2=
+        ed, 3=reported, 4=archived 5= in review)
+        updater id specifies the id of the user (i.e. admin) that added this text
+
+        */
+
+        //sanitize the vars
+        $body = trim ($body);
+        $headline = trim ($headline);
+
+        $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+        $creator_id = $this->converters->checkUserId($creator_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+        $status = intval($status);
+        $language_id = intval($language_id);
+
+        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET headline = :headline, body = :body, consent_text = :consent_text, creator_id = :creator_id, user_needs_to_consent = :user_needs_to_consent, service_id_consent = :service_id_consent, status = :status, last_update = NOW(), updater_id = :updater_id, language_id = :language_id');
+        // bind all VALUES
+
+        $this->db->bind(':headline', $headline);
+        $this->db->bind(':body', $body);
+        $this->db->bind(':consent_text', $consent_text);
+        $this->db->bind(':creator_id', $creator_id);
+        $this->db->bind(':user_needs_to_consent', $user_needs_to_consent);
+        $this->db->bind(':service_id_consent', $service_id_consent);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':language_id', $language_id);
+
+        $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        if (!$err)
+        {
+
+          $this->syslog->addSystemEvent(0, "Edited text (#".$text_id.") by : ".$updater_id, 0, "", 1);
+          $returnvalue ['success'] = true; // set return value
+          $returnvalue ['error_code'] = 0; // error code
+          $returnvalue ['data'] = $insertid; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          // update all users - needed consent field
+          if ($user_needs_to_consent == 2){
+            // only update if consent is mandatory
+            $this->updateConsentsUsers(1);
+          }
+
+          return $returnvalue; // return insert id to calling script
+
+        } else {
+          $returnvalue ['success'] = false; // set return value
+          $returnvalue ['error_code'] = 1; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
+        }
+
+
+    }// end function
+
     public function setTextStatus($text_id, $status, $updater_id = 0) {
         /* edits a text and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          status = status of text (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
