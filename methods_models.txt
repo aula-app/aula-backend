@@ -359,6 +359,14 @@ public function getTextConsentValue ($text_id)
 public function getGlobalPhaseDurations ()
 public function getMediaIdByHashId($hash_id)
 public function getLastDataChange ()
+public function getToday ()
+public function getYesterday ()
+public function getNow ()
+public function getThisMonth ()
+public function getLastMonth ()
+public function getlastWeek ()
+public function getThisYear ()
+public function getLastYear ()
 
 Setters
 
