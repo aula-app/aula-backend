@@ -30,6 +30,55 @@ class Converters {
         return md5 ($key);
     }
 
+    public function getToday (){
+      $day = strtotime("today", $dt1);
+      $return_date  = date("Y-m-d H:i:s", $day);
+      return $return_date;
+
+    }
+    public function getYesterday () {
+      $dt1 = strtotime(date("Y-m-d H:i:s"));
+      $day = strtotime("yesterday", $dt1);
+      $return_date  = date("Y-m-d H:i:s", $day);
+      return $return_date;
+    }
+    public function getNow () {
+      $return_date  = date("Y-m-d H:i:s");
+      return $return_date;
+    }
+
+    public function getThisMonth () {
+      $dt1 = strtotime(date("Y-m-d H:i:s"));
+      $month = strtotime("first day of this month", $dt1);
+      $return_date  = date("Y-m-d H:i:s", $month);
+      return $return_date;
+    }
+
+    public function getLastMonth () {
+      $dt1 = strtotime(date("Y-m-d H:i:s"));
+      $month = strtotime("first day of last month", $dt1);
+      $return_date  = date("Y-m-d H:i:s", $month);
+      return $return_date;
+    }
+    public function getlastWeek () {
+      $dt1 = strtotime(date("Y-m-d"));
+      $day = strtotime("-1 week", $dt1);
+      $return_date  = date("Y-m-d H:i:s", $day);
+      return $return_date;
+    }
+
+    public function getThisYear () {
+      $dt1 = strtotime("01.01.".date("Y"). "0:0:0");
+      $return_date = date('Y-m-d H:i:s', $dt1);
+      return $return_date;
+    }
+
+    public function getLastYear () {
+      $dt1 = strtotime("01.01.".(date("Y")-1). "0:0:0");
+      $return_date = date('Y-m-d H:i:s', $dt1);
+      return $return_date;
+    }
+
     public function getTextConsentValue ($text_id) {
       /* returns hash_id of an idea for a integer text id
       */
