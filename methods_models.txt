@@ -411,6 +411,8 @@ public function searchInTexts ($searchstring, $status=1)
 public function addText ($headline, $body="", $consent_text="", $location=0, $creator_id=0, $user_needs_to_consent=0, $service_id_consent=0, $status=1, $updater_id=0, $language_id=0)
 public function linkTextToService ($text_id, $service_id_consent, $updater_id = 0)
 public function deleteText ($text_id, $updater_id=0)
+public function editText ($text_id, $headline, $body, $consent_text, $location, $creator_id, $user_needs_to_consent, $service_id_consent, $status, $updater_id=0, $language_id=0)
+
 
 MODEL MEDIA
 
