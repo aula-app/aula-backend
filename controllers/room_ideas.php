@@ -26,6 +26,7 @@ if ($check_jwt) {
   $newData = array();
   foreach ($ideaData['data'] as $idea) {
     $idea['content'] = $crypt->decrypt ($idea['content']);
+    $idea['displayname'] = $crypt->decrypt ($idea['displayname']);
     array_push($newData, $idea);
     $i = $i + 1;
   }
