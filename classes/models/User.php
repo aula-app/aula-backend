@@ -1238,7 +1238,7 @@ class User {
 
         }
       } else {
-        $this->syslog->addSystemEvent(1, "DB Error login user ".$user_id, 0, "", 1);
+        $this->syslog->addSystemEvent(1, "DB Error login user ".$username, 0, "", 1);
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // db error code
         $returnvalue ['data'] = false; // returned data
