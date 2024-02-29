@@ -1543,7 +1543,7 @@ class Idea {
         $content = trim ($content);
         $info = trim ($info);
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_ideas.' (is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, votes_given, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (0, 0, :info, :votes_available_per_user, 0, 0, 0, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_ideas.' (is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (0, 0, :info, :votes_available_per_user, 0, 0, 0, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
         // bind all VALUES
 
         $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
@@ -1566,7 +1566,6 @@ class Idea {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-
             $err=true;
         }
         $insertid = intval($this->db->lastInsertId());

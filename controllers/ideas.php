@@ -9,7 +9,7 @@ require_once ($baseHelperDir.'Crypt.php');
 $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
-$idea = new Idea ($db, $crypt, $syslog); 
+$idea = new Idea ($db, $crypt, $syslog);
 $ideaData = $idea->getIdeas(0, 0, 4, 1, 1);
 
 $i = 0;

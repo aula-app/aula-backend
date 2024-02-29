@@ -23,11 +23,11 @@ if ($check_jwt) {
   $user_id = $jwt_payload->$user_id;
   $content = $data->content;
   $room_id = $data->room_id;
-  $idea->addIdea ($content, $user_id, 1, $room_id=$room_id);
+  $inserted_idea = $idea->addIdea ($content, $user_id, 1, $room_id=$room_id);
   
   if ($inserted_idea['error_code'] == 1) {
     http_response_code(409);
-    echo json_encode(['success' => false, 'error' => 'Error inserting Idea']);
+    echo json_encode(['success' => false, 'error' => 'Error inserting Idea', 'detail' => $inserted_idea]);
   } else if ($inserted_idea['success']){
     http_response_code(201);
     echo json_encode(['success' => true, 'idea_id' => $inserted_idea['data']]);
