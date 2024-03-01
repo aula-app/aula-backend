@@ -20,7 +20,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 if ($check_jwt) {
   $jwt_payload = $jwt->payload();
-  $user_id = $jwt_payload->$user_id;
+  $user_id = $jwt_payload->user_id;
   $content = $data->content;
   $room_id = $data->room_id;
   $inserted_idea = $idea->addIdea ($content, $user_id, 1, $room_id=$room_id);
