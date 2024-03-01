@@ -1527,7 +1527,7 @@ class Idea {
         }
     }// end function
 
-    public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
+    public function addIdea ($content, $user_id, $status, $room_id=0, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="") {
         /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters
          content = actual content of the idea,
          status = status of inserted indea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
