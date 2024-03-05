@@ -57,7 +57,7 @@ class Idea {
       */
       $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id = :id');
+      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.is_winner, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -957,7 +957,7 @@ class Idea {
     } // end function
 
 
-    public function getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=-1, $extra_where="", $room_id=0) {
+    public function getIdeas ($room_id=0, $offset=0, $limit=0, $orderby=3, $asc=0, $status=-1, $extra_where="") {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
