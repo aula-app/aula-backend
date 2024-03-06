@@ -20,7 +20,7 @@ $input_data = json_decode($json);
 $check_jwt = $jwt->check_jwt();
 
 if ($check_jwt) {
-  $ideaData = $idea->getIdeas(0, 0, 3, 1, 1, '', $input_data->room_id);
+  $ideaData = $idea->getIdeas($input_data->room_id, 0, 0, 3, 1, 1, '');
   // getIdeas ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0)
   $i = 0;
   $newData = array();
