@@ -77,7 +77,7 @@ if ($check_jwt) {
         }
       }
     }
-      echo json_encode(['success' => true, 'data' => $data['data']]);
+      echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $data['data']]);
     }
 
 } else {
