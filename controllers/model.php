@@ -58,14 +58,23 @@ if ($check_jwt) {
     if ($data['data'] && count($data['data']) > 0) {
       $newData = array();
       if (count($decrypt_fields) > 0) {
-        foreach ($data['data'] as $item) {
+        if (!array_key_exists(0, $data['data'])) {
+          $result = $data['data'];
           foreach ($decrypt_fields as $field) {
-            $item[$field] = $crypt->decrypt($item[$field]);
+            $result[$field] = $crypt->decrypt($result[$field]);
           }
-          array_push($newData, $item);
+          echo json_encode(['success' => true, 'data' => $result]);
+          return;
+        } else {
+          foreach ($data['data'] as $item) {
+            foreach ($decrypt_fields as $field) {
+              $item[$field] = $crypt->decrypt($item[$field]);
+            }
+            array_push($newData, $item);
+          }
+          echo json_encode(['success' => true, 'data' => $newData]);
+          return;
         }
-        echo json_encode(['success' => true, 'data' => $newData]);
-        return;
       }
     }
       echo json_encode(['success' => true, 'data' => $data]);
