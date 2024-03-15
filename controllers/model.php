@@ -55,26 +55,31 @@ if ($check_jwt) {
   } else if ($data['success']){
     http_response_code(200);
 
-    if ($data['data'] && count($data['data']) > 0) {
-      $newData = array();
-      if (count($decrypt_fields) > 0) {
-        if (!array_key_exists(0, $data['data'])) {
-          $result = $data['data'];
-          foreach ($decrypt_fields as $field) {
-            $result[$field] = $crypt->decrypt($result[$field]);
-          }
-          echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $result]);
-          return;
-        } else {
-          foreach ($data['data'] as $item) {
+    if ($data['data']) {
+      if (is_array($data['data']) && count($data['data']) > 0) {
+        $newData = array();
+        if (count($decrypt_fields) > 0) {
+          if (!array_key_exists(0, $data['data'])) {
+            $result = $data['data'];
             foreach ($decrypt_fields as $field) {
-              $item[$field] = $crypt->decrypt($item[$field]);
+              $result[$field] = $crypt->decrypt($result[$field]);
             }
-            array_push($newData, $item);
+            echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $result]);
+            return;
+          } else {
+            foreach ($data['data'] as $item) {
+              foreach ($decrypt_fields as $field) {
+                $item[$field] = $crypt->decrypt($item[$field]);
+              }
+              array_push($newData, $item);
+            }
+            echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $newData]);
+            return;
           }
-          echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $newData]);
-          return;
         }
+      } else if (is_numeric($data['data'])) {
+        echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $data]);
+        return;
       }
     }
       echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $data['data']]);
