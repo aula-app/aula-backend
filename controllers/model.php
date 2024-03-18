@@ -64,7 +64,7 @@ if ($check_jwt) {
             foreach ($decrypt_fields as $field) {
               $result[$field] = $crypt->decrypt($result[$field]);
             }
-            echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $result]);
+            echo json_encode(['success' => true, 'error_code' => $data['error_code'], 'count' => $data['count'], 'data' => $result]);
             return;
           } else {
             foreach ($data['data'] as $item) {
@@ -73,16 +73,16 @@ if ($check_jwt) {
               }
               array_push($newData, $item);
             }
-            echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $newData]);
+            echo json_encode(['success' => true, 'error_code' => $data['error_code'], 'count' => $data['count'], 'data' => $newData]);
             return;
           }
         }
       } else if (is_numeric($data['data'])) {
-        echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $data]);
+        echo json_encode($data);
         return;
       }
     }
-      echo json_encode(['success' => true, 'count' => $data['count'], 'data' => $data['data']]);
+      echo json_encode($data['data']);
     }
 
 } else {
