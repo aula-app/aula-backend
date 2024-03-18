@@ -245,7 +245,7 @@ class Idea {
       */
       $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
       $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-      $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
       // check if this user still has votes available
       $available_votes = $this->checkAvailableVotesUser ($user_id, $idea_id);
