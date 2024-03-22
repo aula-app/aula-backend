@@ -471,6 +471,7 @@ class Comment {
       $this->db->bind(':comment_id', $comment_id); // bind comment id
 
       $likes = $this->db->resultSet();
+
       if (count($likes)<1){
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
@@ -491,7 +492,7 @@ class Comment {
     protected function addLikeUser ($user_id, $comment_id) {
       // add a like into like table for a certain user and idea
 
-      $stmt = $this->db->query('INSERT INTO '.$this->db->au_likes.' (object_type, status, user_id, object_id, last_update, created, hash_id) VALUES (1, 1, :user_id, :comment_id, NOW(), NOW(), :hash_id)');
+      $stmt = $this->db->query('INSERT INTO '.$this->db->au_likes.' (object_type, status, user_id, object_id, last_update, created, hash_id) VALUES (2, 1, :user_id, :comment_id, NOW(), NOW(), :hash_id)');
       // bind all VALUES
       $this->db->bind(':comment_id', $comment_id); // idea id
       $this->db->bind(':user_id', $user_id); // user id
@@ -582,6 +583,46 @@ class Comment {
           return $returnvalue;
         }
     }// end function
+
+    public function removeLikeUser ($user_id, $comment_id) {
+      // add a vote into vote table for a certain user and idea
+
+      // get vote value for this user on this idea
+
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_likes.' WHERE user_id = :user_id AND object_id = :comment_id AND object_type=2');
+      // bind all VALUES
+
+      $this->db->bind(':comment_id', $comment_id); // comment id
+      $this->db->bind(':user_id', $user_id); // user id
+
+      $err=false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+        $rows = intval($this->db->rowCount());
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue ['data'] = $rows; // returned data
+        $returnvalue ['count'] = $rows; // returned count of datasets
+
+        return $returnvalue;
+
+      } else {
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    }
 
     public function CommentRemoveLike ($comment_id, $user_id) {
         /* edits a comment and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
