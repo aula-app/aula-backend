@@ -1367,15 +1367,21 @@ class User {
         $orderby_field = "username";
         break;
         case 6:
-        $orderby_field = "status";
+        $orderby_field = "displayname";
         break;
         case 7:
-        $orderby_field = "o1";
+        $orderby_field = "email";
         break;
         case 8:
-        $orderby_field = "o2";
+        $orderby_field = "status";
         break;
         case 9:
+        $orderby_field = "o1";
+        break;
+        case 10:
+        $orderby_field = "o2";
+        break;
+        case 11:
         $orderby_field = "o3";
         break;
 
