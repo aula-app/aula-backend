@@ -390,7 +390,12 @@ class Group {
         case 4:
         $orderby_field = "id";
         break;
-
+        case 5:
+        $orderby_field = 'description_public';
+        break;
+        case 6:
+        $orderby_field = 'description_internal';
+        break;
         default:
         $orderby_field = "last_update";
       }
