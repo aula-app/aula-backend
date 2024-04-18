@@ -1490,7 +1490,7 @@ class Idea {
 
         $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET user_id = :user_id, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
-        $this->db->bind(':content', $content); // the actual idea
+        $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
         $this->db->bind(':info', $info); // info only shown in backend
         $this->db->bind(':votes_available_per_user', $description_internal); // only shown in backend admin
         $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
