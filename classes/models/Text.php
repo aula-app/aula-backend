@@ -267,7 +267,9 @@ class Text {
         case 5:
         $orderby_field = "headline";
         break;
-
+        case 6:
+        $orderby_field = "body";
+        break;
         default:
         $orderby_field = "last_update";
       }
