@@ -67,7 +67,7 @@ class Room {
       /* returns number of topics in this room (room_id ) */
       $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('SELECT id FROM '.$this->db->au_topics.' WHERE room_id = :room_id');
+      $stmt = $this->db->query('SELECT id, phase_id FROM '.$this->db->au_topics.' WHERE room_id = :room_id');
       $this->db->bind(':room_id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       $returnvalue['success'] = true; // set return value to false
