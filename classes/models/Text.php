@@ -267,7 +267,9 @@ class Text {
         case 5:
         $orderby_field = "headline";
         break;
-
+        case 6:
+        $orderby_field = "body";
+        break;
         default:
         $orderby_field = "last_update";
       }
@@ -481,7 +483,7 @@ class Text {
         $status = intval($status);
         $language_id = intval($language_id);
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET headline = :headline, body = :body, consent_text = :consent_text, creator_id = :creator_id, user_needs_to_consent = :user_needs_to_consent, service_id_consent = :service_id_consent, status = :status, last_update = NOW(), updater_id = :updater_id, language_id = :language_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_texts.' SET headline = :headline, body = :body, consent_text = :consent_text, creator_id = :creator_id, user_needs_to_consent = :user_needs_to_consent, service_id_consent = :service_id_consent, status = :status, last_update = NOW(), updater_id = :updater_id, language_id = :language_id WHERE id = :text_id');
         // bind all VALUES
 
         $this->db->bind(':headline', $headline);
@@ -492,7 +494,7 @@ class Text {
         $this->db->bind(':service_id_consent', $service_id_consent);
         $this->db->bind(':status', $status);
         $this->db->bind(':language_id', $language_id);
-
+        $this->db->bind(':text_id', $text_id);
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
         $err=false; // set error variable to false

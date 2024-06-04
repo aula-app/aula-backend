@@ -1,3 +1,4 @@
 db_config.ini
+db_config.devel.ini
 .DS_Store
 base_config.php

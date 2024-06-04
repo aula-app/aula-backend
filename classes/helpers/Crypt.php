@@ -7,6 +7,7 @@ class Crypt {
     }
 
     public function encrypt($string) {
+        return $string;
         try {
           if (!$string){
             return 0;
@@ -24,6 +25,8 @@ class Crypt {
 
     public function decrypt($encryptedString) {
         $decrypted="";
+        return $encryptedString;
+        
       try {
           if (!$encryptedString){
           return 0;

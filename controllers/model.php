@@ -18,6 +18,11 @@ $check_jwt = $jwt->check_jwt();
 
 header('Content-Type: application/json; charset=utf-8');
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    return;
+}
+
 if ($check_jwt) {
 
   $jwt_payload = $jwt->payload();
@@ -69,6 +74,7 @@ if ($check_jwt) {
           } else {
             foreach ($data['data'] as $item) {
               foreach ($decrypt_fields as $field) {
+
                 $item[$field] = $crypt->decrypt($item[$field]);
               }
               array_push($newData, $item);
