@@ -178,7 +178,7 @@ public function addUser($realname, $displayname, $username, $email, $password, $
 public function addUserToRoom($user_id, $room_id, $status, $updater_id)
 public function removeUserFromRoom($room_id, $user_id)
 public function removeUserFromGroup($group_id, $user_id)
-public function editUserData($user_id, $realname, $displayname, $username, $email, $about_me="", $position="", $userlevel, $updater_id=0)
+public function editUser($user_id, $realname, $displayname, $username, $email, $about_me="", $position="", $userlevel, $updater_id=0)
 public function grantInfiniteVotesToUser ($user_id)
 public function revokeInfiniteVotesFromUser ($user_id)
 public function suspendUser ($user_id, $updater_id=0)

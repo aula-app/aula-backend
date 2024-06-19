@@ -1575,7 +1575,7 @@ class User {
         }
     }// end function
 
-    public function editUserData($user_id, $realname, $displayname, $username, $email, $about_me="", $position="", $userlevel, $updater_id=0) {
+    public function editUser($user_id, $realname, $displayname, $username, $email, $about_me="", $position="", $userlevel, $updater_id=0) {
         /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
          realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
         */

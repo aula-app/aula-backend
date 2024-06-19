@@ -31,7 +31,7 @@ if ($check_jwt) {
   $userlevel = $data->userlevel;
   $position = $data->position;
 
-  $updated_user = $user->editUserData($user_id, $realname, $displayname, $new_username, $email, $about_me, $position, $userlevel, $jwt_payload->user_id);
+  $updated_user = $user->editUser($user_id, $realname, $displayname, $new_username, $email, $about_me, $position, $userlevel, $jwt_payload->user_id);
   
   if ($updated_user['error_code'] == 1) {
     http_response_code(500);
