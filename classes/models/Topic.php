@@ -701,7 +701,7 @@ class Topic {
         }
 
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET phase_duration_0 = :phase_duration_0, phase_duration_1 = :phase_duration_1, phase_duration_2 = :phase_duration_2, phase_duration_3 = :phase_duration_3, phase_duration_4 = :phase_duration_4, name = :name, description_internal = :description_internal , description_public = :description_public, status = :status, last_update = NOW(), updater_id = :updater_id, order_importance = :order_importance, room_id = :room_id WHERE id = :topic_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_topics.' SET phase_duration_0 = :phase_duration_0, phase_duration_1 = :phase_duration_1, phase_duration_2 = :phase_duration_2, phase_duration_3 = :phase_duration_3, phase_duration_4 = :phase_duration_4, phase_id = :phase_id, name = :name, description_internal = :description_internal , description_public = :description_public, status = :status, last_update = NOW(), updater_id = :updater_id, order_importance = :order_importance, room_id = :room_id WHERE id = :topic_id');
 
         // bind all VALUES
 
@@ -712,6 +712,7 @@ class Topic {
         $this->db->bind(':phase_duration_2', $phase_duration_2);
         $this->db->bind(':phase_duration_3', $phase_duration_3);
         $this->db->bind(':phase_duration_4', $phase_duration_4);
+        $this->db->bind(':phase_id', $phase_id);
         $this->db->bind(':description_public', $this->crypt->encrypt($description_public));
         $this->db->bind(':description_internal', $this->crypt->encrypt($description_internal));
         $this->db->bind(':room_id', $room_id);
