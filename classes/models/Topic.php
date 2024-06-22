@@ -592,11 +592,12 @@ class Topic {
         }
 
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_topics.' (phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4, name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4, :name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_topics.' (phase_id, phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4, name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4, :name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
         // bind all VALUES
 
         $this->db->bind(':name', $this->crypt->encrypt($name));
         $this->db->bind(':status', $status);
+        $this->db->bind(':phase_id', $phase_id);
         $this->db->bind(':phase_duration_0', $phase_duration_0);
         $this->db->bind(':phase_duration_1', $phase_duration_1);
         $this->db->bind(':phase_duration_2', $phase_duration_2);
