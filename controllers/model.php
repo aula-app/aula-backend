@@ -52,12 +52,12 @@ if ($check_jwt) {
   }
 
   $data = $model->$method(...$arguments);
-  
+
   if ($data['error_code'] == 1) {
     http_response_code(409);
     echo json_encode(['success' => false, 'error' => 'Error fetching data for '.$model_name, 'detail' => $data]);
     return;
-  } else if ($data['success']){
+  } else if ($data['success']) {
     http_response_code(200);
 
     if ($data['data']) {
@@ -89,7 +89,9 @@ if ($check_jwt) {
       }
     }
       echo json_encode(['success' => true, 'count' => $data['count'], 'error_code' => $data['error_code'], 'data' => $data['data']]);
-    }
+  } else {
+    echo json_encode($data);
+  }
 
 } else {
   http_response_code(401);
