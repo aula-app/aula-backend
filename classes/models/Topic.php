@@ -280,7 +280,7 @@ class Topic {
         $orderby_field = "id";
         break;
         case 5:
-          $orderby_field = "phase_id";
+        $orderby_field = "phase_id";
         break;
         default:
         $orderby_field = "last_update";
