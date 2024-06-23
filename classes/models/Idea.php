@@ -1471,12 +1471,13 @@ class Idea {
     //public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
 
 
-    public function editIdea ($idea_id, $user_id, $content, $status=1, $votes_available_per_user=1, $info="", $order_importance=10, $room_id=0, $updater_id=0) {
+    public function editIdea ($idea_id, $user_id, $content, $status=1, $title="", $votes_available_per_user=1, $info="", $order_importance=10, $room_id=0, $updater_id=0) {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
 
         */
         // sanitize
         $content = trim ($content);
+        $title = trim ($title);
         $info = trim ($info);
         $status = intval ($status);
         $order_importance = intval ($order_importance);
@@ -1488,9 +1489,10 @@ class Idea {
         $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET user_id = :user_id, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET user_id = :user_id, title = :title, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
+        $this->db->bind(':title', $title); // title only shown in backend
         $this->db->bind(':info', $info); // info only shown in backend
         $this->db->bind(':votes_available_per_user', $description_internal); // only shown in backend admin
         $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
@@ -1533,7 +1535,7 @@ class Idea {
         }
     }// end function
 
-    public function addIdea ($content, $user_id, $status=1, $room_id=0, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="") {
+    public function addIdea ($content, $title, $user_id, $status=1, $room_id=0, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="") {
         /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters
          content = actual content of the idea,
          status = status of inserted indea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
@@ -1547,12 +1549,14 @@ class Idea {
         $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
         $order_importance = intval ($order_importance);
         $content = trim ($content);
+        $title = trim ($title);
         $info = trim ($info);
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_ideas.' (is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (0, 0, :info, :votes_available_per_user, 0, 0, 0, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_ideas.' (is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
         // bind all VALUES
 
         $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
+        $this->db->bind(':title', $title);
         $this->db->bind(':status', $status);
         $this->db->bind(':info', $info);
         $this->db->bind(':room_id', $room_id);
