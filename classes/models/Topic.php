@@ -279,7 +279,9 @@ class Topic {
         case 4:
         $orderby_field = "id";
         break;
-
+        case 5:
+          $orderby_field = "phase_id";
+        break;
         default:
         $orderby_field = "last_update";
       }
@@ -648,7 +650,7 @@ class Topic {
 
     }// end function
 
-    public function editTopic ($name, $description_internal, $description_public, $status = 1, $order_importance=10, $updater_id=0, $room_id=0, $wild_ideas_enabled = 1, $phase_id = -1, $phase_duration_0= -1,  $phase_duration_1= -1, $phase_duration_2 = -1, $phase_duration_3 = -1, $phase_duration_4 = -1) {
+    public function editTopic ($name, $description_internal, $description_public, $topic_id, $status = 1, $order_importance=10, $updater_id=0, $room_id=0, $wild_ideas_enabled = 1, $phase_id = -1, $phase_duration_0= -1,  $phase_duration_1= -1, $phase_duration_2 = -1, $phase_duration_3 = -1, $phase_duration_4 = -1) {
         /* edits a topic and returns insert id (topic id) if successful, accepts the above parameters
          name = name of the topic, description_internal = shown only to admins for internal use
          desciption_public = shown in frontend, order_importance = order bias for sorting in the frontend
