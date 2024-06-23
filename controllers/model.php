@@ -90,7 +90,7 @@ if ($check_jwt) {
     }
       echo json_encode(['success' => true, 'count' => $data['count'], 'error_code' => $data['error_code'], 'data' => $data['data']]);
   } else {
-    echo json_encode($data);
+    echo json_encode(['success' => true, 'count' => $data['count'], 'error_code' => $data['error_code'], 'data' => $data['data']]);
   }
 
 } else {
