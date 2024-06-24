@@ -1027,6 +1027,9 @@ class Idea {
         case 8:
         $orderby_field = "room_id";
         break;
+        case 9:
+        $orderby_field = "title";
+        break;
         default:
         $orderby_field = "last_update";
       }
