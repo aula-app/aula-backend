@@ -57,7 +57,7 @@ class Idea {
       */
       $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.is_winner, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id = :id');
+      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.is_winner, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id = :id');
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -865,7 +865,7 @@ class Idea {
           default:
           $asc_field = "DESC";
         }
-        $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+        $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
         $join =  'INNER JOIN '.$this->db->au_rel_categories_ideas.' ON ('.$this->db->au_rel_categories_ideas.'.idea_id='.$this->db->au_ideas.'.id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
         $where = ' WHERE '.$this->db->au_ideas.'.id > 0 AND '.$this->db->au_rel_categories_ideas.'.category_id= :category_id '.$extra_where;
         $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
@@ -1027,6 +1027,9 @@ class Idea {
         case 8:
         $orderby_field = "room_id";
         break;
+        case 9:
+        $orderby_field = "title";
+        break;
         default:
         $orderby_field = "last_update";
       }
@@ -1042,7 +1045,7 @@ class Idea {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit_active){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
@@ -1162,7 +1165,7 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
       $join =  'INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) LEFT OUTER JOIN '.$this->db->au_rel_topics_ideas.' ON '.$this->db->au_ideas.'.id = '.$this->db->au_rel_topics_ideas.'.idea_id';
       $where = $this->db->au_ideas.'.id > 0 AND '.$this->db->au_ideas.'.room_id= :room_id AND '.$this->db->au_rel_topics_ideas.'.idea_id IS NULL'.$extra_where;
       $stmt = $this->db->query($select_part.' '.$join.' WHERE '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
@@ -1290,7 +1293,7 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
       $join =  'INNER JOIN '.$this->db->au_rel_groups_users.' ON ('.$this->db->au_rel_groups_users.'.user_id='.$this->db->au_ideas.'.user_id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
       $where = ' WHERE '.$this->db->au_ideas.'.id > 0 AND '.$this->db->au_rel_groups_users.'.group_id= :group_id '.$extra_where;
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
@@ -1417,7 +1420,7 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update,  '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
+      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update,  '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes FROM '.$this->db->au_ideas;
       $join =  'INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
       $where = ' WHERE '.$this->db->au_ideas.'.id > 0 AND '.$this->db->au_ideas.'.user_id= :user_id '.$extra_where;
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
