@@ -426,7 +426,7 @@ class Idea {
         // everything ok, user and room exists
         // add relation to database
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rel_topics_ideas.' (idea_id, topic_id, status, created, last_update, updater_id) VALUES (:idea_id, :topic_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_rel_topics_ideas.' (idea_id, topic_id, created, last_update, updater_id) VALUES (:idea_id, :topic_id, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
 
         // bind all VALUES
         $this->db->bind(':idea_id', $idea_id);
@@ -465,7 +465,7 @@ class Idea {
           return $returnvalue;
         }
 
-      }else {
+      } else {
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 2; // error code - topic or idea doesn't exist
         $returnvalue ['data'] = $idea_exist.",".$topic_exist; // returned data
