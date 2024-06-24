@@ -957,7 +957,7 @@ class Idea {
     } // end function
 
 
-    public function getIdeas ($room_id=0, $offset=0, $limit=0, $orderby=3, $asc=0, $status=-1, $extra_where="") {
+    public function getIdeas ($room_id=0, $offset=0, $limit=0, $orderby=3, $asc=0, $status=-1, $wild_idea=false, $extra_where="") {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -997,6 +997,10 @@ class Idea {
         // if a room id is set then add to where clause
         $room_id = $this->converters->checkRoomId ($room_id); // auto convert id
         $extra_where.= " AND room_id = ".$room_id; // get specific topics to a room
+      }
+
+      if ($wild_idea) {
+        $extra_where .= " AND au_ideas.id NOT IN (SELECT idea_id FROM au_rel_topics_ideas)";
       }
 
       switch (intval ($orderby)){

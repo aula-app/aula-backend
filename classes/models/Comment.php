@@ -438,6 +438,10 @@ class Comment {
         }
         if (!$err)
         {
+          $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_comments = sum_comments + 1 WHERE id = :idea_id');
+          $this->db->bind(':idea_id', $idea_id);
+          $action = $this->db->execute(); // do the query
+ 
           $insertid = intval($this->db->lastInsertId());
 
           $this->syslog->addSystemEvent(0, "Added new comment (#".$insertid.") user: ".$user_id, 0, "", 1);
@@ -856,6 +860,13 @@ class Comment {
         */
         $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db  id if necessary (when hash id was passed)
 
+        $stmt = $this->db->query('SELECT idea_id FROM '.$this->db->au_comments.' WHERE id = :id');
+        $this->db->bind (':id', $comment_id);
+        $action = $this->db->execute(); // do the query
+
+        $result = $this->db->resultSet();
+        $idea_id = $result[0]['idea_id'];
+
         $stmt = $this->db->query('DELETE FROM '.$this->db->au_comments.' WHERE id = :id');
         $this->db->bind (':id', $comment_id);
 
@@ -869,6 +880,11 @@ class Comment {
         }
         if (!$err)
         {
+
+          $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET sum_comments = sum_comments - 1 WHERE id = :idea_id');
+          $this->db->bind(':idea_id', $idea_id);
+          $action = $this->db->execute(); // do the query
+
           $count_datasets = intval($this->db->rowCount());
           $this->syslog->addSystemEvent(0, "Comment deleted, id=".$comment_id." by ".$updater_id, 0, "", 1);
           $returnvalue ['success'] = true; // set return value
