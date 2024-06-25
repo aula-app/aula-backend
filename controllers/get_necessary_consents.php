@@ -9,14 +9,14 @@ require_once ($baseHelperDir.'Crypt.php');
 $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
-$user = new User ($db, $crypt, $syslog); 
+$user = new User ($db, $crypt, $syslog);
 $jwt = new JWT($jwtKeyFile);
 
 $check_jwt = $jwt->check_jwt();
 
 if ($check_jwt) {
   $payload = $jwt->payload();
-  $user_id = $payload->user_id; 
+  $user_id = $payload->user_id;
   $necessary_consents = $user->getMissingConsents($user_id);
   echo json_encode($necessary_consents);
 }

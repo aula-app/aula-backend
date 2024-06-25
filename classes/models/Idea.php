@@ -1478,7 +1478,7 @@ class Idea {
     //public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
 
 
-    public function editIdea ($idea_id, $user_id, $content, $status=1, $title="", $votes_available_per_user=1, $info="", $order_importance=10, $room_id=0, $updater_id=0) {
+    public function editIdea ($idea_id, $user_id, $content, $status=1, $title="", $votes_available_per_user=1, $info="", $order_importance=10, $room_id=0, $updater_id=0, $approved=0, $approval_comment="") {
         /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
 
         */
@@ -1486,6 +1486,8 @@ class Idea {
         $content = trim ($content);
         $title = trim ($title);
         $info = trim ($info);
+        $approval_comment = trim ($approval_comment);
+
         $status = intval ($status);
         $order_importance = intval ($order_importance);
         $votes_available_per_user = intval ($votes_available_per_user);
@@ -1496,18 +1498,19 @@ class Idea {
         $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
 
-        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET user_id = :user_id, title = :title, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+        $stmt = $this->db->query('UPDATE '.$this->db->au_ideas.' SET user_id = :user_id, title = :title, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
         // bind all VALUES
         $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
         $this->db->bind(':title', $title); // title only shown in backend
         $this->db->bind(':info', $info); // info only shown in backend
-        $this->db->bind(':votes_available_per_user', $description_internal); // only shown in backend admin
+        $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin
         $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
         $this->db->bind(':room_id', $room_id); // room id
         $this->db->bind(':user_id', $user_id); // id of the user that had the idea (author)
         $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
         $this->db->bind(':order_importance', $order_importance); // order for display in frontend
-
+        $this->db->bind(':approved', $approved); // order for display in frontend
+        $this->db->bind(':approval_comment', $approval_comment); // order for display in frontend
         $this->db->bind(':idea_id', $idea_id); // idea that is updated
 
         $err=false; // set error variable to false
