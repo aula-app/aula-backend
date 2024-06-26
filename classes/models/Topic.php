@@ -208,7 +208,7 @@ class Topic {
       /* returns topic base data for a specified db id */
       $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_topics.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT '.$this->db->au_topics.'.name, '.$this->db->au_topics.'.id, '.$this->db->au_topics.'.description_public, '.$this->db->au_topics.'. room_id, '.$this->db->au_topics.'. phase_id, '.$this->db->au_topics.'.last_update, '.$this->db->au_topics.'.created FROM '.$this->db->au_topics.' WHERE id = :id');
       $this->db->bind(':id', $topic_id); // bind topic id
       $topics = $this->db->resultSet();
       if (count($topics)<1){
@@ -297,7 +297,7 @@ class Topic {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_topics.' WHERE '.$this->db->au_topics.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT '.$this->db->au_topics.'.name, '.$this->db->au_topics.'.id, '.$this->db->au_topics.'.description_public, '.$this->db->au_topics.'. room_id, '.$this->db->au_topics.'. phase_id, '.$this->db->au_topics.'.last_update, '.$this->db->au_topics.'.created FROM '.$this->db->au_topics.' WHERE '.$this->db->au_topics.'.status= :status '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
       if ($limit){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
