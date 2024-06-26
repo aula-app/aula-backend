@@ -1101,10 +1101,10 @@ class Idea {
     }// end function
 
 
-    public function getIdeasByRoom ($room_id, $offset=0, $limit=0, $orderby=3, $asc=0, $status=-1) {
+    public function getIdeasByRoom ($room_id, $offset=0, $limit=0, $orderby=2, $asc=0, $status=-1) {
       /* returns idealist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
-      orderby is the field (int, see switch), defaults to last_update (3)
+      orderby is the field (int, see switch), defaults to creation_date (2)
       asc (smallint), is either ascending (1) or descending (0), defaults to descending
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1) -1 = get all datasets with status values 0-4
       $room_id is the id of the room
