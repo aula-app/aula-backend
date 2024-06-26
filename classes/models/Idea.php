@@ -31,7 +31,8 @@ class Idea {
     public function getIdeaBaseData($idea_id) {
       /* returns idea base data for a specified db id */
       $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_ideas.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.topic_id, '.$this->db->au_ideas.'.content,  '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.sum_comments, '.$this->db->au_ideas.'.is_winner, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment FROM '.$this->db->au_ideas.' WHERE id = :id');
+
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
       if (count($ideas)<1){
@@ -748,7 +749,7 @@ class Idea {
         default:
         $asc_field = "DESC";
       }
-      $select_part = 'SELECT * FROM '.$this->db->au_ideas;
+      $select_part = 'SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.topic_id, '.$this->db->au_ideas.'.content,  '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.sum_comments, '.$this->db->au_ideas.'.is_winner, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment FROM '.$this->db->au_ideas;
       $join =  'INNER JOIN '.$this->db->au_rel_topics_ideas.' ON ('.$this->db->au_rel_topics_ideas.'.idea_id='.$this->db->au_ideas.'.id) INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id)';
       $where = ' WHERE '.$this->db->au_ideas.'.id > 0 AND '.$this->db->au_rel_topics_ideas.'.topic_id= :topic_id '.$extra_where;
       $stmt = $this->db->query($select_part.' '.$join.' '.$where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
