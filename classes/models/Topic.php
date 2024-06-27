@@ -47,7 +47,7 @@ class Topic {
 
 
 
-    public function getTopicsByPhase ($offset, $limit, $orderby=3, $asc=0, $status=1, $phase_id, $room_id = 0){
+    public function getTopicsByPhase ($offset, $limit, $phase_id, $orderby=3, $asc=0, $status=1, $room_id = 0){
       // returns topics by phase
       // phase_id is the id of the phase 0 = wild ideas 10 = discussion 20 = approval 30 = voting 40 = implementation
       // room_id = 0 means all rooms or specify a certain room

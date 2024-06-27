@@ -281,7 +281,7 @@ CREATE TABLE `au_ideas` (
   `title` text DEFAULT NULL,
   `sum_comments` int(11) DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=269 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=273 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -291,15 +291,19 @@ CREATE TABLE `au_ideas` (
 LOCK TABLES `au_ideas` WRITE;
 /*!40000 ALTER TABLE `au_ideas` DISABLE KEYS */;
 INSERT INTO `au_ideas` VALUES
-(260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',0,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-06-24 22:39:05','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,NULL,NULL,'Vertical Garden Walls',1),
+(260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-06-26 18:19:02','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,NULL,NULL,'Vertical Garden Walls',1),
 (261,'Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-06-25 00:58:44','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,1,'Sounds like an innovative and engaging way to explore our campus.',NULL,'Augmented Reality Campus Tours',1),
 (262,'Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-06-25 00:59:49','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,-1,'The proposal for the Virtual Learning Lab, while valuable, is not approved due to budget constraints.',NULL,'Virtual Learning Lab',1),
-(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,0,0,165,1,1,0,'2024-06-24 22:04:12','2024-06-25 00:56:25','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0),
+(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-06-26 16:50:23','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0),
 (264,'Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,0,165,1,1,0,'2024-06-24 22:04:28','2024-06-25 00:55:37','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,'Performing Arts Festival',0),
-(265,'Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-25 00:53:34','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,0,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,'School Garden for Food Donation',2),
+(265,'Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,'School Garden for Food Donation',2),
 (266,'Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-06-25 00:52:09','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,1,'It’s a wonderful way for students to support elderly and disabled community members while building intergenerational connections. Looking forward to its positive impact!',NULL,'Adopt-a-Neighbor Program',3),
 (267,'Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,'Solar-Powered Charging Stations',2),
-(268,'Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-06-24 22:23:20','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,NULL,NULL,'Campus-wide Recycling Initiative',4);
+(268,'Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-06-24 22:23:20','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,NULL,NULL,'Campus-wide Recycling Initiative',4),
+(269,'The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,1,1,106,0,'2024-06-26 17:26:59','2024-06-26 17:26:59','80a4654e049f1b21a1aa9edbc8a6b813',10,'',0,0,0,0,NULL,NULL,'165',0),
+(270,'The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,'Student Tech Lab',0),
+(271,'This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,-1,1,165,1,1,0,'2024-06-26 17:34:33','2024-06-26 17:35:30','9491c7450a1a946cfee61a575e51df90',10,'',0,106,0,0,NULL,NULL,'Community Mural Project',0),
+(272,'Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-06-26 18:18:58','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',0,106,0,0,NULL,NULL,'Enhancing Outdoor Learning Spaces',0);
 /*!40000 ALTER TABLE `au_ideas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -320,7 +324,7 @@ CREATE TABLE `au_likes` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the like',
   `object_type` int(11) DEFAULT NULL COMMENT 'type of liked object 1=idea, 2=comment',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=98 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=99 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -336,7 +340,8 @@ INSERT INTO `au_likes` VALUES
 (94,165,261,1,'2024-06-24 22:26:09','2024-06-24 22:26:09','12998fe680ee3821a31f7eb960ebd51a',1),
 (95,165,265,1,'2024-06-24 22:29:47','2024-06-24 22:29:47','aa3b4f148ca22fd64a0fb57083ed7d7f',1),
 (96,165,25,1,'2024-06-24 22:29:49','2024-06-24 22:29:49','2e1615c3f144ccf6cf5bd445e1ab9cda',2),
-(97,165,27,1,'2024-06-24 22:39:20','2024-06-24 22:39:20','3ba7a3a8a63601fca718f586b7fc0469',2);
+(97,165,27,1,'2024-06-24 22:39:20','2024-06-24 22:39:20','3ba7a3a8a63601fca718f586b7fc0469',2),
+(98,165,260,1,'2024-06-26 18:19:02','2024-06-26 18:19:02','92d8d8dac39e43dd4acd6e11741521e4',1);
 /*!40000 ALTER TABLE `au_likes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -701,8 +706,10 @@ INSERT INTO `au_rel_topics_ideas` VALUES
 (473,259,'2024-06-24 22:02:00','2024-06-24 22:02:00',165),
 (473,261,'2024-06-24 22:03:33','2024-06-24 22:03:33',165),
 (473,262,'2024-06-24 22:03:33','2024-06-24 22:03:33',165),
+(473,270,'2024-06-26 17:35:11','2024-06-26 17:35:11',165),
 (474,263,'2024-06-24 22:35:46','2024-06-24 22:35:46',165),
 (474,264,'2024-06-24 22:35:46','2024-06-24 22:35:46',165),
+(474,271,'2024-06-26 17:34:49','2024-06-26 17:34:49',165),
 (475,265,'2024-06-24 22:06:13','2024-06-24 22:06:13',165),
 (475,266,'2024-06-24 22:06:13','2024-06-24 22:06:13',165);
 /*!40000 ALTER TABLE `au_rel_topics_ideas` ENABLE KEYS */;
@@ -1047,7 +1054,7 @@ CREATE TABLE `au_systemlog` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of this entry',
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9461 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9484 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1351,7 +1358,30 @@ INSERT INTO `au_systemlog` VALUES
 (9457,0,'Edited idea 264 by 165',0,'','2024-06-25 00:55:37','2024-06-25 00:55:37',0),
 (9458,0,'Edited idea 263 by 165',0,'','2024-06-25 00:56:25','2024-06-25 00:56:25',0),
 (9459,0,'Edited idea 261 by 165',0,'','2024-06-25 00:58:44','2024-06-25 00:58:44',0),
-(9460,0,'Edited idea 262 by 165',0,'','2024-06-25 00:59:49','2024-06-25 00:59:49',0);
+(9460,0,'Edited idea 262 by 165',0,'','2024-06-25 00:59:49','2024-06-25 00:59:49',0),
+(9461,0,'Idea  263 number of votes given set to 1',0,'','2024-06-25 01:16:21','2024-06-25 01:16:21',0),
+(9462,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-25 01:16:21','2024-06-25 01:16:21',0),
+(9463,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
+(9464,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
+(9465,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
+(9466,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
+(9467,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
+(9468,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
+(9469,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
+(9470,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
+(9471,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
+(9472,0,'Idea  263 votes set to 0',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
+(9473,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
+(9474,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
+(9475,0,'Added new idea (#269) The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,'','2024-06-26 17:26:59','2024-06-26 17:26:59',0),
+(9476,0,'Added new idea (#270) The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,'','2024-06-26 17:32:49','2024-06-26 17:32:49',0),
+(9477,0,'Added new idea (#271) This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,'','2024-06-26 17:34:33','2024-06-26 17:34:33',0),
+(9478,0,'Added idea 271 to topic 474',0,'','2024-06-26 17:34:49','2024-06-26 17:34:49',0),
+(9479,0,'Added idea 270 to topic 473',0,'','2024-06-26 17:35:11','2024-06-26 17:35:11',0),
+(9480,0,'Idea  271 number of votes given set to 1',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
+(9481,0,'Idea (#271) added Vote - value: -1 by 165',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
+(9482,0,'Added new idea (#272) Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,'','2024-06-26 18:18:58','2024-06-26 18:18:58',0),
+(9483,0,'Idea  260 incremented likes',0,'','2024-06-26 18:19:02','2024-06-26 18:19:02',0);
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1601,7 +1631,7 @@ CREATE TABLE `au_votes` (
   `number_of_delegations` int(11) DEFAULT NULL COMMENT 'number of delegated votes included',
   `comment` varchar(2048) DEFAULT NULL COMMENT 'Comment that the user added to a vote he did',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1611,7 +1641,9 @@ CREATE TABLE `au_votes` (
 LOCK TABLES `au_votes` WRITE;
 /*!40000 ALTER TABLE `au_votes` DISABLE KEYS */;
 INSERT INTO `au_votes` VALUES
-(111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,'');
+(111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,''),
+(116,165,263,1,1,'2024-06-26 16:50:23','2024-06-26 16:50:23','8a9c26163e11ffdf794a0670094831d4',1,0,''),
+(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,'');
 /*!40000 ALTER TABLE `au_votes` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1624,4 +1656,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-06-25  1:11:12
+-- Dump completed on 2024-06-26 19:49:28
