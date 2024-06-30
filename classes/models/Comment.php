@@ -82,9 +82,12 @@ class Comment {
         case 4:
         $orderby_field = "id";
         break;
+        case 5:
+        $orderby_field = "id";
+        break;
 
         default:
-        $orderby_field = "last_update";
+        $orderby_field = "created";
       }
 
       switch (intval ($asc)){
