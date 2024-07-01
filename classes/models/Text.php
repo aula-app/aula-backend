@@ -310,7 +310,7 @@ class Text {
       $count_datasets = count ($texts);
       if ($limit_active){
         // only newly calculate datasets if limits are active
-        $count_datasets = $this->converters->getTotalDatasets ($this->db->au_texts, $status.$extra_where);
+        $count_datasets = $this->converters->getTotalDatasets ($this->db->au_texts, "id > 0".$status.$extra_where);
       }
 
       if ($count_datasets<1){

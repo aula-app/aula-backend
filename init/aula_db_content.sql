@@ -129,7 +129,7 @@ CREATE TABLE `au_comments` (
   `idea_id` int(11) DEFAULT NULL COMMENT 'id of the idea',
   `parent_id` int(11) DEFAULT NULL COMMENT 'id of the parent comment (0=first comment)',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -150,7 +150,11 @@ INSERT INTO `au_comments` VALUES
 (24,'ome argue that social service programs like Adopt-a-Neighbor should be voluntary rather than mandatory, as forcing participation may dilute the altruistic spirit and impact of genuine volunteerism.',0,165,1,'2024-06-24 22:28:34','2024-06-24 22:28:34',0,'75158963dcd3dd83a357ad53031a20fd',0,266,0),
 (25,'Managing a school garden requires significant time, resources, and expertise that may detract from core academic priorities and other extracurricular activities.',1,165,1,'2024-06-24 22:29:30','2024-06-24 22:29:49',0,'48648ad4dd02124f1ca7eae54d5c1281',0,265,0),
 (26,'A school garden program teaches students about sustainability, nutrition, and responsibility, fostering a deeper connection to nature and promoting healthier eating habits.',0,165,1,'2024-06-24 22:29:46','2024-06-24 22:29:46',0,'ae8064cb703824b30ba9274aee8b0de6',0,265,0),
-(27,'Vertical garden walls could potentially pose maintenance challenges such as irrigation and plant care, requiring ongoing resources and expertise that may outweigh their aesthetic and environmental benefits in a school setting.',1,165,1,'2024-06-24 22:39:05','2024-06-24 22:39:20',0,'0b7cb5092f9ef3d66b0e55c4046e9bf6',0,260,0);
+(27,'Vertical garden walls could potentially pose maintenance challenges such as irrigation and plant care, requiring ongoing resources and expertise that may outweigh their aesthetic and environmental benefits in a school setting.',1,165,1,'2024-06-24 22:39:05','2024-06-24 22:39:20',0,'0b7cb5092f9ef3d66b0e55c4046e9bf6',0,260,0),
+(28,'What a healthy idea!',0,165,1,'2024-06-30 13:03:21','2024-06-30 13:03:21',165,'a8e4faf7dff84d6172977c027568d676',0,0,0),
+(29,'test',0,165,1,'2024-06-30 13:03:51','2024-06-30 13:03:51',165,'8dbc8e06e0f584be9e3c2fc05e4e9753',0,0,0),
+(30,'Test',0,165,1,'2024-06-30 13:07:59','2024-06-30 13:07:59',165,'dbd920faee13e49ee6bd0181688ea15e',0,0,0),
+(31,'test',0,165,1,'2024-06-30 13:11:42','2024-06-30 13:11:42',165,'c657731b106b5f1508857201cc211643',0,272,0);
 /*!40000 ALTER TABLE `au_comments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -281,7 +285,7 @@ CREATE TABLE `au_ideas` (
   `title` text DEFAULT NULL,
   `sum_comments` int(11) DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=273 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -294,16 +298,15 @@ INSERT INTO `au_ideas` VALUES
 (260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-06-26 18:19:02','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,NULL,NULL,'Vertical Garden Walls',1),
 (261,'Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-06-25 00:58:44','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,1,'Sounds like an innovative and engaging way to explore our campus.',NULL,'Augmented Reality Campus Tours',1),
 (262,'Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-06-25 00:59:49','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,-1,'The proposal for the Virtual Learning Lab, while valuable, is not approved due to budget constraints.',NULL,'Virtual Learning Lab',1),
-(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-06-26 16:50:23','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0),
+(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-06-30 12:21:11','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0),
 (264,'Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,0,165,1,1,0,'2024-06-24 22:04:28','2024-06-25 00:55:37','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,'Performing Arts Festival',0),
 (265,'Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,'School Garden for Food Donation',2),
-(266,'Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-06-25 00:52:09','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,1,'It’s a wonderful way for students to support elderly and disabled community members while building intergenerational connections. Looking forward to its positive impact!',NULL,'Adopt-a-Neighbor Program',3),
+(266,'Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-06-30 12:36:20','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,1,'It’s a wonderful way for students to support elderly and disabled community members while building intergenerational connections. Looking forward to its positive impact!',NULL,'Adopt-a-Neighbor Program',3),
 (267,'Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,'Solar-Powered Charging Stations',2),
 (268,'Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-06-24 22:23:20','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,NULL,NULL,'Campus-wide Recycling Initiative',4),
-(269,'The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,1,1,106,0,'2024-06-26 17:26:59','2024-06-26 17:26:59','80a4654e049f1b21a1aa9edbc8a6b813',10,'',0,0,0,0,NULL,NULL,'165',0),
 (270,'The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,'Student Tech Lab',0),
 (271,'This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,-1,1,165,1,1,0,'2024-06-26 17:34:33','2024-06-26 17:35:30','9491c7450a1a946cfee61a575e51df90',10,'',0,106,0,0,NULL,NULL,'Community Mural Project',0),
-(272,'Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-06-26 18:18:58','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',0,106,0,0,NULL,NULL,'Enhancing Outdoor Learning Spaces',0);
+(272,'Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-06-30 13:11:42','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',165,106,0,0,'',NULL,'Enhancing Outdoor Learning Spaces',1);
 /*!40000 ALTER TABLE `au_ideas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1054,7 +1057,7 @@ CREATE TABLE `au_systemlog` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of this entry',
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9484 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9533 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1381,7 +1384,56 @@ INSERT INTO `au_systemlog` VALUES
 (9480,0,'Idea  271 number of votes given set to 1',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
 (9481,0,'Idea (#271) added Vote - value: -1 by 165',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
 (9482,0,'Added new idea (#272) Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,'','2024-06-26 18:18:58','2024-06-26 18:18:58',0),
-(9483,0,'Idea  260 incremented likes',0,'','2024-06-26 18:19:02','2024-06-26 18:19:02',0);
+(9483,0,'Idea  260 incremented likes',0,'','2024-06-26 18:19:02','2024-06-26 18:19:02',0),
+(9484,0,'Edited idea 272 by 165',0,'','2024-06-30 11:24:24','2024-06-30 11:24:24',0),
+(9485,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:09','2024-06-30 11:25:09',0),
+(9486,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:44','2024-06-30 11:25:44',0),
+(9487,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:53','2024-06-30 11:25:53',0),
+(9488,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:09','2024-06-30 11:26:09',0),
+(9489,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:10','2024-06-30 11:26:10',0),
+(9490,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:28','2024-06-30 11:26:28',0),
+(9491,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:35','2024-06-30 11:26:35',0),
+(9492,0,'Edited idea 272 by 165',0,'','2024-06-30 12:16:25','2024-06-30 12:16:25',0),
+(9493,0,'Edited idea 272 by 165',0,'','2024-06-30 12:16:45','2024-06-30 12:16:45',0),
+(9494,0,'Edited idea 272 by 165',0,'','2024-06-30 12:18:36','2024-06-30 12:18:36',0),
+(9495,0,'Edited idea 272 by 165',0,'','2024-06-30 12:18:43','2024-06-30 12:18:43',0),
+(9496,0,'Edited idea 272 by 165',0,'','2024-06-30 12:19:20','2024-06-30 12:19:20',0),
+(9497,0,'Edited idea 272 by 165',0,'','2024-06-30 12:19:27','2024-06-30 12:19:27',0),
+(9498,0,'Edited idea 272 by 165',0,'','2024-06-30 12:20:17','2024-06-30 12:20:17',0),
+(9499,0,'Edited idea 272 by 165',0,'','2024-06-30 12:20:26','2024-06-30 12:20:26',0),
+(9500,0,'Edited idea 263 by 165',0,'','2024-06-30 12:21:05','2024-06-30 12:21:05',0),
+(9501,0,'Edited idea 263 by 165',0,'','2024-06-30 12:21:11','2024-06-30 12:21:11',0),
+(9502,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:29:58','2024-06-30 12:29:58',0),
+(9503,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:30:09','2024-06-30 12:30:09',0),
+(9504,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:30:16','2024-06-30 12:30:16',0),
+(9505,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:30:34','2024-06-30 12:30:34',0),
+(9506,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:30:39','2024-06-30 12:30:39',0),
+(9507,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:31:07','2024-06-30 12:31:07',0),
+(9508,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:31:12','2024-06-30 12:31:12',0),
+(9509,0,'Edited idea 266 by 165',0,'','2024-06-30 12:36:15','2024-06-30 12:36:15',0),
+(9510,0,'Edited idea 266 by 165',0,'','2024-06-30 12:36:20','2024-06-30 12:36:20',0),
+(9511,0,'Edited idea 0 by 165',0,'','2024-06-30 12:37:43','2024-06-30 12:37:43',0),
+(9512,0,'Edited idea 0 by 165',0,'','2024-06-30 12:48:58','2024-06-30 12:48:58',0),
+(9513,0,'Added new idea (#273) testing',0,'','2024-06-30 12:51:49','2024-06-30 12:51:49',0),
+(9514,0,'Idea deleted, id=273 by 0',0,'','2024-06-30 12:51:59','2024-06-30 12:51:59',0),
+(9515,0,'Added new idea (#274) adsdads',0,'','2024-06-30 12:52:30','2024-06-30 12:52:30',0),
+(9516,0,'Idea deleted, id=274 by 0',0,'','2024-06-30 12:52:41','2024-06-30 12:52:41',0),
+(9517,0,'Added new idea (#275) sad',0,'','2024-06-30 12:55:30','2024-06-30 12:55:30',0),
+(9518,0,'Idea deleted, id=275 by 0',0,'','2024-06-30 12:55:35','2024-06-30 12:55:35',0),
+(9519,0,'Added new idea (#276) test',0,'','2024-06-30 13:00:19','2024-06-30 13:00:19',0),
+(9520,0,'Edited idea 276 by 165',0,'','2024-06-30 13:00:27','2024-06-30 13:00:27',0),
+(9521,0,'Idea deleted, id=276 by 0',0,'','2024-06-30 13:00:40','2024-06-30 13:00:40',0),
+(9522,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:03:21','2024-06-30 13:03:21',0),
+(9523,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:03:51','2024-06-30 13:03:51',0),
+(9524,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:08:00','2024-06-30 13:08:00',0),
+(9525,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:11:42','2024-06-30 13:11:42',0),
+(9526,0,'Added new text (#12) creator: 0',0,'','2024-06-30 13:14:10','2024-06-30 13:14:10',0),
+(9527,0,'Consent values updated by value -1',0,'','2024-06-30 13:14:23','2024-06-30 13:14:23',0),
+(9528,0,'Text deleted, id = 12 by 0',0,'','2024-06-30 13:14:23','2024-06-30 13:14:23',0),
+(9529,0,'Added new topic (#476) New Box',0,'','2024-06-30 13:14:41','2024-06-30 13:14:41',0),
+(9530,0,'Edited topic (#476) New Box.',0,'','2024-06-30 13:14:46','2024-06-30 13:14:46',0),
+(9531,0,'Topic deleted, id=476 by 0',0,'','2024-06-30 13:14:50','2024-06-30 13:14:50',0),
+(9532,0,'Successful login user 165',0,'','2024-07-01 08:12:36','2024-07-01 08:12:36',0);
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1408,7 +1460,7 @@ CREATE TABLE `au_texts` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash_id of the text',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1453,7 +1505,7 @@ CREATE TABLE `au_topics` (
   `phase_duration_3` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   `phase_duration_4` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=476 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=477 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1465,7 +1517,7 @@ LOCK TABLES `au_topics` WRITE;
 INSERT INTO `au_topics` VALUES
 (472,'Green Innovations Vault','Ideas aimed at reducing our environmental footprint, promoting recycling initiatives, sustainable energy projects, and conservation efforts.','Internal description?',1,10,'2024-06-24 21:51:34','2024-06-24 21:51:34','7ba1cc8d79a7cb7457427a5254f69d41',165,106,10,1,NULL,14,14,14,14,14),
 (473,'Tech Frontier','New apps, digital learning tools, robotics projects, smart solutions for the school, and advancements in virtual reality or augmented reality.','Internal description?',1,10,'2024-06-24 21:52:11','2024-06-24 21:52:11','ea45d51cb116ce44f5e69e992393146f',165,106,20,1,NULL,14,14,14,14,14),
-(474,'Creative Canvas','Imaginative ideas spanning visual arts, music performances, theater productions, literary works and other art expression.','Internal description?',1,10,'2024-06-24 21:53:20','2024-06-24 21:53:20','d2c9fb9871033f36407ab0bcf0e676a3',165,106,30,1,NULL,14,14,14,14,14),
+(474,'Creative Canvas','Imaginative ideas spanning visual arts, music performances, theater productions, literary works and other art expression.','',1,10,'2024-06-24 21:53:20','2024-06-30 12:31:12','d2c9fb9871033f36407ab0bcf0e676a3',165,106,30,1,NULL,14,14,14,14,14),
 (475,'Service Heart','Proposals for volunteer programs, fundraising events, social justice initiatives, outreach campaigns, and projects aimed at improving the well-being of others.','Internal description?',1,10,'2024-06-24 21:54:04','2024-06-24 21:54:04','aacc93c0cdabb2bf4106f9f1ce3bf2b5',165,106,40,1,NULL,14,14,14,14,14);
 /*!40000 ALTER TABLE `au_topics` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -1579,7 +1631,7 @@ CREATE TABLE `au_users_basedata` (
 LOCK TABLES `au_users_basedata` WRITE;
 /*!40000 ALTER TABLE `au_users_basedata` DISABLE KEYS */;
 INSERT INTO `au_users_basedata` VALUES
-(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','0',NULL,1,'2023-06-17 14:58:43','2024-06-23 12:47:07',0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-06-22 14:24:47',NULL,NULL,0,NULL,NULL,NULL,NULL,0,1);
+(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','0',NULL,1,'2023-06-17 14:58:43','2024-07-01 08:12:36',0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-07-01 08:12:36',NULL,NULL,0,NULL,NULL,NULL,NULL,0,0);
 /*!40000 ALTER TABLE `au_users_basedata` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1656,4 +1708,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-06-26 19:49:28
+-- Dump completed on 2024-07-01 12:35:43
