@@ -231,7 +231,7 @@ class Topic {
 
 
 
-    public function getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0, $phase_id = -1) {
+    public function getTopics ($offset, $limit, $orderby=3, $asc=0, $extra_where="", $status=1, $room_id=0, $phase_id = -1) {
       /* returns topiclist (associative array) with start and limit provided
       if start and limit are set to 0, then the whole list is read (without limit)
       orderby is the field (int, see switch), defaults to last_update (3)
@@ -327,11 +327,18 @@ class Topic {
         $returnvalue ['count'] = 0; // returned count of datasets
 
         return $returnvalue;
-      }else {
+      } else {
+        // determine total number of datasets without pagination limits
+        // get count
+        $total_datasets = count($topics);
+        if ($limit_active){
+          // only newly calculate datasets if limits are active
+          $total_datasets = $this->converters->getTotalDatasets ($this->db->au_topics, $status.$extra_where);
+        }
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue ['data'] = $topics; // returned data
-        $returnvalue ['count'] = count($topics); // returned count of datasets
+        $returnvalue ['count'] = $total_datasets; // returned count of datasets
 
         return $returnvalue;
 
