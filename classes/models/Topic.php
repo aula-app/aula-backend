@@ -41,7 +41,7 @@ class Topic {
       $room_id = $this->converters->checkRoomId ($room_id);
 
       // getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0)
-      return $this->getTopics ($offset, $limit, $orderby, $asc, $status, "", $room_id);
+      return $this->getTopics ($offset, $limit, $orderby, $asc, "", $status, $room_id);
 
     }// end function
 
@@ -55,7 +55,7 @@ class Topic {
       $phase_id = intval ($phase_id);
       $room_id = $this->converters->checkRoomId ($room_id);
 
-      return $this->getTopics ($offset, $limit, $orderby, $asc, $status, "", $room_id, $phase_id);
+      return $this->getTopics ($offset, $limit, $orderby, $asc, "", $status, $room_id, $phase_id);
     }
 
     public function reportTopic ($topic_id, $user_id, $updater_id, $reason =""){
