@@ -25,7 +25,7 @@ class Room {
       /* returns user base data for a specified db id */
       $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_rooms.' WHERE id = :id');
+      $stmt = $this->db->query('SELECT '.$this->db->au_rooms.'.* FROM '.$this->db->au_rooms.' LEFT JOIN '.$this->db->au_topics.' ON ('.$this->db->au_topics.'.room_id = '.$this->db->au_rooms.'.id) WHERE '.$this->db->au_rooms.'.id = :id');
       $this->db->bind(':id', $room_id); // bind room id
       $rooms = $this->db->resultSet();
       if (count($rooms)<1){
