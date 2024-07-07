@@ -423,8 +423,37 @@ class Idea {
       $topic_exist = $this->converters->checkTopicExist($topic_id);
       $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
+      $existing_topic_id = $this->getIdeaTopic ($idea_id)['data'];
 
-      if ($idea_exist==1 && $topic_exist==1) {
+      if ($existing_topic_id == true and $existing_topic_id > 0)
+      {
+        // idea already has a topic, initiate moving of idea to destination topiv
+        $res = moveIdeaBetweenTopics ($idea_id, $existing_topic_id, $topic_id, $updater_id)['success'];
+        
+        if ($res == true)
+        {
+          $this->syslog->addSystemEvent(0, "Succesfully moved idea ".$idea_id." to topic ".$topic_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = 1; // returned data
+          $returnvalue ['count'] = 1; // returned count of datasets
+
+          return $returnvalue;
+
+        } else {
+          $this->syslog->addSystemEvent(0, "Error while moving idea ".$idea_id." to topic ".$topic_id, 0, "", 1);
+
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // db error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        } // end else
+      } // end if
+
+      if ($idea_exist==1 && $topic_exist==1) 
+      {
         // everything ok, user and room exists
         // add relation to database
 
@@ -1770,11 +1799,11 @@ class Idea {
       $topic_id1 = $this->converters->checkTopicId($topic_id1); // auto convert
       $topic_id2 = $this->converters->checkTopicId($topic_id2); // auto convert
 
-      $ret_value = removeUserFromGroup($topic_id1, $idea_id);
+      $ret_value = removeIdeaFromTopic ($topic_id1, $idea_id);
 
       if ($ret_value['success']){
           // only if removal was successful add to topic 2
-          $ret_value = addUserToGroup ($topic_id2, $idea_id);
+          $ret_value = addIdeaToTopic ($topic_id2, $idea_id);
 
           if ($ret_value['success']){
             $returnvalue['success'] = true; // set return value
