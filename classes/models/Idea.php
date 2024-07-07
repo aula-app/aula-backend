@@ -26,12 +26,13 @@ class Idea {
         $memcache = new Memcached();
         $memcache->addServer('localhost', 11211) or die ("Could not connect");
         */
+        #dele    
     }// end function
 
     public function getIdeaBaseData($idea_id) {
       /* returns idea base data for a specified db id */
       $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.topic_id, '.$this->db->au_ideas.'.content,  '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.status, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.sum_comments, '.$this->db->au_ideas.'.is_winner, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id = :id');
+      $stmt = $this->db->query('SELECT '.$this->db->au_users_basedata.'.displayname, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.created, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.topic_id, '.$this->db->au_ideas.'.content,  '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.sum_comments, '.$this->db->au_ideas.'.is_winner, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id = :id');
 
       $this->db->bind(':id', $idea_id); // bind idea id
       $ideas = $this->db->resultSet();
@@ -1050,7 +1051,10 @@ class Idea {
         $asc_field = "DESC";
       }
 
-      $stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      #$stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      $stmt = $this->db->query('SELECT '.$this->db->au_topics.'.phase_id AS phase_id,  '.$this->db->au_topics.'.description_public AS topic_description,  '.$this->db->au_topics.'.name AS topic_name, '.$this->db->au_topics.'.id AS topic_id,  '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) LEFT JOIN '.$this->db->au_rel_topics_ideas.' ON ('.$this->db->au_ideas.'.id = '.$this->db->au_rel_topics_ideas.'.idea_id) LEFT JOIN '.$this->db->au_topics.' ON ('.$this->db->au_topics.'.id = '.$this->db->au_rel_topics_ideas.'.topic_id)  WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      #$stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.*, '.this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+      
       if ($limit_active){
         // only bind if limit is set
         $this->db->bind(':offset', $offset); // bind limit
@@ -1094,7 +1098,7 @@ class Idea {
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue ['data'] = $ideas; // returned data
         $returnvalue ['count'] = $total_datasets; // returned count of datasets with pagination or $total_datasets returns all datasets (without pagination)
-
+        error_log (var_dump ($ideas));
         return $returnvalue;
 
       }
@@ -3284,12 +3288,16 @@ class Idea {
 
 
 
-    public function getDashboardByUser ($user_id, $status = 1, $room_id = -1) {
+    public function getDashboardByUser ($user_id, $status = 1, $room_id = -1, $limit = 0, $offset = 0) {
       /* returns
        (associative array)
       $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
       $user_id is the id of the user
       */
+      
+      $asc = 0;
+      $orderby = 0;
+      
       $offset = intval ($offset);
       $limit = intval ($limit);
       $orderby = intval ($orderby);
@@ -3358,11 +3366,14 @@ class Idea {
       }else {
         // get count
         $count_by_phase[0] = 0; # wild ideas
-        $count_by_phase[1] = 0; # wild ideas
-        $count_by_phase[2] = 0; # wild ideas
-        $count_by_phase[3] = 0; # wild ideas
-        $count_by_phase[4] = 0; # wild ideas
-        $count_by_phase[5] = 0; # wild ideas
+        $count_by_phase[10] = 0; # wild ideas
+        $count_by_phase[20] = 0; # wild ideas
+        $count_by_phase[30] = 0; # wild ideas
+        $count_by_phase[40] = 0; # wild ideas/ approved / results /
+        $count_by_phase[41] = 0; # wild ideas/ approved / results /
+        $count_by_phase[42] = 0; # wild ideas/ disapproved / results /
+        
+        $count_by_phase[50] = 0; # wild ideas
 
         $data = [];
 
