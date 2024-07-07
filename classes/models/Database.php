@@ -32,7 +32,7 @@
         $this->au_services = $config['au_services'];
         $this->au_delegation = $config['au_delegation'];
         $this->au_media = $config['au_media'];
-        $this->au_daily_stats = $config['au_daily_stats'];
+        #$this->au_daily_stats = $config['au_daily_stats'];
         $this->au_messages = $config['au_messages'];
         $this->au_comments = $config['au_comments'];
         $this->au_commands = $config['au_commands'];
