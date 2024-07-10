@@ -391,6 +391,45 @@ class User {
 
     } // end function
 
+    public function getDelegationStatus ($user_id, $topic_id) {
+        $stmt = $this->db->query('SELECT * FROM '.$this->db->au_delegation.' WHERE user_id_original = :user_id AND topic_id = :topic_id');
+        // bind all VALUES
+        $this->db->bind(':topic_id', $topic_id);
+        $this->db->bind(':user_id', $user_id); // user original id that is updated
+
+        $err=false; // set error variable to false
+
+        try {
+          $action = $this->db->execute(); // do the query
+
+        } catch (Exception $e) {
+
+            $err=true;
+        }
+        $data = $this->db->resultSet();
+        $count_data = intval($this->db->rowCount());
+
+        if (!$err)
+        {
+          $this->syslog->addSystemEvent(0, "Delegation status retrieved: user_id: ".$user_id.", topic_id: ".$topic_id, 0, "", 1);
+          $returnvalue['success'] = true; // set return value
+          $returnvalue['error_code'] = 0; // error code
+          $returnvalue ['data'] = $data; // returned data
+          $returnvalue ['count'] = $count_data; // returned count of datasets
+
+          return $returnvalue;
+
+        } else {
+          $this->syslog->addSystemEvent(1, "Error retrieving delegation status for user ".$user_id." and topic ".$topic_id, 0, "", 1);
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 2; // error code
+          $returnvalue ['data'] = false; // returned data
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+
+    }
 
     public function setDelegationStatus ($user_id, $status, $topic_id = 0, $target = 0) {
         /* edits the status of a delegation and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
