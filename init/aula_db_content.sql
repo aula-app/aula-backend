@@ -217,6 +217,8 @@ CREATE TABLE `au_delegation` (
 
 LOCK TABLES `au_delegation` WRITE;
 /*!40000 ALTER TABLE `au_delegation` DISABLE KEYS */;
+INSERT INTO `au_delegation` VALUES
+(165,264,0,474,1,165,'2024-07-10 10:28:47','2024-07-10 10:28:47');
 /*!40000 ALTER TABLE `au_delegation` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -298,7 +300,7 @@ INSERT INTO `au_ideas` VALUES
 (260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-06-26 18:19:02','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,NULL,NULL,'Vertical Garden Walls',1),
 (261,'Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-06-25 00:58:44','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,1,'Sounds like an innovative and engaging way to explore our campus.',NULL,'Augmented Reality Campus Tours',1),
 (262,'Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-06-25 00:59:49','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,-1,'The proposal for the Virtual Learning Lab, while valuable, is not approved due to budget constraints.',NULL,'Virtual Learning Lab',1),
-(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-06-30 12:21:11','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0),
+(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-07-03 15:22:38','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0),
 (264,'Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,0,165,1,1,0,'2024-06-24 22:04:28','2024-06-25 00:55:37','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,'Performing Arts Festival',0),
 (265,'Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,'School Garden for Food Donation',2),
 (266,'Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-06-30 12:36:20','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,1,'It’s a wonderful way for students to support elderly and disabled community members while building intergenerational connections. Looking forward to its positive impact!',NULL,'Adopt-a-Neighbor Program',3),
@@ -1057,7 +1059,7 @@ CREATE TABLE `au_systemlog` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of this entry',
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9533 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9570 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1433,7 +1435,44 @@ INSERT INTO `au_systemlog` VALUES
 (9529,0,'Added new topic (#476) New Box',0,'','2024-06-30 13:14:41','2024-06-30 13:14:41',0),
 (9530,0,'Edited topic (#476) New Box.',0,'','2024-06-30 13:14:46','2024-06-30 13:14:46',0),
 (9531,0,'Topic deleted, id=476 by 0',0,'','2024-06-30 13:14:50','2024-06-30 13:14:50',0),
-(9532,0,'Successful login user 165',0,'','2024-07-01 08:12:36','2024-07-01 08:12:36',0);
+(9532,0,'Successful login user 165',0,'','2024-07-01 08:12:36','2024-07-01 08:12:36',0),
+(9533,1,'DB Error login user admin',0,'','2024-07-03 14:44:20','2024-07-03 14:44:20',0),
+(9534,0,'Successful login user 165',0,'','2024-07-03 14:44:26','2024-07-03 14:44:26',0),
+(9535,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
+(9536,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
+(9537,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
+(9538,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
+(9539,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
+(9540,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
+(9541,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
+(9542,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
+(9543,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
+(9544,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
+(9545,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:33','2024-07-03 15:02:33',0),
+(9546,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-03 15:02:33','2024-07-03 15:02:33',0),
+(9547,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9548,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9549,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9550,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9551,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9552,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9553,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
+(9554,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
+(9555,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
+(9556,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9557,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9558,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9559,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9560,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9561,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9562,0,'Added new user 264',0,'','2024-07-03 16:31:19','2024-07-03 16:31:19',0),
+(9563,0,'Added new user 265',0,'','2024-07-03 16:32:37','2024-07-03 16:32:37',0),
+(9564,0,'Added new user 266',0,'','2024-07-03 16:33:24','2024-07-03 16:33:24',0),
+(9565,0,'Added new user 267',0,'','2024-07-03 16:34:58','2024-07-03 16:34:58',0),
+(9566,0,'Added new user 268',0,'','2024-07-03 16:35:38','2024-07-03 16:35:38',0),
+(9567,0,'Added new user 269',0,'','2024-07-03 16:36:51','2024-07-03 16:36:51',0),
+(9568,0,'Added new user 270',0,'','2024-07-03 16:37:53','2024-07-03 16:37:53',0),
+(9569,0,'Added delegation for user 165 for topic 474',0,'','2024-07-10 10:28:47','2024-07-10 10:28:47',0);
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1621,7 +1660,7 @@ CREATE TABLE `au_users_basedata` (
   `consents_given` int(11) DEFAULT 0 COMMENT 'consents given',
   `consents_needed` int(11) DEFAULT 0 COMMENT 'needed consents',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=264 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=271 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1631,7 +1670,14 @@ CREATE TABLE `au_users_basedata` (
 LOCK TABLES `au_users_basedata` WRITE;
 /*!40000 ALTER TABLE `au_users_basedata` DISABLE KEYS */;
 INSERT INTO `au_users_basedata` VALUES
-(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','0',NULL,1,'2023-06-17 14:58:43','2024-07-01 08:12:36',0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-07-01 08:12:36',NULL,NULL,0,NULL,NULL,NULL,NULL,0,0);
+(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','0',NULL,1,'2023-06-17 14:58:43','2024-07-03 14:44:26',0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-07-03 14:44:26',NULL,NULL,0,NULL,NULL,NULL,NULL,0,0),
+(264,'Albrecht Durer','durer','adurer','adurer@aula.de','$2y$10$1NNLacyzYP3zI5Ipy1FgOOxbyP9Ezhuch3OkT5uSWIdRBaafJYpS2',NULL,'940ec2b51215d712b2228989e9d04863','description?',NULL,1,'2024-07-03 16:31:19','2024-07-03 16:31:19',165,'d47b6ae7477f77ac3c5ff48d0ca8cded',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,0),
+(265,'Alfred Doblin','doblin','adoblin','adoblin@aula.de','$2y$10$/4NX2p3PEK4YkXVrUHCfiOJL7Jve2kJzP21qMeTsJX5uQ/SjgLIV6',NULL,'599cf1b62ab5ac0b1b3facbd5f08c215','description?',NULL,1,'2024-07-03 16:32:37','2024-07-03 16:32:37',165,'4347d0beb442602471ae29cd56a73d9e',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,0),
+(266,'Friedrich Nietzsche','zaratustra','fnietzsche','fnietzsche@aula.de','$2y$10$YTH2z9ucipRCHxvqAE.Q3Oaj1/KF0r0u2Roflx.DNZVyNUXvOjzLe',NULL,'a50a9bb4f3f792eb7ea94f05629f0cc1','description?',NULL,1,'2024-07-03 16:33:24','2024-07-03 16:33:24',165,'e6d4d10df940311f3642f0bd7e19b22e',10,NULL,NULL,1,NULL,0,NULL,102,102,122,0,0),
+(267,'Marlene Dietrich','merlene','mdietrich','mdietrich@aula.de','$2y$10$vi3.uIrXyLj4vOQi87GWuegNQ13CLucA.SMYziQvCqvUaJypJu74u',NULL,'c4c1cdcdebf21ea35097c3137dc9c405','description?',NULL,1,'2024-07-03 16:34:58','2024-07-03 16:34:58',165,'5c6b5df6b09cfc0ee7dabaa8014aae6c',10,NULL,NULL,1,NULL,0,NULL,109,109,109,0,0),
+(268,'Hannah Arendt','hannah','harendt','harendt@aula.de','$2y$10$nThWaeYj9QdPzDVk5Hcsme3mrOKVsH9/y2acEWe3YyLkuaTzSqYvG',NULL,'67bb4e8a810b2d123b3172e75c69c57d','description?',NULL,1,'2024-07-03 16:35:38','2024-07-03 16:35:38',165,'cfa5a4515d77172fee99e37d30216efe',10,NULL,NULL,1,NULL,0,NULL,104,104,104,0,0),
+(269,'Zazie Beetz','Vanessa','zbeetz','zbeetz@aula.de','$2y$10$IOb9eH2qv7OkSj1yP7ySretynqD/nLY9WTPPVmcp9riuUF9swCmUG',NULL,'33908f14d6f6693ba059ffcfdc618e4d','description?',NULL,1,'2024-07-03 16:36:51','2024-07-03 16:36:51',165,'ee377903e5d1311d7f5f30bee4bfed33',10,NULL,NULL,1,NULL,0,NULL,122,122,118,0,0),
+(270,'Nastassja Kinski','nk','nkinski','nkinski@aula.de','$2y$10$hID/c4EKc7ntojB770cbFuqvQ24IqHz6v0rtC7f3WNc6D0BQyUIGK',NULL,'77993b028df7e814c3a20d17be57511c','description?',NULL,1,'2024-07-03 16:37:53','2024-07-03 16:37:53',165,'279c9e41c5082bdf3f3b4bcf699edbb1',10,NULL,NULL,1,NULL,0,NULL,110,110,110,0,0);
 /*!40000 ALTER TABLE `au_users_basedata` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1683,7 +1729,7 @@ CREATE TABLE `au_votes` (
   `number_of_delegations` int(11) DEFAULT NULL COMMENT 'number of delegated votes included',
   `comment` varchar(2048) DEFAULT NULL COMMENT 'Comment that the user added to a vote he did',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=127 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1694,8 +1740,8 @@ LOCK TABLES `au_votes` WRITE;
 /*!40000 ALTER TABLE `au_votes` DISABLE KEYS */;
 INSERT INTO `au_votes` VALUES
 (111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,''),
-(116,165,263,1,1,'2024-06-26 16:50:23','2024-06-26 16:50:23','8a9c26163e11ffdf794a0670094831d4',1,0,''),
-(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,'');
+(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,''),
+(126,165,263,1,1,'2024-07-03 15:22:38','2024-07-03 15:22:38','94cb41cd888103ef5c13b250820e6d95',1,0,'');
 /*!40000 ALTER TABLE `au_votes` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1708,4 +1754,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-07-01 12:35:43
+-- Dump completed on 2024-07-10 14:14:03
