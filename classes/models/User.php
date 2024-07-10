@@ -702,7 +702,7 @@ class User {
 
     public function giveBackAllDelegations ($user_id, $topic_id = 0){
       // give back all delegations for a) a certain topic (topic id>0) or all delegations (topic_id=0)
-      return $this->removeUserDelegations ($user_id, $topic, 1); // 1 at the end indicates that target user is meant
+      return $this->removeUserDelegations ($user_id, $topic_id, 1); // 1 at the end indicates that target user is meant
     }
 
     public function giveBackDelegation ($my_user_id, $user_id_original, $topic_id = 0){
@@ -739,16 +739,16 @@ class User {
       }
       if (!$err)
       {
-        $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id." for topic ".$topic_id, 0, "", 1);
+        $this->syslog->addSystemEvent(0, "User delegation(s) deleted with id ".$user_id_target." for topic ".$topic_id, 0, "", 1);
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // error code
-        $returnvalue ['data'] = $users; // returned data
+        $returnvalue ['data'] = true; // returned data
         $returnvalue ['count'] = intval ($this->db->rowCount()); // returned count of datasets
 
         return $returnvalue;
 
       } else {
-        $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id." for topic ".$topicid, 0, "", 1);
+        $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id ".$user_id_target." for topic ".$topic_id, 0, "", 1);
         $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
         $returnvalue ['data'] = false; // returned data
@@ -781,8 +781,9 @@ class User {
         $target_user = "user_id_target";
       }
 
-      $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE '.$target_user.' = :id'.$topic_clause);
+      $stmt = $this->db->query('DELETE FROM '.$this->db->au_delegation.' WHERE topic_id = :topic_id AND user_id_original = :id');
       $this->db->bind (':id', $user_id);
+      $this->db->bind (':topic_id', $topic_id);
       $err=false;
       try {
         $action = $this->db->execute(); // do the query
