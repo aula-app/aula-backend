@@ -1543,7 +1543,7 @@ class User
   }
 
 
-  public function addUser($realname, $displayname, $username, $email, $password, $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10)
+  public function addUser($realname, $displayname, $username, $email, $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10)
   {
     /* adds a user and returns insert id (userid) if successful, accepts the above parameters
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
