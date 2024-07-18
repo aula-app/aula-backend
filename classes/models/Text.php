@@ -283,6 +283,13 @@ class Text
       case 6:
         $orderby_field = "body";
         break;
+      case 7:
+        $orderby_field = "user_needs_to_consent";
+        break;
+      case 8:
+        $orderby_field = "consent_text";
+        break;
+
       default:
         $orderby_field = "last_update";
     }

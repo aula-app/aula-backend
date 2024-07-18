@@ -294,6 +294,12 @@ class Topic
       case 5:
         $orderby_field = "phase_id";
         break;
+      case 6:
+        $orderby_field = "room_id";
+        break;
+      case 7:
+        $orderby_field = "description_public";
+        break;
       default:
         $orderby_field = "last_update";
     }

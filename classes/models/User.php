@@ -1448,6 +1448,9 @@ class User
       case 11:
         $orderby_field = "o3";
         break;
+      case 12:
+        $orderby_field = "about_me";
+        break;
 
       default:
         $orderby_field = "last_update";
