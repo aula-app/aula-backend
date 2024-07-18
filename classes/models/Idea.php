@@ -1156,7 +1156,7 @@ class Idea
   }// end function
 
 
-  public function getIdeasByRoom($room_id, $offset = 0, $limit = 0, $orderby = 2, $asc = 0, $status = -1)
+  public function getIdeasByRoom($room_id, $offset = 0, $limit = 0, $orderby = 2, $asc = 0, $status = -1, $extra_where = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1186,9 +1186,6 @@ class Idea
       $limit_string = "";
       $limit_active = false;
     }
-
-    // additional conditions for the WHERE clause
-    $extra_where = "";
 
     if ($status > -1) {
       // specific status selected / -1 = get all status values
