@@ -446,7 +446,7 @@ class Idea
 
     if ($existing_topic_id == true and $existing_topic_id > 0) {
       // idea already has a topic, initiate moving of idea to destination topiv
-      $res = moveIdeaBetweenTopics($idea_id, $existing_topic_id, $topic_id, $updater_id)['success'];
+      $res = $this->moveIdeaBetweenTopics($idea_id, $existing_topic_id, $topic_id, $updater_id)['success'];
 
       if ($res == true) {
         $this->syslog->addSystemEvent(0, "Succesfully moved idea " . $idea_id . " to topic " . $topic_id, 0, "", 1);
@@ -1822,11 +1822,11 @@ class Idea
     $topic_id1 = $this->converters->checkTopicId($topic_id1); // auto convert
     $topic_id2 = $this->converters->checkTopicId($topic_id2); // auto convert
 
-    $ret_value = removeIdeaFromTopic($topic_id1, $idea_id);
+    $ret_value = $this->removeIdeaFromTopic($topic_id1, $idea_id);
 
     if ($ret_value['success']) {
       // only if removal was successful add to topic 2
-      $ret_value = addIdeaToTopic($topic_id2, $idea_id);
+      $ret_value = $this->addIdeaToTopic($topic_id2, $idea_id, $updater_id);
 
       if ($ret_value['success']) {
         $returnvalue['success'] = true; // set return value
