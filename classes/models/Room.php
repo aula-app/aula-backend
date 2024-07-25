@@ -761,7 +761,7 @@ class Room
   }
 
 
-  public function editRoom($room_id, $room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $restricted = 1, $order_importance = 10, $updater_id = 0)
+  public function editRoom($room_id, $room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $order_importance = 10, $updater_id = 0)
   {
     /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
 
@@ -773,13 +773,12 @@ class Room
     $internal_info = trim($internal_info);
     $access_code = trim($access_code);
     $status = intval($status);
-    $restricted = intval($restricted);
     $order_importance = intval($order_importance);
 
     $updater_id = $this->converters->checkUserId($updater_id); // autoconvert
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_rooms . ' SET room_name = :room_name, description_public = :description_public , description_internal= :description_internal, internal_info= :internal_info, status= :status, access_code= :access_code, restricted = :restricted, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_rooms . ' SET room_name = :room_name, description_public = :description_public , description_internal= :description_internal, internal_info= :internal_info, status= :status, access_code= :access_code, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
     // bind all VALUES
     $this->db->bind(':room_name', $room_name); // name of the room
     $this->db->bind(':description_public', $description_internal); // shown in frontend
@@ -788,7 +787,6 @@ class Room
     $this->db->bind(':status', $status); // status of the room (0=inactive, 1=active, 4=archived)
     $this->db->bind(':access_code', $access_code); // optional access code for room access
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-    $this->db->bind(':restricted', $restricted); // room restricted to associated users only
     $this->db->bind(':order_importance', $order_importance); // order for display in frontend
 
     $this->db->bind(':room_id', $room_id); // room that is updated
