@@ -28,7 +28,7 @@ class Idea
     $memcache = new Memcached();
     $memcache->addServer('localhost', 11211) or die ("Could not connect");
     */
-    #dele    
+    #dele
   }// end function
 
   public function getIdeaBaseData($idea_id)
@@ -3342,6 +3342,140 @@ class Idea
 
   }// end function
 
+  public function getUpdatesByUser($user_id)
+  {
+    /* returns statistics / updates for a defined user (userid) since last login of the user
+    returns votes and comments
+    */
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    # init return array
+    $data = [];
+
+    # first get votes
+    $select_part = 'SELECT ' . $this->db->au_votes . '.id, ' . $this->db->au_votes . '.idea_id, ' . $this->db->au_votes . '.vote_value, ' . $this->db->au_votes . '.vote_weight , ' . $this->db->au_votes . '.number_of_delegations, ' . $this->db->au_users_basedata . '.last_login  FROM ' . $this->db->au_votes;
+    #$join = 'LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
+    $join = 'LEFT JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_votes . '.user_id = ' . $this->db->au_users_basedata . '.id)';
+    $where = ' WHERE ' . $this->db->au_votes . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_users_basedata . '.id  = :user_id )';
+    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where);
+
+    $this->db->bind(':user_id', $user_id); // bind user id
+
+    $err = false;
+    try {
+      $votes = $this->db->resultSet();
+
+    } catch (Exception $e) {
+      echo 'Error occured while getting updates: ', $e->getMessage(), "\n"; // display error
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+
+    # second get comments
+    $select_part = 'SELECT ' . $this->db->au_comments . '.id, ' . $this->db->au_comments . '.comment_id  FROM ' . $this->db->au_comments;
+    #$join = 'LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
+    $join = ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_comments . '.idea_id = ' . $this->db->au_ideas . '.id)';
+    $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id AND ' . $this->db->au_comments . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_users_basedata . '.id  = :user_id )';
+    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where);
+
+    $this->db->bind(':user_id', $user_id); // bind user id
+
+    $err = false;
+    try {
+      $comments = $this->db->resultSet();
+
+    } catch (Exception $e) {
+      echo 'Error occured while getting updates: ', $e->getMessage(), "\n"; // display error
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+
+    $total_datasets = count($votes) + count ($comments);
+
+    if ($total_datasets < 1) { # nothing happened in the meantime
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+
+      // fill data array
+      $data = [];
+
+      $data ['votes'] = $votes;
+      $data ['comments'] = $comments;
+
+      // get count
+      /*$count_by_phase[0] = 0; # wild ideas
+      $count_by_phase[10] = 0; # wild ideas
+      $count_by_phase[20] = 0; # wild ideas
+      $count_by_phase[30] = 0; # wild ideas
+      $count_by_phase[40] = 0; # wild ideas/ approved / results /
+      $count_by_phase[41] = 0; # wild ideas/ approved / results /
+      $count_by_phase[42] = 0; # wild ideas/ disapproved / results /
+
+      $count_by_phase[50] = 0; # wild ideas
+
+      $data['total_wild'] = 0;
+      $data['total_idea_box'] = 0;
+      $data['idea_ids'] = "";
+      $data['idea_ids_wild'] = "";
+      $data['idea_ids_box'] = "";
+
+      $total_counter = 0;
+
+      foreach ($ideas as $idea_row) {
+        // get individual counts
+        $idea_phase_id = $idea_row['phase_id'];
+        $idea_topic_id = $idea_row['topic_id'];
+        $idea_id = $idea_row['id'];
+
+        if ($idea_phase_id == NULL) {
+          $idea_phase_id = 0;
+        }
+
+        $data['idea_ids'] .= $idea_id . ",";
+
+        if ($idea_topic_id == NULL) {
+          $idea_topic_id = 0;
+          $data['total_wild']++;
+          $data['idea_ids_wild'] .= $idea_id . ",";
+        } else {
+          $data['total_idea_box']++;
+          $data['idea_ids_box'] .= $idea_id . ",";
+          $count_by_phase[$idea_phase_id]++;
+
+        }
+
+
+
+      } // end foreach
+      $data['phase_counts'] = $count_by_phase;
+      */
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $data; // returned data
+      $returnvalue['count'] = count($votes); // returned count of datasets
+
+      return $returnvalue;
+
+    }
+
+  } // end function getUpdatesByUser
 
 
   public function getDashboardByUser($user_id, $status = 1, $room_id = -1, $limit = 0, $offset = 0)
@@ -3391,7 +3525,8 @@ class Idea
 
 
     $select_part = 'SELECT ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_rel_topics_ideas . '.topic_id AS topic_id , ' . $this->db->au_topics . '.phase_id AS phase_id FROM ' . $this->db->au_ideas;
-    $join = 'LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
+    #$join = 'LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
+    $join = 'LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
     $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_ideas . '.user_id= :user_id ' . $extra_where;
     $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where);
 
