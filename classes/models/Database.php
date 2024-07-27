@@ -54,6 +54,7 @@
         $this->au_rel_topics_media = $config['au_rel_topics_media'];
         $this->au_rel_groups_users = $config['au_rel_groups_users'];
         $this->au_rel_categories_ideas = $config['au_rel_categories_ideas'];
+        $this->au_rel_categories_rooms = $config['au_rel_categories_rooms'];
         $this->au_rel_users_messages = $config['au_rel_users_messages'];
         $this->au_rel_users_services = $config['au_rel_users_services'];
 
