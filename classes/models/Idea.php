@@ -865,7 +865,7 @@ class Idea
     $status = intval($status);
     $extra_where = ""; // init
 
-    $room_id = checkRoomId ($room_id); // auto convert
+    $room_id = $this->converters->checkRoomId ($room_id); // auto convert
 
     // init vars
     $orderby_field = "";
@@ -933,6 +933,7 @@ class Idea
       default:
         $asc_field = "DESC";
     }
+
     $select_part = 'SELECT ' . $this->db->au_categories . '.name, ' . $this->db->au_categories . '.description_public, ' . $this->db->au_categories . '.description_internal, ' . $this->db->au_categories . '.created, ' . $this->db->au_categories . '.last_update, ' . $this->db->au_categories . '.id FROM ' . $this->db->au_categories;
     #$join_idea = 'LEFT JOIN ' . $this->db->au_rel_categories_ideas . ' ON (' . $this->db->au_rel_categories_ideas . '.idea_id=' . $this->db->au_ideas . '.id)';
     $join_room = 'LEFT JOIN ' . $this->db->au_rel_categories_rooms . ' ON (' . $this->db->au_rel_categories_rooms . '.category_id = ' . $this->db->au_categories . '.id)';
