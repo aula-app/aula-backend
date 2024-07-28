@@ -847,8 +847,13 @@ class Idea
   }// end function
 
 
+  public function getCategoryBaseData($category_id, $status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
+  {
+    $cat = $this->getCategories($status, $type, $room_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= 6');
+    return $cat;
+  }
 
-  public function getCategories ($status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
+  public function getCategories($status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0, $extra_where = "")
   {
     /* returns category list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -863,9 +868,8 @@ class Idea
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
-    $extra_where = ""; // init
 
-    $room_id = $this->converters->checkRoomId ($room_id); // auto convert
+    $room_id = $this->converters->checkRoomId($room_id); // auto convert
 
     // init vars
     $orderby_field = "";
@@ -880,9 +884,6 @@ class Idea
       $limit_string = "";
       $limit_active = false;
     }
-
-    // additional conditions for the WHERE clause
-    $extra_where = "";
 
     if ($status > -1) {
       // specific status selected / -1 = get all status values
@@ -937,8 +938,8 @@ class Idea
     $select_part = 'SELECT ' . $this->db->au_categories . '.name, ' . $this->db->au_categories . '.description_public, ' . $this->db->au_categories . '.description_internal, ' . $this->db->au_categories . '.created, ' . $this->db->au_categories . '.last_update, ' . $this->db->au_categories . '.id FROM ' . $this->db->au_categories;
     #$join_idea = 'LEFT JOIN ' . $this->db->au_rel_categories_ideas . ' ON (' . $this->db->au_rel_categories_ideas . '.idea_id=' . $this->db->au_ideas . '.id)';
     $join_room = 'LEFT JOIN ' . $this->db->au_rel_categories_rooms . ' ON (' . $this->db->au_rel_categories_rooms . '.category_id = ' . $this->db->au_categories . '.id)';
-    $where = ' WHERE ' . $this->db->au_categories . '.id > 0 ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $where = $this->db->au_categories . '.id > 0 ' . $extra_where;
+    $stmt = $this->db->query($select_part . ' ' . $join . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit_active) {
       // only bind if limit is set
@@ -946,8 +947,7 @@ class Idea
       $this->db->bind(':limit', $limit); // bind limit
     }
 
-    if ($room_active)
-    {
+    if ($room_active) {
       $this->db->bind(':room_id', $room_id); // bind room_id
     }
 
@@ -1803,7 +1803,7 @@ class Idea
 
   }// end function
 
-  public function addCategory($name, $description_public, $description_internal, $status, $order_importance = 10, $room_id = 0, $updater_id = 0)
+  public function addCategory($name, $description_public = "", $description_internal = "", $status = 1, $order_importance = 10, $room_id = 0, $updater_id = 0)
   {
     /* adds a new category and returns insert id (idea id) if successful, accepts the above parameters
      content = actual content of the idea,
@@ -1812,28 +1812,25 @@ class Idea
     */
 
     //sanitize vars
-    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $status = intval($status);
     $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
     $order_importance = intval($order_importance);
-    $content = trim($content);
-    $info = trim($info);
+    $description_public = trim($description_public);
+    $description_internal = trim($description_internal);
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_categories . ' (name, description_public, description_internal, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:name, :description_public, :description_internal, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_categories . ' (name, description_public, description_internal, status, hash_id, created, last_update, updater_id) VALUES (:name, :description_public, :description_internal, :status, :hash_id, NOW(), NOW(), :updater_id)');
     // bind all VALUES
 
     $this->db->bind(':name', $name);
     $this->db->bind(':status', $status);
     $this->db->bind(':description_public', $description_public);
     $this->db->bind(':description_internal', $description_internal);
-    $this->db->bind(':room_id', $room_id);
     // generate unique hash for this idea
     $testrand = rand(100, 10000000);
     $appendix = microtime(true) . $testrand;
     $hash_id = md5($$name . $appendix); // create hash id for this idea
     $this->db->bind(':hash_id', $hash_id);
-    $this->db->bind(':order_importance', $order_importance); // order parameter
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
     $err = false; // set error variable to false
@@ -1847,7 +1844,7 @@ class Idea
     }
     $insertid = intval($this->db->lastInsertId());
     if (!$err) {
-      $this->syslog->addSystemEvent(0, "Added new category (#" . $insertid . ") " . $content, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Added new category (#" . $insertid . ") " . $name, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $insertid; // returned data
@@ -1856,7 +1853,7 @@ class Idea
       return $returnvalue;
 
     } else {
-      $this->syslog->addSystemEvent(1, "Error adding category " . $content, 0, "", 1);
+      $this->syslog->addSystemEvent(1, "Error adding category " . $name, 0, "", 1);
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
       $returnvalue['data'] = false; // returned data
@@ -1868,9 +1865,9 @@ class Idea
 
   }// end function
 
-  public function removeCategory($category_id, $updater_id)
+  public function deleteCategory($category_id, $updater_id)
   {
-    // removes a category
+    // deletes a category
 
     $category_id = $this->converters->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -3495,15 +3492,14 @@ class Idea
     $join_user = ' LEFT JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id = ' . $this->db->au_users_basedata . '.id)';
 
     if ($mode == 0) {
-        // activity since last login of the user
-        $where = ' WHERE ' . $this->db->au_votes . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_ideas . '.user_id  = :user_id LIMIT 1)';
-    }
-    else {
+      // activity since last login of the user
+      $where = ' WHERE ' . $this->db->au_votes . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_ideas . '.user_id  = :user_id LIMIT 1)';
+    } else {
       // all activity
       $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
     }
 
-    $full_query = $select_part . ' ' . $join_idea . ' '. $join_user . ' ' . $where;
+    $full_query = $select_part . ' ' . $join_idea . ' ' . $join_user . ' ' . $where;
 
     $stmt = $this->db->query($full_query);
 
@@ -3531,14 +3527,14 @@ class Idea
     $join_user = ' LEFT JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id = ' . $this->db->au_users_basedata . '.id)';
 
     if ($mode == 0) {
-        // activity since last login of the user
-        $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id AND ' . $this->db->au_comments . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_users_basedata . '.id  = :user_id LIMIT 1)';
-    }else {
+      // activity since last login of the user
+      $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id AND ' . $this->db->au_comments . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_users_basedata . '.id  = :user_id LIMIT 1)';
+    } else {
       // all activity
       $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
     }
 
-    $stmt = $this->db->query($select_part . ' ' . $join_idea . ' '. $join_user . ' ' . $where);
+    $stmt = $this->db->query($select_part . ' ' . $join_idea . ' ' . $join_user . ' ' . $where);
 
     $this->db->bind(':user_id', $user_id); // bind user id
 
@@ -3558,7 +3554,7 @@ class Idea
     }
 
 
-    $total_datasets = count($votes) + count ($comments);
+    $total_datasets = count($votes) + count($comments);
 
     if ($total_datasets < 1) { # nothing happened in the meantime
       $returnvalue['success'] = true; // set return value
@@ -3577,10 +3573,10 @@ class Idea
 
       $total_datasets = $count_votes + $count_comments;
 
-      $data ['votes'] = $votes;
-      $data ['votes_count'] = $count_votes;
-      $data ['comments'] = $comments;
-      $data ['comments_count'] = $count_comments;
+      $data['votes'] = $votes;
+      $data['votes_count'] = $count_votes;
+      $data['comments'] = $comments;
+      $data['comments_count'] = $count_comments;
 
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
