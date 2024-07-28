@@ -849,7 +849,7 @@ class Idea
 
   public function getCategoryBaseData($category_id, $status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
   {
-    $cat = $this->getCategories($status, $type, $room_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= 6');
+    $cat = $this->getCategories($status, $type, $room_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= ' . $category_id);
     return $cat;
   }
 
