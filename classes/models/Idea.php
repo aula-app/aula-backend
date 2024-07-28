@@ -849,8 +849,19 @@ class Idea
 
   public function getCategoryBaseData($category_id, $status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
   {
-    $cat = $this->getCategories($status, $type, $room_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= ' . $category_id);
-    return $cat;
+    $categories = $this->getCategories($status, $type, $room_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= ' . $category_id);
+
+    if ($categories['success'] == true) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $categories['data'][0]; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      return $categories;
+    }
+
   }
 
   public function getCategories($status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0, $extra_where = "")
