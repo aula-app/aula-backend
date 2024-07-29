@@ -847,9 +847,9 @@ class Idea
   }// end function
 
 
-  public function getCategoryBaseData($category_id, $status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
+  public function getCategoryBaseData($category_id, $status = -1, $type = -1, $room_id = -1, $idea_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
   {
-    $categories = $this->getCategories($status, $type, $room_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= ' . $category_id);
+    $categories = $this->getCategories($status, $type, $room_id, $idea_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= ' . $category_id);
 
     if ($categories['success'] == true) {
       $returnvalue['success'] = true; // set return value
@@ -863,11 +863,10 @@ class Idea
     }
   }// end function
 
-  public function getIdeaCategory($idea_id, $status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
+  public function getIdeaCategory($idea_id)
   {
     /* returns idea base data for a specified db id */
-    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-    $categories = $this->getCategories($status, $type, $room_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_rel_categories_ideas . '.idea_id= ' . $idea_id);
+    $categories = $this->getCategories(-1, -1, -1, $idea_id, -1, 3, 0, 0, "");
 
     if ($categories['success'] == true) {
       $returnvalue['success'] = true; // set return value
@@ -881,7 +880,7 @@ class Idea
     }
   }// end function
 
-  public function getCategories($status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0, $extra_where = "")
+  public function getCategories($status = -1, $type = -1, $room_id = -1, $idea_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0, $extra_where = "")
   {
     /* returns category list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -896,13 +895,13 @@ class Idea
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
-
+    $idea_id = $this->converters->checkIdeaId($idea_id); // auto convert
     $room_id = $this->converters->checkRoomId($room_id); // auto convert
 
     // init vars
     $orderby_field = "";
     $asc_field = "";
-
+    $join = "";
 
     $limit_string = " LIMIT :offset , :limit ";
     $limit_active = true;
@@ -923,12 +922,16 @@ class Idea
       $extra_where .= " AND " . $this->db->au_categories . ".type = " . $type;
     }
 
-    $room_active = false; // init
+    if ($idea_id > -1) {
+      // specific status selected / -1 = get all status values / only activate where clause and binding if room_id > -1
+      $join = 'LEFT JOIN ' . $this->db->au_rel_categories_ideas . ' ON (' . $this->db->au_rel_categories_ideas . '.category_id = ' . $this->db->au_categories . '.id)';
+      $extra_where .= ' AND ' . $this->db->au_rel_categories_ideas . '.idea_id= ' . $idea_id;
+    }
 
     if ($room_id > -1) {
       // specific status selected / -1 = get all status values / only activate where clause and binding if room_id > -1
+      $join = 'LEFT JOIN ' . $this->db->au_rel_categories_rooms . ' ON (' . $this->db->au_rel_categories_rooms . '.category_id = ' . $this->db->au_categories . '.id)';
       $extra_where .= " AND " . $this->db->au_rel_categories_rooms . ".room_id = " . $room_id;
-      $room_active = true;
     }
 
     switch (intval($orderby)) {
@@ -964,20 +967,9 @@ class Idea
     }
 
     $select_part = 'SELECT ' . $this->db->au_categories . '.name, ' . $this->db->au_categories . '.description_public, ' . $this->db->au_categories . '.description_internal, ' . $this->db->au_categories . '.created, ' . $this->db->au_categories . '.last_update, ' . $this->db->au_categories . '.id FROM ' . $this->db->au_categories;
-    $join_idea = 'LEFT JOIN ' . $this->db->au_rel_categories_ideas . ' ON (' . $this->db->au_rel_categories_ideas . '.category_id=' . $this->db->au_categories . '.id)';
-    #$join_room = 'LEFT JOIN ' . $this->db->au_rel_categories_rooms . ' ON (' . $this->db->au_rel_categories_rooms . '.category_id = ' . $this->db->au_categories . '.id)';
     $where = $this->db->au_categories . '.id > 0 ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join_idea . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query($select_part . ' ' . $join . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
-    if ($limit_active) {
-      // only bind if limit is set
-      $this->db->bind(':offset', $offset); // bind limit
-      $this->db->bind(':limit', $limit); // bind limit
-    }
-
-    if ($room_active) {
-      $this->db->bind(':room_id', $room_id); // bind room_id
-    }
 
     $err = false;
     try {
