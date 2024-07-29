@@ -539,7 +539,7 @@ class Idea
       // everything ok, idea exists
       // add relation to database
 
-      $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_categories_ideas . ' (idea_id, category_id, status, created, last_update, updater_id) VALUES (:idea_id, :category_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
+      $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_categories_ideas . ' (idea_id, category_id, created, last_update, updater_id) VALUES (:idea_id, :category_id, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
 
       // bind all VALUES
       $this->db->bind(':idea_id', $idea_id);
@@ -580,7 +580,7 @@ class Idea
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = $idea_exist . "," . $topic_exist; // returned data
+      $returnvalue['data'] = $idea_exist; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
@@ -861,8 +861,25 @@ class Idea
     } else {
       return $categories;
     }
+  }// end function
 
-  }
+  public function getIdeaCategory($idea_id, $status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
+  {
+    /* returns idea base data for a specified db id */
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    $categories = $this->getCategories($status, $type, $room_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_rel_categories_ideas . '.idea_id= ' . $idea_id);
+
+    if ($categories['success'] == true) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $categories['data'][0]; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      return $categories;
+    }
+  }// end function
 
   public function getCategories($status = -1, $type = -1, $room_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0, $extra_where = "")
   {
@@ -947,10 +964,10 @@ class Idea
     }
 
     $select_part = 'SELECT ' . $this->db->au_categories . '.name, ' . $this->db->au_categories . '.description_public, ' . $this->db->au_categories . '.description_internal, ' . $this->db->au_categories . '.created, ' . $this->db->au_categories . '.last_update, ' . $this->db->au_categories . '.id FROM ' . $this->db->au_categories;
-    #$join_idea = 'LEFT JOIN ' . $this->db->au_rel_categories_ideas . ' ON (' . $this->db->au_rel_categories_ideas . '.idea_id=' . $this->db->au_ideas . '.id)';
-    $join_room = 'LEFT JOIN ' . $this->db->au_rel_categories_rooms . ' ON (' . $this->db->au_rel_categories_rooms . '.category_id = ' . $this->db->au_categories . '.id)';
+    $join_idea = 'LEFT JOIN ' . $this->db->au_rel_categories_ideas . ' ON (' . $this->db->au_rel_categories_ideas . '.idea_id=' . $this->db->au_categories . '.id)';
+    #$join_room = 'LEFT JOIN ' . $this->db->au_rel_categories_rooms . ' ON (' . $this->db->au_rel_categories_rooms . '.category_id = ' . $this->db->au_categories . '.id)';
     $where = $this->db->au_categories . '.id > 0 ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query($select_part . ' ' . $join_idea . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit_active) {
       // only bind if limit is set
