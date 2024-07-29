@@ -57,7 +57,10 @@ CREATE TABLE `au_categories` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-
+INSERT INTO `au_categories` VALUES
+(1,'General','','bulb',1,'2024-07-29 15:54:41','2024-07-29 15:54:41',1,'12112890a34f90b5b51a20e61cf10887');
+/*!40000 ALTER TABLE `au_categories` ENABLE KEYS */;
+UNLOCK TABLES;
 
 # Tabellen-Dump au_commands
 # ------------------------------------------------------------
