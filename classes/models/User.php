@@ -1270,7 +1270,7 @@ class User
       // credentials are ok, set last login in db
       $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET last_login = NOW() WHERE id = :user_id');
       $user = $check_credentials['data'];
-      $this->db->bind(':user_id', $user->id); // bind user id
+      $this->db->bind(':user_id', $user['id']); // bind user id
       $err = false;
       try {
         $action = $this->db->execute(); // do the query
