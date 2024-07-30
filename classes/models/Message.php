@@ -647,7 +647,7 @@ class Message
     return $val;
   }
 
-  public function addMessage($headline, $body, $msg_type, $publish_date, $creator_id = 0, $target_group = 0, $target_id = 0, $pin_to_top = 0, $level_of_detail = 1, $only_on_dashboard = 0, $status = 1, $room_id = 0, $updater_id = 0, $language_id = 0)
+  public function addMessage($headline, $body, $msg_type = 3, $publish_date = 0, $creator_id = 0, $target_group = 0, $target_id = 0, $pin_to_top = 0, $level_of_detail = 1, $only_on_dashboard = 0, $status = 1, $room_id = 0, $updater_id = 0, $language_id = 0)
   {
     /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
     $headline is the headline of the message, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
@@ -677,6 +677,9 @@ class Message
     $only_on_dashboard = $this->makebool($only_on_dashboard);
     $level_of_detail = intval($level_of_detail);
     $msg_type = intval($msg_type);
+    if ($publish_date == 0) {
+      $publish_date = date('Y-m-d H:i:s');
+    }
 
     $headline = trim($headline);
     $body = trim($body);
