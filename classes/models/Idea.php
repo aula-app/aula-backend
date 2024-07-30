@@ -3506,10 +3506,13 @@ class Idea
     # init return array
     $data = [];
 
-    # first get votes
-    $select_part = 'SELECT ' . $this->db->au_votes . '.id, ' . $this->db->au_votes . '.idea_id, ' . $this->db->au_votes . '.vote_value, ' . $this->db->au_votes . '.vote_weight , ' . $this->db->au_votes . '.number_of_delegations, ' . $this->db->au_users_basedata . '.last_login  FROM ' . $this->db->au_votes;
-    $join_idea = ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_votes . '.idea_id = ' . $this->db->au_ideas . '.id)';
+    $select_defaults = 'SELECT ' . $this->db->au_ideas . '.id AS idea_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_rel_topics_ideas . '.topic_id, ' . $this->db->au_topics . '.phase_id';
+    $join_topic = ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id = ' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
     $join_user = ' LEFT JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id = ' . $this->db->au_users_basedata . '.id)';
+
+    # first get votes
+    $select_part = ', ' . $this->db->au_votes . '.id, ' . $this->db->au_votes . '.vote_value, ' . $this->db->au_votes . '.vote_weight, ' . $this->db->au_votes . '.number_of_delegations';
+    $from = ' FROM ' . $this->db->au_votes . ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_votes . '.idea_id = ' . $this->db->au_ideas . '.id)';
 
     if ($mode == 0) {
       // activity since last login of the user
@@ -3519,10 +3522,7 @@ class Idea
       $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
     }
 
-    $full_query = $select_part . ' ' . $join_idea . ' ' . $join_user . ' ' . $where;
-
-    $stmt = $this->db->query($full_query);
-
+    $stmt = $this->db->query($select_defaults . $select_part . $from . $join_topic . $join_user . $where);
     $this->db->bind(':user_id', $user_id); // bind user id
 
     $err = false;
@@ -3541,10 +3541,8 @@ class Idea
     }
 
     # second get comments
-    $select_part = 'SELECT ' . $this->db->au_comments . '.id FROM ' . $this->db->au_comments;
-    #$join = 'LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
-    $join_idea = ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_comments . '.idea_id = ' . $this->db->au_ideas . '.id)';
-    $join_user = ' LEFT JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id = ' . $this->db->au_users_basedata . '.id)';
+    $select_part = ', ' . $this->db->au_comments . '.id';
+    $from_part = ' FROM ' . $this->db->au_comments . ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_comments . '.idea_id = ' . $this->db->au_ideas . '.id)';
 
     if ($mode == 0) {
       // activity since last login of the user
@@ -3554,8 +3552,7 @@ class Idea
       $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
     }
 
-    $stmt = $this->db->query($select_part . ' ' . $join_idea . ' ' . $join_user . ' ' . $where);
-
+    $stmt = $this->db->query($select_defaults . $select_part . $from_part . $join_topic . $join_user . $where);
     $this->db->bind(':user_id', $user_id); // bind user id
 
     $err = false;
