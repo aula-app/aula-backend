@@ -3585,15 +3585,15 @@ class Idea
       // fill data array
       $data = [];
 
-      $count_votes = count($votes);
-      $count_comments = count($comments);
+      // $count_votes = count($votes);
+      // $count_comments = count($comments);
 
-      $total_datasets = $count_votes + $count_comments;
+      // $total_datasets = $count_votes + $count_comments;
+      // $data['votes_count'] = $count_votes;
+      // $data['comments_count'] = $count_comments;
 
       $data['votes'] = $votes;
-      $data['votes_count'] = $count_votes;
       $data['comments'] = $comments;
-      $data['comments_count'] = $count_comments;
 
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
