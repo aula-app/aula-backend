@@ -3675,71 +3675,71 @@ class Idea
     }
     $total_datasets = count($ideas);
 
-    if ($total_datasets < 1) {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
+    // if ($total_datasets < 1) {
+    //   $returnvalue['success'] = true; // set return value
+    //   $returnvalue['error_code'] = 2; // error code
+    //   $returnvalue['data'] = false; // returned data
+    //   $returnvalue['count'] = 0; // returned count of datasets
 
-      return $returnvalue;
-    } else {
-      // get count
-      $count_by_phase[0] = 0; # wild ideas
-      $count_by_phase[10] = 0; # wild ideas
-      $count_by_phase[20] = 0; # wild ideas
-      $count_by_phase[30] = 0; # wild ideas
-      $count_by_phase[40] = 0; # wild ideas/ approved / results /
-      $count_by_phase[41] = 0; # wild ideas/ approved / results /
-      $count_by_phase[42] = 0; # wild ideas/ disapproved / results /
+    //   return $returnvalue;
+    // } else {
+    // get count
+    $count_by_phase[0] = 0; # wild ideas
+    $count_by_phase[10] = 0; # wild ideas
+    $count_by_phase[20] = 0; # wild ideas
+    $count_by_phase[30] = 0; # wild ideas
+    $count_by_phase[40] = 0; # wild ideas/ approved / results /
+    $count_by_phase[41] = 0; # wild ideas/ approved / results /
+    $count_by_phase[42] = 0; # wild ideas/ disapproved / results /
 
-      $count_by_phase[50] = 0; # wild ideas
+    $count_by_phase[50] = 0; # wild ideas
 
-      $data = [];
+    $data = [];
 
-      $data['total_wild'] = 0;
-      $data['total_idea_box'] = 0;
-      $data['idea_ids'] = "";
-      $data['idea_ids_wild'] = "";
-      $data['idea_ids_box'] = "";
+    $data['total_wild'] = 0;
+    $data['total_idea_box'] = 0;
+    $data['idea_ids'] = "";
+    $data['idea_ids_wild'] = "";
+    $data['idea_ids_box'] = "";
 
-      $total_counter = 0;
+    $total_counter = 0;
 
-      foreach ($ideas as $idea_row) {
-        // get individual counts
-        $idea_phase_id = $idea_row['phase_id'];
-        $idea_topic_id = $idea_row['topic_id'];
-        $idea_id = $idea_row['id'];
+    foreach ($ideas as $idea_row) {
+      // get individual counts
+      $idea_phase_id = $idea_row['phase_id'];
+      $idea_topic_id = $idea_row['topic_id'];
+      $idea_id = $idea_row['id'];
 
-        if ($idea_phase_id == NULL) {
-          $idea_phase_id = 0;
-        }
+      if ($idea_phase_id == NULL) {
+        $idea_phase_id = 0;
+      }
 
-        $data['idea_ids'] .= $idea_id . ",";
+      $data['idea_ids'] .= $idea_id . ",";
 
-        if ($idea_topic_id == NULL) {
-          $idea_topic_id = 0;
-          $data['total_wild']++;
-          $data['idea_ids_wild'] .= $idea_id . ",";
-        } else {
-          $data['total_idea_box']++;
-          $data['idea_ids_box'] .= $idea_id . ",";
-          $count_by_phase[$idea_phase_id]++;
+      if ($idea_topic_id == NULL) {
+        $idea_topic_id = 0;
+        $data['total_wild']++;
+        $data['idea_ids_wild'] .= $idea_id . ",";
+      } else {
+        $data['total_idea_box']++;
+        $data['idea_ids_box'] .= $idea_id . ",";
+        $count_by_phase[$idea_phase_id]++;
 
-        }
+      }
 
 
 
-      } // end foreach
-      $data['phase_counts'] = $count_by_phase;
+    } // end foreach
+    $data['phase_counts'] = $count_by_phase;
 
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $data; // returned data
-      $returnvalue['count'] = count($ideas); // returned count of datasets
+    $returnvalue['success'] = true; // set return value
+    $returnvalue['error_code'] = 0; // error code
+    $returnvalue['data'] = $data; // returned data
+    $returnvalue['count'] = count($ideas); // returned count of datasets
 
-      return $returnvalue;
+    return $returnvalue;
 
-    }
+    //}
   }// end function
 
 

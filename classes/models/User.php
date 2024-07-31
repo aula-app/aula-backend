@@ -1451,6 +1451,9 @@ class User
       case 12:
         $orderby_field = "about_me";
         break;
+      case 13:
+        $orderby_field = "userlevel";
+        break;
 
       default:
         $orderby_field = "last_update";
