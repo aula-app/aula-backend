@@ -139,6 +139,63 @@ class Idea
     }
   }// end function
 
+  public function getIdeaVoteStats($idea_id)
+  {
+    /* returns the calculated stats of votes (positive, neutral, negative) for this idea
+     */
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+    $stmt = $this->db->query('SELECT vote_value, vote_weight FROM ' . $this->db->au_votes . ' WHERE idea_id = :id and status = 1');
+    $this->db->bind(':id', $idea_id); // bind idea id
+    $votes = $this->db->resultSet();
+
+    if (count($idea_id) < 1) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+
+      $votes_negative = 0;
+      $votes_neutral = 0;
+      $votes_positive = 0;
+
+      $data = [];
+
+      foreach ($votes as $vote) {
+        $vote_value = $vote['vote_value'];
+        $vote_weight = $vote['vote:weight'];
+
+        if ($vote_value > 0) {
+          $votes_positive = $votes_positive + $vote_weight;
+        }
+        if ($vote_value == 0) {
+          $votes_neutral = $votes_neutral + $vote_weight;
+        }
+        if ($vote_value < 0) {
+          $votes_negative = $votes_negative + $vote_weight;
+        }
+        $total_votes = $total_votes + $vote_weight;
+      }
+
+      $data['total_votes'] = $total_votes;
+      $data['votes_negative'] = $votes_negative;
+      $data['votes_neutral'] = $votes_neutral;
+      $data['votes_positive'] = $votes_positive;
+
+
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $data; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+  }// end function
+
   public function getIdeaTopic($idea_id)
   {
     /* returns the topic for a specificc idea integer idea id
