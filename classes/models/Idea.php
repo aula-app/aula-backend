@@ -149,7 +149,7 @@ class Idea
     $this->db->bind(':id', $idea_id); // bind idea id
     $votes = $this->db->resultSet();
 
-    if (count($idea_id) < 1) {
+    if (count($votes) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
       $returnvalue['data'] = false; // returned data
