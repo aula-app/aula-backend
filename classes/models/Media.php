@@ -276,7 +276,7 @@ class Media {
       return $val;
     }
 
-    public function addMedia ($name, $url, $path, $type, $system_type, $filename, $description="", $status=1, $updater_id=0) {
+    public function addMedia ($name, $path, $type, $system_type, $filename, $status=1, $updater_id=0) {
         /* adds a new medium and returns insert id (text id) if successful, accepts the above parameters
         name is the shown name for the medium in the frontend
         description is the shown description for the medium in the frontend
@@ -291,7 +291,6 @@ class Media {
 
         //sanitize the vars
         $name = trim ($name);
-        $description = trim ($description);
 
         $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -299,14 +298,12 @@ class Media {
         $type = intval($type);
         $system_type = intval($system_type);
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_media.' (name, description, type, system_type, url, path, filename, status, hash_id, created, last_update, updater_id) VALUES (:name, :description, :type, :system_type, :url, :path, :filename, :status, :hash_id, NOW(), NOW(), :updater_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_media.' (name, type, system_type, path, filename, status, hash_id, created, last_update, updater_id) VALUES (:name, :type, :system_type, :path, :filename, :status, :hash_id, NOW(), NOW(), :updater_id)');
         // bind all VALUES
 
         $this->db->bind(':name', $name);
-        $this->db->bind(':description', $description);
         $this->db->bind(':type', $type);
         $this->db->bind(':system_type', $system_type);
-        $this->db->bind(':url', $url);
         $this->db->bind(':path', $path);
         $this->db->bind(':filename', $filename);
 
@@ -323,9 +320,9 @@ class Media {
 
         try {
           $action = $this->db->execute(); // do the query
-
         } catch (Exception $e) {
 
+          echo $e;
             $err=true;
         }
         if (!$err)
@@ -445,6 +442,34 @@ class Media {
         }
     }// end function
 
+    public function userAvatar($user_id) {
+      $stmt = $this->db->query('SELECT filename FROM '.$this->db->au_media.' WHERE updater_id = :user_id AND system_type = 0');
+      $this->db->bind(':user_id', $user_id);
+
+      $err =false;
+      try {
+        $action = $this->db->execute(); // do the query
+      } catch (Exception $e) {
+          $err=true;
+      }
+      if (!$err)
+      {
+        $returnvalue ['success'] = true; // set return value
+        $returnvalue ['error_code'] = 0; // error code
+        $returnvalue ['data'] = $this->db->resultSet(); // returned data
+        $returnvalue ['count'] = count($this->db->resultSet()); // returned data
+
+        return $returnvalue; // return number of affected rows to calling script
+      } else {
+        $returnvalue ['success'] = false; // set return value
+        $returnvalue ['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned data
+
+        return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
+      }
+   
+    }
 
     public function deleteMedia ($media_id, $updater_id=0) {
         /* deletes texts, accepts media id (hash (varchar) or db id (int))
