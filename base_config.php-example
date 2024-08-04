@@ -10,4 +10,6 @@ $baseConfigDir = "/var/www/html/api/";
 $cryptFile="/var/www/html/api/superkey.ini";
 $jwtKeyFile="/var/www/html/api/jwt_key.ini";
 
+$filesDir="/var/www/html/files" 
+
 ?>
