@@ -10,9 +10,10 @@ $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
 $jwt = new JWT($jwtKeyFile);
-$media = new Media($db, $crypt, $syslog);
+$media = new Media($db, $crypt, $syslog, $filesDir);
 
-$json = fopen('php://input', "r");
+$json = file_get_contents('php://input');
+
 // $input = json_decode($json, true);
 $check_jwt = $jwt->check_jwt();
 
@@ -24,14 +25,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 if ($check_jwt) {
-  try {
+  $file_type =  $_POST['fileType'];
 
+  try {
     if (
       !isset($_FILES['file']['error']) ||
       is_array($_FILES['file']['error'])
     ) {
       throw new RuntimeException('Invalid parameters.');
     }
+
 
     // Check $_FILES['upfile']['error'] value.
     switch ($_FILES['file']['error']) {
@@ -74,7 +77,8 @@ if ($check_jwt) {
     } else {
       $jwt_payload = $jwt->payload();
       $user_id = $jwt_payload->user_id;
-      $inserted_media = $media->addMedia ("avatar",  $file_path, 1, 0, $file_name, 1, $user_id);
+
+      $inserted_media = $media->addMedia ($file_type, $file_path, 1, 0, $file_name, 1, $user_id);
     }
 
     echo json_encode(["status" => "File is uploaded successfully."]);
