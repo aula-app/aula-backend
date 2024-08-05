@@ -1748,7 +1748,7 @@ class User
 
       while ($not_created) {
         $stmt = $this->db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
-        $this->db->bind(':secret', $secret); 
+        $this->db->bind(':secret', $secret);
 
         if (count($this->db->resultSet()) == 0) {
           $not_created = false;
@@ -1758,7 +1758,7 @@ class User
       }
 
       $stmt = $this->db->query('SELECT id FROM au_users_basedata WHERE email = :email');
-      $this->db->bind(':email', $email); 
+      $this->db->bind(':email', $email);
       $user_id = $this->db->resultSet()[0]["id"];
 
       $stmt = $this->db->query('INSERT INTO au_change_password (user_id, secret) values (:user_id, :secret)');
@@ -1776,24 +1776,28 @@ class User
       global $email_creation_subject;
       global $email_creation_body;
 
-      $params = array  ('host' => $email_host,
-      	'port' => $email_port,
-      	'auth' => true,
-      	'username' => $email_username,
-      	'password' => $email_password);
-      
-      $smtp = Mail::factory ('smtp', $params);
+      $params = array(
+        'host' => $email_host,
+        'port' => $email_port,
+        'auth' => true,
+        'username' => $email_username,
+        'password' => $email_password
+      );
+
+      $smtp = Mail::factory('smtp', $params);
       $content = "text/html; charset=utf-8";
       $mime = "1.0";
-  
-      $headers = array ('From' => $email_from,
-      	'To' => $email,
-      	'Subject' => 	$email_creation_subject,
-      	'Reply-To' => $email_address,
-      	'MIME-Version' => $mime,
-      	'Content-type' => $content);
-      
-      $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $secret, $secret));
+
+      $headers = array(
+        'From' => $email_from,
+        'To' => $email,
+        'Subject' => $email_creation_subject,
+        'Reply-To' => $email_address,
+        'MIME-Version' => $mime,
+        'Content-type' => $content
+      );
+
+      $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $secret));
 
       $insertid = intval($this->db->lastInsertId());
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
@@ -1817,7 +1821,7 @@ class User
     }
   }// end function
 
-  public function editUser($user_id, $realname, $displayname, $username, $email, $userlevel, $about_me = "", $position = "",  $updater_id = 0)
+  public function editUser($user_id, $realname, $displayname, $username, $email, $userlevel, $about_me = "", $position = "", $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
@@ -2304,19 +2308,19 @@ class User
     }
   }// end function
 
-  public function setUserAbout($user_id, $about, $updater_id = 0)
+  public function setUserAbout($user_id, $about_me, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      about (text) -> description of a user
      updater_id is the id of the user that commits the update (i.E. admin )
     */
-    $about = $this->crypt->encrypt(trim($about)); // sanitize and encrypt about text
+    $about_me = $this->crypt->encrypt(trim($about_me)); // sanitize and encrypt about text
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET about_me= :about, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET about_me= :about_me, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
     // bind all VALUES
-    $this->db->bind(':about', $about);
+    $this->db->bind(':about_me', $about_me);
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
     $this->db->bind(':userid', $user_id); // user that is updated
