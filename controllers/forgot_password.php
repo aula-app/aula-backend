@@ -49,12 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $headers = array ('From' => $email_from,
     	'To' => $email,
-    	'Subject' => 	$email_forgot_password_subject,
+    	'Subject' => 	$email_creation_subject,
     	'Reply-To' => $email_address,
     	'MIME-Version' => $mime,
     	'Content-type' => $content);
     
-    $mail = $smtp->send($email, $headers, sprintf($email_forgot_password_body, $secret));
+    $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $secret));
 
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(["success" => true]);
