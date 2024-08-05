@@ -16,6 +16,29 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `au_change_password`
+--
+
+DROP TABLE IF EXISTS `au_change_password`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `au_change_password` (
+  `user_id` int(11) DEFAULT NULL,
+  `secret` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_change_password`
+--
+
+LOCK TABLES `au_change_password` WRITE;
+/*!40000 ALTER TABLE `au_change_password` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_change_password` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `au_activitylog`
 --
 
