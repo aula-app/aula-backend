@@ -1793,7 +1793,7 @@ class User
       	'MIME-Version' => $mime,
       	'Content-type' => $content);
       
-      $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $secret));
+      $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $secret, $secret));
 
       $insertid = intval($this->db->lastInsertId());
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
