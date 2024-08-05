@@ -34,6 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $password = $input['password'];
     $user = new User ($db, $crypt, $syslog);
     $user->setUserPW($user_id, $password);
+    // Delete secret from db
+    $stmt = $db->query('DELETE FROM au_change_password WHERE secret = :secret');
+    $db->bind(':secret', $secret); 
+    $user_id = $db->resultSet();
+
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(["success" => true]);
   };
