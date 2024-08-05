@@ -1322,10 +1322,13 @@ class User
     // create temp blind index
     $bi = md5(strtolower($username));
 
-    $stmt = $this->db->query('SELECT id,username,pw,userlevel,hash_id FROM ' . $this->db->au_users_basedata . ' WHERE bi= :bi');
-    $this->db->bind(':bi', $bi); // blind index
-    $users = $this->db->resultSet();
-
+    $stmt = $this->db->query('SELECT id, username, pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username');
+    try {
+      $this->db->bind(':username', $username); // blind index
+      $users = $this->db->resultSet();
+    } catch (Exception $e) {
+      print_r($e);
+    }
 
     if (count($users) < 1) {
       $returnvalue['success'] = true; // set return value
@@ -1761,7 +1764,7 @@ class User
     }
   }// end function
 
-  public function editUser($user_id, $realname, $displayname, $username, $email, $about_me = "", $position = "", $userlevel, $updater_id = 0)
+  public function editUser($user_id, $realname, $displayname, $username, $email, $userlevel, $about_me = "", $position = "",  $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
