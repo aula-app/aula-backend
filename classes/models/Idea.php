@@ -166,7 +166,7 @@ class Idea
 
       foreach ($votes as $vote) {
         $vote_value = $vote['vote_value'];
-        $vote_weight = $vote['vote:weight'];
+        $vote_weight = $vote['vote_weight'];
 
         if ($vote_value > 0) {
           $votes_positive = $votes_positive + $vote_weight;
