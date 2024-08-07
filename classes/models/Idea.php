@@ -3780,9 +3780,10 @@ class Idea
       } else {
         $data['total_idea_box']++;
         $data['idea_ids_box'] .= $idea_id . ",";
-        $count_by_phase[$idea_phase_id]++;
-
+        
       }
+
+      $count_by_phase[$idea_phase_id]++;
 
 
 
