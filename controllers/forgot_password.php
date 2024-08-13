@@ -14,11 +14,12 @@ $jwt = new JWT($jwtKeyFile);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $email =  $_GET["email"];
-  $stmt = $db->query('SELECT id FROM au_users_basedata WHERE email = :email');
+  $stmt = $db->query('SELECT id, realname FROM au_users_basedata WHERE email = :email');
   $db->bind(':email', $email); 
   
   if (count($db->resultSet()) > 0) {
     $user_id = $db->resultSet()[0]["id"];
+    $realname = $db->resultSet()[0]["realname"];
 
     $not_created = true;
     while ($not_created) {
@@ -54,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     	'MIME-Version' => $mime,
     	'Content-type' => $content);
     
-    $mail = $smtp->send($email, $headers, sprintf($email_forgot_password_body, $secret, $secret));
+    $mail = $smtp->send($email, $headers, sprintf($email_forgot_password_body, $realname, $secret, $secret))
 
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(["success" => true]);
