@@ -1757,9 +1757,11 @@ class User
         }
       }
 
-      $stmt = $this->db->query('SELECT id FROM au_users_basedata WHERE email = :email');
+      $stmt = $this->db->query('SELECT id, realname FROM au_users_basedata WHERE email = :email');
       $this->db->bind(':email', $email);
       $user_id = $this->db->resultSet()[0]["id"];
+      $realname = $this->db->resultSet()[0]["realname"];
+
 
       $stmt = $this->db->query('INSERT INTO au_change_password (user_id, secret) values (:user_id, :secret)');
       $this->db->bind(':user_id', $user_id);
@@ -1797,7 +1799,7 @@ class User
         'Content-type' => $content
       );
 
-      $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $secret));
+      $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $realname, $secret, $secret));
 
       $insertid = intval($this->db->lastInsertId());
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
