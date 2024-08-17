@@ -1367,6 +1367,123 @@ class Idea
     }
   }// end function
 
+  public function getWildIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 2, $asc = 0, $status = -1, $extra_where = "")
+  {
+    /* returns idealist (associative array) with start and limit provided
+    if start and limit are set to 0, then the whole list is read (without limit)
+    orderby is the field (int, see switch), defaults to creation_date (2)
+    asc (smallint), is either ascending (1) or descending (0), defaults to descending
+    $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1) -1 = get all datasets with status values 0-4
+    $room_id is the id of the room
+    */
+    // sanitize
+    $offset = intval($offset);
+    $limit = intval($limit);
+    $orderby = intval($orderby);
+    $asc = intval($asc);
+    $status = intval($status);
+
+    // init vars
+    $orderby_field = "";
+    $asc_field = "";
+
+    $limit_string = " LIMIT :offset , :limit ";
+    $limit_active = true;
+
+    // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+    if ($offset == 0 && $limit == 0) {
+      $limit_string = "";
+      $limit_active = false;
+    }
+
+    if ($status > -1) {
+      // specific status selected / -1 = get all status values
+      $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
+    }
+
+    switch (intval($orderby)) {
+      case 0:
+        $orderby_field = "status";
+        break;
+      case 1:
+        $orderby_field = "order_importance";
+        break;
+      case 2:
+        $orderby_field = "created";
+        break;
+      case 3:
+        $orderby_field = "last_update";
+        break;
+      case 4:
+        $orderby_field = "id";
+        break;
+
+      default:
+        $orderby_field = "last_update";
+    }
+
+    switch (intval($asc)) {
+      case 0:
+        $asc_field = "DESC";
+        break;
+      case 1:
+        $asc_field = "ASC";
+        break;
+      default:
+        $asc_field = "DESC";
+    }
+    $select_part = 'SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.sum_votes FROM ' . $this->db->au_ideas;
+    $join = 'INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT OUTER JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id';
+    $where = $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_users_basedata . '.id= :user_id AND ' . $this->db->au_rel_topics_ideas . '.idea_id IS NULL' . $extra_where;
+    $stmt = $this->db->query($select_part . ' ' . $join . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+
+    if ($limit_active) {
+      // only bind if limit is set
+      $this->db->bind(':offset', $offset); // bind limit
+      $this->db->bind(':limit', $limit); // bind limit
+    }
+    //$this->db->bind(':status', $status); // bind status
+    $this->db->bind(':user_id', $user_id); // bind user id
+
+    $err = false;
+    try {
+      $ideas = $this->db->resultSet();
+
+    } catch (Exception $e) {
+      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+    $total_datasets = count($ideas);
+
+    if ($total_datasets < 1) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      // get count
+      if ($limit_active) {
+        // only newly calculate datasets if limits are active
+        $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":room_id", $room_id, $select_part . ' ' . $join . ' ' . $where));
+      }
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $ideas; // returned data
+      $returnvalue['count'] = $total_datasets; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+  }// end function
+
 
   public function getIdeasByRoom($room_id, $offset = 0, $limit = 0, $orderby = 2, $asc = 0, $status = -1, $extra_where = "")
   {
