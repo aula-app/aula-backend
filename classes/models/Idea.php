@@ -1615,7 +1615,7 @@ class Idea
     }
   }// end function
 
-  public function getIdeasByUser($offset, $limit, $orderby = 3, $asc = 0, $status = -1, $user_id, $room_id = -1)
+  public function getIdeasByUser($user_id, $orderby = 3, $asc = 0, $status = -1,  $room_id = -1, $offset=0, $limit=0)
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
