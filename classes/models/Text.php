@@ -237,26 +237,41 @@ class Text
 
     if ($location > 0) {
       // if a location id is set then add to where clause
-      $extra_where .= " WHERE location = " . $location; // get specific texts for a certain page (page id)
+      if ($extra_where == "") {
+        $extra_where = " WHERE ";
+      }
+      $extra_where .= " location = " . $location; // get specific texts for a certain page (page id)
     }
 
     if ($creator_id > 0) {
+      if ($extra_where == "") {
+        $extra_where = " WHERE ";
+      }
       // if a creator id is set then add to where clause
       $extra_where .= " AND creator_id = " . $creator_id; // get specific texts for a creator / moderator / admin
     }
 
     if ($user_needs_to_consent > -1) {
+      if ($extra_where == "") {
+        $extra_where = " WHERE ";
+      }
       // if a target user id is set then add to where clause
       $extra_where .= " AND user_needs_to_consent = " . $user_needs_to_consent; // get only texts that need (1)/dont need (0) consent
     }
 
     if ($service_id_consent > -1) {
+      if ($extra_where == "") {
+        $extra_where = " WHERE ";
+      }
       // if a target user id is set then add to where clause
       $extra_where .= " AND service_id_consent = " . $service_id_consent; // get only texts that are linked to a certain service
     }
 
 
     if (!(intval($last_update) == 0)) {
+      if ($extra_where == "") {
+        $extra_where = " WHERE ";
+      }
       // if a publish date is set then add to where clause
       $extra_where .= " AND last_update > \'" . $last_update . "\'";
     }
@@ -311,7 +326,6 @@ class Text
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
     }
-    $this->db->bind(':status', $status); // bind status
 
     $err = false;
     try {
