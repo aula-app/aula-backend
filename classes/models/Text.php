@@ -237,7 +237,7 @@ class Text
 
     if ($location > 0) {
       // if a location id is set then add to where clause
-      $extra_where .= " AND location = " . $location; // get specific texts for a certain page (page id)
+      $extra_where .= " WHERE location = " . $location; // get specific texts for a certain page (page id)
     }
 
     if ($creator_id > 0) {
@@ -305,7 +305,7 @@ class Text
         $asc_field = "DESC";
     }
     $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE status= :status ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
