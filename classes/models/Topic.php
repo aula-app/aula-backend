@@ -195,7 +195,7 @@ class Topic
     // returns the phase of the topic
     $topic_id = $this->converters->checkTopicId($topic_id); // autoconvert id
 
-    $ret_value = getTopicBaseData($topic_id);
+    $ret_value = $this->getTopicBaseData($topic_id);
     if ($ret_value['success']) {
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // error code
@@ -219,7 +219,7 @@ class Topic
     /* returns topic base data for a specified db id */
     $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('SELECT '. $this->db->au_topics . '.phase_duration_0, '. $this->db->au_topics . '.phase_duration_1, '. $this->db->au_topics . '.phase_duration_2, '. $this->db->au_topics . '.phase_duration_3, '. $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' WHERE id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' WHERE id = :id');
     $this->db->bind(':id', $topic_id); // bind topic id
     $topics = $this->db->resultSet();
     if (count($topics) < 1) {
