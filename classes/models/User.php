@@ -2,7 +2,7 @@
 // only process script if variable $allowed_include is set to 1, otherwise exit
 // this prevents direct call of this script
 
-require_once ('../base_config.php');
+require_once('../base_config.php');
 require_once "Mail.php";
 
 if ($allowed_include == 1) {
@@ -632,7 +632,7 @@ class User
       $i++;
     }
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_consent . '.consent FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id) WHERE ' . $this->db->au_texts . '.id NOT IN (' . implode(",", $ids) . ') AND ' . $this->db->au_texts . '.user_needs_to_consent = 2 AND '. $this->db->au_texts . '.status = 1');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_consent . '.consent FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id) WHERE ' . $this->db->au_texts . '.id NOT IN (' . implode(",", $ids) . ') AND ' . $this->db->au_texts . '.user_needs_to_consent = 2 AND ' . $this->db->au_texts . '.status = 1');
 
     $texts = $this->db->resultSet();
     $missing_consents = count($texts);
