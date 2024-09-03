@@ -825,7 +825,7 @@ class Comment
     }
   }// end function
 
-  public function editComment($comment_id, $content, $updater_id = 0)
+  public function editComment($comment_id, $content, $status = 1, $updater_id = 0)
   {
     /* edits a comment and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      content = content  of comment
@@ -834,10 +834,11 @@ class Comment
     $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $content = trim($content);
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_comments . ' SET content= :content, last_update= NOW(), updater_id= :updater_id WHERE id= :comment_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_comments . ' SET content= :content, last_update= NOW(), status= :status, updater_id= :updater_id WHERE id= :comment_id');
     // bind all VALUES
     $this->db->bind(':content', $this->crypt->encrypt($content));
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+    $this->db->bind(':status', $status); // id of the user doing the update (i.e. admin)
 
     $this->db->bind(':comment_id', $comment_id); // comment that is updated
 

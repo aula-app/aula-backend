@@ -1823,15 +1823,16 @@ class User
     }
   }// end function
 
-  public function editUser($user_id, $realname, $displayname, $username, $email, $userlevel, $about_me = "", $position = "", $updater_id = 0)
+  public function editUser($user_id, $realname, $displayname, $username, $email, $userlevel, $about_me = "", $position = "", $updater_id = 0, $status = 1)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
     */
     // query('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $status = intval($status);
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET userlevel = :userlevel, realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET userlevel = :userlevel, realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id, status= :status WHERE id= :userid');
     // bind all VALUES
     $this->db->bind(':username', $this->crypt->encrypt($username));
     $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -1841,7 +1842,7 @@ class User
     $this->db->bind(':email', $this->crypt->encrypt($email));
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
     $this->db->bind(':userlevel', $userlevel); // user level (10 default)
-
+    $this->db->bind(':status', $status); // user level (10 default)
     $this->db->bind(':userid', $user_id); // user that is updated
 
     $err = false; // set error variable to false
