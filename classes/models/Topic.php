@@ -265,6 +265,11 @@ class Topic
       $limit_active = false;
     }
 
+    // check if a status was set (status > -1 default value)
+    if ($status > -1) {
+      $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
+    }
+
     if ($room_id > 0) {
       // if a room id is set then add to where clause
       $extra_where .= " AND room_id = " . $room_id; // get specific topics to a room
@@ -274,6 +279,8 @@ class Topic
       // if a room id is set then add to where clause
       $extra_where .= " AND phase_id = " . $phase_id; // get specific topics in a phase
     }
+
+
 
     switch (intval($orderby)) {
       case 0:
@@ -315,13 +322,12 @@ class Topic
         $asc_field = "DESC";
     }
 
-    $stmt = $this->db->query('SELECT count(' . $this->db->au_rel_topics_ideas . '.idea_id) as ideas_num, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_rel_topics_ideas . '.topic_id = ' . $this->db->au_topics . '.id WHERE ' . $this->db->au_topics . '.status= :status ' . $extra_where . ' GROUP BY ' . $this->db->au_topics . '.id ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT count(' . $this->db->au_rel_topics_ideas . '.idea_id) as ideas_num, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.status, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_rel_topics_ideas . '.topic_id = ' . $this->db->au_topics . '.id WHERE ' . $this->db->au_topics . '.id> 0 ' . $extra_where . ' GROUP BY ' . $this->db->au_topics . '.id ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
     }
-    $this->db->bind(':status', $status); // bind status
 
     $err = false;
     try {
