@@ -1,13 +1,13 @@
 # ************************************************************
 # Sequel Ace SQL dump
-# Version 20067
+# Version 20071
 #
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-07-27 07:43:58 +0000
+# Verarbeitungszeit: 2024-09-04 12:11:37 +0000
 # ************************************************************
 
 
@@ -53,8 +53,20 @@ CREATE TABLE `au_categories` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the category',
-  `type` int(11) DEFAULT 0 COMMENT '0 = content type 1 = media type',
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
+
+
+# Tabellen-Dump au_change_password
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `au_change_password`;
+
+CREATE TABLE `au_change_password` (
+  `user_id` int(11) DEFAULT NULL,
+  `secret` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 
@@ -68,7 +80,7 @@ CREATE TABLE `au_commands` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `cmd_id` int(11) DEFAULT NULL COMMENT 'command id (i.e. 1=delete user, 2=suspend user, 3=unsuspend user 4=vacation_on, 5=vacation_off etc.))',
   `command` varchar(1024) DEFAULT NULL COMMENT 'command in text form',
-  `parameters` int(11) DEFAULT NULL COMMENT 'parameters for the command',
+  `parameters` varchar(2048) DEFAULT NULL COMMENT 'parameters for the command',
   `date_start` datetime DEFAULT NULL COMMENT 'Date and time, when command is executed',
   `date_end` datetime DEFAULT NULL COMMENT 'Date and time, when command execution ends',
   `active` tinyint(1) DEFAULT NULL COMMENT '0=inactive, 1=active',
@@ -105,30 +117,6 @@ CREATE TABLE `au_comments` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_comments` WRITE;
-/*!40000 ALTER TABLE `au_comments` DISABLE KEYS */;
-
-INSERT INTO `au_comments` (`id`, `content`, `sum_likes`, `user_id`, `status`, `created`, `last_update`, `updater_id`, `hash_id`, `language_id`, `idea_id`, `parent_id`)
-VALUES
-	(16,'While the idea of solar-powered charging stations is admirable, it may not be the most cost-effective solution for our school at this time.',0,165,1,'2024-06-24 22:20:58','2024-06-24 22:20:58',0,'a02c31c880b78d596ba9784e64d13981',0,267,0),
-	(17,'This idea for solar-powered charging stations is a fantastic initiative for our school. Not only will it reduce our carbon footprint by utilizing renewable energy, but it also sets a great example for students on sustainable practices. It\'s a practical solution that aligns with our commitment to environmental stewardship and can potentially save costs in the long run by reducing energy expenses. Plus, it educates students about the benefits of renewable energy sources like solar power.',0,165,1,'2024-06-24 22:21:53','2024-06-24 22:21:53',0,'22e8eab0d638f32c348f4e6a04050483',0,267,0),
-	(18,'A campus-wide recycling initiative is long overdue! It\'s a practical step towards reducing our environmental impact and promoting responsible waste management among students and staff.',1,165,1,'2024-06-24 22:22:59','2024-06-24 22:23:03',0,'735404f40c91a2bd39161e569dbb5723',0,268,0),
-	(19,'While recycling is important, implementing a campus-wide initiative might be challenging. It requires significant resources for infrastructure, maintenance, and education. We should explore other sustainability efforts that are more feasible and impactful within our current budget constraints.',0,165,1,'2024-06-24 22:23:20','2024-06-24 22:23:20',0,'fda296d1a58c0e400639182ada616542',0,268,0),
-	(20,'Implementing a Virtual Learning Lab may divert resources away from traditional educational methods that have proven effective.',0,165,1,'2024-06-24 22:24:51','2024-06-24 22:24:51',0,'287e0423885d65d509a3d74b393bdb07',0,262,0),
-	(21,'Virtual campus tours offer a convenient and inclusive way for prospective students to explore our campus from anywhere!',0,165,1,'2024-06-24 22:26:07','2024-06-24 22:26:07',0,'53e7dafd1c12437f45a46b34c3578186',0,261,0),
-	(22,'This program not only strengthens community bonds but also teaches students valuable life skills like empathy, responsibility, and the importance of giving back.',0,165,1,'2024-06-24 22:28:12','2024-06-24 22:28:12',0,'a63540efa56b609ae6f5555085b3dce0',0,266,0),
-	(23,'Directly involving students in personal care tasks for neighbors could raise privacy concerns and may not always align with the needs or preferences of the elderly individuals involved.',0,165,1,'2024-06-24 22:28:25','2024-06-24 22:28:25',0,'3ff37e558e7cd5c986c9dcf50d27d490',0,266,0),
-	(24,'ome argue that social service programs like Adopt-a-Neighbor should be voluntary rather than mandatory, as forcing participation may dilute the altruistic spirit and impact of genuine volunteerism.',0,165,1,'2024-06-24 22:28:34','2024-06-24 22:28:34',0,'75158963dcd3dd83a357ad53031a20fd',0,266,0),
-	(25,'Managing a school garden requires significant time, resources, and expertise that may detract from core academic priorities and other extracurricular activities.',1,165,1,'2024-06-24 22:29:30','2024-06-24 22:29:49',0,'48648ad4dd02124f1ca7eae54d5c1281',0,265,0),
-	(26,'A school garden program teaches students about sustainability, nutrition, and responsibility, fostering a deeper connection to nature and promoting healthier eating habits.',0,165,1,'2024-06-24 22:29:46','2024-06-24 22:29:46',0,'ae8064cb703824b30ba9274aee8b0de6',0,265,0),
-	(27,'Vertical garden walls could potentially pose maintenance challenges such as irrigation and plant care, requiring ongoing resources and expertise that may outweigh their aesthetic and environmental benefits in a school setting.',1,165,1,'2024-06-24 22:39:05','2024-06-24 22:39:20',0,'0b7cb5092f9ef3d66b0e55c4046e9bf6',0,260,0),
-	(28,'What a healthy idea!',0,165,1,'2024-06-30 13:03:21','2024-06-30 13:03:21',165,'a8e4faf7dff84d6172977c027568d676',0,0,0),
-	(29,'test',0,165,1,'2024-06-30 13:03:51','2024-06-30 13:03:51',165,'8dbc8e06e0f584be9e3c2fc05e4e9753',0,0,0),
-	(30,'Test',0,165,1,'2024-06-30 13:07:59','2024-06-30 13:07:59',165,'dbd920faee13e49ee6bd0181688ea15e',0,0,0),
-	(31,'test',0,165,1,'2024-06-30 13:11:42','2024-06-30 13:11:42',165,'c657731b106b5f1508857201cc211643',0,272,0);
-
-/*!40000 ALTER TABLE `au_comments` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_consent
@@ -149,16 +137,6 @@ CREATE TABLE `au_consent` (
   PRIMARY KEY (`user_id`,`text_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_consent` WRITE;
-/*!40000 ALTER TABLE `au_consent` DISABLE KEYS */;
-
-INSERT INTO `au_consent` (`user_id`, `text_id`, `consent`, `date_consent`, `date_revoke`, `created`, `last_update`, `updater_id`, `status`)
-VALUES
-	(165,9,1,'2024-06-23 12:45:18',NULL,'2024-06-23 12:45:18','2024-06-23 12:45:18',0,1),
-	(165,11,1,'2024-06-23 12:47:20',NULL,'2024-06-23 12:47:20','2024-06-23 12:47:20',0,1);
-
-/*!40000 ALTER TABLE `au_consent` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_delegation
@@ -178,15 +156,6 @@ CREATE TABLE `au_delegation` (
   PRIMARY KEY (`user_id_original`,`user_id_target`,`topic_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-LOCK TABLES `au_delegation` WRITE;
-/*!40000 ALTER TABLE `au_delegation` DISABLE KEYS */;
-
-INSERT INTO `au_delegation` (`user_id_original`, `user_id_target`, `room_id`, `topic_id`, `status`, `updater_id`, `created`, `last_update`)
-VALUES
-	(165,264,0,474,1,165,'2024-07-10 10:28:47','2024-07-10 10:28:47');
-
-/*!40000 ALTER TABLE `au_delegation` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_groups
@@ -244,26 +213,6 @@ CREATE TABLE `au_ideas` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_ideas` WRITE;
-/*!40000 ALTER TABLE `au_ideas` DISABLE KEYS */;
-
-INSERT INTO `au_ideas` (`id`, `content`, `sum_likes`, `sum_votes`, `number_of_votes`, `user_id`, `votes_available_per_user`, `status`, `language_id`, `created`, `last_update`, `hash_id`, `order_importance`, `info`, `updater_id`, `room_id`, `is_winner`, `approved`, `approval_comment`, `topic_id`, `title`, `sum_comments`)
-VALUES
-	(260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-06-26 18:19:02','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,NULL,NULL,'Vertical Garden Walls',1),
-	(261,'Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-06-25 00:58:44','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,1,'Sounds like an innovative and engaging way to explore our campus.',NULL,'Augmented Reality Campus Tours',1),
-	(262,'Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-06-25 00:59:49','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,-1,'The proposal for the Virtual Learning Lab, while valuable, is not approved due to budget constraints.',NULL,'Virtual Learning Lab',1),
-	(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-07-03 15:22:38','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0),
-	(264,'Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,0,165,1,1,0,'2024-06-24 22:04:28','2024-06-25 00:55:37','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,'Performing Arts Festival',0),
-	(265,'Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,'School Garden for Food Donation',2),
-	(266,'Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-06-30 12:36:20','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,1,'It’s a wonderful way for students to support elderly and disabled community members while building intergenerational connections. Looking forward to its positive impact!',NULL,'Adopt-a-Neighbor Program',3),
-	(267,'Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,'Solar-Powered Charging Stations',2),
-	(268,'Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-06-24 22:23:20','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,NULL,NULL,'Campus-wide Recycling Initiative',4),
-	(270,'The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,'Student Tech Lab',0),
-	(271,'This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,-1,1,165,1,1,0,'2024-06-26 17:34:33','2024-06-26 17:35:30','9491c7450a1a946cfee61a575e51df90',10,'',0,106,0,0,NULL,NULL,'Community Mural Project',0),
-	(272,'Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-06-30 13:11:42','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',165,106,0,0,'',NULL,'Enhancing Outdoor Learning Spaces',1);
-
-/*!40000 ALTER TABLE `au_ideas` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_likes
@@ -283,22 +232,6 @@ CREATE TABLE `au_likes` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_likes` WRITE;
-/*!40000 ALTER TABLE `au_likes` DISABLE KEYS */;
-
-INSERT INTO `au_likes` (`id`, `user_id`, `object_id`, `status`, `created`, `last_update`, `hash_id`, `object_type`)
-VALUES
-	(90,165,267,1,'2024-06-24 22:20:59','2024-06-24 22:20:59','15c9a8b0cf946afbd29bc511bc4049ba',1),
-	(92,165,18,1,'2024-06-24 22:23:03','2024-06-24 22:23:03','1cc92b86fb1b54e00a2e5851556d4e4b',2),
-	(93,165,268,1,'2024-06-24 22:23:06','2024-06-24 22:23:06','d973f5da7b1a145b44ffd83edfc2feb9',1),
-	(94,165,261,1,'2024-06-24 22:26:09','2024-06-24 22:26:09','12998fe680ee3821a31f7eb960ebd51a',1),
-	(95,165,265,1,'2024-06-24 22:29:47','2024-06-24 22:29:47','aa3b4f148ca22fd64a0fb57083ed7d7f',1),
-	(96,165,25,1,'2024-06-24 22:29:49','2024-06-24 22:29:49','2e1615c3f144ccf6cf5bd445e1ab9cda',2),
-	(97,165,27,1,'2024-06-24 22:39:20','2024-06-24 22:39:20','3ba7a3a8a63601fca718f586b7fc0469',2),
-	(98,165,260,1,'2024-06-26 18:19:02','2024-06-26 18:19:02','92d8d8dac39e43dd4acd6e11741521e4',1);
-
-/*!40000 ALTER TABLE `au_likes` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_media
@@ -404,7 +337,7 @@ CREATE TABLE `au_rel_categories_media` (
   `type` int(11) DEFAULT NULL COMMENT 'position where media is used within category (i.e. profile pic)',
   `created` datetime DEFAULT NULL COMMENT 'create time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'id of updater',
+  `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`category_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -543,35 +476,6 @@ CREATE TABLE `au_rel_topics_ideas` (
   PRIMARY KEY (`topic_id`,`idea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_rel_topics_ideas` WRITE;
-/*!40000 ALTER TABLE `au_rel_topics_ideas` DISABLE KEYS */;
-
-INSERT INTO `au_rel_topics_ideas` (`topic_id`, `idea_id`, `last_update`, `created`, `updater_id`)
-VALUES
-	(468,251,'2024-06-24 14:17:04','2024-06-24 14:17:04',165),
-	(468,252,'2024-06-24 14:17:04','2024-06-24 14:17:04',165),
-	(469,253,'2024-06-24 14:16:42','2024-06-24 14:12:42',165),
-	(469,254,'2024-06-24 14:16:42','2024-06-24 14:16:42',165),
-	(469,255,'2024-06-24 14:16:42','2024-06-24 14:12:42',165),
-	(470,249,'2024-06-24 14:13:06','2024-06-24 14:13:06',165),
-	(470,250,'2024-06-24 14:13:06','2024-06-24 14:13:06',165),
-	(471,256,'2024-06-24 14:16:33','2024-06-24 14:16:33',165),
-	(471,257,'2024-06-24 14:16:33','2024-06-24 14:16:33',165),
-	(472,267,'2024-06-24 22:08:15','2024-06-24 22:08:15',165),
-	(472,268,'2024-06-24 22:08:15','2024-06-24 22:08:15',165),
-	(473,258,'2024-06-24 22:02:00','2024-06-24 22:02:00',165),
-	(473,259,'2024-06-24 22:02:00','2024-06-24 22:02:00',165),
-	(473,261,'2024-06-24 22:03:33','2024-06-24 22:03:33',165),
-	(473,262,'2024-06-24 22:03:33','2024-06-24 22:03:33',165),
-	(473,270,'2024-06-26 17:35:11','2024-06-26 17:35:11',165),
-	(474,263,'2024-06-24 22:35:46','2024-06-24 22:35:46',165),
-	(474,264,'2024-06-24 22:35:46','2024-06-24 22:35:46',165),
-	(474,271,'2024-06-26 17:34:49','2024-06-26 17:34:49',165),
-	(475,265,'2024-06-24 22:06:13','2024-06-24 22:06:13',165),
-	(475,266,'2024-06-24 22:06:13','2024-06-24 22:06:13',165);
-
-/*!40000 ALTER TABLE `au_rel_topics_ideas` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_rel_topics_media
@@ -660,16 +564,6 @@ CREATE TABLE `au_reported` (
   PRIMARY KEY (`user_id`,`object_id`,`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-LOCK TABLES `au_reported` WRITE;
-/*!40000 ALTER TABLE `au_reported` DISABLE KEYS */;
-
-INSERT INTO `au_reported` (`user_id`, `type`, `object_id`, `status`, `created`, `last_update`, `reason`, `internal_info`)
-VALUES
-	(4,0,3,0,'2023-06-03 07:04:27','2023-06-03 07:04:27','this idea is scandalous',NULL),
-	(4,0,5,0,'2023-06-03 07:13:36','2023-06-03 07:13:36','this idea is scandalous',NULL);
-
-/*!40000 ALTER TABLE `au_reported` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_roles
@@ -716,15 +610,6 @@ CREATE TABLE `au_rooms` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_rooms` WRITE;
-/*!40000 ALTER TABLE `au_rooms` DISABLE KEYS */;
-
-INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`)
-VALUES
-	(106,'The Innovation Hub','The Innovation Hub is a bustling room where creativity takes center stage. Students gather here to pitch their innovative ideas, which are then categorized into topics like sustainability, technology, arts, and community service.','',1,1,10,'2024-06-24 21:48:04','2024-06-24 21:48:04',165,'02a9374ae856c01ebb647c3b7570312d','$2y$10$6.gYwdO.NjuAt7su1Cvif.ajGv9eStGy6R1dZAgvJvbYAveE/4XF2','');
-
-/*!40000 ALTER TABLE `au_rooms` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_services
@@ -827,418 +712,6 @@ CREATE TABLE `au_systemlog` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_systemlog` WRITE;
-/*!40000 ALTER TABLE `au_systemlog` DISABLE KEYS */;
-
-INSERT INTO `au_systemlog` (`id`, `type`, `message`, `usergroup`, `url`, `created`, `last_update`, `updater_id`)
-VALUES
-	(9166,0,'Edited user 84 by 0',0,'','2024-06-18 13:15:02','2024-06-18 13:15:02',0),
-	(9167,0,'Edited user 204 by 0',0,'','2024-06-18 13:16:26','2024-06-18 13:16:26',0),
-	(9168,0,'Added new room (#104) Default Class',0,'','2024-06-18 13:20:07','2024-06-18 13:20:07',0),
-	(9169,0,'Added new idea (#246) Some Wild Idea',0,'','2024-06-18 13:22:48','2024-06-18 13:22:48',0),
-	(9170,0,'Edited user 165 by 0',0,'','2024-06-18 13:36:08','2024-06-18 13:36:08',0),
-	(9171,0,'Successful login user 165',0,'','2024-06-18 15:31:25','2024-06-18 15:31:25',0),
-	(9172,0,'Added new topic (#465) First Box',0,'','2024-06-19 17:42:56','2024-06-19 17:42:56',0),
-	(9173,0,'Added new topic (#466) Second Box',0,'','2024-06-20 12:50:24','2024-06-20 12:50:24',0),
-	(9174,0,'Edited topic (#) Second Box',0,'','2024-06-20 20:00:05','2024-06-20 20:00:05',0),
-	(9175,0,'Added new topic (#467) Second Box',0,'','2024-06-20 20:00:56','2024-06-20 20:00:56',0),
-	(9176,0,'Topic deleted, id=467 by 0',0,'','2024-06-20 20:04:39','2024-06-20 20:04:39',0),
-	(9177,0,'Topic deleted, id=466 by 0',0,'','2024-06-20 20:04:58','2024-06-20 20:04:58',0),
-	(9178,0,'Added new topic (#468) Box on Approval Phase',0,'','2024-06-20 20:06:33','2024-06-20 20:06:33',0),
-	(9179,0,'Edited topic (#) First Box',0,'','2024-06-21 13:46:53','2024-06-21 13:46:53',0),
-	(9180,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-21 13:47:09','2024-06-21 13:47:09',0),
-	(9181,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-21 13:48:13','2024-06-21 13:48:13',0),
-	(9182,0,'Successful login user 165',0,'','2024-06-22 14:24:47','2024-06-22 14:24:47',0),
-	(9183,0,'Edited topic (#) First Box',0,'','2024-06-22 19:29:34','2024-06-22 19:29:34',0),
-	(9184,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-22 19:29:58','2024-06-22 19:29:58',0),
-	(9185,0,'Added new user 262',0,'','2024-06-22 20:49:34','2024-06-22 20:49:34',0),
-	(9186,0,'User delegation(s) deleted with id 262 for topic 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
-	(9187,0,'User delegation(s) deleted with id 262 for topic 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
-	(9188,0,'User deleted with id 262 by 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
-	(9189,0,'Added new room (#105) Test Room',0,'','2024-06-22 20:50:03','2024-06-22 20:50:03',0),
-	(9190,0,'Room deleted with id 105 by 0',0,'','2024-06-22 20:50:06','2024-06-22 20:50:06',0),
-	(9191,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-22 21:17:17','2024-06-22 21:17:17',0),
-	(9192,0,'Added new text (#6) creator: 0',0,'','2024-06-22 21:41:02','2024-06-22 21:41:02',0),
-	(9193,0,'Consent values updated by value -1',0,'','2024-06-22 21:43:31','2024-06-22 21:43:31',0),
-	(9194,0,'Text deleted, id = 6 by 0',0,'','2024-06-22 21:43:31','2024-06-22 21:43:31',0),
-	(9195,0,'Added new text (#7) creator: 0',0,'','2024-06-22 21:43:55','2024-06-22 21:43:55',0),
-	(9196,0,'Consent values updated by value -1',0,'','2024-06-22 21:44:00','2024-06-22 21:44:00',0),
-	(9197,0,'Text deleted, id = 7 by 0',0,'','2024-06-22 21:44:00','2024-06-22 21:44:00',0),
-	(9198,0,'Added new user 263',0,'','2024-06-22 21:53:33','2024-06-22 21:53:33',0),
-	(9199,0,'User delegation(s) deleted with id 263 for topic 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
-	(9200,0,'User delegation(s) deleted with id 263 for topic 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
-	(9201,0,'User deleted with id 263 by 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
-	(9202,0,'Added new idea (#247) test idea',0,'','2024-06-22 22:06:37','2024-06-22 22:06:37',0),
-	(9203,0,'Idea deleted, id=247 by 0',0,'','2024-06-22 22:06:47','2024-06-22 22:06:47',0),
-	(9204,0,'Edited topic (#468) Box on Approval Phase',0,'','2024-06-22 22:13:42','2024-06-22 22:13:42',0),
-	(9205,0,'Added new topic (#469) Box on Voting phase',0,'','2024-06-22 22:19:52','2024-06-22 22:19:52',0),
-	(9206,0,'Edited topic (#465) First Box',0,'','2024-06-22 22:22:30','2024-06-22 22:22:30',0),
-	(9207,0,'Topic deleted, id=465 by 0',0,'','2024-06-22 22:24:03','2024-06-22 22:24:03',0),
-	(9208,0,'Added new text (#8) creator: 0',0,'','2024-06-22 22:30:30','2024-06-22 22:30:30',0),
-	(9209,0,'Added new topic (#470) Box on Discussion Phase',0,'','2024-06-22 22:39:57','2024-06-22 22:39:57',0),
-	(9210,0,'Edited topic (#468) Box on Approval Phase',0,'','2024-06-22 22:40:05','2024-06-22 22:40:05',0),
-	(9211,0,'Edited topic (#469) Box on Voting phase',0,'','2024-06-22 22:40:11','2024-06-22 22:40:11',0),
-	(9212,0,'Added new topic (#471) Box on Results Phase',0,'','2024-06-22 22:40:33','2024-06-22 22:40:33',0),
-	(9213,0,'Added new text (#9) creator: 0',0,'','2024-06-23 12:27:27','2024-06-23 12:27:27',0),
-	(9214,0,'Consent values updated by value 1',0,'','2024-06-23 12:27:27','2024-06-23 12:27:27',0),
-	(9215,0,'Added new text (#10) creator: 0',0,'','2024-06-23 12:30:58','2024-06-23 12:30:58',0),
-	(9216,0,'Added consent for user 165 for text 9',0,'','2024-06-23 12:45:18','2024-06-23 12:45:18',0),
-	(9217,0,'Added new text (#11) creator: 0',0,'','2024-06-23 12:47:07','2024-06-23 12:47:07',0),
-	(9218,0,'Consent values updated by value 1',0,'','2024-06-23 12:47:07','2024-06-23 12:47:07',0),
-	(9219,0,'Added consent for user 165 for text 11',0,'','2024-06-23 12:47:20','2024-06-23 12:47:20',0),
-	(9220,0,'Edited idea 246 by 165',0,'','2024-06-24 10:04:44','2024-06-24 10:04:44',0),
-	(9221,0,'Added new idea (#248) Some wild idea to work with',0,'','2024-06-24 10:12:42','2024-06-24 10:12:42',0),
-	(9222,0,'Added new idea (#249) There is a need for a discussion idea for testing purposes.',0,'','2024-06-24 10:13:23','2024-06-24 10:13:23',0),
-	(9223,0,'Added new idea (#250) Is there anything to be discussed here? I don\'t think so. We should all agree.',0,'','2024-06-24 10:14:10','2024-06-24 10:14:10',0),
-	(9224,0,'Added new idea (#251) This idea is a mock up for the approval phase.',0,'','2024-06-24 10:18:24','2024-06-24 10:18:24',0),
-	(9225,0,'Added new idea (#252) Unfortunately, this was not approved',0,'','2024-06-24 10:19:13','2024-06-24 10:19:13',0),
-	(9226,0,'Added new idea (#253) Vote for this idea!',0,'','2024-06-24 10:19:34','2024-06-24 10:19:34',0),
-	(9227,0,'Added new idea (#254) We don\'t support nor reject this idea.',0,'','2024-06-24 10:20:13','2024-06-24 10:20:13',0),
-	(9228,0,'Added new idea (#255) People don\'t want this idea to be the selected one.',0,'','2024-06-24 10:21:17','2024-06-24 10:21:17',0),
-	(9229,0,'Added new idea (#256) This is a winner idea on the results phase.',0,'','2024-06-24 10:21:50','2024-06-24 10:21:50',0),
-	(9230,0,'Added new idea (#257) This idea was not approved by the voters.',0,'','2024-06-24 10:22:20','2024-06-24 10:22:20',0),
-	(9231,0,'Idea  257 incremented likes',0,'','2024-06-24 13:29:35','2024-06-24 13:29:35',0),
-	(9232,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:29:37','2024-06-24 13:29:37',0),
-	(9233,0,'Idea  257 incremented likes',0,'','2024-06-24 13:29:38','2024-06-24 13:29:38',0),
-	(9234,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:29:38','2024-06-24 13:29:38',0),
-	(9235,0,'Idea  257 incremented likes',0,'','2024-06-24 13:36:28','2024-06-24 13:36:28',0),
-	(9236,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:36:29','2024-06-24 13:36:29',0),
-	(9237,0,'Added new comment (#12) user: 165',0,'','2024-06-24 13:40:13','2024-06-24 13:40:13',0),
-	(9238,0,'Idea  246 incremented likes',0,'','2024-06-24 13:40:34','2024-06-24 13:40:34',0),
-	(9239,0,'Idea  246 decrementing likes',0,'','2024-06-24 13:51:03','2024-06-24 13:51:03',0),
-	(9240,0,'Added idea 255 to topic 469',0,'','2024-06-24 14:12:42','2024-06-24 14:12:42',0),
-	(9241,0,'Added idea 253 to topic 469',0,'','2024-06-24 14:12:42','2024-06-24 14:12:42',0),
-	(9242,0,'Added idea 249 to topic 470',0,'','2024-06-24 14:13:06','2024-06-24 14:13:06',0),
-	(9243,0,'Added idea 250 to topic 470',0,'','2024-06-24 14:13:06','2024-06-24 14:13:06',0),
-	(9244,0,'Added idea 257 to topic 471',0,'','2024-06-24 14:16:33','2024-06-24 14:16:33',0),
-	(9245,0,'Added idea 256 to topic 471',0,'','2024-06-24 14:16:33','2024-06-24 14:16:33',0),
-	(9246,0,'Added idea 253 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
-	(9247,0,'Added idea 255 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
-	(9248,0,'Added idea 254 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
-	(9249,0,'Added idea 251 to topic 468',0,'','2024-06-24 14:17:04','2024-06-24 14:17:04',0),
-	(9250,0,'Added idea 252 to topic 468',0,'','2024-06-24 14:17:04','2024-06-24 14:17:04',0),
-	(9251,0,'Added new comment (#0) user: 165',0,'','2024-06-24 14:58:16','2024-06-24 14:58:16',0),
-	(9252,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:17','2024-06-24 16:00:17',0),
-	(9253,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:17','2024-06-24 16:00:17',0),
-	(9254,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
-	(9255,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
-	(9256,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
-	(9257,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
-	(9258,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
-	(9259,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
-	(9260,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
-	(9261,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
-	(9262,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
-	(9263,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9264,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9265,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9266,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9267,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9268,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9269,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
-	(9270,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
-	(9271,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
-	(9272,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
-	(9273,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
-	(9274,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
-	(9275,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
-	(9276,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
-	(9277,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
-	(9278,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
-	(9279,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
-	(9280,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
-	(9281,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
-	(9282,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
-	(9283,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
-	(9284,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
-	(9285,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
-	(9286,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
-	(9287,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
-	(9288,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
-	(9289,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
-	(9290,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9291,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9292,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9293,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9294,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9295,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9296,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
-	(9297,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
-	(9298,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
-	(9299,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9300,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9301,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9302,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9303,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9304,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9305,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
-	(9306,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
-	(9307,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
-	(9308,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
-	(9309,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
-	(9310,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
-	(9311,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
-	(9312,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
-	(9313,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
-	(9314,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
-	(9315,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
-	(9316,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
-	(9317,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
-	(9318,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
-	(9319,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
-	(9320,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
-	(9321,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
-	(9322,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
-	(9323,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
-	(9324,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
-	(9325,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
-	(9326,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
-	(9327,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
-	(9328,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
-	(9329,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
-	(9330,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
-	(9331,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
-	(9332,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
-	(9333,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
-	(9334,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
-	(9335,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
-	(9336,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
-	(9337,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
-	(9338,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
-	(9339,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
-	(9340,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
-	(9341,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9342,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9343,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9344,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9345,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9346,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9347,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
-	(9348,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
-	(9349,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
-	(9350,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
-	(9351,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
-	(9352,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
-	(9353,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
-	(9354,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
-	(9355,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
-	(9356,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
-	(9357,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
-	(9358,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
-	(9359,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
-	(9360,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
-	(9361,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
-	(9362,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
-	(9363,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
-	(9364,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
-	(9365,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
-	(9366,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
-	(9367,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
-	(9368,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
-	(9369,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
-	(9370,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
-	(9371,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
-	(9372,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
-	(9373,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
-	(9374,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9375,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9376,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9377,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9378,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9379,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9380,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
-	(9381,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
-	(9382,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
-	(9383,0,'Topic deleted, id=470 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
-	(9384,0,'Topic deleted, id=468 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
-	(9385,0,'Topic deleted, id=471 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
-	(9386,0,'Topic deleted, id=469 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
-	(9387,0,'Idea deleted, id=252 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9388,0,'Idea deleted, id=255 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9389,0,'Idea deleted, id=256 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9390,0,'Idea deleted, id=246 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9391,0,'Idea deleted, id=250 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9392,0,'Idea deleted, id=257 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9393,0,'Idea deleted, id=249 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9394,0,'Idea deleted, id=254 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9395,0,'Idea deleted, id=253 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9396,0,'Idea deleted, id=251 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9397,0,'Idea deleted, id=248 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9398,0,'Room deleted with id 104 by 0',0,'','2024-06-24 21:47:47','2024-06-24 21:47:47',0),
-	(9399,0,'Added new room (#106) The Innovation Hub',0,'','2024-06-24 21:48:04','2024-06-24 21:48:04',0),
-	(9400,0,'Added new topic (#472) Green Innovations Vault',0,'','2024-06-24 21:51:34','2024-06-24 21:51:34',0),
-	(9401,0,'Added new topic (#473) Tech Frontier',0,'','2024-06-24 21:52:11','2024-06-24 21:52:11',0),
-	(9402,0,'Added new topic (#474) Creative Canvas',0,'','2024-06-24 21:53:20','2024-06-24 21:53:20',0),
-	(9403,0,'Added new topic (#475) Service Heart',0,'','2024-06-24 21:54:04','2024-06-24 21:54:04',0),
-	(9404,0,'Added new idea (#258) Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',0,'','2024-06-24 22:00:54','2024-06-24 22:00:54',0),
-	(9405,0,'Added new idea (#259) Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',0,'','2024-06-24 22:01:35','2024-06-24 22:01:35',0),
-	(9406,0,'Added new idea (#260) Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',0,'','2024-06-24 22:01:53','2024-06-24 22:01:53',0),
-	(9407,0,'Added idea 258 to topic 473',0,'','2024-06-24 22:02:00','2024-06-24 22:02:00',0),
-	(9408,0,'Added idea 259 to topic 473',0,'','2024-06-24 22:02:00','2024-06-24 22:02:00',0),
-	(9409,0,'Added new idea (#261) Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',0,'','2024-06-24 22:02:38','2024-06-24 22:02:38',0),
-	(9410,0,'Added new idea (#262) Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,'','2024-06-24 22:02:54','2024-06-24 22:02:54',0),
-	(9411,0,'Added idea 262 to topic 474',0,'','2024-06-24 22:03:23','2024-06-24 22:03:23',0),
-	(9412,0,'Added idea 261 to topic 474',0,'','2024-06-24 22:03:23','2024-06-24 22:03:23',0),
-	(9413,0,'Added idea 262 to topic 473',0,'','2024-06-24 22:03:33','2024-06-24 22:03:33',0),
-	(9414,0,'Added idea 261 to topic 473',0,'','2024-06-24 22:03:33','2024-06-24 22:03:33',0),
-	(9415,0,'Added new idea (#263) Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,'','2024-06-24 22:04:12','2024-06-24 22:04:12',0),
-	(9416,0,'Added new idea (#264) Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,'','2024-06-24 22:04:28','2024-06-24 22:04:28',0),
-	(9417,0,'Added idea 264 to topic 474',0,'','2024-06-24 22:04:46','2024-06-24 22:04:46',0),
-	(9418,0,'Added idea 263 to topic 474',0,'','2024-06-24 22:04:46','2024-06-24 22:04:46',0),
-	(9419,0,'Added new idea (#265) Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',0,'','2024-06-24 22:05:21','2024-06-24 22:05:21',0),
-	(9420,0,'Added new idea (#266) Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,'','2024-06-24 22:05:52','2024-06-24 22:05:52',0),
-	(9421,0,'Added idea 266 to topic 475',0,'','2024-06-24 22:06:13','2024-06-24 22:06:13',0),
-	(9422,0,'Added idea 265 to topic 475',0,'','2024-06-24 22:06:13','2024-06-24 22:06:13',0),
-	(9423,0,'Idea deleted, id=258 by 0',0,'','2024-06-24 22:07:15','2024-06-24 22:07:15',0),
-	(9424,0,'Idea deleted, id=259 by 0',0,'','2024-06-24 22:07:15','2024-06-24 22:07:15',0),
-	(9425,0,'Added new idea (#267) Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',0,'','2024-06-24 22:07:32','2024-06-24 22:07:32',0),
-	(9426,0,'Added new idea (#268) Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',0,'','2024-06-24 22:07:47','2024-06-24 22:07:47',0),
-	(9427,0,'Added idea 268 to topic 472',0,'','2024-06-24 22:08:15','2024-06-24 22:08:15',0),
-	(9428,0,'Added idea 267 to topic 472',0,'','2024-06-24 22:08:15','2024-06-24 22:08:15',0),
-	(9429,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:09:28','2024-06-24 22:09:28',0),
-	(9430,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:19:47','2024-06-24 22:19:47',0),
-	(9431,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:20:58','2024-06-24 22:20:58',0),
-	(9432,0,'Idea  267 incremented likes',0,'','2024-06-24 22:20:59','2024-06-24 22:20:59',0),
-	(9433,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:21:53','2024-06-24 22:21:53',0),
-	(9434,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:22:59','2024-06-24 22:22:59',0),
-	(9435,0,'Idea  268 incremented likes',0,'','2024-06-24 22:23:03','2024-06-24 22:23:03',0),
-	(9436,0,'Comment  18 incremented likes',0,'','2024-06-24 22:23:03','2024-06-24 22:23:03',0),
-	(9437,0,'Idea  268 decrementing likes',0,'','2024-06-24 22:23:05','2024-06-24 22:23:05',0),
-	(9438,0,'Idea  268 incremented likes',0,'','2024-06-24 22:23:06','2024-06-24 22:23:06',0),
-	(9439,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:23:20','2024-06-24 22:23:20',0),
-	(9440,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:24:51','2024-06-24 22:24:51',0),
-	(9441,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:26:07','2024-06-24 22:26:07',0),
-	(9442,0,'Idea  261 incremented likes',0,'','2024-06-24 22:26:09','2024-06-24 22:26:09',0),
-	(9443,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:12','2024-06-24 22:28:12',0),
-	(9444,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:25','2024-06-24 22:28:25',0),
-	(9445,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:34','2024-06-24 22:28:34',0),
-	(9446,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:29:30','2024-06-24 22:29:30',0),
-	(9447,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:29:46','2024-06-24 22:29:46',0),
-	(9448,0,'Idea  265 incremented likes',0,'','2024-06-24 22:29:47','2024-06-24 22:29:47',0),
-	(9449,0,'Comment  25 incremented likes',0,'','2024-06-24 22:29:49','2024-06-24 22:29:49',0),
-	(9450,0,'Added idea 263 to topic 474',0,'','2024-06-24 22:35:46','2024-06-24 22:35:46',0),
-	(9451,0,'Added idea 264 to topic 474',0,'','2024-06-24 22:35:46','2024-06-24 22:35:46',0),
-	(9452,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:39:05','2024-06-24 22:39:05',0),
-	(9453,0,'Comment  27 incremented likes',0,'','2024-06-24 22:39:20','2024-06-24 22:39:20',0),
-	(9454,0,'Edited idea 266 by 165',0,'','2024-06-25 00:51:18','2024-06-25 00:51:18',0),
-	(9455,0,'Edited idea 266 by 165',0,'','2024-06-25 00:52:09','2024-06-25 00:52:09',0),
-	(9456,0,'Edited idea 265 by 165',0,'','2024-06-25 00:53:34','2024-06-25 00:53:34',0),
-	(9457,0,'Edited idea 264 by 165',0,'','2024-06-25 00:55:37','2024-06-25 00:55:37',0),
-	(9458,0,'Edited idea 263 by 165',0,'','2024-06-25 00:56:25','2024-06-25 00:56:25',0),
-	(9459,0,'Edited idea 261 by 165',0,'','2024-06-25 00:58:44','2024-06-25 00:58:44',0),
-	(9460,0,'Edited idea 262 by 165',0,'','2024-06-25 00:59:49','2024-06-25 00:59:49',0),
-	(9461,0,'Idea  263 number of votes given set to 1',0,'','2024-06-25 01:16:21','2024-06-25 01:16:21',0),
-	(9462,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-25 01:16:21','2024-06-25 01:16:21',0),
-	(9463,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
-	(9464,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
-	(9465,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
-	(9466,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
-	(9467,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
-	(9468,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
-	(9469,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
-	(9470,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
-	(9471,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
-	(9472,0,'Idea  263 votes set to 0',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
-	(9473,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
-	(9474,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
-	(9475,0,'Added new idea (#269) The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,'','2024-06-26 17:26:59','2024-06-26 17:26:59',0),
-	(9476,0,'Added new idea (#270) The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,'','2024-06-26 17:32:49','2024-06-26 17:32:49',0),
-	(9477,0,'Added new idea (#271) This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,'','2024-06-26 17:34:33','2024-06-26 17:34:33',0),
-	(9478,0,'Added idea 271 to topic 474',0,'','2024-06-26 17:34:49','2024-06-26 17:34:49',0),
-	(9479,0,'Added idea 270 to topic 473',0,'','2024-06-26 17:35:11','2024-06-26 17:35:11',0),
-	(9480,0,'Idea  271 number of votes given set to 1',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
-	(9481,0,'Idea (#271) added Vote - value: -1 by 165',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
-	(9482,0,'Added new idea (#272) Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,'','2024-06-26 18:18:58','2024-06-26 18:18:58',0),
-	(9483,0,'Idea  260 incremented likes',0,'','2024-06-26 18:19:02','2024-06-26 18:19:02',0),
-	(9484,0,'Edited idea 272 by 165',0,'','2024-06-30 11:24:24','2024-06-30 11:24:24',0),
-	(9485,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:09','2024-06-30 11:25:09',0),
-	(9486,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:44','2024-06-30 11:25:44',0),
-	(9487,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:53','2024-06-30 11:25:53',0),
-	(9488,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:09','2024-06-30 11:26:09',0),
-	(9489,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:10','2024-06-30 11:26:10',0),
-	(9490,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:28','2024-06-30 11:26:28',0),
-	(9491,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:35','2024-06-30 11:26:35',0),
-	(9492,0,'Edited idea 272 by 165',0,'','2024-06-30 12:16:25','2024-06-30 12:16:25',0),
-	(9493,0,'Edited idea 272 by 165',0,'','2024-06-30 12:16:45','2024-06-30 12:16:45',0),
-	(9494,0,'Edited idea 272 by 165',0,'','2024-06-30 12:18:36','2024-06-30 12:18:36',0),
-	(9495,0,'Edited idea 272 by 165',0,'','2024-06-30 12:18:43','2024-06-30 12:18:43',0),
-	(9496,0,'Edited idea 272 by 165',0,'','2024-06-30 12:19:20','2024-06-30 12:19:20',0),
-	(9497,0,'Edited idea 272 by 165',0,'','2024-06-30 12:19:27','2024-06-30 12:19:27',0),
-	(9498,0,'Edited idea 272 by 165',0,'','2024-06-30 12:20:17','2024-06-30 12:20:17',0),
-	(9499,0,'Edited idea 272 by 165',0,'','2024-06-30 12:20:26','2024-06-30 12:20:26',0),
-	(9500,0,'Edited idea 263 by 165',0,'','2024-06-30 12:21:05','2024-06-30 12:21:05',0),
-	(9501,0,'Edited idea 263 by 165',0,'','2024-06-30 12:21:11','2024-06-30 12:21:11',0),
-	(9502,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:29:58','2024-06-30 12:29:58',0),
-	(9503,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:30:09','2024-06-30 12:30:09',0),
-	(9504,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:30:16','2024-06-30 12:30:16',0),
-	(9505,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:30:34','2024-06-30 12:30:34',0),
-	(9506,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:30:39','2024-06-30 12:30:39',0),
-	(9507,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:31:07','2024-06-30 12:31:07',0),
-	(9508,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:31:12','2024-06-30 12:31:12',0),
-	(9509,0,'Edited idea 266 by 165',0,'','2024-06-30 12:36:15','2024-06-30 12:36:15',0),
-	(9510,0,'Edited idea 266 by 165',0,'','2024-06-30 12:36:20','2024-06-30 12:36:20',0),
-	(9511,0,'Edited idea 0 by 165',0,'','2024-06-30 12:37:43','2024-06-30 12:37:43',0),
-	(9512,0,'Edited idea 0 by 165',0,'','2024-06-30 12:48:58','2024-06-30 12:48:58',0),
-	(9513,0,'Added new idea (#273) testing',0,'','2024-06-30 12:51:49','2024-06-30 12:51:49',0),
-	(9514,0,'Idea deleted, id=273 by 0',0,'','2024-06-30 12:51:59','2024-06-30 12:51:59',0),
-	(9515,0,'Added new idea (#274) adsdads',0,'','2024-06-30 12:52:30','2024-06-30 12:52:30',0),
-	(9516,0,'Idea deleted, id=274 by 0',0,'','2024-06-30 12:52:41','2024-06-30 12:52:41',0),
-	(9517,0,'Added new idea (#275) sad',0,'','2024-06-30 12:55:30','2024-06-30 12:55:30',0),
-	(9518,0,'Idea deleted, id=275 by 0',0,'','2024-06-30 12:55:35','2024-06-30 12:55:35',0),
-	(9519,0,'Added new idea (#276) test',0,'','2024-06-30 13:00:19','2024-06-30 13:00:19',0),
-	(9520,0,'Edited idea 276 by 165',0,'','2024-06-30 13:00:27','2024-06-30 13:00:27',0),
-	(9521,0,'Idea deleted, id=276 by 0',0,'','2024-06-30 13:00:40','2024-06-30 13:00:40',0),
-	(9522,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:03:21','2024-06-30 13:03:21',0),
-	(9523,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:03:51','2024-06-30 13:03:51',0),
-	(9524,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:08:00','2024-06-30 13:08:00',0),
-	(9525,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:11:42','2024-06-30 13:11:42',0),
-	(9526,0,'Added new text (#12) creator: 0',0,'','2024-06-30 13:14:10','2024-06-30 13:14:10',0),
-	(9527,0,'Consent values updated by value -1',0,'','2024-06-30 13:14:23','2024-06-30 13:14:23',0),
-	(9528,0,'Text deleted, id = 12 by 0',0,'','2024-06-30 13:14:23','2024-06-30 13:14:23',0),
-	(9529,0,'Added new topic (#476) New Box',0,'','2024-06-30 13:14:41','2024-06-30 13:14:41',0),
-	(9530,0,'Edited topic (#476) New Box.',0,'','2024-06-30 13:14:46','2024-06-30 13:14:46',0),
-	(9531,0,'Topic deleted, id=476 by 0',0,'','2024-06-30 13:14:50','2024-06-30 13:14:50',0),
-	(9532,0,'Successful login user 165',0,'','2024-07-01 08:12:36','2024-07-01 08:12:36',0),
-	(9533,1,'DB Error login user admin',0,'','2024-07-03 14:44:20','2024-07-03 14:44:20',0),
-	(9534,0,'Successful login user 165',0,'','2024-07-03 14:44:26','2024-07-03 14:44:26',0),
-	(9535,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
-	(9536,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
-	(9537,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
-	(9538,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
-	(9539,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
-	(9540,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
-	(9541,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
-	(9542,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
-	(9543,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
-	(9544,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
-	(9545,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:33','2024-07-03 15:02:33',0),
-	(9546,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-03 15:02:33','2024-07-03 15:02:33',0),
-	(9547,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9548,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9549,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9550,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9551,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9552,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9553,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
-	(9554,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
-	(9555,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
-	(9556,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9557,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9558,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9559,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9560,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9561,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9562,0,'Added new user 264',0,'','2024-07-03 16:31:19','2024-07-03 16:31:19',0),
-	(9563,0,'Added new user 265',0,'','2024-07-03 16:32:37','2024-07-03 16:32:37',0),
-	(9564,0,'Added new user 266',0,'','2024-07-03 16:33:24','2024-07-03 16:33:24',0),
-	(9565,0,'Added new user 267',0,'','2024-07-03 16:34:58','2024-07-03 16:34:58',0),
-	(9566,0,'Added new user 268',0,'','2024-07-03 16:35:38','2024-07-03 16:35:38',0),
-	(9567,0,'Added new user 269',0,'','2024-07-03 16:36:51','2024-07-03 16:36:51',0),
-	(9568,0,'Added new user 270',0,'','2024-07-03 16:37:53','2024-07-03 16:37:53',0),
-	(9569,0,'Added delegation for user 165 for topic 474',0,'','2024-07-10 10:28:47','2024-07-10 10:28:47',0);
-
-/*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_texts
@@ -1264,18 +737,6 @@ CREATE TABLE `au_texts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_texts` WRITE;
-/*!40000 ALTER TABLE `au_texts` DISABLE KEYS */;
-
-INSERT INTO `au_texts` (`id`, `creator_id`, `headline`, `body`, `user_needs_to_consent`, `service_id_consent`, `consent_text`, `language_id`, `location`, `created`, `last_update`, `updater_id`, `hash_id`, `status`)
-VALUES
-	(8,0,'Sample Text','test message',0,0,'Agree',0,NULL,'2024-06-22 22:30:30','2024-06-22 22:30:30',165,'3ce902fa6d5fc806c02017188a2e0daa',1),
-	(9,0,'Test Mandatory message','test this message',2,0,'Agree',0,NULL,'2024-06-23 12:27:27','2024-06-23 12:27:27',165,'0a4f7789ffe37e398393af1fa120f4d0',1),
-	(10,0,'Optional consent message','This message is not mandatory',1,0,'Agree',0,NULL,'2024-06-23 12:30:58','2024-06-23 12:30:58',165,'faca362395a9bf1f4add5370aa6ee67d',1),
-	(11,0,'Another consent','Mandatory consent',2,0,'Agree',0,NULL,'2024-06-23 12:47:07','2024-06-23 12:47:07',165,'da35ed97b7014ba1a8f456c47e0f54ba',1);
-
-/*!40000 ALTER TABLE `au_texts` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_topics
@@ -1306,18 +767,6 @@ CREATE TABLE `au_topics` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_topics` WRITE;
-/*!40000 ALTER TABLE `au_topics` DISABLE KEYS */;
-
-INSERT INTO `au_topics` (`id`, `name`, `description_public`, `description_internal`, `status`, `order_importance`, `created`, `last_update`, `hash_id`, `updater_id`, `room_id`, `phase_id`, `wild_ideas_enabled`, `publishing_date`, `phase_duration_0`, `phase_duration_1`, `phase_duration_2`, `phase_duration_3`, `phase_duration_4`)
-VALUES
-	(472,'Green Innovations Vault','Ideas aimed at reducing our environmental footprint, promoting recycling initiatives, sustainable energy projects, and conservation efforts.','Internal description?',1,10,'2024-06-24 21:51:34','2024-06-24 21:51:34','7ba1cc8d79a7cb7457427a5254f69d41',165,106,10,1,NULL,14,14,14,14,14),
-	(473,'Tech Frontier','New apps, digital learning tools, robotics projects, smart solutions for the school, and advancements in virtual reality or augmented reality.','Internal description?',1,10,'2024-06-24 21:52:11','2024-06-24 21:52:11','ea45d51cb116ce44f5e69e992393146f',165,106,20,1,NULL,14,14,14,14,14),
-	(474,'Creative Canvas','Imaginative ideas spanning visual arts, music performances, theater productions, literary works and other art expression.','',1,10,'2024-06-24 21:53:20','2024-06-30 12:31:12','d2c9fb9871033f36407ab0bcf0e676a3',165,106,30,1,NULL,14,14,14,14,14),
-	(475,'Service Heart','Proposals for volunteer programs, fundraising events, social justice initiatives, outreach campaigns, and projects aimed at improving the well-being of others.','Internal description?',1,10,'2024-06-24 21:54:04','2024-06-24 21:54:04','aacc93c0cdabb2bf4106f9f1ce3bf2b5',165,106,40,1,NULL,14,14,14,14,14);
-
-/*!40000 ALTER TABLE `au_topics` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_triggers
@@ -1354,20 +803,6 @@ CREATE TABLE `au_user_levels` (
   PRIMARY KEY (`level`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-LOCK TABLES `au_user_levels` WRITE;
-/*!40000 ALTER TABLE `au_user_levels` DISABLE KEYS */;
-
-INSERT INTO `au_user_levels` (`level`, `name`, `description`, `status`)
-VALUES
-	(10,'Guest','Read only',1),
-	(20,'Basic','Read, Create Ideas',1),
-	(30,'Moderator','Read ',1),
-	(40,'Super Moderator','',1),
-	(50,'Admin',' ',1),
-	(60,'Tech admin','',1);
-
-/*!40000 ALTER TABLE `au_user_levels` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_users_basedata
@@ -1406,22 +841,6 @@ CREATE TABLE `au_users_basedata` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_users_basedata` WRITE;
-/*!40000 ALTER TABLE `au_users_basedata` DISABLE KEYS */;
-
-INSERT INTO `au_users_basedata` (`id`, `realname`, `displayname`, `username`, `email`, `pw`, `position`, `hash_id`, `about_me`, `registration_status`, `status`, `created`, `last_update`, `updater_id`, `bi`, `userlevel`, `infinite_votes`, `last_login`, `presence`, `absent_until`, `auto_delegation`, `trustee_id`, `o1`, `o2`, `o3`, `consents_given`, `consents_needed`)
-VALUES
-	(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','0',NULL,1,'2023-06-17 14:58:43','2024-07-03 14:44:26',0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-07-03 14:44:26',NULL,NULL,0,NULL,NULL,NULL,NULL,0,0),
-	(264,'Albrecht Durer','durer','adurer','adurer@aula.de','$2y$10$1NNLacyzYP3zI5Ipy1FgOOxbyP9Ezhuch3OkT5uSWIdRBaafJYpS2',NULL,'940ec2b51215d712b2228989e9d04863','description?',NULL,1,'2024-07-03 16:31:19','2024-07-03 16:31:19',165,'d47b6ae7477f77ac3c5ff48d0ca8cded',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,0),
-	(265,'Alfred Doblin','doblin','adoblin','adoblin@aula.de','$2y$10$/4NX2p3PEK4YkXVrUHCfiOJL7Jve2kJzP21qMeTsJX5uQ/SjgLIV6',NULL,'599cf1b62ab5ac0b1b3facbd5f08c215','description?',NULL,1,'2024-07-03 16:32:37','2024-07-03 16:32:37',165,'4347d0beb442602471ae29cd56a73d9e',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,0),
-	(266,'Friedrich Nietzsche','zaratustra','fnietzsche','fnietzsche@aula.de','$2y$10$YTH2z9ucipRCHxvqAE.Q3Oaj1/KF0r0u2Roflx.DNZVyNUXvOjzLe',NULL,'a50a9bb4f3f792eb7ea94f05629f0cc1','description?',NULL,1,'2024-07-03 16:33:24','2024-07-03 16:33:24',165,'e6d4d10df940311f3642f0bd7e19b22e',10,NULL,NULL,1,NULL,0,NULL,102,102,122,0,0),
-	(267,'Marlene Dietrich','merlene','mdietrich','mdietrich@aula.de','$2y$10$vi3.uIrXyLj4vOQi87GWuegNQ13CLucA.SMYziQvCqvUaJypJu74u',NULL,'c4c1cdcdebf21ea35097c3137dc9c405','description?',NULL,1,'2024-07-03 16:34:58','2024-07-03 16:34:58',165,'5c6b5df6b09cfc0ee7dabaa8014aae6c',10,NULL,NULL,1,NULL,0,NULL,109,109,109,0,0),
-	(268,'Hannah Arendt','hannah','harendt','harendt@aula.de','$2y$10$nThWaeYj9QdPzDVk5Hcsme3mrOKVsH9/y2acEWe3YyLkuaTzSqYvG',NULL,'67bb4e8a810b2d123b3172e75c69c57d','description?',NULL,1,'2024-07-03 16:35:38','2024-07-03 16:35:38',165,'cfa5a4515d77172fee99e37d30216efe',10,NULL,NULL,1,NULL,0,NULL,104,104,104,0,0),
-	(269,'Zazie Beetz','Vanessa','zbeetz','zbeetz@aula.de','$2y$10$IOb9eH2qv7OkSj1yP7ySretynqD/nLY9WTPPVmcp9riuUF9swCmUG',NULL,'33908f14d6f6693ba059ffcfdc618e4d','description?',NULL,1,'2024-07-03 16:36:51','2024-07-03 16:36:51',165,'ee377903e5d1311d7f5f30bee4bfed33',10,NULL,NULL,1,NULL,0,NULL,122,122,118,0,0),
-	(270,'Nastassja Kinski','nk','nkinski','nkinski@aula.de','$2y$10$hID/c4EKc7ntojB770cbFuqvQ24IqHz6v0rtC7f3WNc6D0BQyUIGK',NULL,'77993b028df7e814c3a20d17be57511c','description?',NULL,1,'2024-07-03 16:37:53','2024-07-03 16:37:53',165,'279c9e41c5082bdf3f3b4bcf699edbb1',10,NULL,NULL,1,NULL,0,NULL,110,110,110,0,0);
-
-/*!40000 ALTER TABLE `au_users_basedata` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_users_settings
@@ -1440,29 +859,6 @@ CREATE TABLE `au_users_settings` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-
---
--- Table structure for table `au_change_password`
---
-
-DROP TABLE IF EXISTS `au_change_password`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `au_change_password` (
-  `user_id` int(11) DEFAULT NULL,
-  `secret` text DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `au_change_password`
---
-
-LOCK TABLES `au_change_password` WRITE;
-/*!40000 ALTER TABLE `au_change_password` DISABLE KEYS */;
-/*!40000 ALTER TABLE `au_change_password` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Tabellen-Dump au_votes
@@ -1485,17 +881,6 @@ CREATE TABLE `au_votes` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-LOCK TABLES `au_votes` WRITE;
-/*!40000 ALTER TABLE `au_votes` DISABLE KEYS */;
-
-INSERT INTO `au_votes` (`id`, `user_id`, `idea_id`, `vote_value`, `status`, `created`, `last_update`, `hash_id`, `vote_weight`, `number_of_delegations`, `comment`)
-VALUES
-	(111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,''),
-	(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,''),
-	(126,165,263,1,1,'2024-07-03 15:22:38','2024-07-03 15:22:38','94cb41cd888103ef5c13b250820e6d95',1,0,'');
-
-/*!40000 ALTER TABLE `au_votes` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 
