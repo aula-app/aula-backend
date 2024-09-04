@@ -58,9 +58,30 @@ class Settings
     }
   }// end function
 
+  public function getGlobalConfig()
+  {
+    /* returns base data for the instance */
 
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_system_global_config . ' LIMIT 1');
 
+    $settings = $this->db->resultSet();
+    if (count($settings) < 1) {
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 2; // error code - db error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
 
+      return $returnvalue;
+    } else {
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue['data'] = $settings[0]; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+  }// end function
 
   public function setInstanceOnlineMode($status, $updater_id = 0)
   {
@@ -119,8 +140,7 @@ class Settings
 
   } // end function
 
-
-  public function setInstanceName($name, $updater_id = 0)
+  public function setInstanceInfo($name, $description, $updater_id = 0)
   {
     // sets name for the instance
 
@@ -131,10 +151,11 @@ class Settings
     if (strlen($name) > 1) {
       $updater_id = $this->converters->checkUserId($updater_id);
 
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET name = :name, last_update = NOW(), updater_id = :updater_id ');
+      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET name = :name, description_public = :description, last_update = NOW(), updater_id = :updater_id ');
 
       // bind all VALUES
       $this->db->bind(':name', $name);
+      $this->db->bind(':description', $description);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
       $err = false; // set error variable to false
@@ -148,7 +169,7 @@ class Settings
       }
 
       if (!$err) {
-        $this->syslog->addSystemEvent(0, "Name set to " . $name, 0, "", 1);
+        $this->syslog->addSystemEvent(0, "Name set to " . $name . " and Description set to " . $description, 0, "", 1);
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue['data'] = 1; // returned data
@@ -177,21 +198,21 @@ class Settings
 
   } // end function
 
-  public function setAllowRegistration($allowreg, $updater_id = 0)
+  public function setAllowRegistration($status, $updater_id = 0)
   {
     // sets name for the instance
 
 
     // sanitize
-    $allowreg = intval($allowreg);
+    $status = intval($status);
 
-    if ($allowreg > -1) {
+    if ($status > -1) {
       $updater_id = $this->converters->checkUserId($updater_id);
 
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET allow_registration = :allowreg, last_update = NOW(), updater_id = :updater_id ');
+      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET allow_registration = :status, last_update = NOW(), updater_id = :updater_id ');
 
       // bind all VALUES
-      $this->db->bind(':allowreg', $allowreg);
+      $this->db->bind(':status', $status);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
       $err = false; // set error variable to false
@@ -205,7 +226,7 @@ class Settings
       }
 
       if (!$err) {
-        $this->syslog->addSystemEvent(0, "Allow registration set to " . $allowreg, 0, "", 1);
+        $this->syslog->addSystemEvent(0, "Allow registration set to " . $status, 0, "", 1);
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue['data'] = 1; // returned data
@@ -459,20 +480,20 @@ class Settings
   } // end function
 
 
-  public function setDailyStartTime($starttime, $updater_id = 0)
+  public function setDailyStartTime($time, $updater_id = 0)
   {
     // sets daily start time (FORMAT SQL DATE) for the instance
 
     // sanitize
-    $starttime = trim($starttime);
+    $time = trim($time);
 
-    if (strlen($starttime) > 1) {
+    if (strlen($time) > 1) {
       $updater_id = $this->converters->checkUserId($updater_id);
 
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET start_time = :starttime, last_update = NOW(), updater_id = :updater_id ');
+      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET start_time = :time, last_update = NOW(), updater_id = :updater_id ');
 
       // bind all VALUES
-      $this->db->bind(':starttime', $starttime);
+      $this->db->bind(':time', $time);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
       $err = false; // set error variable to false
@@ -486,7 +507,7 @@ class Settings
       }
 
       if (!$err) {
-        $this->syslog->addSystemEvent(0, "Daily starttime set to " . $starttime, 0, "", 1);
+        $this->syslog->addSystemEvent(0, "Daily time set to " . $time, 0, "", 1);
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue['data'] = 1; // returned data
@@ -496,6 +517,7 @@ class Settings
 
 
       } else {
+        echo $err;
         $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 1; // error code - db error
         $returnvalue['data'] = false; // returned data
@@ -514,20 +536,20 @@ class Settings
 
   } // end function
 
-  public function setDailyEndTime($endtime, $updater_id = 0)
+  public function setDailyEndTime($time, $updater_id = 0)
   {
     // sets daily start time (FORMAT SQL DATE) for the instance
 
     // sanitize
-    $endtime = trim($endtime);
+    $time = trim($time);
 
-    if (strlen($endtime) > 1) {
+    if (strlen($time) > 1) {
       $updater_id = $this->converters->checkUserId($updater_id);
 
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET daily_end_time = :endtime, last_update = NOW(), updater_id = :updater_id ');
+      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET daily_end_time = :time, last_update = NOW(), updater_id = :updater_id ');
 
       // bind all VALUES
-      $this->db->bind(':endtime', $endtime);
+      $this->db->bind(':time', $time);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
       $err = false; // set error variable to false
@@ -541,62 +563,7 @@ class Settings
       }
 
       if (!$err) {
-        $this->syslog->addSystemEvent(0, "Daily endtime set to " . $starttime, 0, "", 1);
-        $returnvalue['success'] = true; // set return value to false
-        $returnvalue['error_code'] = 0; // error code - db error
-        $returnvalue['data'] = 1; // returned data
-        $returnvalue['count'] = 1; // returned count of datasets
-
-        return $returnvalue;
-
-
-      } else {
-        $returnvalue['success'] = false; // set return value to false
-        $returnvalue['error_code'] = 1; // error code - db error
-        $returnvalue['data'] = false; // returned data
-        $returnvalue['count'] = 0; // returned count of datasets
-
-        return $returnvalue;
-      }
-    } else {
-      $returnvalue['success'] = false; // set return value to false
-      $returnvalue['error_code'] = 3; // error code - status out of range error
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    }
-
-  } // end function
-
-  public function setInstanceDescription($description, $updater_id = 0)
-  {
-    // sets description for the instance
-
-    // sanitize
-    $description = trim($description);
-
-    if (strlen($description) > 1) {
-      $updater_id = $this->converters->checkUserId($updater_id);
-
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET description_public = :description, last_update = NOW(), updater_id = :updater_id ');
-
-      // bind all VALUES
-      $this->db->bind(':description', $description);
-      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-      $err = false; // set error variable to false
-
-      try {
-        $action = $this->db->execute(); // do the query
-
-      } catch (Exception $e) {
-
-        $err = true;
-      }
-
-      if (!$err) {
-        $this->syslog->addSystemEvent(0, "Description set to " . $description, 0, "", 1);
+        $this->syslog->addSystemEvent(0, "Daily time set to " . $time, 0, "", 1);
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue['data'] = 1; // returned data
