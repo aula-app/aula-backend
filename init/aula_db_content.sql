@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-09-04 12:11:55 +0000
+# Verarbeitungszeit: 2024-09-04 12:26:31 +0000
 # ************************************************************
 
 
@@ -856,22 +856,23 @@ CREATE TABLE `au_system_global_config` (
   `last_workday_week` int(11) DEFAULT NULL COMMENT 'id for the last workday (1=monday, 2=tuesday etc.)',
   `start_time` datetime DEFAULT NULL COMMENT 'regular starting time',
   `daily_end_time` datetime DEFAULT NULL COMMENT 'regular end_time',
-  `allow_registration` tinyint(1) DEFAULT NULL COMMENT '0=no 1=yes',
+  `allow_registration` tinyint(1) NOT NULL COMMENT '0=no 1=yes',
   `default_role_for_registration` int(11) DEFAULT NULL COMMENT 'role id for new self registered users',
   `default_email_address` varchar(1024) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin DEFAULT NULL COMMENT 'default fallback e-mail adress',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of updater',
   `archive_after` int(11) DEFAULT NULL COMMENT 'number of days after which content is automatically archived',
   `organisation_type` int(11) DEFAULT NULL COMMENT '0=school, 1=other organisation - for term set',
+  `enable_oauth` int(11) DEFAULT 0 COMMENT '0 = disable,1 = enable',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 LOCK TABLES `au_system_global_config` WRITE;
 /*!40000 ALTER TABLE `au_system_global_config` DISABLE KEYS */;
 
-INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`)
+INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`, `enable_oauth`)
 VALUES
-	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465',NULL,0,NULL,1);
+	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465',NULL,0,NULL,1,0);
 
 /*!40000 ALTER TABLE `au_system_global_config` ENABLE KEYS */;
 UNLOCK TABLES;
