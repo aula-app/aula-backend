@@ -2108,26 +2108,105 @@ class User
   {
     //retrieves all data associated to a certain user and returns it
 
+    /* returns user base data for a specified db id */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT infinite_votes FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
     $this->db->bind(':id', $user_id); // bind userid
+    
+    // init output array
+    $gdpr = [];
+
+    // init data found helper
+    $data_found = false;
+
     $users = $this->db->resultSet();
 
     if (count($users) < 1) {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 2; // db error code
+      // no data found / user not existent
+      // return error code
+      returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code
       $returnvalue['data'] = false; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
-    return $returnvalue;
-    } else {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // db error code
-      $returnvalue['data'] = $users[0]['infinite_votes']; // returned data
-      $returnvalue['count'] = 1; // returned count of datasets
+      return $returnvalue;
+      
+    } 
+    else {
+      // data found, continue...
+      $data_found = true;
     }
-    return $returnvalue;
+      
+    /* User basedata */
+    
+    $gdpr ['realname'] = $users[0]['realname'];
+    $gdpr ['displayname'] = $users[0]['displayname'];
+    $gdpr ['username'] = $users[0]['username'];
+    $gdpr ['email'] = $users[0]['email'];
+    $gdpr ['about_me'] = $users[0]['about_me'];
+    $gdpr ['user_created'] = $users[0]['created'];
+    $gdpr ['user_last_update'] = $users[0]['last_update'];
+    $gdpr ['user_last_login'] = $users[0]['last_login'];
+    $gdpr ['user_level'] = $users[0]['userlevel'];
+
+    // get ideas
+    $stmt = $this->db->query('SELECT content, last_update, created FROM ' . $this->db->au_ideas . ' WHERE user_id = :id');
+    $this->db->bind(':id', $user_id); // bind userid
+  
+    $ideas = $this->db->resultSet();
+
+    if (count($ideas) > 0) {
+      // data found
+      $data_found = true;
+    } 
+    
+    // iterate through ideas, concatenate
+    $gdpr ['ideas'] ='';
+
+    foreach ($ideas as $idea) {
+      $gdpr ['ideas'] .= $idea['content'].", IDEA CREATED: ".$idea['created'].", IDEA LAST UPDATE: ".$idea['last_update']."*§$";
+    }
+
+    // get comments 
+    $stmt = $this->db->query('SELECT content, created, last_update FROM ' . $this->db->au_comments . ' WHERE user_id = :id');
+    $this->db->bind(':id', $user_id); // bind userid
+  
+    $comments = $this->db->resultSet();
+
+    if (count($comments) > 0) {
+      // data found
+      $data_found = true;
+      
+    } 
+    
+    // iterate through comments, concatenate
+    $gdpr ['comments'] ='';
+
+    foreach ($comments as $comment) {
+      $gdpr ['comments'] .= $comment['content'].", COMMENT CREATED: ".$comment['created'].", COMMENT LAST UPDATE: ".$comment['last_update']."*§$";
+    }
+
+
+    if (!$data_found) {
+      // nothing found, return error code
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      // everything ok, return values
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue['data'] = $gdpr; // returned data
+        $returnvalue['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+    } // end else
+      
   } // end function
 
 
