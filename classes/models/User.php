@@ -2108,8 +2108,27 @@ class User
   {
     //retrieves all data associated to a certain user and returns it
 
-    return $user_data;
-  }
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query('SELECT infinite_votes FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
+    $this->db->bind(':id', $user_id); // bind userid
+    $users = $this->db->resultSet();
+
+    if (count($users) < 1) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+    return $returnvalue;
+    } else {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = $users[0]['infinite_votes']; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+    }
+    return $returnvalue;
+  } // end function
 
 
   public function getUserAbsence($user_id)
@@ -2657,6 +2676,7 @@ class User
 
       // delete associated data if option delete_mode is set
       if ($delete_mode == 1) {
+        // delete ideas from this user
         $stmt = $this->db->query('DELETE FROM ' . $this->db->au_ideas . ' WHERE user_id = :id');
         $this->db->bind(':id', $user_id);
         $err = false;
@@ -2673,6 +2693,7 @@ class User
 
           return $returnvalue;
         }
+        // delete comments from this user
         $stmt = $this->db->query('DELETE FROM ' . $this->db->au_comments . ' WHERE user_id = :id');
         $this->db->bind(':id', $user_id);
         $err = false;
@@ -2689,7 +2710,117 @@ class User
 
           return $returnvalue;
         }
+        // delete messages from this user
         $stmt = $this->db->query('DELETE FROM ' . $this->db->au_messages . ' WHERE creator_id = :id');
+        $this->db->bind(':id', $user_id);
+        $err = false;
+        try {
+          $action = $this->db->execute(); // do the query
+          $rows_affected = intval($this->db->rowCount());
+
+        } catch (Exception $e) {
+
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue['data'] = false; // returned data
+          $returnvalue['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+        
+        // delete group relations from this user
+        $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :id');
+        $this->db->bind(':id', $user_id);
+        $err = false;
+        try {
+          $action = $this->db->execute(); // do the query
+          $rows_affected = intval($this->db->rowCount());
+
+        } catch (Exception $e) {
+
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue['data'] = false; // returned data
+          $returnvalue['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+
+        // delete room relations from this user
+        $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_rooms_users . ' WHERE user_id = :id');
+        $this->db->bind(':id', $user_id);
+        $err = false;
+        try {
+          $action = $this->db->execute(); // do the query
+          $rows_affected = intval($this->db->rowCount());
+
+        } catch (Exception $e) {
+
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue['data'] = false; // returned data
+          $returnvalue['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+
+        // delete media relations from this user
+        $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_users_media . ' WHERE user_id = :id');
+        $this->db->bind(':id', $user_id);
+        $err = false;
+        try {
+          $action = $this->db->execute(); // do the query
+          $rows_affected = intval($this->db->rowCount());
+
+        } catch (Exception $e) {
+
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue['data'] = false; // returned data
+          $returnvalue['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+
+        // delete user / user relations from this user
+        $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_user_user . ' WHERE user_id1 = :id or user_id2 = :id');
+        $this->db->bind(':id', $user_id);
+        $err = false;
+        try {
+          $action = $this->db->execute(); // do the query
+          $rows_affected = intval($this->db->rowCount());
+
+        } catch (Exception $e) {
+
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue['data'] = false; // returned data
+          $returnvalue['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+        
+      
+        // Remove user associations in likes from this user
+        $stmt = $this->db->query('UPDATE ' . $this->db->au_likes . ' SET user_id = 0 WHERE user_id = :id');
+        $this->db->bind(':id', $user_id);
+        $err = false;
+        try {
+          $action = $this->db->execute(); // do the query
+          $rows_affected = intval($this->db->rowCount());
+
+        } catch (Exception $e) {
+
+          $returnvalue['success'] = false; // set return value
+          $returnvalue['error_code'] = 1; // error code
+          $returnvalue['data'] = false; // returned data
+          $returnvalue['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+        }
+
+        // Remove user associations in votes from this user
+        $stmt = $this->db->query('UPDATE ' . $this->db->au_votes . ' SET user_id = 0 WHERE user_id = :id');
         $this->db->bind(':id', $user_id);
         $err = false;
         try {
