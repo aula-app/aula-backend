@@ -114,12 +114,12 @@ class Settings
   public function setInstanceOnlineMode($status, $updater_id = 0)
   {
     // sets on- / offline mode of the instance
-    // 0=off, 1=on, 2=off(weekend) 3=off (vacation) 4=off (holiday)
+    // 0=off, 1=on, 2=off(weekend) 3=off (vacation) 4=off (holiday) // 5=off for all roles (Lock out)
 
     // sanitize
     $status = intval($status);
 
-    if ($status > -1 && $status < 5) {
+    if ($status > -1 && $status < 6) {
       $updater_id = $this->converters->checkUserId($updater_id);
 
       $stmt = $this->db->query('UPDATE ' . $this->db->au_system_current_state . ' SET online_mode = :status, last_update = NOW(), updater_id = :updater_id ');
