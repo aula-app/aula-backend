@@ -411,7 +411,7 @@ class Settings
 
       // bind all VALUES
       $this->db->bind(':first_day', $first_day);
-      $this->db->bind(':last_day', $first_day);
+      $this->db->bind(':last_day', $last_day);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
       $err = false; // set error variable to false
