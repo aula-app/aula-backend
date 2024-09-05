@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-09-04 12:26:50 +0000
+# Verarbeitungszeit: 2024-09-05 16:50:01 +0000
 # ************************************************************
 
 
@@ -210,6 +210,8 @@ CREATE TABLE `au_ideas` (
   `topic_id` int(11) DEFAULT NULL COMMENT 'id of topic that idea belongs to',
   `title` text DEFAULT NULL,
   `sum_comments` int(11) DEFAULT 0,
+  `custom_field1` text DEFAULT NULL COMMENT 'custom_field1',
+  `custom_field2` text DEFAULT NULL COMMENT 'custom_field2',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -691,6 +693,8 @@ CREATE TABLE `au_system_global_config` (
   `archive_after` int(11) DEFAULT NULL COMMENT 'number of days after which content is automatically archived',
   `organisation_type` int(11) DEFAULT NULL COMMENT '0=school, 1=other organisation - for term set',
   `enable_oauth` int(11) DEFAULT 0 COMMENT '0 = disable,1 = enable',
+  `custom_field1_name` text DEFAULT NULL COMMENT 'Name custom field 1',
+  `custom_field2_name` text DEFAULT NULL COMMENT 'Name custom field 2',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
