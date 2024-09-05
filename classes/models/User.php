@@ -2125,7 +2125,7 @@ class User
     if (count($users) < 1) {
       // no data found / user not existent
       // return error code
-      returnvalue['success'] = true; // set return value
+      $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
       $returnvalue['data'] = false; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
