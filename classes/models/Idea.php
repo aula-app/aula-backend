@@ -3563,6 +3563,7 @@ class Idea
   {
     /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      content = content of the idea
+     $field_id = 1 or 2 (depending on which field is adressed)
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
