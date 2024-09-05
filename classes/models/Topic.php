@@ -267,7 +267,7 @@ class Topic
 
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
-      $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
+      $extra_where .= " AND " . $this->db->au_topics . ".status = " . $status;
     }
 
     if ($room_id > 0) {
@@ -338,7 +338,7 @@ class Topic
       $err = true;
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 1; // error code - db error
-      $returnvalue['data'] = false; // returned data
+      $returnvalue['data'] = $e; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
