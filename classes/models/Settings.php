@@ -91,7 +91,7 @@ class Settings
     $stmt = $this->db->query('SELECT custom_field1_name, custom_field2_name FROM ' . $this->db->au_system_global_config . ' LIMIT 1');
 
     $settings = $this->db->resultSet();
-    
+
     if (count($settings) < 1) {
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 2; // error code - db error
