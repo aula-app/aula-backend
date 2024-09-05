@@ -35,7 +35,7 @@ class Idea
   {
     /* returns idea base data for a specified db id */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-    $stmt = $this->db->query('SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.custom_field1, ' . $this->db->au_ideas . '.custom_field2, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
 
     $this->db->bind(':id', $idea_id); // bind idea id
     $ideas = $this->db->resultSet();
@@ -1929,7 +1929,7 @@ class Idea
     }
   }// end function
 
-  public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "")
+  public function addIdea ($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $customfield1 = "", $customfield2 = "")
   {
     /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters
      content = actual content of the idea,
@@ -3541,6 +3541,64 @@ class Idea
     }
     if (!$err) {
       $this->syslog->addSystemEvent(0, "Idea info changed " . $idea_id . " by " . $updater_id, 0, "", 1);
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = 1; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+    } else {
+      //$this->syslog->addSystemEvent(1, "Error changing idea info ".$idea_id." by ".$updater_id, 0, "", 1);
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+  }// end function
+
+  public function setCustomField ($idea_id, $field_id, $content, $updater_id = 0)
+  {
+    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+     content = content of the idea
+     updater_id is the id of the user that commits the update (i.E. admin )
+    */
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+    $field_id = intval ($field_id);
+
+    if ($field_id < 1 || $field_id > 2) {
+      // field id out of range
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field'.$field_id.' = :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    // bind all VALUES
+    //$this->db->bind(':content', $this->crypt->encrypt($content));
+    $this->db->bind(':content', $content);
+    
+    $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
+
+    $this->db->bind(':idea_id', $idea_id); // idea that is updated
+
+    $err = false; // set error variable to false
+
+    try {
+      $action = $this->db->execute(); // do the query
+
+    } catch (Exception $e) {
+
+      $err = true;
+    }
+    if (!$err) {
+      $this->syslog->addSystemEvent(0, "Idea custom field ".$field_id." changed " . $idea_id . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code
       $returnvalue['data'] = 1; // returned data

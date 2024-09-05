@@ -83,6 +83,34 @@ class Settings
     }
   }// end function
 
+
+  public function getCustomfields()
+  {
+    /* returns names for idea custom fields for the instance */
+
+    $stmt = $this->db->query('SELECT custom_field1_name, custom_field2_name FROM ' . $this->db->au_system_global_config . ' LIMIT 1');
+
+    $settings = $this->db->resultSet();
+    
+    if (count($settings) < 1) {
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 2; // error code - db error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue['data'] = $settings[0]; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+  }// end function
+
+
   public function setInstanceOnlineMode($status, $updater_id = 0)
   {
     // sets on- / offline mode of the instance
