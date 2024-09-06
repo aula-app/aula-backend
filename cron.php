@@ -29,7 +29,7 @@ $converters = new Converters($db); // load converters
 echo ("LOADING THE REST CLASS\n");
 $idea_class = new Idea ($db, $crypt, $syslog); //, $syslog); // instanciate group model class
 $room_class = new Room ($db, $crypt, $syslog); // instanciate room model class
-$user_class = new User ($db, $crypt, $syslog); // instanciate room model class
+#$user_class = new User ($db, $crypt, $syslog); // instanciate room model class
 $topic_class = new Topic ($db, $crypt, $syslog); // instanciate topic model class
 $settings_class = new Settings($db, $crypt, $syslog); // load settings class
 
