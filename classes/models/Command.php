@@ -52,6 +52,57 @@ class Command {
       }
     }// end function
 
+    public function getDueCommands () {
+      /* returns commands list (associative array) with commands that are due right now 
+
+      */
+
+      // init return array
+      $returnvalue ['success'] = false; // success (true) or failure (false)
+      $returnvalue ['errorcode'] = 0; // error code
+      $returnvalue ['data'] = false; // the actual data
+      $returnvalue ['count_data'] = 0; // number of datasets
+
+      $date_now = date('Y-m-d H:i:s');
+      
+      
+      $count_datasets = 0; // number of datasets retrieved
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_commands.' WHERE active = 1 AND start_date = :start_date');
+      
+      $this->db->bind(':start_date', $date_now); // bind date
+      
+      $err=false;
+      try {
+        $commands = $this->db->resultSet();
+
+
+      } catch (Exception $e) {
+          $err=true;
+          $returnvalue['success'] = false; // set return value to false
+          $returnvalue['error_code'] = 1; // database error while executing query
+          $returnvalue ['data'] = false; // returned data is false
+          $returnvalue ['count'] = 0; // returned count of datasets
+
+          return $returnvalue;
+      }
+      $count_datasets = count ($commands);
+
+      if ($count_datasets<1){
+        $returnvalue['success'] = false; // set success value
+        $returnvalue['error_code'] = 2; // no data found
+        $returnvalue ['data'] = false; // returned data is false
+        $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+        return $returnvalue; // nothing found, return 0 code
+      }else {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // no error code
+        $returnvalue ['data'] = $commands; // returned data
+        $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+        return $returnvalue; // return an array (associative) with all the data
+      }
+    }// end function
 
     public function getCommands ($offset=0, $limit=0, $orderby=3, $asc=0, $status=1, $extra_where="", $last_update=0) {
       /* returns commands list (associative array) with start and limit provided
@@ -196,7 +247,7 @@ class Command {
         
         $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-        $stmt = $this->db->query('INSERT INTO '.$this->db->au_commands.' (cmd_id, command, date_start, parameters, active, created, last_update, updater_id, target_id) VALUES (:cmd_id, :cmd_name, :date_start, :parameters, 1, NOW(), NOW(), :updater_id, :target_id)');
+        $stmt = $this->db->query('INSERT INTO '.$this->db->au_commands.' (cmd_id, command, date_start, parameters, active, status, created, last_update, updater_id, target_id) VALUES (:cmd_id, :cmd_name, :date_start, :parameters, 1, 0,NOW(), NOW(), :updater_id, :target_id)');
         // bind all VALUES
 
         $this->db->bind(':cmd_id', $cmd_id);
@@ -240,9 +291,9 @@ class Command {
 
     }// end function
 
-    public function setCommandStatus($cmd_id, $status, $updater_id = 0) {
+    public function setActiveStatus($cmd_id, $status, $updater_id = 0) {
         /* edits a command, accepts the above parameters, all parameters are mandatory
-         status = status of command (0=inactive, 1=active) if inactive command will not be executed
+         active status = status of command (0=inactive, 1=active) if inactive command will not be executed
          updater_id is the id of the user that does the update (i.E. admin )
         */
         $cmd_id = intval ($cmd_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -268,7 +319,7 @@ class Command {
         if (!$err)
         {
           $count_datasets = intval($this->db->rowCount());
-          $this->syslog->addSystemEvent(0, "Command status changed for command ".$cmd_id." to ".$status." by ".$updater_id, 0, "", 1);
+          $this->syslog->addSystemEvent(0, "Command ACTIVE status changed for command ".$cmd_id." to ".$status." by ".$updater_id, 0, "", 1);
           $returnvalue ['success'] = true; // set return value
           $returnvalue ['error_code'] = 0; // error code
           $returnvalue ['data'] = $count_datasets; // returned data
@@ -285,6 +336,52 @@ class Command {
           return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
         }
     }// end function
+
+    public function setCommandStatus($cmd_id, $status, $updater_id = 0) {
+      /* edits a command, accepts the above parameters, all parameters are mandatory
+       status = status of command (0=not exectued yet, 1=successfully executed, 2 = execution error)
+       updater_id is the id of the user that does the update (i.E. admin )
+      */
+      $cmd_id = intval ($cmd_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $status = intval ($status);
+      #
+      $stmt = $this->db->query('UPDATE '.$this->db->au_commands.' SET active= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :command_id');
+      // bind all VALUES
+      $this->db->bind(':status', $status);
+      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+      $this->db->bind(':command_id', $cmd_id); // command that is updated
+
+      $err=false; // set error variable to false
+      $count_datasets = 0; // init row count
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+          $err=true;
+      }
+      if (!$err)
+      {
+        $count_datasets = intval($this->db->rowCount());
+        $this->syslog->addSystemEvent(0, "Command status changed for command ".$cmd_id." to ".$status." by ".$updater_id, 0, "", 1);
+        $returnvalue ['success'] = true; // set return value
+        $returnvalue ['error_code'] = 0; // error code
+        $returnvalue ['data'] = $count_datasets; // returned data
+        $returnvalue ['count'] = $count_datasets; // returned count of datasets
+
+
+        return $returnvalue; // return number of affected rows to calling script
+      } else {
+        $returnvalue ['success'] = false; // set return value
+        $returnvalue ['error_code'] = 1; // error code
+        $returnvalue ['data'] = false; // returned data
+        $returnvalue ['count'] = 0; // returned count of datasets
+
+        return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
+      }
+  }// end function
 
     public function setCommandDate ($cmd_id, $date, $updater_id = 0) {
         /* edits a command, accepts the above parameters, all parameters are mandatory

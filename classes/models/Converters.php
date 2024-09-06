@@ -57,6 +57,12 @@ class Converters
     return $return_date;
   }
 
+  public function getTimeOnlyNow()
+  {
+    $return_date = date("H:i:s");
+    return $return_date;
+  }
+
   public function getThisMonth()
   {
     $dt1 = strtotime(date("Y-m-d H:i:s"));
@@ -202,7 +208,7 @@ class Converters
    // creates a db dump a sends it back to frontend to create file
     global $baseUploadDir;
 
-    $r = getToday()."_".mt_rand();
+    $r = getNow()."_".mt_rand();
 
     $dir = $baseUploadDir."aula_dump_".$r.".sql";
 
