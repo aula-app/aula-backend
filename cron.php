@@ -3,15 +3,21 @@
 require_once ('base_config.php'); // load base config with paths to classes etc.
 require_once ('error_msg.php');
 
-echo ("LOADING CONFIG");
+echo ("LOADING CONFIG\n");
 echo ("baseClassModelDir: ".$baseClassModelDir);
 
 require ('functions.php'); // include Class autoloader (models)
 
-
+echo ("LOADING DB\n");
 // Create a new Database object with the MySQL credentials
 $db = new Database();
 
+echo ("LOADING COMMAND CLASS\n");
+
+$command_class = new Command($db, $crypt, $syslog); // load command class
+
+echo ("LOADING CONVERTERS CLASS\n");
+$converters = new Converters($db); // load converters
 exit();
 
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
