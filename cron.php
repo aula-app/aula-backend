@@ -25,16 +25,12 @@ $command_class = new Command($db, $crypt, $syslog); // load command class
 
 echo ("LOADING CONVERTERS CLASS\n");
 $converters = new Converters($db); // load converters
-exit();
 
-$crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
-$syslog = new Systemlog ($db); // systemlog
+echo ("LOADING THE REST CLASS\n");
 $idea_class = new Idea ($db, $crypt, $syslog); //, $syslog); // instanciate group model class
 $room_class = new Room ($db, $crypt, $syslog); // instanciate room model class
 $user_class = new User ($db, $crypt, $syslog); // instanciate room model class
 $topic_class = new Topic ($db, $crypt, $syslog); // instanciate topic model class
-$converters = new Converters($db); // load converters
-$command_class = new Command($db, $crypt, $syslog); // load command class
 $settings_class = new Settings($db, $crypt, $syslog); // load settings class
 
 $now = $converters -> getNow();
