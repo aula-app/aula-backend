@@ -2263,6 +2263,33 @@ class User
   }// end function
 
 
+  public function getUserLevel($user_id)
+  {
+    /* returns last login of a user for a integer user id
+     */
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query('SELECT userlevel FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
+    $this->db->bind(':id', $user_id); // bind userid
+    $users = $this->db->resultSet();
+    if (count($users) < 1) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = $users[0]['last_login']; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+    }
+  }// end function
+
+
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)
   {
