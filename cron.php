@@ -18,7 +18,7 @@ $user_class = new User ($db, $crypt, $syslog); // instanciate room model class
 $topic_class = new Topic ($db, $crypt, $syslog); // instanciate topic model class
 $converters = new Converters($db); // load converters
 $command_class = new Command($db, $crypt, $syslog); // load command class
-$settings_class = new Settings($db); // load settings class
+$settings_class = new Settings($db, $crypt, $syslog); // load settings class
 
 $now = $converters -> getNow();
 $time_only = $converters -> getTimeOnlyNow ();
