@@ -17,7 +17,7 @@ $room_class = new Room ($db, $crypt, $syslog); // instanciate room model class
 $user_class = new User ($db, $crypt, $syslog); // instanciate room model class
 $topic_class = new Topic ($db, $crypt, $syslog); // instanciate topic model class
 $converters = new Converters($db); // load converters
-$command_class = new Command($db); // load command class
+$command_class = new Command($db, $crypt, $syslog); // load command class
 $settings_class = new Settings($db); // load settings class
 
 $now = $converters -> getNow();
