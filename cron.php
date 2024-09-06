@@ -1,9 +1,15 @@
 <?php
-session_start();
+
 require_once ('base_config.php'); // load base config with paths to classes etc.
 require_once ('error_msg.php');
 
+echo ("LOADING CONFIG");
+echo ("baseClassModelDir: ".$baseClassModelDir);
+
 require ('functions.php'); // include Class autoloader (models)
+
+exit;
+
 
 //load helper classes
 require_once ($baseHelperDir.'Crypt.php');
