@@ -4,13 +4,18 @@ require_once ('base_config.php'); // load base config with paths to classes etc.
 require_once ('error_msg.php');
 
 echo ("LOADING CONFIG\n");
-echo ("baseClassModelDir: ".$baseClassModelDir);
+echo ("baseClassModelDir: ".$baseClassModelDir."\n");
 
 require ('functions.php'); // include Class autoloader (models)
 
 echo ("LOADING DB\n");
 // Create a new Database object with the MySQL credentials
 $db = new Database();
+
+
+echo ("LOADING CRYPT AND SYSLOG CLASS\n");
+$crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
+$syslog = new Systemlog ($db); // systemlog
 
 echo ("LOADING COMMAND CLASS\n");
 
