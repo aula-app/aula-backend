@@ -18,7 +18,7 @@ class Converters
   public function __construct($db)
   {
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
-    $global $baseUploadDir;
+    global $baseUploadDir;
     
     $this->db = $db;
     $this->baseUploadDir = $baseUploadDir;
