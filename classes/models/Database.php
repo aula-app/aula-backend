@@ -69,9 +69,9 @@
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch(PDOException $e) {
             $this->error = $e->getMessage();
-            echo ("ERROR occured: ".$e->getMessage());
+            //echo ("ERROR occured: ".$e->getMessage());
         }
-        echo ("EVERYTHING OK WITH THE DB");
+        
     }
 
     public function query($query) {
