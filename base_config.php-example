@@ -3,6 +3,7 @@
 $baseHelperDir = "/var/www/html/api/classes/helpers/";
 $baseClassDir = "/var/www/html/api/classes/";
 $baseClassModelDir = "/var/www/html/api/classes/models/";
+$baseUploadDir = "/var/www/html/api/uploads/";
 
 $baseDir = "/var/www/html/api/";
 $baseConfigDir = "/var/www/html/api/";

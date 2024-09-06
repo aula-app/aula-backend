@@ -18,7 +18,11 @@ class Converters
   public function __construct($db)
   {
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
+    $global $baseUploadDir;
+    
     $this->db = $db;
+    $this->baseUploadDir = $baseUploadDir;
+    
 
     $this->cache = new Memcached();
     $this->cache->addServer('localhost', 11211) or die("Could not connect");
@@ -89,6 +93,97 @@ class Converters
     $return_date = date('Y-m-d H:i:s', $dt1);
     return $return_date;
   }
+
+
+  public function exportIdeasCSV ($status = 1)
+  {
+    // exports all ideas with a certain status, defaults to active ideas (status = 1)
+    
+    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_id AS phase_id,  ' . $this->db->au_topics . '.description_public AS topic_description,  ' . $this->db->au_topics . '.name AS topic_name, ' . $this->db->au_topics . '.id AS topic_id,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.status, ' . $this->db->au_ideas . '.created, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id)  WHERE ' . $this->db->au_ideas . '.status = :status');
+    
+    $this->db->bind(':status', $status); // bind status
+    
+    $err = false;
+    try {
+      $ideas = $this->db->resultSet();
+
+      foreach ($texts as $key) {
+        $ids[$i] = $key['id'];
+        $i++;
+      }
+    } catch (Exception $e) {
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+
+    $total_datasets = count($ideas);
+
+    if ($total_datasets < 1) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // no datasets error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+
+    } else {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = $ideas; // returned data
+      $returnvalue['count'] = $total_datasets; // returned count of datasets with pagination or $total_datasets returns all datasets (without pagination)
+      return $returnvalue;
+    }
+    
+  } // end function
+
+  public function exportUsersCSV ($status = 1)
+  {
+    // exports all users with a certain status, defaults to active users (status = 1)
+    
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE status = :status');
+
+    $this->db->bind(':status', $status); // bind status
+    
+    $err = false;
+    try {
+      $users = $this->db->resultSet();
+
+    } catch (Exception $e) {
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+
+    $total_datasets = count($users);
+
+    if ($total_datasets < 1) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // no datasets error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+
+    } else {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = $users; // returned data
+      $returnvalue['count'] = $total_datasets; // returned count of datasets with pagination or $total_datasets returns all datasets (without pagination)
+      return $returnvalue;
+    }
+    
+  } // end function
 
   public function getTextConsentValue($text_id)
   {
@@ -167,7 +262,7 @@ class Converters
     $returnvalue['count'] = 1; // returned count of datasets
 
     return $returnvalue;
-  }
+  } // end function
   
 
   public function getLastDataChange()

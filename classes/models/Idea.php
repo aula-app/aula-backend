@@ -1330,8 +1330,6 @@ class Idea
       $ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
-      echo ('SELECT ' . $this->db->au_topics . '.phase_id AS phase_id,  ' . $this->db->au_topics . '.description_public AS topic_description,  ' . $this->db->au_topics . '.name AS topic_name, ' . $this->db->au_topics . '.id AS topic_id,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.status, ' . $this->db->au_ideas . '.created, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id)  WHERE ' . $this->db->au_ideas . '.id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string . "\n");
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // db error code
