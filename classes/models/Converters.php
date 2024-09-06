@@ -102,6 +102,74 @@ class Converters
 
   }// end function
 
+  public function checkAuthorization ($user_id, $method_name)
+  {
+    /* checks if user with the id user_id is 
+     to use method with the name $method_name 
+    returns data = true (ok) or false (not ok) 
+    */
+    $user_id = checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    
+    $stmt = $this->db->query('SELECT userlevel FROM ' . $this->db->au_users_basedata . ' WHERE id = :id LIMIT 1');
+    $this->db->bind(':id', $user_id); // bind userid
+    
+    $users = $this->db->resultSet();
+    // init return value
+    $result_check = false; // default to not 
+    
+    $user_level = 0; // default user_level
+    
+    if (count($users) < 1) {
+      # user not existent
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code (user not existent)
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      // user found, get user level
+      $user_level = intval ($users[0]['userlevel']); // returned data
+      
+    }
+    // get minimum needed level to access method 
+    $stmt = $this->db->query('SELECT user_level FROM ' . $this->db->au_userlevel_methods . ' WHERE method_nane = :method_nane LIMIT 1');
+    $this->db->bind(':method_nane', $method_nane); // bind user_level
+    
+    $level = $this->db->resultSet();
+    
+    if (count($level) < 1) {
+      # method not existent, default to allow access (true), error code = 3
+      $result_check = true;
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 3; // error code (method not in authorization table)
+      $returnvalue['data'] = $result_check; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+
+      $method_level = intval ($level[0]['user_level']); 
+
+      if ($user_level == $method_level || $user_level > $method_level) 
+      {
+        // user is authorized
+        $result_check = true;
+      } else {
+        $result_check = false;
+      }
+    }
+
+    $returnvalue['success'] = true; // set return value to false
+    $returnvalue['error_code'] = 0; // error code - db error
+    $returnvalue['data'] = $result_check; // returned data
+    $returnvalue['count'] = 1; // returned count of datasets
+
+    return $returnvalue;
+  }
+  
+
   public function getLastDataChange()
   {
     /* returns hash_id of an idea for a integer text id

@@ -2265,7 +2265,7 @@ class User
 
   public function getUserLevel($user_id)
   {
-    /* returns last login of a user for a integer user id
+    /* returns user level for a certain user id
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -2282,7 +2282,7 @@ class User
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code
-      $returnvalue['data'] = $users[0]['last_login']; // returned data
+      $returnvalue['data'] = $users[0]['userlevel']; // returned data
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
