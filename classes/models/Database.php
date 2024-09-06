@@ -57,6 +57,7 @@
         $this->au_rel_categories_rooms = $config['au_rel_categories_rooms'];
         $this->au_rel_users_messages = $config['au_rel_users_messages'];
         $this->au_rel_users_services = $config['au_rel_users_services'];
+        $this->au_userlevel_methods = $config['au_userlevel_methods'];
 
         // Set up a PDO connection
         $dsn = "mysql:host=$this->host;dbname=$this->dbname";
@@ -68,8 +69,9 @@
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch(PDOException $e) {
             $this->error = $e->getMessage();
-            //echo ("<br><br>ERROR occured: ".$e->getMessage());
+            echo ("ERROR occured: ".$e->getMessage());
         }
+        echo ("EVERYTHING OK WITH THE DB");
     }
 
     public function query($query) {
