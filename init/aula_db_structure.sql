@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-09-05 16:50:01 +0000
+# Verarbeitungszeit: 2024-09-06 08:04:19 +0000
 # ************************************************************
 
 
@@ -806,6 +806,23 @@ CREATE TABLE `au_user_levels` (
   `description` text DEFAULT NULL COMMENT 'description of userlevel / rights',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active',
   PRIMARY KEY (`level`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+# Tabellen-Dump au_userlevel_methods
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `au_userlevel_methods`;
+
+CREATE TABLE `au_userlevel_methods` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `method_name` text DEFAULT NULL COMMENT 'Name of the method',
+  `user_level` int(11) DEFAULT NULL COMMENT 'Minimum userlevel needed to use method',
+  `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active',
+  `class` text DEFAULT NULL COMMENT 'class where method is found',
+  `info` text DEFAULT NULL COMMENT 'extra info',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 

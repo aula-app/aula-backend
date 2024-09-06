@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-09-05 16:50:21 +0000
+# Verarbeitungszeit: 2024-09-06 08:04:39 +0000
 # ************************************************************
 
 
@@ -144,7 +144,8 @@ VALUES
 	(26,'A school garden program teaches students about sustainability, nutrition, and responsibility, fostering a deeper connection to nature and promoting healthier eating habits.',0,165,1,'2024-06-24 22:29:46','2024-06-24 22:29:46',0,'ae8064cb703824b30ba9274aee8b0de6',0,265,0),
 	(27,'Vertical garden walls could potentially pose maintenance challenges such as irrigation and plant care, requiring ongoing resources and expertise that may outweigh their aesthetic and environmental benefits in a school setting.',1,165,1,'2024-06-24 22:39:05','2024-06-24 22:39:20',0,'0b7cb5092f9ef3d66b0e55c4046e9bf6',0,260,0),
 	(31,'test',0,165,1,'2024-06-30 13:11:42','2024-06-30 13:11:42',165,'c657731b106b5f1508857201cc211643',0,272,0),
-	(35,'Maybe testing comments could be an idea too.',0,165,1,'2024-07-17 17:18:17','2024-07-17 17:19:23',165,'e77b45b6b9fb10b42ba388778783623d',0,278,0);
+	(35,'Maybe testing comments could be an idea too.',0,165,1,'2024-07-17 17:18:17','2024-07-17 17:19:23',165,'e77b45b6b9fb10b42ba388778783623d',0,278,0),
+	(36,'Comment 1',0,165,1,'2024-09-06 06:35:19','2024-09-06 06:35:19',165,'59d5107dad6bd0e3320dcffe06309acb',0,260,0);
 
 /*!40000 ALTER TABLE `au_comments` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -261,7 +262,7 @@ LOCK TABLES `au_ideas` WRITE;
 
 INSERT INTO `au_ideas` (`id`, `content`, `sum_likes`, `sum_votes`, `number_of_votes`, `user_id`, `votes_available_per_user`, `status`, `language_id`, `created`, `last_update`, `hash_id`, `order_importance`, `info`, `updater_id`, `room_id`, `is_winner`, `approved`, `approval_comment`, `topic_id`, `title`, `sum_comments`, `custom_field1`, `custom_field2`)
 VALUES
-	(260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-07-29 15:55:07','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,'',NULL,'Vertical Garden Walls',1,NULL,NULL),
+	(260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-09-06 06:35:19','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,'',NULL,'Vertical Garden Walls',2,NULL,NULL),
 	(261,'Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-07-29 15:03:18','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,0,'',NULL,'Augmented Reality Campus Tours',1,NULL,NULL),
 	(262,'Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-07-29 15:03:41','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,0,'',NULL,'Virtual Learning Lab',1,NULL,NULL),
 	(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-07-17 09:30:30','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0,NULL,NULL),
@@ -2357,7 +2358,8 @@ VALUES
 	(10616,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
 	(10617,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-29 15:55:30','2024-07-29 15:55:30',0),
 	(10618,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-29 15:55:30','2024-07-29 15:55:30',0),
-	(10619,0,'Added new message (#25) test88',0,'','2024-09-04 07:46:00','2024-09-04 07:46:00',0);
+	(10619,0,'Added new message (#25) test88',0,'','2024-09-04 07:46:00','2024-09-04 07:46:00',0),
+	(10620,0,'Added new comment (#0) user: 165',0,'','2024-09-06 06:35:19','2024-09-06 06:35:19',0);
 
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -2490,6 +2492,23 @@ VALUES
 
 /*!40000 ALTER TABLE `au_user_levels` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+# Tabellen-Dump au_userlevel_methods
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `au_userlevel_methods`;
+
+CREATE TABLE `au_userlevel_methods` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `method_name` text DEFAULT NULL COMMENT 'Name of the method',
+  `user_level` int(11) DEFAULT NULL COMMENT 'Minimum userlevel needed to use method',
+  `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active',
+  `class` text DEFAULT NULL COMMENT 'class where method is found',
+  `info` text DEFAULT NULL COMMENT 'extra info',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 
 # Tabellen-Dump au_users_basedata
