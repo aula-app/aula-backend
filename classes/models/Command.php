@@ -67,7 +67,7 @@ class Command {
       
       
       $count_datasets = 0; // number of datasets retrieved
-      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_commands.' WHERE active = 1 AND start_date = :start_date');
+      $stmt = $this->db->query('SELECT * FROM '.$this->db->au_commands.' WHERE active = 1 AND date_start = :start_date');
       
       $this->db->bind(':start_date', $date_now); // bind date
       

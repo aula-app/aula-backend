@@ -37,10 +37,10 @@ $now = $converters -> getNow();
 $time_only = $converters -> getTimeOnlyNow ();
 
 
-echo ("<h1>Welcome to the cron job</h1>");
-echo ("NOW: ".$now);
-echo ("<br>TIME ONLY: ".$time_only);
-
+echo ("\n\nWelcome to the cron job");
+echo ("\nNOW: ".$now);
+echo ("\nTIME ONLY: ".$time_only);
+echo ("\n\nchecking for commands");
 // check commands first
 $commands = $command_class->getDueCommands();
 
