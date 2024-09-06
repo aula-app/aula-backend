@@ -6,6 +6,8 @@ require_once ('error_msg.php');
 echo ("LOADING CONFIG\n");
 echo ("baseClassModelDir: ".$baseClassModelDir."\n");
 
+require_once ($baseHelperDir.'Crypt.php');
+
 require ('functions.php'); // include Class autoloader (models)
 
 echo ("LOADING DB\n");
@@ -13,7 +15,7 @@ echo ("LOADING DB\n");
 $db = new Database();
 
 
-echo ("LOADING CRYPT AND SYSLOG CLASS\n");
+echo ("LOADING CRYPT AND SYSLOG CLASS WITH CRYPTFILE ".$cryptFile."\n");
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog ($db); // systemlog
 
