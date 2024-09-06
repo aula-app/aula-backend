@@ -197,6 +197,36 @@ class Converters
 
   }// end function
 
+  public function createDBDump ()
+  {
+   // creates a db dump a sends it back to frontend to create file
+    global $baseUploadDir;
+
+    $r = getToday()."_".mt_rand();
+
+    $dir = $baseUploadDir."aula_dump_".$r.".sql";
+
+    exec("mysqldump --user={$this->db->$user} --password={$this->db->$pass} --host={$this->db->$host} {$this->db->$dbname} --result-file={$dir} 2>&1", $dump_output);
+    if (strlen ($dump_output) > 1) {
+      # dump contains info
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code (user not existent)
+      $returnvalue['data'] = $dump_output; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code (dump empty)
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+      
+    }
+  } // end function
+
   public function checkAuthorization ($user_id, $method_name)
   {
     /* checks if user with the id user_id is 
