@@ -40,7 +40,7 @@ $time_only = $converters -> getTimeOnlyNow ();
 echo ("\n\nWelcome to the cron job");
 echo ("\nNOW: ".$now);
 echo ("\nTIME ONLY: ".$time_only);
-echo ("\n\nchecking for commands");
+echo ("\n\nchecking for commands in table ".$db->au_commands. " ALSO CHECKING: ".$db->user." P:".$db->pass);
 // check commands first
 $commands = $command_class->getDueCommands();
 
