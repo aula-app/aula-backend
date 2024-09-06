@@ -203,7 +203,7 @@ class Converters
 
   }// end function
 
-  public function createDBDump ()
+  public function createDBDump ($salt)
   {
    // creates a db dump a sends it back to frontend to create file
     global $baseUploadDir;
