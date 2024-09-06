@@ -8,14 +8,12 @@ echo ("baseClassModelDir: ".$baseClassModelDir);
 
 require ('functions.php'); // include Class autoloader (models)
 
-exit;
-
-
-//load helper classes
-require_once ($baseHelperDir.'Crypt.php');
 
 // Create a new Database object with the MySQL credentials
 $db = new Database();
+
+exit();
+
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog ($db); // systemlog
 $idea_class = new Idea ($db, $crypt, $syslog); //, $syslog); // instanciate group model class
@@ -48,9 +46,7 @@ foreach ($commmands as $command) {
     /* implementeed commands:
     10 = set online mode
     20 = delete user
-    30 = delete group
-    40 = user deactivate
-    50 = user activate
+    40 = set user status (user_Id ; 0,1,2)
     */
     switch ($cmd_id) {
 
