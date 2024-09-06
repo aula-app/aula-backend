@@ -218,7 +218,7 @@ class Command {
       }
     }// end function
 
-    public function addCommand ($cmd_id, $cmd_name, $parameters, $date_start="", $updater_id=0) {
+    public function addCommand ($cmd_id, $cmd_name, $parameters, $date_start="", $updater_id = 0) {
         /* adds a new command
             cmd_id is the id of the command (int) => 
                 10 = set online mode
@@ -243,7 +243,7 @@ class Command {
         $cmd_id = intval ($cmd_id);
         $target_id = intval ($target_id);
         $parameters = trim ($parameters);
-        $date_start = trim ($date_start)
+        $date_start = trim ($date_start);
         
         $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
