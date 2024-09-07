@@ -496,13 +496,14 @@ class Message
     }
   }// end function
 
-  public function getMessages($offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $room_id = 0, $user_id = 0, $creator_id = 0)
+  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $room_id = 0, $user_id = 0, $creator_id = 0)
   {
     /* returns message list (associative array) with start and limit provided
+    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report )
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (3)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
-    $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 4=is report, 5=archived report, 6= in review defaults to active (1)
+    status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 4= in review defaults to active (1)
     publish_date = date that specifies messages younger than publish date (if set to 0, gets all messages)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
     user_id = specifies a certain user (for private messages) if set to 0 all users are included
@@ -559,8 +560,13 @@ class Message
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
       $extra_where .= " AND " . $this->db->au_messages . ".status = " . $status;
+    }
+
+    // check if a status was set (status > -1 default value)
+    if ($msg_type > -1) {
+      $extra_where .= " AND " . $this->db->au_messages . ".msg_type = " . $msg_type;
     } else {
-      $extra_where .= " AND NOT " . $this->db->au_messages . ".status = 4 AND NOT " . $this->db->au_messages . ".status = 5";
+      $extra_where .= " AND NOT " . $this->db->au_messages . ".msg_type = 4";
     }
 
     switch (intval($orderby)) {
@@ -658,11 +664,11 @@ class Message
     /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
     $headline is the headline of the mesage, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
     target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
-    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user )
+    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report )
     publish_date (datetime) specifies the date when this message should be published Format DB datetime (2023-06-14 14:21:03)
     level_of_detail (int) specifies how detailed the scope of this message is (low = general, high = very specific)
     only_on_dashboard (int 0,1) specifies if the message should only be displayed on the dashboard (1) or also pushed to the user (email / push notification)
-    status = status of the message (0=inactive, 1=active, 2=suspended, 3=archived,  4=is report, 5=archived report, 6= in review)
+    status = status of the message (0=inactive, 1=active, 2=suspended, 3=archived, 4= in review)
     room_id specifies a room that this message is adressed to / associated with (all users within this room will receive this message), set to 0 for all rooms
     updater id specifies the id of the user (i.e. admin) that added this message
     */
