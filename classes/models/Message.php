@@ -502,7 +502,7 @@ class Message
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (3)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
-    $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 5= in review defaults to active (1)
+    $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 4=is report, 5= in review defaults to active (1)
     publish_date = date that specifies messages younger than publish date (if set to 0, gets all messages)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
     user_id = specifies a certain user (for private messages) if set to 0 all users are included
@@ -561,10 +561,10 @@ class Message
         $orderby_field = "status";
         break;
       case 1:
-        $orderby_field = "name";
+        $orderby_field = "headline";
         break;
       case 2:
-        $orderby_field = "created";
+        $orderby_field = "body";
         break;
       case 3:
         $orderby_field = "last_update";
@@ -573,7 +573,7 @@ class Message
         $orderby_field = "id";
         break;
       case 5:
-        $orderby_field = "headline";
+        $orderby_field = "created";
         break;
 
       default:
@@ -650,13 +650,13 @@ class Message
   public function addMessage($headline, $body, $msg_type = 3, $publish_date = 0, $creator_id = 0, $target_group = 0, $target_id = 0, $pin_to_top = 0, $level_of_detail = 1, $only_on_dashboard = 0, $status = 1, $room_id = 0, $updater_id = 0, $language_id = 0)
   {
     /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
-    $headline is the headline of the message, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
+    $headline is the headline of the mesage, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
     target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
     msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user )
     publish_date (datetime) specifies the date when this message should be published Format DB datetime (2023-06-14 14:21:03)
     level_of_detail (int) specifies how detailed the scope of this message is (low = general, high = very specific)
     only_on_dashboard (int 0,1) specifies if the message should only be displayed on the dashboard (1) or also pushed to the user (email / push notification)
-    status = status of the message (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+    status = status of the message (0=inactive, 1=active, 2=suspended, 3=archived, 4=is report 5= in review)
     room_id specifies a room that this message is adressed to / associated with (all users within this room will receive this message), set to 0 for all rooms
     updater id specifies the id of the user (i.e. admin) that added this message
     */
