@@ -502,7 +502,7 @@ class Message
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (3)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
-    $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 4=is report, 5= in review defaults to active (1)
+    $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 4=is report, 5=archived report, 6= in review defaults to active (1)
     publish_date = date that specifies messages younger than publish date (if set to 0, gets all messages)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
     user_id = specifies a certain user (for private messages) if set to 0 all users are included
@@ -556,6 +556,13 @@ class Message
       $extra_where .= " AND publish_date > \'" . $publish_date . "\'";
     }
 
+    // check if a status was set (status > -1 default value)
+    if ($status > -1) {
+      $extra_where .= " AND " . $this->db->au_messages . ".status = " . $status;
+    } else {
+      $extra_where .= " AND NOT " . $this->db->au_messages . ".status = 4 AND NOT " . $this->db->au_messages . ".status = 5";
+    }
+
     switch (intval($orderby)) {
       case 0:
         $orderby_field = "status";
@@ -593,13 +600,12 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE status= :status ' . $extra_where . ' AND publish_date <= \'' . $date_now . '\' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE id > 0 ' . $extra_where . ' AND publish_date <= \'' . $date_now . '\' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
     }
-    $this->db->bind(':status', $status); // bind status
 
     $err = false;
     try {
@@ -656,7 +662,7 @@ class Message
     publish_date (datetime) specifies the date when this message should be published Format DB datetime (2023-06-14 14:21:03)
     level_of_detail (int) specifies how detailed the scope of this message is (low = general, high = very specific)
     only_on_dashboard (int 0,1) specifies if the message should only be displayed on the dashboard (1) or also pushed to the user (email / push notification)
-    status = status of the message (0=inactive, 1=active, 2=suspended, 3=archived, 4=is report 5= in review)
+    status = status of the message (0=inactive, 1=active, 2=suspended, 3=archived,  4=is report, 5=archived report, 6= in review)
     room_id specifies a room that this message is adressed to / associated with (all users within this room will receive this message), set to 0 for all rooms
     updater id specifies the id of the user (i.e. admin) that added this message
     */
