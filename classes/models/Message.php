@@ -752,6 +752,96 @@ class Message
 
   }// end function
 
+  public function editMessage($message_id, $headline, $body, $msg_type = 3, $publish_date = 0, $target_group = 0, $target_id = 0, $pin_to_top = 0, $level_of_detail = 1, $only_on_dashboard = 0, $status = 1, $room_id = 0, $updater_id = 0, $language_id = 0)
+  {
+    /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
+    $headline is the headline of the mesage, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
+    target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
+    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report )
+    publish_date (datetime) specifies the date when this message should be published Format DB datetime (2023-06-14 14:21:03)
+    level_of_detail (int) specifies how detailed the scope of this message is (low = general, high = very specific)
+    only_on_dashboard (int 0,1) specifies if the message should only be displayed on the dashboard (1) or also pushed to the user (email / push notification)
+    status = status of the message (0=inactive, 1=active, 2=suspended, 3=archived, 4= in review)
+    room_id specifies a room that this message is adressed to / associated with (all users within this room will receive this message), set to 0 for all rooms
+    updater id specifies the id of the user (i.e. admin) that added this message
+    */
+    //sanitize the vars
+    $message_id = $this->converters->checkUserId($message_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    if (!(intval($target_id) == 0)) {
+      // only check for target id if it is not set to 0
+      $target_id = $this->converters->checkUserId($target_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    }
+    if (!(intval($target_group) == 0)) {
+      $target_group = $this->converters->checkGroupId($target_group); // check id and converts id to db id if necessary (when hash id was passed)
+    }
+    $status = intval($status);
+    if (!(intval($room_id) == 0)) {
+      $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+    }
+    $pin_to_top = $this->makeBool($pin_to_top);
+    $only_on_dashboard = $this->makebool($only_on_dashboard);
+    $level_of_detail = intval($level_of_detail);
+    $msg_type = intval($msg_type);
+    if ($publish_date == 0) {
+      $publish_date = date('Y-m-d H:i:s');
+    }
+
+    $headline = trim($headline);
+    $body = trim($body);
+
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_messages . ' SET headline= :headline, body= :body, target_group= :target_group, target_id= :target_id, pin_to_top= :pin_to_top, msg_type= :msg_type, publish_date= :publish_date, level_of_detail= :level_of_detail, only_on_dashboard= :only_on_dashboard, status= :status, room_id= :room_id, last_update= NOW(), updater_id= :updater_id, language_id= :language_id WHERE id = :message_id');
+    // bind all VALUES
+
+    $this->db->bind(':message_id', $message_id);
+    $this->db->bind(':headline', $headline);
+    $this->db->bind(':body', $body);
+    $this->db->bind(':msg_type', $msg_type);
+    $this->db->bind(':target_id', $target_id);
+    $this->db->bind(':target_group', $target_group);
+    $this->db->bind(':room_id', $room_id);
+    $this->db->bind(':pin_to_top', $pin_to_top);
+    $this->db->bind(':publish_date', $publish_date);
+    $this->db->bind(':level_of_detail', $level_of_detail);
+    $this->db->bind(':only_on_dashboard', $only_on_dashboard);
+    $this->db->bind(':status', $status);
+    $this->db->bind(':language_id', $language_id);
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+    $err = false; // set error variable to false
+
+    try {
+      $action = $this->db->execute(); // do the query
+
+    } catch (Exception $e) {
+
+      $err = true;
+    }
+    if (!$err) {
+      $insertid = intval($this->db->lastInsertId());
+
+      $this->syslog->addSystemEvent(0, "Added new message (#" . $insertid . ") " . $headline, 0, "", 1);
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $insertid; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue; // return insert id to calling script
+
+    } else {
+      $this->syslog->addSystemEvent(1, "Error adding message " . $headline, 0, "", 1);
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
+    }
+
+
+  }// end function
+
 
   public function setMessageStatus($message_id, $status, $updater_id = 0)
   {
