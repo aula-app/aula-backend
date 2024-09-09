@@ -310,21 +310,21 @@ class Message
   {
     // returns all messages for this specific user
     $user_id = $this->converters->checkUserId($user_id);
-    return $this->getMessages(0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0);
+    return $this->getMessages(-1, 0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0);
   }
 
   public function getMessagesToReview($user_id = 0, $publish_date = 0)
   {
     // returns all messages that are due to review, if wanted --for a specific user
     $user_id = $this->converters->checkUserId($user_id);
-    return $this->getMessages(0, 0, 3, 1, 5, "", $publish_date, 0, 0, $user_id, 0);
+    return $this->getMessages(-1, 0, 0, 3, 1, 5, "", $publish_date, 0, 0, $user_id, 0);
   }
 
   public function getSuspendedMessages($user_id = 0, $publish_date = 0)
   {
     // returns all messages that are due to review, if wanted --for a specific user
     $user_id = $this->converters->checkUserId($user_id);
-    return $this->getMessages(0, 0, 3, 1, 2, "", $publish_date, 0, 0, $user_id, 0);
+    return $this->getMessages(-1, 0, 0, 3, 1, 2, "", $publish_date, 0, 0, $user_id, 0);
   }
 
   public function sendMessageToUser($user_id, $msg, $publish_date = 0)
