@@ -538,8 +538,6 @@ class Message
     if ($user_id > 0) {
       // if a target user id is set then add to where clause
       $extra_where .= " AND target_id = " . $user_id; // get specific messages to this user (private messages)
-    } else {
-      $extra_where .= " AND target_id = 0"; // get all messages aside from private messages
     }
 
     if ($creator_id > 0) {
@@ -606,7 +604,7 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE id > 0 ' . $extra_where . ' AND publish_date <= \'' . $date_now . '\' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -632,7 +630,7 @@ class Message
     if ($count_datasets < 1) {
       $returnvalue['success'] = true; // set success value
       $returnvalue['error_code'] = 2; // no data found
-      $returnvalue['data'] = false; // returned data is false
+      $returnvalue['data'] = $messages; // returned data is false
       $returnvalue['count'] = $count_datasets; // returned count of datasets
 
       return $returnvalue; // nothing found, return 0 code
