@@ -1201,7 +1201,7 @@ class User
 
   }// end function
 
-  public function addUserToGroup($user_id, $group_id, $status, $updater_id)
+  public function addUserToGroup($user_id, $group_id, $updater_id, $status = 1)
   {
     /* adds a user to a group, accepts user_id (by hash or id) and group id (by hash or id)
     returns 1,1 = ok, 0,1 = user id not in db 0,2 group id not in db 0,3 user id not in db group id not in db */
@@ -2113,7 +2113,7 @@ class User
 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
     $this->db->bind(':id', $user_id); // bind userid
-    
+
     // init output array
     $gdpr = [];
 
@@ -2131,60 +2131,59 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-      
-    } 
-    else {
+
+    } else {
       // data found, continue...
       $data_found = true;
     }
-      
+
     /* User basedata */
-    
-    $gdpr ['realname'] = $users[0]['realname'];
-    $gdpr ['displayname'] = $users[0]['displayname'];
-    $gdpr ['username'] = $users[0]['username'];
-    $gdpr ['email'] = $users[0]['email'];
-    $gdpr ['about_me'] = $users[0]['about_me'];
-    $gdpr ['user_created'] = $users[0]['created'];
-    $gdpr ['user_last_update'] = $users[0]['last_update'];
-    $gdpr ['user_last_login'] = $users[0]['last_login'];
-    $gdpr ['user_level'] = $users[0]['userlevel'];
+
+    $gdpr['realname'] = $users[0]['realname'];
+    $gdpr['displayname'] = $users[0]['displayname'];
+    $gdpr['username'] = $users[0]['username'];
+    $gdpr['email'] = $users[0]['email'];
+    $gdpr['about_me'] = $users[0]['about_me'];
+    $gdpr['user_created'] = $users[0]['created'];
+    $gdpr['user_last_update'] = $users[0]['last_update'];
+    $gdpr['user_last_login'] = $users[0]['last_login'];
+    $gdpr['user_level'] = $users[0]['userlevel'];
 
     // get ideas
     $stmt = $this->db->query('SELECT content, last_update, created FROM ' . $this->db->au_ideas . ' WHERE user_id = :id');
     $this->db->bind(':id', $user_id); // bind userid
-  
+
     $ideas = $this->db->resultSet();
 
     if (count($ideas) > 0) {
       // data found
       $data_found = true;
-    } 
-    
+    }
+
     // iterate through ideas, concatenate
-    $gdpr ['ideas'] ='';
+    $gdpr['ideas'] = '';
 
     foreach ($ideas as $idea) {
-      $gdpr ['ideas'] .= $idea['content'].", IDEA CREATED: ".$idea['created'].", IDEA LAST UPDATE: ".$idea['last_update']."*§$";
+      $gdpr['ideas'] .= $idea['content'] . ", IDEA CREATED: " . $idea['created'] . ", IDEA LAST UPDATE: " . $idea['last_update'] . "*§$";
     }
 
     // get comments 
     $stmt = $this->db->query('SELECT content, created, last_update FROM ' . $this->db->au_comments . ' WHERE user_id = :id');
     $this->db->bind(':id', $user_id); // bind userid
-  
+
     $comments = $this->db->resultSet();
 
     if (count($comments) > 0) {
       // data found
       $data_found = true;
-      
-    } 
-    
+
+    }
+
     // iterate through comments, concatenate
-    $gdpr ['comments'] ='';
+    $gdpr['comments'] = '';
 
     foreach ($comments as $comment) {
-      $gdpr ['comments'] .= $comment['content'].", COMMENT CREATED: ".$comment['created'].", COMMENT LAST UPDATE: ".$comment['last_update']."*§$";
+      $gdpr['comments'] .= $comment['content'] . ", COMMENT CREATED: " . $comment['created'] . ", COMMENT LAST UPDATE: " . $comment['last_update'] . "*§$";
     }
 
 
@@ -2198,15 +2197,15 @@ class User
       return $returnvalue;
     } else {
       // everything ok, return values
-        $returnvalue['success'] = true; // set return value
-        $returnvalue['error_code'] = 0; // error code
-        $returnvalue['data'] = $gdpr; // returned data
-        $returnvalue['count'] = 1; // returned count of datasets
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $gdpr; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
 
-        return $returnvalue;
+      return $returnvalue;
 
     } // end else
-      
+
   } // end function
 
 
@@ -2833,7 +2832,7 @@ class User
 
           return $returnvalue;
         }
-        
+
         // delete group relations from this user
         $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :id');
         $this->db->bind(':id', $user_id);
@@ -2905,8 +2904,8 @@ class User
 
           return $returnvalue;
         }
-        
-      
+
+
         // Remove user associations in likes from this user
         $stmt = $this->db->query('UPDATE ' . $this->db->au_likes . ' SET user_id = 0 WHERE user_id = :id');
         $this->db->bind(':id', $user_id);
