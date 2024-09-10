@@ -19,10 +19,10 @@ class Converters
   {
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
     global $baseUploadDir;
-    
+
     $this->db = $db;
     $this->baseUploadDir = $baseUploadDir;
-    
+
 
     $this->cache = new Memcached();
     $this->cache->addServer('localhost', 11211) or die("Could not connect");
@@ -101,14 +101,14 @@ class Converters
   }
 
 
-  public function exportIdeasCSV ($status = 1)
+  public function exportIdeasCSV($status = 1)
   {
     // exports all ideas with a certain status, defaults to active ideas (status = 1)
-    
+
     $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_id AS phase_id,  ' . $this->db->au_topics . '.description_public AS topic_description,  ' . $this->db->au_topics . '.name AS topic_name, ' . $this->db->au_topics . '.id AS topic_id,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.status, ' . $this->db->au_ideas . '.created, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id)  WHERE ' . $this->db->au_ideas . '.status = :status');
-    
+
     $this->db->bind(':status', $status); // bind status
-    
+
     $err = false;
     try {
       $ideas = $this->db->resultSet();
@@ -145,17 +145,17 @@ class Converters
       $returnvalue['count'] = $total_datasets; // returned count of datasets with pagination or $total_datasets returns all datasets (without pagination)
       return $returnvalue;
     }
-    
+
   } // end function
 
-  public function exportUsersCSV ($status = 1)
+  public function exportUsersCSV($status = 1)
   {
     // exports all users with a certain status, defaults to active users (status = 1)
-    
+
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE status = :status');
 
     $this->db->bind(':status', $status); // bind status
-    
+
     $err = false;
     try {
       $users = $this->db->resultSet();
@@ -188,7 +188,7 @@ class Converters
       $returnvalue['count'] = $total_datasets; // returned count of datasets with pagination or $total_datasets returns all datasets (without pagination)
       return $returnvalue;
     }
-    
+
   } // end function
 
   public function getTextConsentValue($text_id)
@@ -203,17 +203,17 @@ class Converters
 
   }// end function
 
-  public function createDBDump ($salt)
+  public function createDBDump($salt)
   {
-   // creates a db dump a sends it back to frontend to create file
+    // creates a db dump a sends it back to frontend to create file
     global $baseUploadDir;
 
-    $r = getNow()."_".mt_rand();
+    $r = getNow() . "_" . mt_rand();
 
-    $dir = $baseUploadDir."aula_dump_".$r.".sql";
+    $dir = $baseUploadDir . "aula_dump_" . $r . ".sql";
 
     exec("mysqldump --user={$this->db->$user} --password={$this->db->$pass} --host={$this->db->$host} {$this->db->$dbname} --result-file={$dir} 2>&1", $dump_output);
-    if (strlen ($dump_output) > 1) {
+    if (strlen($dump_output) > 1) {
       # dump contains info
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code (user not existent)
@@ -229,11 +229,11 @@ class Converters
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-      
+
     }
   } // end function
 
-  public function checkAuthorization ($user_id, $method_name)
+  public function checkAuthorization($user_id, $method_name)
   {
     /* checks if user with the id user_id is 
      to use method with the name $method_name 
@@ -241,16 +241,16 @@ class Converters
     */
     $user_id = checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    
+
     $stmt = $this->db->query('SELECT userlevel FROM ' . $this->db->au_users_basedata . ' WHERE id = :id LIMIT 1');
     $this->db->bind(':id', $user_id); // bind userid
-    
+
     $users = $this->db->resultSet();
     // init return value
     $result_check = false; // default to not 
-    
+
     $user_level = 0; // default user_level
-    
+
     if (count($users) < 1) {
       # user not existent
       $returnvalue['success'] = true; // set return value
@@ -261,15 +261,15 @@ class Converters
       return $returnvalue;
     } else {
       // user found, get user level
-      $user_level = intval ($users[0]['userlevel']); // returned data
-      
+      $user_level = intval($users[0]['userlevel']); // returned data
+
     }
     // get minimum needed level to access method 
     $stmt = $this->db->query('SELECT user_level FROM ' . $this->db->au_userlevel_methods . ' WHERE method_nane = :method_nane LIMIT 1');
     $this->db->bind(':method_nane', $method_nane); // bind user_level
-    
+
     $level = $this->db->resultSet();
-    
+
     if (count($level) < 1) {
       # method not existent, default to allow access (true), error code = 3
       $result_check = true;
@@ -281,10 +281,9 @@ class Converters
       return $returnvalue;
     } else {
 
-      $method_level = intval ($level[0]['user_level']); 
+      $method_level = intval($level[0]['user_level']);
 
-      if ($user_level == $method_level || $user_level > $method_level) 
-      {
+      if ($user_level == $method_level || $user_level > $method_level) {
         // user is authorized
         $result_check = true;
       } else {
@@ -299,7 +298,7 @@ class Converters
 
     return $returnvalue;
   } // end function
-  
+
 
   public function getLastDataChange()
   {
@@ -1164,7 +1163,7 @@ class Converters
     $total_rows = $res[0]['total'];
     return $total_rows;
 
-  }
+  } // end function
 
   public function getTotalDatasetsFree($query)
   {
@@ -1186,6 +1185,7 @@ class Converters
     }
     return intval($total_rows);
 
-  }
+  } // end function
+
 } // end class
 ?>

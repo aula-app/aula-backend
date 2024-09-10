@@ -277,26 +277,23 @@ class Text
     }
 
     switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
       case 1:
-        $orderby_field = "creator_id";
-        break;
-      case 2:
         $orderby_field = "created";
         break;
+      case 2:
+        $orderby_field = "status";
+        break;
       case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
         $orderby_field = "headline";
         break;
-      case 6:
+      case 4:
         $orderby_field = "body";
+        break;
+      case 5:
+        $orderby_field = "creator_id";
+        break;
+      case 6:
+        $orderby_field = "id";
         break;
       case 7:
         $orderby_field = "user_needs_to_consent";
