@@ -550,13 +550,13 @@ class Group
     }
   }// end function
 
-  public function addGroup($group_name, $description_public, $description_internal, $internal_info, $status, $access_code, $updater_id = 0, $order_importance = 10, $vote_bias = 1)
+  public function addGroup($group_name, $description_public, $description_internal = "", $internal_info = "", $status = 1, $access_code = 0, $updater_id = 0, $order_importance = 10, $vote_bias = 1)
   {
     /* adds a new group and returns insert id (group id) if successful, accepts the above parameters
      description_public = actual description of the group, status = status of inserted group (0 = inactive, 1=active)
     */
     //sanitize in vars
-    $group_order = intval($group_order);
+    $order_importance = intval($order_importance);
     $updater_id = intval($updater_id);
     $status = intval($status);
     $vote_bias = intval($vote_bias);
