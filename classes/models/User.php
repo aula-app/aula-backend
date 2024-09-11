@@ -1353,7 +1353,7 @@ class User
     // create temp blind index
     $bi = md5(strtolower($username));
 
-    $stmt = $this->db->query('SELECT id, username, pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username');
+    $stmt = $this->db->query('SELECT id, username, pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username AND status = 1');
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
