@@ -1414,7 +1414,7 @@ class User
   }// end function
 
 
-  public function getUsers($offset, $limit, $orderby = 3, $asc = 0, $extra_where = "", $status = -1)
+  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $status = -1)
   {
     /* returns userlist (associative array) with start and limit provided
     extra_where = SQL Clause that can be added to where in the query like AND status = 1
