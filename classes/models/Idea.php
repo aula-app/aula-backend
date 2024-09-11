@@ -60,6 +60,26 @@ class Idea
     }
   }// end function
 
+  public function getCategoryOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "name";
+      case 6:
+        return "description_public";
+      default:
+        return "last_update";
+    }
+  }// end function
+
   public function getIdeaBaseData($idea_id)
   {
     /* returns idea base data for a specified db id */
@@ -998,7 +1018,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_rel_categories_rooms . ".room_id = " . $room_id;
     }
 
-    $orderby_field = $this->db->au_ideas . '.' . $this->getIdeaOrderId($orderby);
+    $orderby_field = $this->getCategoryOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

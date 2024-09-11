@@ -203,12 +203,12 @@ class Converters
 
   }// end function
 
-  public function createDBDump($salt)
+  public function createDBDump()
   {
     // creates a db dump a sends it back to frontend to create file
     global $baseUploadDir;
 
-    $r = getNow() . "_" . mt_rand();
+    $r = $this->getNow() . "_" . mt_rand();
 
     $dir = $baseUploadDir . "aula_dump_" . $r . ".sql";
 
