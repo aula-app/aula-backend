@@ -45,17 +45,17 @@ class User
       case 4:
         return "created";
       case 5:
-        return "realname";
+        return "displayname";
       case 6:
-        return "username";
+        return "realname";
       case 7:
-        return "email";
+        return "username";
       case 8:
-        return "phase_id";
+        return "email";
       case 9:
-        return "about_me";
-      case 10:
         return "userlevel";
+      case 10:
+        return "about_me";
       default:
         return "last_update";
     }
