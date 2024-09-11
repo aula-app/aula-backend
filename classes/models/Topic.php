@@ -23,9 +23,6 @@ class Topic
     //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
     $this->converters = new Converters($db); // load converters
-
-
-
   }// end function
 
   protected function buildCacheHash($key)
@@ -33,25 +30,49 @@ class Topic
     return md5($key);
   }
 
-  public function getTopicsByRoom($room_id, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1)
+  public function getTopicOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "name";
+      case 6:
+        return "description_public";
+      case 7:
+        return "room_id";
+      case 8:
+        return "phase_id";
+      default:
+        return "last_update";
+    }
+  }// end function
+
+  public function getTopicsByRoom($room_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1)
   {
     /* returns topiclist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $room_id is the id of the room
     */
     $room_id = $this->converters->checkRoomId($room_id);
 
-    // getTopics ($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="", $room_id=0)
+    // getTopics ($offset, $limit, $orderby=0, $asc=0, $status=1, $extra_where="", $room_id=0)
     return $this->getTopics($offset, $limit, $orderby, $asc, "", $status, $room_id);
 
   }// end function
 
 
 
-  public function getTopicsByPhase($offset, $limit, $phase_id, $orderby = 3, $asc = 0, $status = 1, $room_id = 0)
+  public function getTopicsByPhase($offset, $limit, $phase_id, $orderby = 0, $asc = 0, $status = 1, $room_id = 0)
   {
     // returns topics by phase
     // phase_id is the id of the phase 0 = wild ideas 10 = discussion 20 = approval 30 = voting 40 = implementation
@@ -242,11 +263,11 @@ class Topic
 
 
 
-  public function getTopics($offset, $limit, $orderby = 3, $asc = 0, $extra_where = "", $status = 1, $room_id = 0, $phase_id = -1)
+  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $status = 1, $room_id = 0, $phase_id = -1)
   {
     /* returns topiclist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
@@ -280,36 +301,7 @@ class Topic
       $extra_where .= " AND phase_id = " . $phase_id; // get specific topics in a phase
     }
 
-
-
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "name";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = "phase_id";
-        break;
-      case 6:
-        $orderby_field = "room_id";
-        break;
-      case 7:
-        $orderby_field = "description_public";
-        break;
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getTopicOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

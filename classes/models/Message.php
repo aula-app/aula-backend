@@ -30,6 +30,35 @@ class Message
     return md5($key);
   }
 
+  public function getMessageOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "headline";
+      case 6:
+        return "body";
+      case 7:
+        return "publish_date";
+      case 8:
+        return "msg_type";
+      case 9:
+        return "target_id";
+      case 10:
+        return "target_group";
+      case 11:
+        return "room_id";
+      default:
+        return "last_update";
+    }
+  }// end function
 
   public function getMessageHashId($message_id)
   {
@@ -47,11 +76,11 @@ class Message
     }
   }// end function
 
-  public function getMessagesByRoom($offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1, $room_id)
+  public function getMessagesByRoom($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $room_id)
   {
     /* returns message list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $room_id is the id of the room
@@ -71,26 +100,7 @@ class Message
       $limit_active = false;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "publish_date";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getMessageOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -332,11 +342,11 @@ class Message
 
   }
 
-  public function getMessagesUser($user_id = 0, $mode = 0, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1, $extra_where = "", $room_id = 0, $publish_date = 0)
+  public function getMessagesUser($user_id = 0, $mode = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $room_id = 0, $publish_date = 0)
   {
     /* returns message list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
 
     $mode = 0 = gets all messages FOR this user, = 1 gets messages since last login of user FOR this user
@@ -381,29 +391,7 @@ class Message
       $extra_where .= " AND publish_date > \'" . $publish_date . "\'";
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "name";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = "headline";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getMessageOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -496,12 +484,12 @@ class Message
     }
   }// end function
 
-  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $room_id = 0, $user_id = 0, $creator_id = 0)
+  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $room_id = 0, $user_id = 0, $creator_id = 0)
   {
     /* returns message list (associative array) with start and limit provided
     msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report )
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 4= in review defaults to active (1)
     publish_date = date that specifies messages younger than publish date (if set to 0, gets all messages)
@@ -567,29 +555,7 @@ class Message
       $extra_where .= " AND NOT " . $this->db->au_messages . ".msg_type = 4";
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "headline";
-        break;
-      case 2:
-        $orderby_field = "body";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = "created";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getMessageOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

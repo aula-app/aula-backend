@@ -31,6 +31,35 @@ class Idea
     #dele
   }// end function
 
+  public function getIdeaOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "title";
+      case 6:
+        return "content";
+      case 7:
+        return "room_id";
+      case 8:
+        return "sum_likes";
+      case 9:
+        return "sum_votes";
+      case 10:
+        return "order_importance";
+
+      default:
+        return "last_update";
+    }
+  }// end function
+
   public function getIdeaBaseData($idea_id)
   {
     /* returns idea base data for a specified db id */
@@ -783,11 +812,11 @@ class Idea
 
   }// end function
 
-  public function getIdeasByTopic($topic_id, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = -1)
+  public function getIdeasByTopic($topic_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1)
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $room_id is the id of the room
@@ -822,29 +851,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = $this->db->au_ideas . ".status";
-        break;
-      case 1:
-        $orderby_field = $this->db->au_ideas . ".order_importance";
-        break;
-      case 2:
-        $orderby_field = $this->db->au_ideas . ".created";
-        break;
-      case 3:
-        $orderby_field = $this->db->au_ideas . ".last_update";
-        break;
-      case 4:
-        $orderby_field = $this->db->au_ideas . ".id";
-        break;
-      case 5:
-        $orderby_field = $this->db->au_ideas . ".content";
-        break;
-
-      default:
-        $orderby_field = $this->db->au_ideas . ".last_update";
-    }
+    $orderby_field = $this->db->au_ideas . '.' . $this->getIdeaOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -937,11 +944,11 @@ class Idea
     }
   }// end function
 
-  public function getCategories($status = -1, $type = -1, $room_id = -1, $idea_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0, $extra_where = "")
+  public function getCategories($status = -1, $type = -1, $room_id = -1, $idea_id = -1, $limit = -1, $orderby = 0, $asc = 0, $offset = 0, $extra_where = "")
   {
     /* returns category list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $room_id is the id of the room
@@ -991,26 +998,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_rel_categories_rooms . ".room_id = " . $room_id;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = $this->db->au_categories . ".status";
-        break;
-      case 1:
-        $orderby_field = $this->db->au_categories . ".name";
-        break;
-      case 2:
-        $orderby_field = $this->db->au_categories . ".created";
-        break;
-      case 3:
-        $orderby_field = $this->db->au_categories . ".last_update";
-        break;
-      case 4:
-        $orderby_field = $this->db->au_categories . ".id";
-        break;
-
-      default:
-        $orderby_field = $this->db->au_categories . ".last_update";
-    }
+    $orderby_field = $this->db->au_ideas . '.' . $this->getIdeaOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1059,11 +1047,11 @@ class Idea
     }
   }// end function getCategories
 
-  public function getIdeasByCategory($offset, $limit, $orderby = 3, $asc = 0, $status = -1, $category_id)
+  public function getIdeasByCategory($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $category_id)
   {
     /* returns category list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $room_id is the id of the room
@@ -1098,26 +1086,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = $this->db->au_ideas . ".status";
-        break;
-      case 1:
-        $orderby_field = $this->db->au_ideas . ".order_importance";
-        break;
-      case 2:
-        $orderby_field = $this->db->au_ideas . ".created";
-        break;
-      case 3:
-        $orderby_field = $this->db->au_ideas . ".last_update";
-        break;
-      case 4:
-        $orderby_field = $this->db->au_ideas . ".id";
-        break;
-
-      default:
-        $orderby_field = $this->db->au_ideas . ".last_update";
-    }
+    $orderby_field = $this->db->au_ideas . '.' . $this->getIdeaOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1222,11 +1191,11 @@ class Idea
   } // end function
 
 
-  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = -1, $wild_idea = false, $extra_where = "")
+  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $extra_where = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
@@ -1269,40 +1238,8 @@ class Idea
       $extra_where .= " AND au_ideas.id NOT IN (SELECT idea_id FROM au_rel_topics_ideas)";
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "order_importance";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = "sum_likes";
-        break;
-      case 6:
-        $orderby_field = "sum_votes";
-        break;
-      case 7:
-        $orderby_field = "content";
-        break;
-      case 8:
-        $orderby_field = "room_id";
-        break;
-      case 9:
-        $orderby_field = "title";
-        break;
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getIdeaOrderId($orderby);
+
 
     switch (intval($asc)) {
       case 0:
@@ -1366,11 +1303,11 @@ class Idea
     }
   }// end function
 
-  public function getWildIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 2, $asc = 0, $status = -1, $extra_where = "")
+  public function getWildIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 4, $asc = 0, $status = -1, $extra_where = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to creation_date (2)
+    orderby is the field (int, see switch), defaults to creation_date (4)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1) -1 = get all datasets with status values 0-4
     $room_id is the id of the room
@@ -1400,26 +1337,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "order_importance";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getIdeaOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1484,11 +1402,11 @@ class Idea
   }// end function
 
 
-  public function getIdeasByRoom($room_id, $offset = 0, $limit = 0, $orderby = 2, $asc = 0, $status = -1, $extra_where = "")
+  public function getIdeasByRoom($room_id, $offset = 0, $limit = 0, $orderby = 4, $asc = 0, $status = -1, $extra_where = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to creation_date (2)
+    orderby is the field (int, see switch), defaults to creation_date (4)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1) -1 = get all datasets with status values 0-4
     $room_id is the id of the room
@@ -1520,26 +1438,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "order_importance";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getIdeaOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1603,11 +1502,11 @@ class Idea
     }
   }// end function
 
-  public function getIdeasByGroup($offset, $limit, $orderby = 3, $asc = 0, $status = -1, $group_id, $room_id = -1)
+  public function getIdeasByGroup($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $group_id, $room_id = -1)
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $$group_id is the id of the group
@@ -1648,27 +1547,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".room_id = " . $room_id;
     }
 
-
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "order_importance";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getIdeaOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1731,11 +1610,11 @@ class Idea
     }
   }// end function
 
-  public function getIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = -1, $room_id = -1)
+  public function getIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $room_id = -1)
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $$user_id is the id of the user
@@ -1774,29 +1653,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".room_id = " . $room_id;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "order_importance";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = "room_id";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getIdeaOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1927,7 +1784,7 @@ class Idea
     }
   }// end function
 
-  public function addIdea ($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $customfield1 = "", $customfield2 = "")
+  public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $customfield1 = "", $customfield2 = "")
   {
     /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters
      content = actual content of the idea,
@@ -3557,7 +3414,7 @@ class Idea
     }
   }// end function
 
-  public function setCustomField ($idea_id, $field_id, $content, $updater_id = 0)
+  public function setCustomField($idea_id, $field_id, $content, $updater_id = 0)
   {
     /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      content = content of the idea
@@ -3566,7 +3423,7 @@ class Idea
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-    $field_id = intval ($field_id);
+    $field_id = intval($field_id);
 
     if ($field_id < 1 || $field_id > 2) {
       // field id out of range
@@ -3578,11 +3435,11 @@ class Idea
       return $returnvalue;
     }
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field'.$field_id.' = :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field' . $field_id . ' = :content, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
     //$this->db->bind(':content', $this->crypt->encrypt($content));
     $this->db->bind(':content', $content);
-    
+
     $this->db->bind(':updater_id', $updater_id); // id of the idea doing the update (i.e. admin)
 
     $this->db->bind(':idea_id', $idea_id); // idea that is updated
@@ -3597,7 +3454,7 @@ class Idea
       $err = true;
     }
     if (!$err) {
-      $this->syslog->addSystemEvent(0, "Idea custom field ".$field_id." changed " . $idea_id . " by " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Idea custom field " . $field_id . " changed " . $idea_id . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code
       $returnvalue['data'] = 1; // returned data

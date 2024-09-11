@@ -33,6 +33,34 @@ class User
     return $content = $this->crypt->decrypt($content);
   }
 
+  public function getUserOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "realname";
+      case 6:
+        return "username";
+      case 7:
+        return "email";
+      case 8:
+        return "phase_id";
+      case 9:
+        return "about_me";
+      case 10:
+        return "userlevel";
+      default:
+        return "last_update";
+    }
+  }// end function
+
   public function getUserBaseData($user_id)
   {
     /* returns user base data for a specified db id */
@@ -1416,54 +1444,7 @@ class User
       $extra_where .= " AND status = " . $status;
     }
 
-
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "registration_status";
-        break;
-      case 1:
-        $orderby_field = "realname";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = "username";
-        break;
-      case 6:
-        $orderby_field = "displayname";
-        break;
-      case 7:
-        $orderby_field = "email";
-        break;
-      case 8:
-        $orderby_field = "status";
-        break;
-      case 9:
-        $orderby_field = "o1";
-        break;
-      case 10:
-        $orderby_field = "o2";
-        break;
-      case 11:
-        $orderby_field = "o3";
-        break;
-      case 12:
-        $orderby_field = "about_me";
-        break;
-      case 13:
-        $orderby_field = "userlevel";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1592,27 +1573,7 @@ class User
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
-
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = $this->db->au_users_basedata . ".status";
-        break;
-      case 1:
-        $orderby_field = $this->db->au_users_basedata . ".updater_id";
-        break;
-      case 2:
-        $orderby_field = $this->db->au_users_basedata . ".created";
-        break;
-      case 3:
-        $orderby_field = $this->db->au_users_basedata . ".last_update";
-        break;
-      case 4:
-        $orderby_field = $this->db->au_users_basedata . ".id";
-        break;
-
-      default:
-        $orderby_field = $this->db->au_users_basedata . ".last_update";
-    }
+    $orderby_field = $this->db->au_users_basedata . "." . $this->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1706,27 +1667,7 @@ class User
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
-
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = $this->db->au_users_basedata . ".status";
-        break;
-      case 1:
-        $orderby_field = $this->db->au_users_basedata . ".updater_id";
-        break;
-      case 2:
-        $orderby_field = $this->db->au_users_basedata . ".created";
-        break;
-      case 3:
-        $orderby_field = $this->db->au_users_basedata . ".last_update";
-        break;
-      case 4:
-        $orderby_field = $this->db->au_users_basedata . ".id";
-        break;
-
-      default:
-        $orderby_field = $this->db->au_users_basedata . ".last_update";
-    }
+    $orderby_field = $this->db->au_users_basedata . "." . $this->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

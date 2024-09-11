@@ -30,6 +30,22 @@ class Command
     return md5($key);
   }
 
+  public function getCommandOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      default:
+        return "last_update";
+    }
+  }// end function
+
 
   public function getCommandBaseData($command_id)
   {
@@ -108,11 +124,11 @@ class Command
     }
   }// end function
 
-  public function getCommands($offset = 0, $limit = 0, $orderby = 3, $asc = 0, $updater_id = 0, $extra_where = "", $last_update = 0)
+  public function getCommands($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $updater_id = 0, $extra_where = "", $last_update = 0)
   {
     /* returns commands list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 5= in review defaults to active (1)
     last_update = date that specifies texts younger than last_update date (if set to 0, gets all texts)
@@ -149,27 +165,7 @@ class Command
       $extra_where .= " AND last_update > \'" . $last_update . "\'";
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "name";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getCommandOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

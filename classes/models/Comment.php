@@ -30,6 +30,25 @@ class Comment
     return md5($key);
   }
 
+  public function getCommentOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "idea_id";
+      case 6:
+        return "content";
+      default:
+        return "last_update";
+    }
+  }// end function
 
   public function getCommentHashId($comment_id)
   {
@@ -47,11 +66,11 @@ class Comment
     }
   }// end function
 
-  public function getCommentsByIdeaId($idea_id, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1)
+  public function getCommentsByIdeaId($idea_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1)
   {
     /* returns comments list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $room_id is the id of the room
@@ -71,29 +90,7 @@ class Comment
       $limit_active = false;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "publish_date";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = "id";
-        break;
-
-      default:
-        $orderby_field = "created";
-    }
+    $orderby_field = $this->getCommentOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -254,11 +251,11 @@ class Comment
     return getComments(0, 0, 3, 0, 2, "", $publish_date, 0, $parent_id, $user_id);
   }
 
-  public function getComments($offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1, $extra_where = "", $last_update = 0, $idea_id = 0, $parent_id = 0, $user_id = 0)
+  public function getComments($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $last_update = 0, $idea_id = 0, $parent_id = 0, $user_id = 0)
   {
     /* returns comments list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 5= in review defaults to active (1)
     last_update = date that specifies comments younger than last_update date (if set to 0, gets all comments)
@@ -314,29 +311,7 @@ class Comment
       $extra_where .= " AND last_update > \'" . $last_update . "\'";
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "status";
-        break;
-      case 1:
-        $orderby_field = "parent_id";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = "content";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getCommentOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

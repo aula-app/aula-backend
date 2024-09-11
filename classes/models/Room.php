@@ -20,7 +20,32 @@ class Room
     $this->crypt = $crypt;
     $this->syslog = $syslog;
     $this->converters = new Converters($db); // load converters
+    $this->user = new User($db, $crypt, $syslog); // load User
 
+  }// end function
+
+  public function getRoomOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "room_name";
+      case 6:
+        return "description_public";
+      case 7:
+        return "description_internal";
+      case 8:
+        return "order_importance";
+      default:
+        return "last_update";
+    }
   }// end function
 
   public function getRoomBaseData($room_id)
@@ -256,11 +281,11 @@ class Room
   }// end function
 
 
-  public function getRooms($offset, $limit, $orderby = 3, $asc = 0, $status = -1, $extra_where = "")
+  public function getRooms($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $extra_where = "")
   {
     /* returns roomlist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=susepended, 3=archived, defaults to active (1)
     */
@@ -288,31 +313,7 @@ class Room
       $extra_where .= " AND status = " . $status;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "room_name";
-        break;
-      case 1:
-        $orderby_field = "order_importance";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = 'description_public';
-        break;
-      case 6:
-        $orderby_field = 'description_internal';
-        break;
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getRoomOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -363,11 +364,11 @@ class Room
     }
   }// end function
 
-  public function getRoomsByUser($user_id, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = -1)
+  public function getRoomsByUser($user_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1)
   {
     /* returns roomlist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=susepended, 3=archived, defaults to active (1)
     All rooms are returned that the user is member of OR that dont have user restriction (open rooms)
@@ -407,26 +408,7 @@ class Room
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = $this->db->au_rooms . ".room_name";
-        break;
-      case 1:
-        $orderby_field = $this->db->au_rooms . ".order_importance";
-        break;
-      case 2:
-        $orderby_field = $this->db->au_rooms . ".created";
-        break;
-      case 3:
-        $orderby_field = $this->db->au_rooms . ".last_update";
-        break;
-      case 4:
-        $orderby_field = $this->db->au_rooms . ".id";
-        break;
-
-      default:
-        $orderby_field = "$this->db->au_rooms." . "last_update";
-    }
+    $orderby_field = $this->getRoomOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -523,27 +505,7 @@ class Room
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
-
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = $this->db->au_users_basedata . ".status";
-        break;
-      case 1:
-        $orderby_field = $this->db->au_users_basedata . ".updater_id";
-        break;
-      case 2:
-        $orderby_field = $this->db->au_users_basedata . ".created";
-        break;
-      case 3:
-        $orderby_field = $this->db->au_users_basedata . ".last_update";
-        break;
-      case 4:
-        $orderby_field = $this->db->au_users_basedata . ".id";
-        break;
-
-      default:
-        $orderby_field = $this->db->au_users_basedata . ".last_update";
-    }
+    $orderby_field = $this->db->au_users_basedata . "." . $$this->user->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

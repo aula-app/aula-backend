@@ -20,8 +20,31 @@ class Group
     $this->crypt = $crypt;
     $this->syslog = $syslog;
     $this->converters = new Converters($db); // load converters
+    $this->user = new User($db, $crypt, $syslog); // load User
 
 
+  }// end function
+
+  public function getGroupOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "group_name";
+      case 6:
+        return "description_public";
+      case 7:
+        return 'order_importance';
+      default:
+        return "last_update";
+    }
   }// end function
 
   public function getGroupBaseData($group_id)
@@ -238,27 +261,7 @@ class Group
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
-
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = $this->db->au_users_basedata . ".status";
-        break;
-      case 1:
-        $orderby_field = $this->db->au_users_basedata . ".updater_id";
-        break;
-      case 2:
-        $orderby_field = $this->db->au_users_basedata . ".created";
-        break;
-      case 3:
-        $orderby_field = $this->db->au_users_basedata . ".last_update";
-        break;
-      case 4:
-        $orderby_field = $this->db->au_users_basedata . ".id";
-        break;
-
-      default:
-        $orderby_field = $this->db->au_users_basedata . ".last_update";
-    }
+    $orderby_field = $this->db->au_users_basedata . "." . $$this->user->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -353,10 +356,10 @@ class Group
 
 
 
-  public function getGroups($offset = 0, $limit = 0, $orderby = 3, $asc = 1, $status = -1, $extra_where = "")
+  public function getGroups($offset = 0, $limit = 0, $orderby = 0, $asc = 1, $status = -1, $extra_where = "")
   {
     /* returns group list (associative array) with start and limit provided
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     */
     // init vars
@@ -382,32 +385,7 @@ class Group
       $extra_where .= " AND status = " . $status;
     }
 
-
-    switch (intval($orderby)) {
-      case 0:
-        $orderby_field = "group_name";
-        break;
-      case 1:
-        $orderby_field = "order_importance";
-        break;
-      case 2:
-        $orderby_field = "created";
-        break;
-      case 3:
-        $orderby_field = "last_update";
-        break;
-      case 4:
-        $orderby_field = "id";
-        break;
-      case 5:
-        $orderby_field = 'description_public';
-        break;
-      case 6:
-        $orderby_field = 'description_internal';
-        break;
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getGroupOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

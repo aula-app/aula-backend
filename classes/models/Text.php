@@ -30,6 +30,31 @@ class Text
     return md5($key);
   }
 
+  public function getTextOrderId($orderby)
+  {
+    switch (intval($orderby)) {
+      case 1:
+        return "id";
+      case 2:
+        return "status";
+      case 3:
+        return "creator_id";
+      case 4:
+        return "created";
+      case 5:
+        return "headline";
+      case 6:
+        return "body";
+      case 7:
+        return "creator_id";
+      case 8:
+        return "user_needs_to_consent";
+      case 9:
+        return "consent_text";
+      default:
+        return "last_update";
+    }
+  }// end function
 
   public function getTextHashId($text_id)
   {
@@ -201,11 +226,11 @@ class Text
     return $ret_value;
   }
 
-  public function getTexts($offset = 0, $limit = 0, $orderby = 3, $asc = 0, $status = 1, $extra_where = "", $last_update = 0, $location = 0, $creator_id = 0, $user_needs_to_consent = -1, $service_id_consent = -1)
+  public function getTexts($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $last_update = 0, $location = 0, $creator_id = 0, $user_needs_to_consent = -1, $service_id_consent = -1)
   {
     /* returns text list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
-    orderby is the field (int, see switch), defaults to last_update (3)
+    orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 5= in review defaults to active (1)
     last_update = date that specifies texts younger than last_update date (if set to 0, gets all texts)
@@ -276,35 +301,7 @@ class Text
       $extra_where .= " AND last_update > \'" . $last_update . "\'";
     }
 
-    switch (intval($orderby)) {
-      case 1:
-        $orderby_field = "created";
-        break;
-      case 2:
-        $orderby_field = "status";
-        break;
-      case 3:
-        $orderby_field = "headline";
-        break;
-      case 4:
-        $orderby_field = "body";
-        break;
-      case 5:
-        $orderby_field = "creator_id";
-        break;
-      case 6:
-        $orderby_field = "id";
-        break;
-      case 7:
-        $orderby_field = "user_needs_to_consent";
-        break;
-      case 8:
-        $orderby_field = "consent_text";
-        break;
-
-      default:
-        $orderby_field = "last_update";
-    }
+    $orderby_field = $this->getTextOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
