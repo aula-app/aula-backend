@@ -480,12 +480,12 @@ class Group
     $vote_bias = intval($vote_bias);
 
     $updater_id = $this->converters->checkUserId($updater_id); // autoconvert
-    $group_id = $this->converters->checkRoomId($group_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $group_id = $this->converters->checkGroupId($group_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_groups . ' SET group_name = :group_name, description_public = :description_public , description_internal= :description_internal, internal_info= :internal_info, status= :status, access_code= :access_code, vote_bias = :vote_bias, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
     // bind all VALUES
-    $this->db->bind(':room_name', $room_name); // name of the room
+    $this->db->bind(':group_name', $group_name); // shown in frontend
     $this->db->bind(':description_public', $description_internal); // shown in frontend
     $this->db->bind(':description_internal', $description_internal); // only shown in backend admin
     $this->db->bind(':internal_info', $internal_info); // extra internal info, only visible in backend
@@ -507,7 +507,7 @@ class Group
       $err = true;
     }
     if (!$err) {
-      $this->syslog->addSystemEvent(0, "Edited group " . $room_id . " by " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Edited group " . $group_id . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = intval($this->db->rowCount()); // returned data

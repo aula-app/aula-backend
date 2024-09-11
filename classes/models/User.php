@@ -1630,7 +1630,7 @@ class User
     }
   }// end function
 
-  public function getUsersByGroup($group_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0)
+  public function getUsersByGroup($group_id, $status = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0)
   {
     /* returns users (associative array)
     $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)

@@ -219,24 +219,19 @@ class Command
     }
   }// end function
 
-  public function addCommand($cmd_id, $cmd_name, $parameters, $date_start = "", $updater_id = 0)
+  public function addCommand($cmd_id, $cmd_name, $parameters = "", $date_start = "", $updater_id = 0)
   {
     /* adds a new command
         cmd_id is the id of the command (int) => 
-            10 = set online mode
-            20 = delete user
-            30 = delete group
-            40 = user deactivate
-            50 = user activate
+            10 = set
+            20 = activate
+            30 = deactivate
+            40 = delete
             etc.
-        $cmd_name is a human-readable name for the command (i.e. "activate user")
-
-        parameters is optional json string with parameters (for later use)
-        
+        $cmd_name is the scope for the command (i.e. "activate user")
+        parameters is optional json string with parameters - not in use
         date_start (format sql date) describes when cmd starts execution 
-
         target_id describes the target of the action (i.e. user_id for command delete user xy)
-
         cron job watches for commands and executes them 
     */
 

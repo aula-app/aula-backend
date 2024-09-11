@@ -931,7 +931,7 @@ class Idea
   }// end function
 
 
-  public function getCategoryBaseData($category_id, $status = -1, $type = -1, $room_id = -1, $idea_id = -1, $limit = -1, $orderby = 3, $asc = 0, $offset = 0)
+  public function getCategoryBaseData($category_id, $status = -1, $type = -1, $room_id = -1, $idea_id = -1, $limit = -1, $orderby = 0, $asc = 0, $offset = 0)
   {
     $categories = $this->getCategories($status, $type, $room_id, $idea_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= ' . $category_id);
 
@@ -1901,6 +1901,64 @@ class Idea
     $this->db->bind(':hash_id', $hash_id);
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
+    $err = false; // set error variable to false
+
+    try {
+      $action = $this->db->execute(); // do the query
+
+    } catch (Exception $e) {
+
+      $err = true;
+    }
+    $insertid = intval($this->db->lastInsertId());
+    if (!$err) {
+      $this->syslog->addSystemEvent(0, "Added new category (#" . $insertid . ") " . $name, 0, "", 1);
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $insertid; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+    } else {
+      $this->syslog->addSystemEvent(1, "Error adding category " . $name, 0, "", 1);
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+
+  }// end function
+
+  public function editCategory($category_id, $name, $description_public = "", $description_internal = "", $status = 1, $order_importance = 10, $room_id = 0, $updater_id = 0)
+  {
+    /* adds a new category and returns insert id (idea id) if successful, accepts the above parameters
+     content = actual content of the idea,
+     status = status of inserted category (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+     info is internal info or can be used for open aula to enter the name of the person that had the idea
+    */
+
+    //sanitize vars
+    $category_id = $this->converters->checkCategoryId($category_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $status = intval($status);
+    $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+    $order_importance = intval($order_importance);
+    $description_public = trim($description_public);
+    $description_internal = trim($description_internal);
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_categories . ' SET name= :name, description_public= :description_public, description_internal= :description_internal, status= :status, last_update= NOW(), updater_id= :updater_id WHERE id = :category_id');
+    // bind all VALUES
+
+    $this->db->bind(':name', $name);
+    $this->db->bind(':status', $status);
+    $this->db->bind(':description_public', $description_public);
+    $this->db->bind(':description_internal', $description_internal);
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+    $this->db->bind(':category_id', $category_id); // id of the user doing the update (i.e. admin)
     $err = false; // set error variable to false
 
     try {
