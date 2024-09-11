@@ -486,7 +486,7 @@ class Group
     $stmt = $this->db->query('UPDATE ' . $this->db->au_groups . ' SET group_name = :group_name, description_public = :description_public , description_internal= :description_internal, internal_info= :internal_info, status= :status, access_code= :access_code, vote_bias = :vote_bias, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :group_id');
     // bind all VALUES
     $this->db->bind(':group_name', $group_name); // shown in frontend
-    $this->db->bind(':description_public', $description_internal); // shown in frontend
+    $this->db->bind(':description_public', $description_public); // shown in frontend
     $this->db->bind(':description_internal', $description_internal); // only shown in backend admin
     $this->db->bind(':internal_info', $internal_info); // extra internal info, only visible in backend
     $this->db->bind(':status', $status); // status of the room (0=inactive, 1=active, 4=archived)
