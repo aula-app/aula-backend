@@ -124,7 +124,7 @@ class Command
     }
   }// end function
 
-  public function getCommands($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $updater_id = 0, $extra_where = "", $last_update = 0)
+  public function getCommands($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $active = 1, $updater_id = 0, $extra_where = "", $last_update = 0)
   {
     /* returns commands list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -219,10 +219,10 @@ class Command
     }
   }// end function
 
-  public function addCommand($cmd_id, $cmd_name, $parameters = "", $date_start = "", $updater_id = 0)
+  public function addCommand($cmd_id, $cmd_name, $parameters, $date_start = "", $updater_id = 0)
   {
     /* adds a new command
-        cmd_id is the id of the command (int) => 
+        cmd_id is the id of the command (int) =>
             10 = set
             20 = activate
             30 = deactivate
@@ -230,28 +230,26 @@ class Command
             etc.
         $cmd_name is the scope for the command (i.e. "activate user")
         parameters is optional json string with parameters - not in use
-        date_start (format sql date) describes when cmd starts execution 
+        date_start (format sql date) describes when cmd starts execution
         target_id describes the target of the action (i.e. user_id for command delete user xy)
-        cron job watches for commands and executes them 
+        cron job watches for commands and executes them
     */
 
     //sanitize the vars
     $cmd_name = trim($cmd_name);
     $cmd_id = intval($cmd_id);
-    $target_id = intval($target_id);
     $parameters = trim($parameters);
     $date_start = trim($date_start);
 
     $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_commands . ' (cmd_id, command, date_start, parameters, active, status, created, last_update, updater_id, target_id) VALUES (:cmd_id, :cmd_name, :date_start, :parameters, 1, 0,NOW(), NOW(), :updater_id, :target_id)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_commands . ' (cmd_id, command, date_start, parameters, active, status, created, last_update, updater_id) VALUES (:cmd_id, :cmd_name, :date_start, :parameters, 1, 0,NOW(), NOW(), :updater_id)');
     // bind all VALUES
 
     $this->db->bind(':cmd_id', $cmd_id);
     $this->db->bind(':cmd_name', $cmd_name);
     $this->db->bind(':parameters', $parameters);
     $this->db->bind(':date_start', $date_start);
-    $this->db->bind(':target_id', $target_id);
 
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
