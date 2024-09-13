@@ -553,7 +553,7 @@ class Message
     if ($msg_type > -1) {
       $extra_where .= " AND " . $this->db->au_messages . ".msg_type = " . $msg_type;
     } else {
-      $extra_where .= " AND NOT " . $this->db->au_messages . ".msg_type = 4";
+      $extra_where .= " AND " . $this->db->au_messages . ".msg_type < 4";
     }
 
     $orderby_field = $this->getMessageOrderId($orderby);
@@ -611,7 +611,7 @@ class Message
     }
   }// end function
 
-  public function getPersonalMessagesByUser($user_id, $mode = 0)
+  public function getPersonalMessagesByUser($user_id, $mode = 0, $extra_where = "")
   {
     /* returns message list (associative array) of messages that are for this user (specified by $user_id)
     user_id = specifies a certain user
@@ -622,7 +622,7 @@ class Message
 
     $date_now = date('Y-m-d H:i:s');
 
-    $stmt = $this->db->query('SELECT last_login FROM ' . $this->db->au_users_basedata . ' WHERE user_id = :user_id LIMIT 1');
+    $stmt = $this->db->query('SELECT last_login FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id LIMIT 1');
 
     $this->db->bind(':user_id', $user_id); // bind user id
 
@@ -636,7 +636,7 @@ class Message
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 2; // database error while executing query
-      $returnvalue['data'] = false; // returned data is false
+      $returnvalue['data'] = 'false'; // returned data is false
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
@@ -654,8 +654,7 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id) OR target_id = :user_id) and publish_date > :target_date ORDER BY publish_date DESC');
-
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) and publish_date > :target_date ' . $extra_where . ' ORDER BY publish_date DESC');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':target_date', $target_date); // bind target date
 
