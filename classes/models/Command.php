@@ -200,26 +200,26 @@ class Command
 
       return $returnvalue;
     }
-    $count_datasets = count($commands);
+    $total_datasets = $this->converters->getTotalDatasets($this->db->au_commands, "id > 0" . $extra_where);
 
-    if ($count_datasets < 1) {
+    if ($total_datasets < 1) {
       $returnvalue['success'] = false; // set success value
       $returnvalue['error_code'] = 2; // no data found
       $returnvalue['data'] = false; // returned data is false
-      $returnvalue['count'] = $count_datasets; // returned count of datasets
+      $returnvalue['count'] = $total_datasets; // returned count of datasets
 
       return $returnvalue; // nothing found, return 0 code
     } else {
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // no error code
       $returnvalue['data'] = $commands; // returned data
-      $returnvalue['count'] = $count_datasets; // returned count of datasets
+      $returnvalue['count'] = $total_datasets; // returned count of datasets
 
       return $returnvalue; // return an array (associative) with all the data
     }
   }// end function
 
-  public function addCommand($cmd_id, $cmd_name, $parameters, $date_start = "", $updater_id = 0)
+  public function addCommand($cmd_id, $cmd_name, $parameters, $date_start, $updater_id)
   {
     /* adds a new command
         cmd_id is the id of the command (int) =>
@@ -236,9 +236,9 @@ class Command
     */
 
     //sanitize the vars
-    $cmd_name = trim($cmd_name);
     $cmd_id = intval($cmd_id);
-    $parameters = trim($parameters);
+    $cmd_name = trim($cmd_name);
+    $parameters = intval($parameters);
     $date_start = trim($date_start);
 
     $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)

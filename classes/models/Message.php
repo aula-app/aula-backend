@@ -23,7 +23,7 @@ class Message
     //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
     $this->converters = new Converters($db);
-    $this->user = new User ($db, $crypt, $syslog);
+    $this->user = new User($db, $crypt, $syslog);
   }// end function
 
   protected function buildCacheHash($key)
@@ -611,7 +611,7 @@ class Message
     }
   }// end function
 
-  public function getPersonalMessagesByUser ($user_id, $mode = 0)
+  public function getPersonalMessagesByUser($user_id, $mode = 0)
   {
     /* returns message list (associative array) of messages that are for this user (specified by $user_id)
     user_id = specifies a certain user
@@ -619,18 +619,18 @@ class Message
     
     */
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    
+
     $date_now = date('Y-m-d H:i:s');
 
     $stmt = $this->db->query('SELECT last_login FROM ' . $this->db->au_users_basedata . ' WHERE user_id = :user_id LIMIT 1');
-   
+
     $this->db->bind(':user_id', $user_id); // bind user id
 
     $last_login = '1972-01-30 00:00:00';
 
     try {
       $user_data = $this->db->resultSet();
-      $last_login = $user_data [0]['last_login'];
+      $last_login = $user_data[0]['last_login'];
 
     } catch (Exception $e) {
       $err = true;
@@ -641,25 +641,24 @@ class Message
 
       return $returnvalue;
     }
-    
-    
+
+
 
     if ($mode == 1) {
       // if mode is set to 1 then use last login date from user for selection
       $target_date = $last_login;
-    }
-    else {
+    } else {
       // get all messages
       $target_date = '1972-01-30 00:00:00';
     }
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_group IN (SELECT group_id FROM '$this->db->au_rel_groups_users.' WHERE user_id = :user_id) OR target_id = :user_id) and publish_date > :target_date ORDER BY publish_date DESC');
-   
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id) OR target_id = :user_id) and publish_date > :target_date ORDER BY publish_date DESC');
+
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':target_date', $target_date); // bind target date
-    
+
     $err = false;
     try {
       $messages = $this->db->resultSet();
