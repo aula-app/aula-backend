@@ -1,30 +1,28 @@
-# ************************************************************
-# Sequel Ace SQL dump
-# Version 20071
-#
-# https://sequel-ace.com/
-# https://github.com/Sequel-Ace/Sequel-Ace
-#
-# Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
-# Datenbank: aula_db
-# Verarbeitungszeit: 2024-09-06 08:04:39 +0000
-# ************************************************************
-
+/*M!999999\- enable the sandbox mode */ 
+-- MariaDB dump 10.19-11.5.2-MariaDB, for osx10.19 (x86_64)
+--
+-- Host: localhost    Database: aula
+-- ------------------------------------------------------
+-- Server version	11.5.2-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-SET NAMES utf8mb4;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE='NO_AUTO_VALUE_ON_ZERO', SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
-
-# Tabellen-Dump au_activitylog
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_activitylog`
+--
 
 DROP TABLE IF EXISTS `au_activitylog`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_activitylog` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `type` smallint(6) DEFAULT NULL COMMENT 'Which type of activity (i.e. 1=login, 2=logout, 3=vote, 4= new idea etc.)',
@@ -35,14 +33,24 @@ CREATE TABLE `au_activitylog` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update is saved if dataset is altered',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_activitylog`
+--
 
+LOCK TABLES `au_activitylog` WRITE;
+/*!40000 ALTER TABLE `au_activitylog` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_activitylog` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_categories
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_categories`
+--
 
 DROP TABLE IF EXISTS `au_categories`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_categories` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of category',
@@ -54,37 +62,51 @@ CREATE TABLE `au_categories` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the category',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_categories`
+--
 
 LOCK TABLES `au_categories` WRITE;
 /*!40000 ALTER TABLE `au_categories` DISABLE KEYS */;
-
-INSERT INTO `au_categories` (`id`, `name`, `description_public`, `description_internal`, `status`, `created`, `last_update`, `updater_id`, `hash_id`)
-VALUES
-	(3,'General','','bulb',1,'2024-07-29 15:54:41','2024-07-29 15:54:41',165,'12112890a34f90b5b51a20e61cf10887');
-
+INSERT INTO `au_categories` VALUES
+(3,'General','','bulb',1,'2024-07-29 15:54:41','2024-07-29 15:54:41',165,'12112890a34f90b5b51a20e61cf10887'),
+(4,'sdsadsa','','atom',1,'2024-09-11 10:52:41','2024-09-11 16:53:56',165,'470680d0532d41b0b9c19abf343dd252');
 /*!40000 ALTER TABLE `au_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_change_password
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_change_password`
+--
 
 DROP TABLE IF EXISTS `au_change_password`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_change_password` (
   `user_id` int(11) DEFAULT NULL,
   `secret` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_change_password`
+--
 
+LOCK TABLES `au_change_password` WRITE;
+/*!40000 ALTER TABLE `au_change_password` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_change_password` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_commands
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_commands`
+--
 
 DROP TABLE IF EXISTS `au_commands`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_commands` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `cmd_id` int(11) DEFAULT NULL COMMENT 'command id (i.e. 1=delete user, 2=suspend user, 3=unsuspend user 4=vacation_on, 5=vacation_off etc.))',
@@ -101,15 +123,27 @@ CREATE TABLE `au_commands` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of command',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_commands`
+--
 
+LOCK TABLES `au_commands` WRITE;
+/*!40000 ALTER TABLE `au_commands` DISABLE KEYS */;
+INSERT INTO `au_commands` VALUES
+(2,20,'user','264','2024-09-18 16:23:29',NULL,1,0,NULL,NULL,NULL,'2024-09-12 16:23:35','2024-09-12 16:23:35',165);
+/*!40000 ALTER TABLE `au_commands` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_comments
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_comments`
+--
 
 DROP TABLE IF EXISTS `au_comments`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_comments` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `content` varchar(4096) DEFAULT NULL COMMENT 'content of the comment',
@@ -124,38 +158,40 @@ CREATE TABLE `au_comments` (
   `idea_id` int(11) DEFAULT NULL COMMENT 'id of the idea',
   `parent_id` int(11) DEFAULT NULL COMMENT 'id of the parent comment (0=first comment)',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_comments`
+--
 
 LOCK TABLES `au_comments` WRITE;
 /*!40000 ALTER TABLE `au_comments` DISABLE KEYS */;
-
-INSERT INTO `au_comments` (`id`, `content`, `sum_likes`, `user_id`, `status`, `created`, `last_update`, `updater_id`, `hash_id`, `language_id`, `idea_id`, `parent_id`)
-VALUES
-	(16,'While the idea of solar-powered charging stations is admirable, it may not be the most cost-effective solution for our school at this time.',0,165,1,'2024-06-24 22:20:58','2024-06-24 22:20:58',0,'a02c31c880b78d596ba9784e64d13981',0,267,0),
-	(17,'This idea for solar-powered charging stations is a fantastic initiative for our school. Not only will it reduce our carbon footprint by utilizing renewable energy, but it also sets a great example for students on sustainable practices. It\'s a practical solution that aligns with our commitment to environmental stewardship and can potentially save costs in the long run by reducing energy expenses. Plus, it educates students about the benefits of renewable energy sources like solar power.',0,165,1,'2024-06-24 22:21:53','2024-06-24 22:21:53',0,'22e8eab0d638f32c348f4e6a04050483',0,267,0),
-	(18,'A campus-wide recycling initiative is long overdue! It\'s a practical step towards reducing our environmental impact and promoting responsible waste management among students and staff.',1,165,1,'2024-06-24 22:22:59','2024-06-24 22:23:03',0,'735404f40c91a2bd39161e569dbb5723',0,268,0),
-	(19,'While recycling is important, implementing a campus-wide initiative might be challenging. It requires significant resources for infrastructure, maintenance, and education. We should explore other sustainability efforts that are more feasible and impactful within our current budget constraints.',0,165,1,'2024-06-24 22:23:20','2024-06-24 22:23:20',0,'fda296d1a58c0e400639182ada616542',0,268,0),
-	(20,'Implementing a Virtual Learning Lab may divert resources away from traditional educational methods that have proven effective.',0,165,1,'2024-06-24 22:24:51','2024-06-24 22:24:51',0,'287e0423885d65d509a3d74b393bdb07',0,262,0),
-	(21,'Virtual campus tours offer a convenient and inclusive way for prospective students to explore our campus from anywhere!',0,165,1,'2024-06-24 22:26:07','2024-06-24 22:26:07',0,'53e7dafd1c12437f45a46b34c3578186',0,261,0),
-	(22,'This program not only strengthens community bonds but also teaches students valuable life skills like empathy, responsibility, and the importance of giving back.',0,165,1,'2024-06-24 22:28:12','2024-06-24 22:28:12',0,'a63540efa56b609ae6f5555085b3dce0',0,266,0),
-	(23,'Directly involving students in personal care tasks for neighbors could raise privacy concerns and may not always align with the needs or preferences of the elderly individuals involved.',0,165,1,'2024-06-24 22:28:25','2024-06-24 22:28:25',0,'3ff37e558e7cd5c986c9dcf50d27d490',0,266,0),
-	(24,'ome argue that social service programs like Adopt-a-Neighbor should be voluntary rather than mandatory, as forcing participation may dilute the altruistic spirit and impact of genuine volunteerism.',0,165,1,'2024-06-24 22:28:34','2024-06-24 22:28:34',0,'75158963dcd3dd83a357ad53031a20fd',0,266,0),
-	(25,'Managing a school garden requires significant time, resources, and expertise that may detract from core academic priorities and other extracurricular activities.',1,165,1,'2024-06-24 22:29:30','2024-06-24 22:29:49',0,'48648ad4dd02124f1ca7eae54d5c1281',0,265,0),
-	(26,'A school garden program teaches students about sustainability, nutrition, and responsibility, fostering a deeper connection to nature and promoting healthier eating habits.',0,165,1,'2024-06-24 22:29:46','2024-06-24 22:29:46',0,'ae8064cb703824b30ba9274aee8b0de6',0,265,0),
-	(27,'Vertical garden walls could potentially pose maintenance challenges such as irrigation and plant care, requiring ongoing resources and expertise that may outweigh their aesthetic and environmental benefits in a school setting.',1,165,1,'2024-06-24 22:39:05','2024-06-24 22:39:20',0,'0b7cb5092f9ef3d66b0e55c4046e9bf6',0,260,0),
-	(31,'test',0,165,1,'2024-06-30 13:11:42','2024-06-30 13:11:42',165,'c657731b106b5f1508857201cc211643',0,272,0),
-	(35,'Maybe testing comments could be an idea too.',0,165,1,'2024-07-17 17:18:17','2024-07-17 17:19:23',165,'e77b45b6b9fb10b42ba388778783623d',0,278,0),
-	(36,'Comment 1',0,165,1,'2024-09-06 06:35:19','2024-09-06 06:35:19',165,'59d5107dad6bd0e3320dcffe06309acb',0,260,0);
-
+INSERT INTO `au_comments` VALUES
+(16,'While the idea of solar-powered charging stations is admirable, it may not be the most cost-effective solution for our school at this time.',0,165,1,'2024-06-24 22:20:58','2024-06-24 22:20:58',0,'a02c31c880b78d596ba9784e64d13981',0,267,0),
+(17,'This idea for solar-powered charging stations is a fantastic initiative for our school. Not only will it reduce our carbon footprint by utilizing renewable energy, but it also sets a great example for students on sustainable practices. It\'s a practical solution that aligns with our commitment to environmental stewardship and can potentially save costs in the long run by reducing energy expenses. Plus, it educates students about the benefits of renewable energy sources like solar power.',0,165,1,'2024-06-24 22:21:53','2024-06-24 22:21:53',0,'22e8eab0d638f32c348f4e6a04050483',0,267,0),
+(18,'A campus-wide recycling initiative is long overdue! It\'s a practical step towards reducing our environmental impact and promoting responsible waste management among students and staff.',1,165,1,'2024-06-24 22:22:59','2024-06-24 22:23:03',0,'735404f40c91a2bd39161e569dbb5723',0,268,0),
+(19,'While recycling is important, implementing a campus-wide initiative might be challenging. It requires significant resources for infrastructure, maintenance, and education. We should explore other sustainability efforts that are more feasible and impactful within our current budget constraints.',0,165,1,'2024-06-24 22:23:20','2024-06-24 22:23:20',0,'fda296d1a58c0e400639182ada616542',0,268,0),
+(20,'Implementing a Virtual Learning Lab may divert resources away from traditional educational methods that have proven effective.',0,165,1,'2024-06-24 22:24:51','2024-06-24 22:24:51',0,'287e0423885d65d509a3d74b393bdb07',0,262,0),
+(21,'Virtual campus tours offer a convenient and inclusive way for prospective students to explore our campus from anywhere!',0,165,1,'2024-06-24 22:26:07','2024-06-24 22:26:07',0,'53e7dafd1c12437f45a46b34c3578186',0,261,0),
+(22,'This program not only strengthens community bonds but also teaches students valuable life skills like empathy, responsibility, and the importance of giving back.',0,165,1,'2024-06-24 22:28:12','2024-06-24 22:28:12',0,'a63540efa56b609ae6f5555085b3dce0',0,266,0),
+(23,'Directly involving students in personal care tasks for neighbors could raise privacy concerns and may not always align with the needs or preferences of the elderly individuals involved.',0,165,1,'2024-06-24 22:28:25','2024-06-24 22:28:25',0,'3ff37e558e7cd5c986c9dcf50d27d490',0,266,0),
+(24,'ome argue that social service programs like Adopt-a-Neighbor should be voluntary rather than mandatory, as forcing participation may dilute the altruistic spirit and impact of genuine volunteerism.',0,165,1,'2024-06-24 22:28:34','2024-06-24 22:28:34',0,'75158963dcd3dd83a357ad53031a20fd',0,266,0),
+(25,'Managing a school garden requires significant time, resources, and expertise that may detract from core academic priorities and other extracurricular activities.',1,165,1,'2024-06-24 22:29:30','2024-06-24 22:29:49',0,'48648ad4dd02124f1ca7eae54d5c1281',0,265,0),
+(26,'A school garden program teaches students about sustainability, nutrition, and responsibility, fostering a deeper connection to nature and promoting healthier eating habits.',0,165,1,'2024-06-24 22:29:46','2024-06-24 22:29:46',0,'ae8064cb703824b30ba9274aee8b0de6',0,265,0),
+(27,'Vertical garden walls could potentially pose maintenance challenges such as irrigation and plant care, requiring ongoing resources and expertise that may outweigh their aesthetic and environmental benefits in a school setting.',1,165,1,'2024-06-24 22:39:05','2024-06-24 22:39:20',0,'0b7cb5092f9ef3d66b0e55c4046e9bf6',0,260,0),
+(31,'test',0,165,1,'2024-06-30 13:11:42','2024-06-30 13:11:42',165,'c657731b106b5f1508857201cc211643',0,272,0),
+(35,'Maybe testing comments could be an idea too.',0,165,1,'2024-07-17 17:18:17','2024-07-17 17:19:23',165,'e77b45b6b9fb10b42ba388778783623d',0,278,0);
 /*!40000 ALTER TABLE `au_comments` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_consent
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_consent`
+--
 
 DROP TABLE IF EXISTS `au_consent`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_consent` (
   `user_id` int(11) NOT NULL COMMENT 'id of user',
   `text_id` int(1) NOT NULL DEFAULT 0 COMMENT 'id of text',
@@ -168,24 +204,29 @@ CREATE TABLE `au_consent` (
   `status` int(11) DEFAULT 1 COMMENT 'status of consent',
   PRIMARY KEY (`user_id`,`text_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_consent`
+--
 
 LOCK TABLES `au_consent` WRITE;
 /*!40000 ALTER TABLE `au_consent` DISABLE KEYS */;
-
-INSERT INTO `au_consent` (`user_id`, `text_id`, `consent`, `date_consent`, `date_revoke`, `created`, `last_update`, `updater_id`, `status`)
-VALUES
-	(165,9,1,'2024-06-23 12:45:18',NULL,'2024-06-23 12:45:18','2024-06-23 12:45:18',0,1),
-	(165,11,1,'2024-06-23 12:47:20',NULL,'2024-06-23 12:47:20','2024-06-23 12:47:20',0,1);
-
+INSERT INTO `au_consent` VALUES
+(165,9,1,'2024-06-23 12:45:18',NULL,'2024-06-23 12:45:18','2024-06-23 12:45:18',0,1),
+(165,11,1,'2024-06-23 12:47:20',NULL,'2024-06-23 12:47:20','2024-06-23 12:47:20',0,1),
+(266,9,1,'2024-09-12 17:00:13',NULL,'2024-09-12 17:00:13','2024-09-12 17:00:13',0,1),
+(266,11,1,'2024-09-12 17:00:12',NULL,'2024-09-12 17:00:12','2024-09-12 17:00:12',0,1);
 /*!40000 ALTER TABLE `au_consent` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_delegation
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_delegation`
+--
 
 DROP TABLE IF EXISTS `au_delegation`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_delegation` (
   `user_id_original` int(11) NOT NULL COMMENT 'original user (delegating)',
   `user_id_target` int(11) NOT NULL COMMENT 'receiving user',
@@ -197,14 +238,26 @@ CREATE TABLE `au_delegation` (
   `last_update` datetime DEFAULT NULL COMMENT 'last update',
   PRIMARY KEY (`user_id_original`,`user_id_target`,`topic_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_delegation`
+--
 
+LOCK TABLES `au_delegation` WRITE;
+/*!40000 ALTER TABLE `au_delegation` DISABLE KEYS */;
+INSERT INTO `au_delegation` VALUES
+(165,264,0,474,1,165,'2024-09-11 11:10:24','2024-09-11 11:10:24');
+/*!40000 ALTER TABLE `au_delegation` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_groups
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_groups`
+--
 
 DROP TABLE IF EXISTS `au_groups`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `group_name` varchar(1024) DEFAULT NULL COMMENT 'name of group',
@@ -220,15 +273,27 @@ CREATE TABLE `au_groups` (
   `order_importance` int(11) DEFAULT NULL COMMENT 'order htat groups are shown (used for display)',
   `vote_bias` int(11) DEFAULT NULL COMMENT 'votes weight per user in this group',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_groups`
+--
 
+LOCK TABLES `au_groups` WRITE;
+/*!40000 ALTER TABLE `au_groups` DISABLE KEYS */;
+INSERT INTO `au_groups` VALUES
+(3,'Test','','',1,'','2024-09-10 10:34:34','2024-09-11 16:55:33',165,'dafad754e59d3347064806c9b46d4247','',10,1);
+/*!40000 ALTER TABLE `au_groups` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_ideas
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_ideas`
+--
 
 DROP TABLE IF EXISTS `au_ideas`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_ideas` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `content` text DEFAULT NULL COMMENT 'content of the idea',
@@ -255,35 +320,38 @@ CREATE TABLE `au_ideas` (
   `custom_field1` text DEFAULT NULL COMMENT 'custom_field1',
   `custom_field2` text DEFAULT NULL COMMENT 'custom_field2',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=273 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_ideas`
+--
 
 LOCK TABLES `au_ideas` WRITE;
 /*!40000 ALTER TABLE `au_ideas` DISABLE KEYS */;
-
-INSERT INTO `au_ideas` (`id`, `content`, `sum_likes`, `sum_votes`, `number_of_votes`, `user_id`, `votes_available_per_user`, `status`, `language_id`, `created`, `last_update`, `hash_id`, `order_importance`, `info`, `updater_id`, `room_id`, `is_winner`, `approved`, `approval_comment`, `topic_id`, `title`, `sum_comments`, `custom_field1`, `custom_field2`)
-VALUES
-	(260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-09-06 06:35:19','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,'',NULL,'Vertical Garden Walls',2,NULL,NULL),
-	(261,'Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-07-29 15:03:18','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,0,'',NULL,'Augmented Reality Campus Tours',1,NULL,NULL),
-	(262,'Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-07-29 15:03:41','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,0,'',NULL,'Virtual Learning Lab',1,NULL,NULL),
-	(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-07-17 09:30:30','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0,NULL,NULL),
-	(264,'Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,1,165,1,1,0,'2024-06-24 22:04:28','2024-07-23 16:30:29','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,'Performing Arts Festival',0,NULL,NULL),
-	(265,'Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,'School Garden for Food Donation',2,NULL,NULL),
-	(266,'Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-07-29 15:55:02','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,0,'',NULL,'Adopt-a-Neighbor Program',3,NULL,NULL),
-	(267,'Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,'Solar-Powered Charging Stations',2,NULL,NULL),
-	(268,'Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-07-29 15:54:55','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,'',NULL,'Campus-wide Recycling Initiative',4,NULL,NULL),
-	(270,'The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,'Student Tech Lab',0,NULL,NULL),
-	(271,'This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,-1,1,165,1,1,0,'2024-06-26 17:34:33','2024-06-26 17:35:30','9491c7450a1a946cfee61a575e51df90',10,'',0,106,0,0,NULL,NULL,'Community Mural Project',0,NULL,NULL),
-	(272,'Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-07-29 14:58:50','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',165,106,0,0,'',NULL,'Enhancing Outdoor Learning Spaces',1,NULL,NULL);
-
+INSERT INTO `au_ideas` VALUES
+(260,'Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-07-29 15:55:07','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,'',NULL,'Vertical Garden Walls',1,NULL,NULL),
+(261,'Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-07-29 15:03:18','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,0,'',NULL,'Augmented Reality Campus Tours',1,NULL,NULL),
+(262,'Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-07-29 15:03:41','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,0,'',NULL,'Virtual Learning Lab',1,NULL,NULL),
+(263,'Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-07-17 09:30:30','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,'Student Art Gallery',0,NULL,NULL),
+(264,'Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,1,165,1,1,0,'2024-06-24 22:04:28','2024-07-23 16:30:29','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,'Performing Arts Festival',0,NULL,NULL),
+(265,'Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,'School Garden for Food Donation',2,NULL,NULL),
+(266,'Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-07-29 15:55:02','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,0,'',NULL,'Adopt-a-Neighbor Program',3,NULL,NULL),
+(267,'Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,'Solar-Powered Charging Stations',2,NULL,NULL),
+(268,'Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-07-29 15:54:55','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,'',NULL,'Campus-wide Recycling Initiative',4,NULL,NULL),
+(270,'The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,'Student Tech Lab',0,NULL,NULL),
+(271,'This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,-1,1,165,1,1,0,'2024-06-26 17:34:33','2024-06-26 17:35:30','9491c7450a1a946cfee61a575e51df90',10,'',0,106,0,0,NULL,NULL,'Community Mural Project',0,NULL,NULL),
+(272,'Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-07-29 14:58:50','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',165,106,0,0,'',NULL,'Enhancing Outdoor Learning Spaces',1,NULL,NULL);
 /*!40000 ALTER TABLE `au_ideas` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_likes
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_likes`
+--
 
 DROP TABLE IF EXISTS `au_likes`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_likes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL COMMENT 'id of liking user',
@@ -294,31 +362,34 @@ CREATE TABLE `au_likes` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the like',
   `object_type` int(11) DEFAULT NULL COMMENT 'type of liked object 1=idea, 2=comment',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_likes`
+--
 
 LOCK TABLES `au_likes` WRITE;
 /*!40000 ALTER TABLE `au_likes` DISABLE KEYS */;
-
-INSERT INTO `au_likes` (`id`, `user_id`, `object_id`, `status`, `created`, `last_update`, `hash_id`, `object_type`)
-VALUES
-	(90,165,267,1,'2024-06-24 22:20:59','2024-06-24 22:20:59','15c9a8b0cf946afbd29bc511bc4049ba',1),
-	(92,165,18,1,'2024-06-24 22:23:03','2024-06-24 22:23:03','1cc92b86fb1b54e00a2e5851556d4e4b',2),
-	(94,165,261,1,'2024-06-24 22:26:09','2024-06-24 22:26:09','12998fe680ee3821a31f7eb960ebd51a',1),
-	(95,165,265,1,'2024-06-24 22:29:47','2024-06-24 22:29:47','aa3b4f148ca22fd64a0fb57083ed7d7f',1),
-	(96,165,25,1,'2024-06-24 22:29:49','2024-06-24 22:29:49','2e1615c3f144ccf6cf5bd445e1ab9cda',2),
-	(97,165,27,1,'2024-06-24 22:39:20','2024-06-24 22:39:20','3ba7a3a8a63601fca718f586b7fc0469',2),
-	(98,165,260,1,'2024-06-26 18:19:02','2024-06-26 18:19:02','92d8d8dac39e43dd4acd6e11741521e4',1),
-	(99,165,268,1,'2024-07-23 14:24:35','2024-07-23 14:24:35','50df919921c8b6673371c310a86e99ee',1);
-
+INSERT INTO `au_likes` VALUES
+(90,165,267,1,'2024-06-24 22:20:59','2024-06-24 22:20:59','15c9a8b0cf946afbd29bc511bc4049ba',1),
+(92,165,18,1,'2024-06-24 22:23:03','2024-06-24 22:23:03','1cc92b86fb1b54e00a2e5851556d4e4b',2),
+(94,165,261,1,'2024-06-24 22:26:09','2024-06-24 22:26:09','12998fe680ee3821a31f7eb960ebd51a',1),
+(95,165,265,1,'2024-06-24 22:29:47','2024-06-24 22:29:47','aa3b4f148ca22fd64a0fb57083ed7d7f',1),
+(96,165,25,1,'2024-06-24 22:29:49','2024-06-24 22:29:49','2e1615c3f144ccf6cf5bd445e1ab9cda',2),
+(97,165,27,1,'2024-06-24 22:39:20','2024-06-24 22:39:20','3ba7a3a8a63601fca718f586b7fc0469',2),
+(98,165,260,1,'2024-06-26 18:19:02','2024-06-26 18:19:02','92d8d8dac39e43dd4acd6e11741521e4',1),
+(99,165,268,1,'2024-07-23 14:24:35','2024-07-23 14:24:35','50df919921c8b6673371c310a86e99ee',1);
 /*!40000 ALTER TABLE `au_likes` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_media
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_media`
+--
 
 DROP TABLE IF EXISTS `au_media`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_media` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `type` int(11) DEFAULT NULL COMMENT 'type of media (1=picture, 2=video, 3= audio 4=pdf etc. etc)',
@@ -335,14 +406,24 @@ CREATE TABLE `au_media` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that uploaded',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_media`
+--
 
+LOCK TABLES `au_media` WRITE;
+/*!40000 ALTER TABLE `au_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_media` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_messages
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_messages`
+--
 
 DROP TABLE IF EXISTS `au_messages`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_messages` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `creator_id` int(11) DEFAULT NULL COMMENT 'user id of the creator (0=system)',
@@ -363,24 +444,32 @@ CREATE TABLE `au_messages` (
   `room_id` int(11) DEFAULT NULL COMMENT 'if specified only displayed to room members',
   `pin_to_top` int(11) DEFAULT 0 COMMENT '0=no, 1 = yes',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_messages`
+--
 
 LOCK TABLES `au_messages` WRITE;
 /*!40000 ALTER TABLE `au_messages` DISABLE KEYS */;
-
-INSERT INTO `au_messages` (`id`, `creator_id`, `headline`, `body`, `publish_date`, `target_group`, `target_id`, `status`, `only_on_dashboard`, `created`, `last_update`, `updater_id`, `hash_id`, `language_id`, `level_of_detail`, `msg_type`, `room_id`, `pin_to_top`)
-VALUES
-	(25,44,'2d2gj/s9PQ6Wguacb7uQR1k+TFNQB9DyuHOYOD9HBQgahg==','3O+uCRscDFEolxEAl1gyFmBRJDET5Jtehoz97CHH7aJS70t8og==','2024-08-22 09:14:36',0,0,1,0,'2024-09-04 07:46:00','2024-09-04 07:46:00',0,'64b35e61ed4c301423d1c06ab8ab0004',0,1,1,0,0);
-
+INSERT INTO `au_messages` VALUES
+(38,165,'Test message','this is a test','2024-09-09 18:59:34',0,165,1,0,'2024-09-09 15:23:16','2024-09-09 15:59:34',165,'ceeb67b807833c4a30d95bcd430e109f',0,1,3,0,0),
+(39,165,'Test','message to the mountains','2024-09-09 19:00:28',0,266,1,0,'2024-09-09 16:00:28','2024-09-09 16:00:28',165,'bde708293ddc3e242c21b0cc12ce73d8',0,1,3,0,0),
+(40,165,'test','test','2024-09-09 19:20:52',0,0,1,0,'2024-09-09 16:20:52','2024-09-09 16:20:52',165,'464cd17bdeaf03115a2121b90e88c830',0,1,3,0,0),
+(41,0,'Bug report','{\"data\":{\"location\":\"/settings/reports\",\"user\":165,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0\"},\"content\":\"test\"}','2024-09-11 02:23:35',0,0,3,0,'2024-09-10 23:23:35','2024-09-13 08:18:28',165,'2ffe77f72a1ac3ea692a5bcfd498d68c',0,1,4,0,0),
+(44,0,'Bug report','{\"data\":{\"location\":\"/settings/messages\",\"user\":165,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0\"},\"content\":\"This is a bug report\"}','2024-09-13 11:17:53',0,0,1,0,'2024-09-13 08:17:53','2024-09-13 08:17:53',165,'3205d1d792393d14169411d86ee2452d',0,1,4,0,0),
+(45,165,'This is a message for Admin only','Only Admin should be able to read this','2024-09-13 11:19:36',0,165,1,0,'2024-09-13 08:19:36','2024-09-13 08:19:36',165,'5eeb5bd3995e6a96df2d95f92bb17aa1',0,1,3,0,0);
 /*!40000 ALTER TABLE `au_messages` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_phases_global_config
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_phases_global_config`
+--
 
 DROP TABLE IF EXISTS `au_phases_global_config`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_phases_global_config` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id of dataset',
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of phase',
@@ -396,14 +485,24 @@ CREATE TABLE `au_phases_global_config` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_phases_global_config`
+--
 
+LOCK TABLES `au_phases_global_config` WRITE;
+/*!40000 ALTER TABLE `au_phases_global_config` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_phases_global_config` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_categories_ideas
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_categories_ideas`
+--
 
 DROP TABLE IF EXISTS `au_rel_categories_ideas`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_categories_ideas` (
   `category_id` int(11) NOT NULL COMMENT 'id of category',
   `idea_id` int(11) NOT NULL COMMENT 'id of idea',
@@ -412,25 +511,28 @@ CREATE TABLE `au_rel_categories_ideas` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`category_id`,`idea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_rel_categories_ideas`
+--
 
 LOCK TABLES `au_rel_categories_ideas` WRITE;
 /*!40000 ALTER TABLE `au_rel_categories_ideas` DISABLE KEYS */;
-
-INSERT INTO `au_rel_categories_ideas` (`category_id`, `idea_id`, `created`, `last_update`, `updater_id`)
-VALUES
-	(3,260,'2024-07-29 15:55:07','2024-07-29 15:55:07',165),
-	(3,266,'2024-07-29 15:55:02','2024-07-29 15:55:02',165),
-	(3,268,'2024-07-29 15:54:55','2024-07-29 15:54:55',165);
-
+INSERT INTO `au_rel_categories_ideas` VALUES
+(3,260,'2024-07-29 15:55:07','2024-07-29 15:55:07',165),
+(3,266,'2024-07-29 15:55:02','2024-07-29 15:55:02',165),
+(3,268,'2024-07-29 15:54:55','2024-07-29 15:54:55',165);
 /*!40000 ALTER TABLE `au_rel_categories_ideas` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_rel_categories_media
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_categories_media`
+--
 
 DROP TABLE IF EXISTS `au_rel_categories_media`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_categories_media` (
   `category_id` int(11) NOT NULL COMMENT 'id of category',
   `media_id` int(11) NOT NULL COMMENT 'id of media in mediatable',
@@ -440,14 +542,24 @@ CREATE TABLE `au_rel_categories_media` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`category_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_categories_media`
+--
 
+LOCK TABLES `au_rel_categories_media` WRITE;
+/*!40000 ALTER TABLE `au_rel_categories_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_categories_media` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_categories_rooms
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_categories_rooms`
+--
 
 DROP TABLE IF EXISTS `au_rel_categories_rooms`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_categories_rooms` (
   `category_id` int(11) NOT NULL COMMENT 'id of category',
   `room_id` int(11) NOT NULL COMMENT 'id of room',
@@ -456,14 +568,24 @@ CREATE TABLE `au_rel_categories_rooms` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'id of updater',
   PRIMARY KEY (`category_id`,`room_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_categories_rooms`
+--
 
+LOCK TABLES `au_rel_categories_rooms` WRITE;
+/*!40000 ALTER TABLE `au_rel_categories_rooms` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_categories_rooms` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_groups_media
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_groups_media`
+--
 
 DROP TABLE IF EXISTS `au_rel_groups_media`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_groups_media` (
   `group_id` int(11) NOT NULL COMMENT 'id of group',
   `media_id` int(11) NOT NULL COMMENT 'id of media',
@@ -474,14 +596,24 @@ CREATE TABLE `au_rel_groups_media` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`group_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_groups_media`
+--
 
+LOCK TABLES `au_rel_groups_media` WRITE;
+/*!40000 ALTER TABLE `au_rel_groups_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_groups_media` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_groups_users
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_groups_users`
+--
 
 DROP TABLE IF EXISTS `au_rel_groups_users`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_groups_users` (
   `group_id` int(11) NOT NULL COMMENT 'group id',
   `user_id` int(11) NOT NULL COMMENT 'id of user',
@@ -491,14 +623,28 @@ CREATE TABLE `au_rel_groups_users` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user who did the update',
   PRIMARY KEY (`group_id`,`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_groups_users`
+--
 
+LOCK TABLES `au_rel_groups_users` WRITE;
+/*!40000 ALTER TABLE `au_rel_groups_users` DISABLE KEYS */;
+INSERT INTO `au_rel_groups_users` VALUES
+(3,264,1,'2024-09-10 10:34:34','2024-09-11 16:55:32',165),
+(3,265,1,'2024-09-10 10:34:34','2024-09-11 16:55:32',165),
+(3,268,1,'2024-09-10 10:34:34','2024-09-10 10:34:34',165);
+/*!40000 ALTER TABLE `au_rel_groups_users` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_ideas_comments
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_ideas_comments`
+--
 
 DROP TABLE IF EXISTS `au_rel_ideas_comments`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_ideas_comments` (
   `idea_id` int(11) NOT NULL COMMENT 'id of the idea',
   `comment_id` int(11) NOT NULL COMMENT 'id of the comment',
@@ -508,14 +654,24 @@ CREATE TABLE `au_rel_ideas_comments` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`idea_id`,`comment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_ideas_comments`
+--
 
+LOCK TABLES `au_rel_ideas_comments` WRITE;
+/*!40000 ALTER TABLE `au_rel_ideas_comments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_ideas_comments` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_ideas_media
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_ideas_media`
+--
 
 DROP TABLE IF EXISTS `au_rel_ideas_media`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_ideas_media` (
   `idea_id` int(11) NOT NULL,
   `media_id` int(11) NOT NULL,
@@ -524,14 +680,24 @@ CREATE TABLE `au_rel_ideas_media` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`idea_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_ideas_media`
+--
 
+LOCK TABLES `au_rel_ideas_media` WRITE;
+/*!40000 ALTER TABLE `au_rel_ideas_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_ideas_media` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_rooms_media
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_rooms_media`
+--
 
 DROP TABLE IF EXISTS `au_rel_rooms_media`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_rooms_media` (
   `room_id` int(11) NOT NULL COMMENT 'id of the room',
   `media_id` int(11) NOT NULL COMMENT 'id of the medium in media table',
@@ -542,14 +708,24 @@ CREATE TABLE `au_rel_rooms_media` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`room_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_rooms_media`
+--
 
+LOCK TABLES `au_rel_rooms_media` WRITE;
+/*!40000 ALTER TABLE `au_rel_rooms_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_rooms_media` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_rooms_users
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_rooms_users`
+--
 
 DROP TABLE IF EXISTS `au_rel_rooms_users`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_rooms_users` (
   `room_id` int(11) NOT NULL COMMENT 'id of the room',
   `user_id` int(11) NOT NULL COMMENT 'id of the user',
@@ -559,32 +735,35 @@ CREATE TABLE `au_rel_rooms_users` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of updater',
   PRIMARY KEY (`room_id`,`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_rel_rooms_users`
+--
 
 LOCK TABLES `au_rel_rooms_users` WRITE;
 /*!40000 ALTER TABLE `au_rel_rooms_users` DISABLE KEYS */;
-
-INSERT INTO `au_rel_rooms_users` (`room_id`, `user_id`, `status`, `created`, `last_update`, `updater_id`)
-VALUES
-	(106,165,1,'2024-07-21 11:02:07','2024-07-21 11:02:07',165),
-	(106,264,1,'2024-07-21 11:02:08','2024-07-21 11:02:08',165),
-	(106,265,1,'2024-07-21 11:02:07','2024-07-21 11:02:07',165),
-	(106,266,1,'2024-07-21 11:02:14','2024-07-21 11:02:14',165),
-	(106,267,1,'2024-07-21 11:02:11','2024-07-21 11:02:11',165),
-	(106,268,1,'2024-07-21 11:02:11','2024-07-21 11:02:11',165),
-	(106,269,1,'2024-07-21 11:02:13','2024-07-21 11:02:13',165),
-	(106,270,1,'2024-07-21 11:02:12','2024-07-21 11:02:12',165),
-	(108,264,1,'2024-07-18 16:13:21','2024-07-18 16:13:21',165),
-	(108,268,1,'2024-07-18 16:13:21','2024-07-18 16:13:21',165);
-
+INSERT INTO `au_rel_rooms_users` VALUES
+(106,165,1,'2024-07-21 11:02:07','2024-07-21 11:02:07',165),
+(106,264,1,'2024-07-21 11:02:08','2024-07-21 11:02:08',165),
+(106,265,1,'2024-07-21 11:02:07','2024-07-21 11:02:07',165),
+(106,266,1,'2024-07-21 11:02:14','2024-07-21 11:02:14',165),
+(106,267,1,'2024-07-21 11:02:11','2024-07-21 11:02:11',165),
+(106,268,1,'2024-07-21 11:02:11','2024-07-21 11:02:11',165),
+(106,269,1,'2024-07-21 11:02:13','2024-07-21 11:02:13',165),
+(106,270,1,'2024-07-21 11:02:12','2024-07-21 11:02:12',165),
+(108,264,1,'2024-07-18 16:13:21','2024-07-18 16:13:21',165),
+(108,268,1,'2024-07-18 16:13:21','2024-07-18 16:13:21',165);
 /*!40000 ALTER TABLE `au_rel_rooms_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_rel_topics_ideas
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_topics_ideas`
+--
 
 DROP TABLE IF EXISTS `au_rel_topics_ideas`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_topics_ideas` (
   `topic_id` int(11) NOT NULL COMMENT 'id of the topic',
   `idea_id` int(11) NOT NULL COMMENT 'id of the idea',
@@ -593,44 +772,47 @@ CREATE TABLE `au_rel_topics_ideas` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`topic_id`,`idea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_rel_topics_ideas`
+--
 
 LOCK TABLES `au_rel_topics_ideas` WRITE;
 /*!40000 ALTER TABLE `au_rel_topics_ideas` DISABLE KEYS */;
-
-INSERT INTO `au_rel_topics_ideas` (`topic_id`, `idea_id`, `last_update`, `created`, `updater_id`)
-VALUES
-	(468,251,'2024-06-24 14:17:04','2024-06-24 14:17:04',165),
-	(468,252,'2024-06-24 14:17:04','2024-06-24 14:17:04',165),
-	(469,253,'2024-06-24 14:16:42','2024-06-24 14:12:42',165),
-	(469,254,'2024-06-24 14:16:42','2024-06-24 14:16:42',165),
-	(469,255,'2024-06-24 14:16:42','2024-06-24 14:12:42',165),
-	(470,249,'2024-06-24 14:13:06','2024-06-24 14:13:06',165),
-	(470,250,'2024-06-24 14:13:06','2024-06-24 14:13:06',165),
-	(471,256,'2024-06-24 14:16:33','2024-06-24 14:16:33',165),
-	(471,257,'2024-06-24 14:16:33','2024-06-24 14:16:33',165),
-	(472,267,'2024-06-24 22:08:15','2024-06-24 22:08:15',165),
-	(472,268,'2024-06-24 22:08:15','2024-06-24 22:08:15',165),
-	(473,258,'2024-06-24 22:02:00','2024-06-24 22:02:00',165),
-	(473,259,'2024-06-24 22:02:00','2024-06-24 22:02:00',165),
-	(473,261,'2024-06-24 22:03:33','2024-06-24 22:03:33',165),
-	(473,262,'2024-06-24 22:03:33','2024-06-24 22:03:33',165),
-	(473,270,'2024-06-26 17:35:11','2024-06-26 17:35:11',165),
-	(474,263,'2024-06-24 22:35:46','2024-06-24 22:35:46',165),
-	(474,264,'2024-06-24 22:35:46','2024-06-24 22:35:46',165),
-	(474,271,'2024-06-26 17:34:49','2024-06-26 17:34:49',165),
-	(475,265,'2024-06-24 22:06:13','2024-06-24 22:06:13',165),
-	(475,266,'2024-06-24 22:06:13','2024-06-24 22:06:13',165),
-	(489,278,'2024-07-18 15:44:33','2024-07-18 15:44:33',165);
-
+INSERT INTO `au_rel_topics_ideas` VALUES
+(468,251,'2024-06-24 14:17:04','2024-06-24 14:17:04',165),
+(468,252,'2024-06-24 14:17:04','2024-06-24 14:17:04',165),
+(469,253,'2024-06-24 14:16:42','2024-06-24 14:12:42',165),
+(469,254,'2024-06-24 14:16:42','2024-06-24 14:16:42',165),
+(469,255,'2024-06-24 14:16:42','2024-06-24 14:12:42',165),
+(470,249,'2024-06-24 14:13:06','2024-06-24 14:13:06',165),
+(470,250,'2024-06-24 14:13:06','2024-06-24 14:13:06',165),
+(471,256,'2024-06-24 14:16:33','2024-06-24 14:16:33',165),
+(471,257,'2024-06-24 14:16:33','2024-06-24 14:16:33',165),
+(472,267,'2024-06-24 22:08:15','2024-06-24 22:08:15',165),
+(472,268,'2024-06-24 22:08:15','2024-06-24 22:08:15',165),
+(473,258,'2024-06-24 22:02:00','2024-06-24 22:02:00',165),
+(473,259,'2024-06-24 22:02:00','2024-06-24 22:02:00',165),
+(473,261,'2024-06-24 22:03:33','2024-06-24 22:03:33',165),
+(473,262,'2024-06-24 22:03:33','2024-06-24 22:03:33',165),
+(473,270,'2024-06-26 17:35:11','2024-06-26 17:35:11',165),
+(474,263,'2024-06-24 22:35:46','2024-06-24 22:35:46',165),
+(474,264,'2024-06-24 22:35:46','2024-06-24 22:35:46',165),
+(474,271,'2024-06-26 17:34:49','2024-06-26 17:34:49',165),
+(475,265,'2024-06-24 22:06:13','2024-06-24 22:06:13',165),
+(475,266,'2024-06-24 22:06:13','2024-06-24 22:06:13',165),
+(489,278,'2024-07-18 15:44:33','2024-07-18 15:44:33',165);
 /*!40000 ALTER TABLE `au_rel_topics_ideas` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_rel_topics_media
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_topics_media`
+--
 
 DROP TABLE IF EXISTS `au_rel_topics_media`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_topics_media` (
   `topic_id` int(11) NOT NULL COMMENT 'id of the topic',
   `media_id` int(11) NOT NULL COMMENT 'id of the media in media table',
@@ -640,14 +822,24 @@ CREATE TABLE `au_rel_topics_media` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`topic_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_topics_media`
+--
 
+LOCK TABLES `au_rel_topics_media` WRITE;
+/*!40000 ALTER TABLE `au_rel_topics_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_topics_media` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_user_user
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_user_user`
+--
 
 DROP TABLE IF EXISTS `au_rel_user_user`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_user_user` (
   `user_id1` int(11) NOT NULL COMMENT 'id of first user',
   `user_id2` int(11) NOT NULL COMMENT 'id of second user',
@@ -658,14 +850,24 @@ CREATE TABLE `au_rel_user_user` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'if of user who did the update',
   PRIMARY KEY (`user_id1`,`user_id2`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_user_user`
+--
 
+LOCK TABLES `au_rel_user_user` WRITE;
+/*!40000 ALTER TABLE `au_rel_user_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_user_user` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_users_media
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_users_media`
+--
 
 DROP TABLE IF EXISTS `au_rel_users_media`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_users_media` (
   `user_id` int(11) NOT NULL COMMENT 'id of the user',
   `media_id` int(11) NOT NULL COMMENT 'id of the media in the media table',
@@ -675,14 +877,24 @@ CREATE TABLE `au_rel_users_media` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`user_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_users_media`
+--
 
+LOCK TABLES `au_rel_users_media` WRITE;
+/*!40000 ALTER TABLE `au_rel_users_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_users_media` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rel_users_triggers
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rel_users_triggers`
+--
 
 DROP TABLE IF EXISTS `au_rel_users_triggers`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rel_users_triggers` (
   `user_id` int(11) NOT NULL COMMENT 'id of the user',
   `trigger_id` int(11) NOT NULL COMMENT 'id of the trigger',
@@ -692,14 +904,24 @@ CREATE TABLE `au_rel_users_triggers` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   PRIMARY KEY (`user_id`,`trigger_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_rel_users_triggers`
+--
 
+LOCK TABLES `au_rel_users_triggers` WRITE;
+/*!40000 ALTER TABLE `au_rel_users_triggers` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_rel_users_triggers` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_reported
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_reported`
+--
 
 DROP TABLE IF EXISTS `au_reported`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_reported` (
   `user_id` int(11) NOT NULL COMMENT 'id of the reporting user',
   `type` int(11) NOT NULL COMMENT 'type of reported object 0=idea, 1=comment, 2=user',
@@ -711,24 +933,27 @@ CREATE TABLE `au_reported` (
   `internal_info` text DEFAULT NULL COMMENT 'internal notes on this reporting',
   PRIMARY KEY (`user_id`,`object_id`,`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_reported`
+--
 
 LOCK TABLES `au_reported` WRITE;
 /*!40000 ALTER TABLE `au_reported` DISABLE KEYS */;
-
-INSERT INTO `au_reported` (`user_id`, `type`, `object_id`, `status`, `created`, `last_update`, `reason`, `internal_info`)
-VALUES
-	(4,0,3,0,'2023-06-03 07:04:27','2023-06-03 07:04:27','this idea is scandalous',NULL),
-	(4,0,5,0,'2023-06-03 07:13:36','2023-06-03 07:13:36','this idea is scandalous',NULL);
-
+INSERT INTO `au_reported` VALUES
+(4,0,3,0,'2023-06-03 07:04:27','2023-06-03 07:04:27','this idea is scandalous',NULL),
+(4,0,5,0,'2023-06-03 07:13:36','2023-06-03 07:13:36','this idea is scandalous',NULL);
 /*!40000 ALTER TABLE `au_reported` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_roles
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_roles`
+--
 
 DROP TABLE IF EXISTS `au_roles`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_roles` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` int(11) DEFAULT NULL COMMENT 'name of role',
@@ -743,14 +968,24 @@ CREATE TABLE `au_roles` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_roles`
+--
 
+LOCK TABLES `au_roles` WRITE;
+/*!40000 ALTER TABLE `au_roles` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_roles` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_rooms
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_rooms`
+--
 
 DROP TABLE IF EXISTS `au_rooms`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_rooms` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'dataset id',
   `room_name` varchar(1024) DEFAULT NULL COMMENT 'Name of the room',
@@ -766,24 +1001,27 @@ CREATE TABLE `au_rooms` (
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set, user needs access code to access room',
   `internal_info` text DEFAULT NULL COMMENT 'internal info and notes on this room',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=107 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_rooms`
+--
 
 LOCK TABLES `au_rooms` WRITE;
 /*!40000 ALTER TABLE `au_rooms` DISABLE KEYS */;
-
-INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`)
-VALUES
-	(106,'The Innovation Hub','DI:6:0','DI:6:0',1,1,10,'2024-06-24 21:48:04','2024-07-25 16:43:46',165,'02a9374ae856c01ebb647c3b7570312d','','');
-
+INSERT INTO `au_rooms` VALUES
+(106,'The Innovation Hub','DI:6:0','DI:6:0',1,1,10,'2024-06-24 21:48:04','2024-07-25 16:43:46',165,'02a9374ae856c01ebb647c3b7570312d','','');
 /*!40000 ALTER TABLE `au_rooms` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_services
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_services`
+--
 
 DROP TABLE IF EXISTS `au_services`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_services` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of the service',
@@ -809,14 +1047,24 @@ CREATE TABLE `au_services` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash_id of the service',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_services`
+--
 
+LOCK TABLES `au_services` WRITE;
+/*!40000 ALTER TABLE `au_services` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_services` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_system_current_state
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_system_current_state`
+--
 
 DROP TABLE IF EXISTS `au_system_current_state`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_system_current_state` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `online_mode` tinyint(1) DEFAULT NULL COMMENT '0=off, 1=on, 2=off (weekend) 3=off (vacation) 4=off (holiday)',
@@ -826,24 +1074,27 @@ CREATE TABLE `au_system_current_state` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_system_current_state`
+--
 
 LOCK TABLES `au_system_current_state` WRITE;
 /*!40000 ALTER TABLE `au_system_current_state` DISABLE KEYS */;
-
-INSERT INTO `au_system_current_state` (`id`, `online_mode`, `revert_to_on_active`, `revert_to_on_date`, `created`, `last_update`, `updater_id`)
-VALUES
-	(1,1,0,'2024-09-09 08:00:00',NULL,'2024-09-04 12:08:43',0);
-
+INSERT INTO `au_system_current_state` VALUES
+(1,1,0,'2024-09-09 08:00:00',NULL,'2024-09-12 17:00:07',266);
 /*!40000 ALTER TABLE `au_system_current_state` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_system_global_config
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_system_global_config`
+--
 
 DROP TABLE IF EXISTS `au_system_global_config`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_system_global_config` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of organisation',
@@ -870,24 +1121,27 @@ CREATE TABLE `au_system_global_config` (
   `custom_field1_name` text DEFAULT NULL COMMENT 'Name custom field 1',
   `custom_field2_name` text DEFAULT NULL COMMENT 'Name custom field 2',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_system_global_config`
+--
 
 LOCK TABLES `au_system_global_config` WRITE;
 /*!40000 ALTER TABLE `au_system_global_config` DISABLE KEYS */;
-
-INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`, `enable_oauth`, `custom_field1_name`, `custom_field2_name`)
-VALUES
-	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465',NULL,0,NULL,1,0,NULL,NULL);
-
+INSERT INTO `au_system_global_config` VALUES
+(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,'info@aula.de','2024-09-12 17:00:07',266,NULL,1,0,NULL,NULL);
 /*!40000 ALTER TABLE `au_system_global_config` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_systemlog
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_systemlog`
+--
 
 DROP TABLE IF EXISTS `au_systemlog`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_systemlog` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `type` int(11) DEFAULT NULL COMMENT '0=standard, 1=warning, 2=error 3=nuke error',
@@ -898,1478 +1152,2347 @@ CREATE TABLE `au_systemlog` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of this entry',
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11487 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_systemlog`
+--
 
 LOCK TABLES `au_systemlog` WRITE;
 /*!40000 ALTER TABLE `au_systemlog` DISABLE KEYS */;
-
-INSERT INTO `au_systemlog` (`id`, `type`, `message`, `usergroup`, `url`, `created`, `last_update`, `updater_id`)
-VALUES
-	(9166,0,'Edited user 84 by 0',0,'','2024-06-18 13:15:02','2024-06-18 13:15:02',0),
-	(9167,0,'Edited user 204 by 0',0,'','2024-06-18 13:16:26','2024-06-18 13:16:26',0),
-	(9168,0,'Added new room (#104) Default Class',0,'','2024-06-18 13:20:07','2024-06-18 13:20:07',0),
-	(9169,0,'Added new idea (#246) Some Wild Idea',0,'','2024-06-18 13:22:48','2024-06-18 13:22:48',0),
-	(9170,0,'Edited user 165 by 0',0,'','2024-06-18 13:36:08','2024-06-18 13:36:08',0),
-	(9171,0,'Successful login user 165',0,'','2024-06-18 15:31:25','2024-06-18 15:31:25',0),
-	(9172,0,'Added new topic (#465) First Box',0,'','2024-06-19 17:42:56','2024-06-19 17:42:56',0),
-	(9173,0,'Added new topic (#466) Second Box',0,'','2024-06-20 12:50:24','2024-06-20 12:50:24',0),
-	(9174,0,'Edited topic (#) Second Box',0,'','2024-06-20 20:00:05','2024-06-20 20:00:05',0),
-	(9175,0,'Added new topic (#467) Second Box',0,'','2024-06-20 20:00:56','2024-06-20 20:00:56',0),
-	(9176,0,'Topic deleted, id=467 by 0',0,'','2024-06-20 20:04:39','2024-06-20 20:04:39',0),
-	(9177,0,'Topic deleted, id=466 by 0',0,'','2024-06-20 20:04:58','2024-06-20 20:04:58',0),
-	(9178,0,'Added new topic (#468) Box on Approval Phase',0,'','2024-06-20 20:06:33','2024-06-20 20:06:33',0),
-	(9179,0,'Edited topic (#) First Box',0,'','2024-06-21 13:46:53','2024-06-21 13:46:53',0),
-	(9180,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-21 13:47:09','2024-06-21 13:47:09',0),
-	(9181,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-21 13:48:13','2024-06-21 13:48:13',0),
-	(9182,0,'Successful login user 165',0,'','2024-06-22 14:24:47','2024-06-22 14:24:47',0),
-	(9183,0,'Edited topic (#) First Box',0,'','2024-06-22 19:29:34','2024-06-22 19:29:34',0),
-	(9184,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-22 19:29:58','2024-06-22 19:29:58',0),
-	(9185,0,'Added new user 262',0,'','2024-06-22 20:49:34','2024-06-22 20:49:34',0),
-	(9186,0,'User delegation(s) deleted with id 262 for topic 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
-	(9187,0,'User delegation(s) deleted with id 262 for topic 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
-	(9188,0,'User deleted with id 262 by 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
-	(9189,0,'Added new room (#105) Test Room',0,'','2024-06-22 20:50:03','2024-06-22 20:50:03',0),
-	(9190,0,'Room deleted with id 105 by 0',0,'','2024-06-22 20:50:06','2024-06-22 20:50:06',0),
-	(9191,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-22 21:17:17','2024-06-22 21:17:17',0),
-	(9192,0,'Added new text (#6) creator: 0',0,'','2024-06-22 21:41:02','2024-06-22 21:41:02',0),
-	(9193,0,'Consent values updated by value -1',0,'','2024-06-22 21:43:31','2024-06-22 21:43:31',0),
-	(9194,0,'Text deleted, id = 6 by 0',0,'','2024-06-22 21:43:31','2024-06-22 21:43:31',0),
-	(9195,0,'Added new text (#7) creator: 0',0,'','2024-06-22 21:43:55','2024-06-22 21:43:55',0),
-	(9196,0,'Consent values updated by value -1',0,'','2024-06-22 21:44:00','2024-06-22 21:44:00',0),
-	(9197,0,'Text deleted, id = 7 by 0',0,'','2024-06-22 21:44:00','2024-06-22 21:44:00',0),
-	(9198,0,'Added new user 263',0,'','2024-06-22 21:53:33','2024-06-22 21:53:33',0),
-	(9199,0,'User delegation(s) deleted with id 263 for topic 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
-	(9200,0,'User delegation(s) deleted with id 263 for topic 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
-	(9201,0,'User deleted with id 263 by 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
-	(9202,0,'Added new idea (#247) test idea',0,'','2024-06-22 22:06:37','2024-06-22 22:06:37',0),
-	(9203,0,'Idea deleted, id=247 by 0',0,'','2024-06-22 22:06:47','2024-06-22 22:06:47',0),
-	(9204,0,'Edited topic (#468) Box on Approval Phase',0,'','2024-06-22 22:13:42','2024-06-22 22:13:42',0),
-	(9205,0,'Added new topic (#469) Box on Voting phase',0,'','2024-06-22 22:19:52','2024-06-22 22:19:52',0),
-	(9206,0,'Edited topic (#465) First Box',0,'','2024-06-22 22:22:30','2024-06-22 22:22:30',0),
-	(9207,0,'Topic deleted, id=465 by 0',0,'','2024-06-22 22:24:03','2024-06-22 22:24:03',0),
-	(9208,0,'Added new text (#8) creator: 0',0,'','2024-06-22 22:30:30','2024-06-22 22:30:30',0),
-	(9209,0,'Added new topic (#470) Box on Discussion Phase',0,'','2024-06-22 22:39:57','2024-06-22 22:39:57',0),
-	(9210,0,'Edited topic (#468) Box on Approval Phase',0,'','2024-06-22 22:40:05','2024-06-22 22:40:05',0),
-	(9211,0,'Edited topic (#469) Box on Voting phase',0,'','2024-06-22 22:40:11','2024-06-22 22:40:11',0),
-	(9212,0,'Added new topic (#471) Box on Results Phase',0,'','2024-06-22 22:40:33','2024-06-22 22:40:33',0),
-	(9213,0,'Added new text (#9) creator: 0',0,'','2024-06-23 12:27:27','2024-06-23 12:27:27',0),
-	(9214,0,'Consent values updated by value 1',0,'','2024-06-23 12:27:27','2024-06-23 12:27:27',0),
-	(9215,0,'Added new text (#10) creator: 0',0,'','2024-06-23 12:30:58','2024-06-23 12:30:58',0),
-	(9216,0,'Added consent for user 165 for text 9',0,'','2024-06-23 12:45:18','2024-06-23 12:45:18',0),
-	(9217,0,'Added new text (#11) creator: 0',0,'','2024-06-23 12:47:07','2024-06-23 12:47:07',0),
-	(9218,0,'Consent values updated by value 1',0,'','2024-06-23 12:47:07','2024-06-23 12:47:07',0),
-	(9219,0,'Added consent for user 165 for text 11',0,'','2024-06-23 12:47:20','2024-06-23 12:47:20',0),
-	(9220,0,'Edited idea 246 by 165',0,'','2024-06-24 10:04:44','2024-06-24 10:04:44',0),
-	(9221,0,'Added new idea (#248) Some wild idea to work with',0,'','2024-06-24 10:12:42','2024-06-24 10:12:42',0),
-	(9222,0,'Added new idea (#249) There is a need for a discussion idea for testing purposes.',0,'','2024-06-24 10:13:23','2024-06-24 10:13:23',0),
-	(9223,0,'Added new idea (#250) Is there anything to be discussed here? I don\'t think so. We should all agree.',0,'','2024-06-24 10:14:10','2024-06-24 10:14:10',0),
-	(9224,0,'Added new idea (#251) This idea is a mock up for the approval phase.',0,'','2024-06-24 10:18:24','2024-06-24 10:18:24',0),
-	(9225,0,'Added new idea (#252) Unfortunately, this was not approved',0,'','2024-06-24 10:19:13','2024-06-24 10:19:13',0),
-	(9226,0,'Added new idea (#253) Vote for this idea!',0,'','2024-06-24 10:19:34','2024-06-24 10:19:34',0),
-	(9227,0,'Added new idea (#254) We don\'t support nor reject this idea.',0,'','2024-06-24 10:20:13','2024-06-24 10:20:13',0),
-	(9228,0,'Added new idea (#255) People don\'t want this idea to be the selected one.',0,'','2024-06-24 10:21:17','2024-06-24 10:21:17',0),
-	(9229,0,'Added new idea (#256) This is a winner idea on the results phase.',0,'','2024-06-24 10:21:50','2024-06-24 10:21:50',0),
-	(9230,0,'Added new idea (#257) This idea was not approved by the voters.',0,'','2024-06-24 10:22:20','2024-06-24 10:22:20',0),
-	(9231,0,'Idea  257 incremented likes',0,'','2024-06-24 13:29:35','2024-06-24 13:29:35',0),
-	(9232,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:29:37','2024-06-24 13:29:37',0),
-	(9233,0,'Idea  257 incremented likes',0,'','2024-06-24 13:29:38','2024-06-24 13:29:38',0),
-	(9234,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:29:38','2024-06-24 13:29:38',0),
-	(9235,0,'Idea  257 incremented likes',0,'','2024-06-24 13:36:28','2024-06-24 13:36:28',0),
-	(9236,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:36:29','2024-06-24 13:36:29',0),
-	(9237,0,'Added new comment (#12) user: 165',0,'','2024-06-24 13:40:13','2024-06-24 13:40:13',0),
-	(9238,0,'Idea  246 incremented likes',0,'','2024-06-24 13:40:34','2024-06-24 13:40:34',0),
-	(9239,0,'Idea  246 decrementing likes',0,'','2024-06-24 13:51:03','2024-06-24 13:51:03',0),
-	(9240,0,'Added idea 255 to topic 469',0,'','2024-06-24 14:12:42','2024-06-24 14:12:42',0),
-	(9241,0,'Added idea 253 to topic 469',0,'','2024-06-24 14:12:42','2024-06-24 14:12:42',0),
-	(9242,0,'Added idea 249 to topic 470',0,'','2024-06-24 14:13:06','2024-06-24 14:13:06',0),
-	(9243,0,'Added idea 250 to topic 470',0,'','2024-06-24 14:13:06','2024-06-24 14:13:06',0),
-	(9244,0,'Added idea 257 to topic 471',0,'','2024-06-24 14:16:33','2024-06-24 14:16:33',0),
-	(9245,0,'Added idea 256 to topic 471',0,'','2024-06-24 14:16:33','2024-06-24 14:16:33',0),
-	(9246,0,'Added idea 253 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
-	(9247,0,'Added idea 255 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
-	(9248,0,'Added idea 254 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
-	(9249,0,'Added idea 251 to topic 468',0,'','2024-06-24 14:17:04','2024-06-24 14:17:04',0),
-	(9250,0,'Added idea 252 to topic 468',0,'','2024-06-24 14:17:04','2024-06-24 14:17:04',0),
-	(9251,0,'Added new comment (#0) user: 165',0,'','2024-06-24 14:58:16','2024-06-24 14:58:16',0),
-	(9252,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:17','2024-06-24 16:00:17',0),
-	(9253,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:17','2024-06-24 16:00:17',0),
-	(9254,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
-	(9255,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
-	(9256,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
-	(9257,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
-	(9258,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
-	(9259,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
-	(9260,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
-	(9261,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
-	(9262,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
-	(9263,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9264,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9265,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9266,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9267,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9268,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
-	(9269,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
-	(9270,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
-	(9271,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
-	(9272,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
-	(9273,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
-	(9274,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
-	(9275,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
-	(9276,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
-	(9277,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
-	(9278,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
-	(9279,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
-	(9280,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
-	(9281,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
-	(9282,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
-	(9283,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
-	(9284,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
-	(9285,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
-	(9286,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
-	(9287,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
-	(9288,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
-	(9289,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
-	(9290,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9291,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9292,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9293,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9294,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9295,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
-	(9296,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
-	(9297,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
-	(9298,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
-	(9299,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9300,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9301,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9302,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9303,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9304,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
-	(9305,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
-	(9306,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
-	(9307,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
-	(9308,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
-	(9309,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
-	(9310,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
-	(9311,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
-	(9312,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
-	(9313,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
-	(9314,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
-	(9315,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
-	(9316,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
-	(9317,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
-	(9318,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
-	(9319,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
-	(9320,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
-	(9321,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
-	(9322,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
-	(9323,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
-	(9324,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
-	(9325,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
-	(9326,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
-	(9327,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
-	(9328,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
-	(9329,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
-	(9330,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
-	(9331,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
-	(9332,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
-	(9333,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
-	(9334,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
-	(9335,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
-	(9336,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
-	(9337,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
-	(9338,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
-	(9339,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
-	(9340,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
-	(9341,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9342,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9343,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9344,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9345,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9346,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
-	(9347,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
-	(9348,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
-	(9349,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
-	(9350,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
-	(9351,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
-	(9352,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
-	(9353,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
-	(9354,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
-	(9355,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
-	(9356,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
-	(9357,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
-	(9358,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
-	(9359,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
-	(9360,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
-	(9361,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
-	(9362,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
-	(9363,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
-	(9364,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
-	(9365,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
-	(9366,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
-	(9367,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
-	(9368,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
-	(9369,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
-	(9370,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
-	(9371,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
-	(9372,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
-	(9373,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
-	(9374,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9375,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9376,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9377,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9378,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9379,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
-	(9380,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
-	(9381,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
-	(9382,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
-	(9383,0,'Topic deleted, id=470 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
-	(9384,0,'Topic deleted, id=468 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
-	(9385,0,'Topic deleted, id=471 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
-	(9386,0,'Topic deleted, id=469 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
-	(9387,0,'Idea deleted, id=252 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9388,0,'Idea deleted, id=255 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9389,0,'Idea deleted, id=256 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9390,0,'Idea deleted, id=246 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9391,0,'Idea deleted, id=250 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9392,0,'Idea deleted, id=257 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9393,0,'Idea deleted, id=249 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9394,0,'Idea deleted, id=254 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9395,0,'Idea deleted, id=253 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9396,0,'Idea deleted, id=251 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9397,0,'Idea deleted, id=248 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
-	(9398,0,'Room deleted with id 104 by 0',0,'','2024-06-24 21:47:47','2024-06-24 21:47:47',0),
-	(9399,0,'Added new room (#106) The Innovation Hub',0,'','2024-06-24 21:48:04','2024-06-24 21:48:04',0),
-	(9400,0,'Added new topic (#472) Green Innovations Vault',0,'','2024-06-24 21:51:34','2024-06-24 21:51:34',0),
-	(9401,0,'Added new topic (#473) Tech Frontier',0,'','2024-06-24 21:52:11','2024-06-24 21:52:11',0),
-	(9402,0,'Added new topic (#474) Creative Canvas',0,'','2024-06-24 21:53:20','2024-06-24 21:53:20',0),
-	(9403,0,'Added new topic (#475) Service Heart',0,'','2024-06-24 21:54:04','2024-06-24 21:54:04',0),
-	(9404,0,'Added new idea (#258) Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',0,'','2024-06-24 22:00:54','2024-06-24 22:00:54',0),
-	(9405,0,'Added new idea (#259) Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',0,'','2024-06-24 22:01:35','2024-06-24 22:01:35',0),
-	(9406,0,'Added new idea (#260) Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',0,'','2024-06-24 22:01:53','2024-06-24 22:01:53',0),
-	(9407,0,'Added idea 258 to topic 473',0,'','2024-06-24 22:02:00','2024-06-24 22:02:00',0),
-	(9408,0,'Added idea 259 to topic 473',0,'','2024-06-24 22:02:00','2024-06-24 22:02:00',0),
-	(9409,0,'Added new idea (#261) Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',0,'','2024-06-24 22:02:38','2024-06-24 22:02:38',0),
-	(9410,0,'Added new idea (#262) Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,'','2024-06-24 22:02:54','2024-06-24 22:02:54',0),
-	(9411,0,'Added idea 262 to topic 474',0,'','2024-06-24 22:03:23','2024-06-24 22:03:23',0),
-	(9412,0,'Added idea 261 to topic 474',0,'','2024-06-24 22:03:23','2024-06-24 22:03:23',0),
-	(9413,0,'Added idea 262 to topic 473',0,'','2024-06-24 22:03:33','2024-06-24 22:03:33',0),
-	(9414,0,'Added idea 261 to topic 473',0,'','2024-06-24 22:03:33','2024-06-24 22:03:33',0),
-	(9415,0,'Added new idea (#263) Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,'','2024-06-24 22:04:12','2024-06-24 22:04:12',0),
-	(9416,0,'Added new idea (#264) Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,'','2024-06-24 22:04:28','2024-06-24 22:04:28',0),
-	(9417,0,'Added idea 264 to topic 474',0,'','2024-06-24 22:04:46','2024-06-24 22:04:46',0),
-	(9418,0,'Added idea 263 to topic 474',0,'','2024-06-24 22:04:46','2024-06-24 22:04:46',0),
-	(9419,0,'Added new idea (#265) Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',0,'','2024-06-24 22:05:21','2024-06-24 22:05:21',0),
-	(9420,0,'Added new idea (#266) Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,'','2024-06-24 22:05:52','2024-06-24 22:05:52',0),
-	(9421,0,'Added idea 266 to topic 475',0,'','2024-06-24 22:06:13','2024-06-24 22:06:13',0),
-	(9422,0,'Added idea 265 to topic 475',0,'','2024-06-24 22:06:13','2024-06-24 22:06:13',0),
-	(9423,0,'Idea deleted, id=258 by 0',0,'','2024-06-24 22:07:15','2024-06-24 22:07:15',0),
-	(9424,0,'Idea deleted, id=259 by 0',0,'','2024-06-24 22:07:15','2024-06-24 22:07:15',0),
-	(9425,0,'Added new idea (#267) Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',0,'','2024-06-24 22:07:32','2024-06-24 22:07:32',0),
-	(9426,0,'Added new idea (#268) Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',0,'','2024-06-24 22:07:47','2024-06-24 22:07:47',0),
-	(9427,0,'Added idea 268 to topic 472',0,'','2024-06-24 22:08:15','2024-06-24 22:08:15',0),
-	(9428,0,'Added idea 267 to topic 472',0,'','2024-06-24 22:08:15','2024-06-24 22:08:15',0),
-	(9429,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:09:28','2024-06-24 22:09:28',0),
-	(9430,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:19:47','2024-06-24 22:19:47',0),
-	(9431,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:20:58','2024-06-24 22:20:58',0),
-	(9432,0,'Idea  267 incremented likes',0,'','2024-06-24 22:20:59','2024-06-24 22:20:59',0),
-	(9433,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:21:53','2024-06-24 22:21:53',0),
-	(9434,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:22:59','2024-06-24 22:22:59',0),
-	(9435,0,'Idea  268 incremented likes',0,'','2024-06-24 22:23:03','2024-06-24 22:23:03',0),
-	(9436,0,'Comment  18 incremented likes',0,'','2024-06-24 22:23:03','2024-06-24 22:23:03',0),
-	(9437,0,'Idea  268 decrementing likes',0,'','2024-06-24 22:23:05','2024-06-24 22:23:05',0),
-	(9438,0,'Idea  268 incremented likes',0,'','2024-06-24 22:23:06','2024-06-24 22:23:06',0),
-	(9439,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:23:20','2024-06-24 22:23:20',0),
-	(9440,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:24:51','2024-06-24 22:24:51',0),
-	(9441,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:26:07','2024-06-24 22:26:07',0),
-	(9442,0,'Idea  261 incremented likes',0,'','2024-06-24 22:26:09','2024-06-24 22:26:09',0),
-	(9443,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:12','2024-06-24 22:28:12',0),
-	(9444,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:25','2024-06-24 22:28:25',0),
-	(9445,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:34','2024-06-24 22:28:34',0),
-	(9446,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:29:30','2024-06-24 22:29:30',0),
-	(9447,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:29:46','2024-06-24 22:29:46',0),
-	(9448,0,'Idea  265 incremented likes',0,'','2024-06-24 22:29:47','2024-06-24 22:29:47',0),
-	(9449,0,'Comment  25 incremented likes',0,'','2024-06-24 22:29:49','2024-06-24 22:29:49',0),
-	(9450,0,'Added idea 263 to topic 474',0,'','2024-06-24 22:35:46','2024-06-24 22:35:46',0),
-	(9451,0,'Added idea 264 to topic 474',0,'','2024-06-24 22:35:46','2024-06-24 22:35:46',0),
-	(9452,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:39:05','2024-06-24 22:39:05',0),
-	(9453,0,'Comment  27 incremented likes',0,'','2024-06-24 22:39:20','2024-06-24 22:39:20',0),
-	(9454,0,'Edited idea 266 by 165',0,'','2024-06-25 00:51:18','2024-06-25 00:51:18',0),
-	(9455,0,'Edited idea 266 by 165',0,'','2024-06-25 00:52:09','2024-06-25 00:52:09',0),
-	(9456,0,'Edited idea 265 by 165',0,'','2024-06-25 00:53:34','2024-06-25 00:53:34',0),
-	(9457,0,'Edited idea 264 by 165',0,'','2024-06-25 00:55:37','2024-06-25 00:55:37',0),
-	(9458,0,'Edited idea 263 by 165',0,'','2024-06-25 00:56:25','2024-06-25 00:56:25',0),
-	(9459,0,'Edited idea 261 by 165',0,'','2024-06-25 00:58:44','2024-06-25 00:58:44',0),
-	(9460,0,'Edited idea 262 by 165',0,'','2024-06-25 00:59:49','2024-06-25 00:59:49',0),
-	(9461,0,'Idea  263 number of votes given set to 1',0,'','2024-06-25 01:16:21','2024-06-25 01:16:21',0),
-	(9462,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-25 01:16:21','2024-06-25 01:16:21',0),
-	(9463,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
-	(9464,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
-	(9465,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
-	(9466,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
-	(9467,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
-	(9468,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
-	(9469,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
-	(9470,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
-	(9471,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
-	(9472,0,'Idea  263 votes set to 0',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
-	(9473,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
-	(9474,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
-	(9475,0,'Added new idea (#269) The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,'','2024-06-26 17:26:59','2024-06-26 17:26:59',0),
-	(9476,0,'Added new idea (#270) The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,'','2024-06-26 17:32:49','2024-06-26 17:32:49',0),
-	(9477,0,'Added new idea (#271) This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,'','2024-06-26 17:34:33','2024-06-26 17:34:33',0),
-	(9478,0,'Added idea 271 to topic 474',0,'','2024-06-26 17:34:49','2024-06-26 17:34:49',0),
-	(9479,0,'Added idea 270 to topic 473',0,'','2024-06-26 17:35:11','2024-06-26 17:35:11',0),
-	(9480,0,'Idea  271 number of votes given set to 1',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
-	(9481,0,'Idea (#271) added Vote - value: -1 by 165',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
-	(9482,0,'Added new idea (#272) Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,'','2024-06-26 18:18:58','2024-06-26 18:18:58',0),
-	(9483,0,'Idea  260 incremented likes',0,'','2024-06-26 18:19:02','2024-06-26 18:19:02',0),
-	(9484,0,'Edited idea 272 by 165',0,'','2024-06-30 11:24:24','2024-06-30 11:24:24',0),
-	(9485,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:09','2024-06-30 11:25:09',0),
-	(9486,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:44','2024-06-30 11:25:44',0),
-	(9487,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:53','2024-06-30 11:25:53',0),
-	(9488,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:09','2024-06-30 11:26:09',0),
-	(9489,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:10','2024-06-30 11:26:10',0),
-	(9490,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:28','2024-06-30 11:26:28',0),
-	(9491,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:35','2024-06-30 11:26:35',0),
-	(9492,0,'Edited idea 272 by 165',0,'','2024-06-30 12:16:25','2024-06-30 12:16:25',0),
-	(9493,0,'Edited idea 272 by 165',0,'','2024-06-30 12:16:45','2024-06-30 12:16:45',0),
-	(9494,0,'Edited idea 272 by 165',0,'','2024-06-30 12:18:36','2024-06-30 12:18:36',0),
-	(9495,0,'Edited idea 272 by 165',0,'','2024-06-30 12:18:43','2024-06-30 12:18:43',0),
-	(9496,0,'Edited idea 272 by 165',0,'','2024-06-30 12:19:20','2024-06-30 12:19:20',0),
-	(9497,0,'Edited idea 272 by 165',0,'','2024-06-30 12:19:27','2024-06-30 12:19:27',0),
-	(9498,0,'Edited idea 272 by 165',0,'','2024-06-30 12:20:17','2024-06-30 12:20:17',0),
-	(9499,0,'Edited idea 272 by 165',0,'','2024-06-30 12:20:26','2024-06-30 12:20:26',0),
-	(9500,0,'Edited idea 263 by 165',0,'','2024-06-30 12:21:05','2024-06-30 12:21:05',0),
-	(9501,0,'Edited idea 263 by 165',0,'','2024-06-30 12:21:11','2024-06-30 12:21:11',0),
-	(9502,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:29:58','2024-06-30 12:29:58',0),
-	(9503,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:30:09','2024-06-30 12:30:09',0),
-	(9504,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:30:16','2024-06-30 12:30:16',0),
-	(9505,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:30:34','2024-06-30 12:30:34',0),
-	(9506,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:30:39','2024-06-30 12:30:39',0),
-	(9507,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:31:07','2024-06-30 12:31:07',0),
-	(9508,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:31:12','2024-06-30 12:31:12',0),
-	(9509,0,'Edited idea 266 by 165',0,'','2024-06-30 12:36:15','2024-06-30 12:36:15',0),
-	(9510,0,'Edited idea 266 by 165',0,'','2024-06-30 12:36:20','2024-06-30 12:36:20',0),
-	(9511,0,'Edited idea 0 by 165',0,'','2024-06-30 12:37:43','2024-06-30 12:37:43',0),
-	(9512,0,'Edited idea 0 by 165',0,'','2024-06-30 12:48:58','2024-06-30 12:48:58',0),
-	(9513,0,'Added new idea (#273) testing',0,'','2024-06-30 12:51:49','2024-06-30 12:51:49',0),
-	(9514,0,'Idea deleted, id=273 by 0',0,'','2024-06-30 12:51:59','2024-06-30 12:51:59',0),
-	(9515,0,'Added new idea (#274) adsdads',0,'','2024-06-30 12:52:30','2024-06-30 12:52:30',0),
-	(9516,0,'Idea deleted, id=274 by 0',0,'','2024-06-30 12:52:41','2024-06-30 12:52:41',0),
-	(9517,0,'Added new idea (#275) sad',0,'','2024-06-30 12:55:30','2024-06-30 12:55:30',0),
-	(9518,0,'Idea deleted, id=275 by 0',0,'','2024-06-30 12:55:35','2024-06-30 12:55:35',0),
-	(9519,0,'Added new idea (#276) test',0,'','2024-06-30 13:00:19','2024-06-30 13:00:19',0),
-	(9520,0,'Edited idea 276 by 165',0,'','2024-06-30 13:00:27','2024-06-30 13:00:27',0),
-	(9521,0,'Idea deleted, id=276 by 0',0,'','2024-06-30 13:00:40','2024-06-30 13:00:40',0),
-	(9522,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:03:21','2024-06-30 13:03:21',0),
-	(9523,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:03:51','2024-06-30 13:03:51',0),
-	(9524,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:08:00','2024-06-30 13:08:00',0),
-	(9525,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:11:42','2024-06-30 13:11:42',0),
-	(9526,0,'Added new text (#12) creator: 0',0,'','2024-06-30 13:14:10','2024-06-30 13:14:10',0),
-	(9527,0,'Consent values updated by value -1',0,'','2024-06-30 13:14:23','2024-06-30 13:14:23',0),
-	(9528,0,'Text deleted, id = 12 by 0',0,'','2024-06-30 13:14:23','2024-06-30 13:14:23',0),
-	(9529,0,'Added new topic (#476) New Box',0,'','2024-06-30 13:14:41','2024-06-30 13:14:41',0),
-	(9530,0,'Edited topic (#476) New Box.',0,'','2024-06-30 13:14:46','2024-06-30 13:14:46',0),
-	(9531,0,'Topic deleted, id=476 by 0',0,'','2024-06-30 13:14:50','2024-06-30 13:14:50',0),
-	(9532,0,'Successful login user 165',0,'','2024-07-01 08:12:36','2024-07-01 08:12:36',0),
-	(9533,1,'DB Error login user admin',0,'','2024-07-03 14:44:20','2024-07-03 14:44:20',0),
-	(9534,0,'Successful login user 165',0,'','2024-07-03 14:44:26','2024-07-03 14:44:26',0),
-	(9535,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
-	(9536,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
-	(9537,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
-	(9538,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
-	(9539,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
-	(9540,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
-	(9541,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
-	(9542,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
-	(9543,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
-	(9544,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
-	(9545,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:33','2024-07-03 15:02:33',0),
-	(9546,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-03 15:02:33','2024-07-03 15:02:33',0),
-	(9547,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9548,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9549,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9550,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9551,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9552,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
-	(9553,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
-	(9554,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
-	(9555,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
-	(9556,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9557,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9558,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9559,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9560,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9561,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
-	(9562,0,'Added new user 264',0,'','2024-07-03 16:31:19','2024-07-03 16:31:19',0),
-	(9563,0,'Added new user 265',0,'','2024-07-03 16:32:37','2024-07-03 16:32:37',0),
-	(9564,0,'Added new user 266',0,'','2024-07-03 16:33:24','2024-07-03 16:33:24',0),
-	(9565,0,'Added new user 267',0,'','2024-07-03 16:34:58','2024-07-03 16:34:58',0),
-	(9566,0,'Added new user 268',0,'','2024-07-03 16:35:38','2024-07-03 16:35:38',0),
-	(9567,0,'Added new user 269',0,'','2024-07-03 16:36:51','2024-07-03 16:36:51',0),
-	(9568,0,'Added new user 270',0,'','2024-07-03 16:37:53','2024-07-03 16:37:53',0),
-	(9569,0,'Added delegation for user 165 for topic 474',0,'','2024-07-10 10:28:47','2024-07-10 10:28:47',0),
-	(9570,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:20:26','2024-07-10 17:20:26',0),
-	(9571,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:24:56','2024-07-10 17:24:56',0),
-	(9572,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:24:58','2024-07-10 17:24:58',0),
-	(9573,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:21','2024-07-10 17:25:21',0),
-	(9574,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:21','2024-07-10 17:25:21',0),
-	(9575,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-10 17:25:30','2024-07-10 17:25:30',0),
-	(9576,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-10 17:25:30','2024-07-10 17:25:30',0),
-	(9577,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:41','2024-07-10 17:25:41',0),
-	(9578,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:41','2024-07-10 17:25:41',0),
-	(9579,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:41','2024-07-10 17:25:41',0),
-	(9580,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:41','2024-07-10 17:25:41',0),
-	(9581,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:26:57','2024-07-10 17:26:57',0),
-	(9582,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:26:57','2024-07-10 17:26:57',0),
-	(9583,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:26:57','2024-07-10 17:26:57',0),
-	(9584,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:26:57','2024-07-10 17:26:57',0),
-	(9585,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:51:49','2024-07-10 17:51:49',0),
-	(9586,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:51:49','2024-07-10 17:51:49',0),
-	(9587,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:51:50','2024-07-10 17:51:50',0),
-	(9588,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:51:50','2024-07-10 17:51:50',0),
-	(9589,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:52:42','2024-07-10 17:52:42',0),
-	(9590,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:52:42','2024-07-10 17:52:42',0),
-	(9591,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:53:06','2024-07-10 17:53:06',0),
-	(9592,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:53:06','2024-07-10 17:53:06',0),
-	(9593,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:53:06','2024-07-10 17:53:06',0),
-	(9594,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:53:06','2024-07-10 17:53:06',0),
-	(9595,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:54:05','2024-07-10 17:54:05',0),
-	(9596,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:54:05','2024-07-10 17:54:05',0),
-	(9597,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:54:05','2024-07-10 17:54:05',0),
-	(9598,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:54:05','2024-07-10 17:54:05',0),
-	(9599,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:02','2024-07-10 17:57:02',0),
-	(9600,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:02','2024-07-10 17:57:02',0),
-	(9601,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:02','2024-07-10 17:57:02',0),
-	(9602,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:03','2024-07-10 17:57:03',0),
-	(9603,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:09','2024-07-10 17:57:09',0),
-	(9604,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:09','2024-07-10 17:57:09',0),
-	(9605,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:09','2024-07-10 17:57:09',0),
-	(9606,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:09','2024-07-10 17:57:09',0),
-	(9607,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:11','2024-07-10 17:57:11',0),
-	(9608,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:11','2024-07-10 17:57:11',0),
-	(9609,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:11','2024-07-10 17:57:11',0),
-	(9610,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:11','2024-07-10 17:57:11',0),
-	(9611,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:05','2024-07-10 18:06:05',0),
-	(9612,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:05','2024-07-10 18:06:05',0),
-	(9613,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:05','2024-07-10 18:06:05',0),
-	(9614,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:05','2024-07-10 18:06:05',0),
-	(9615,0,'User delegation(s) deleted with id 165 for topic ',0,'','2024-07-10 18:06:24','2024-07-10 18:06:24',0),
-	(9616,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:29','2024-07-10 18:06:29',0),
-	(9617,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:29','2024-07-10 18:06:29',0),
-	(9618,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:29','2024-07-10 18:06:29',0),
-	(9619,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:29','2024-07-10 18:06:29',0),
-	(9620,0,'User delegation(s) deleted with id 165 for topic ',0,'','2024-07-10 18:06:34','2024-07-10 18:06:34',0),
-	(9621,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:39','2024-07-10 18:07:39',0),
-	(9622,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:39','2024-07-10 18:07:39',0),
-	(9623,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:39','2024-07-10 18:07:39',0),
-	(9624,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:39','2024-07-10 18:07:39',0),
-	(9625,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:07:41','2024-07-10 18:07:41',0),
-	(9626,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:47','2024-07-10 18:07:47',0),
-	(9627,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:47','2024-07-10 18:07:47',0),
-	(9628,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:47','2024-07-10 18:07:47',0),
-	(9629,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:47','2024-07-10 18:07:47',0),
-	(9630,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:08:38','2024-07-10 18:08:38',0),
-	(9631,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:08:38','2024-07-10 18:08:38',0),
-	(9632,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:08:41','2024-07-10 18:08:41',0),
-	(9633,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:08:56','2024-07-10 18:08:56',0),
-	(9634,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:09:24','2024-07-10 18:09:24',0),
-	(9635,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:09:24','2024-07-10 18:09:24',0),
-	(9636,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:09:24','2024-07-10 18:09:24',0),
-	(9637,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:09:24','2024-07-10 18:09:24',0),
-	(9638,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:12:33','2024-07-10 18:12:33',0),
-	(9639,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:12:33','2024-07-10 18:12:33',0),
-	(9640,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:14:55','2024-07-10 18:14:55',0),
-	(9641,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:14:57','2024-07-10 18:14:57',0),
-	(9642,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:19:44','2024-07-10 18:19:44',0),
-	(9643,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:19:58','2024-07-10 18:19:58',0),
-	(9644,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:01','2024-07-10 18:20:01',0),
-	(9645,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:01','2024-07-10 18:20:01',0),
-	(9646,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:01','2024-07-10 18:20:01',0),
-	(9647,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:01','2024-07-10 18:20:01',0),
-	(9648,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:05','2024-07-10 18:20:05',0),
-	(9649,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:22:59','2024-07-10 18:22:59',0),
-	(9650,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:22:59','2024-07-10 18:22:59',0),
-	(9651,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:03','2024-07-10 18:23:03',0),
-	(9652,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:03','2024-07-10 18:23:03',0),
-	(9653,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:06','2024-07-10 18:23:06',0),
-	(9654,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:06','2024-07-10 18:23:06',0),
-	(9655,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:06','2024-07-10 18:23:06',0),
-	(9656,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:06','2024-07-10 18:23:06',0),
-	(9657,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:24:35','2024-07-10 18:24:35',0),
-	(9658,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:24:35','2024-07-10 18:24:35',0),
-	(9659,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:24:35','2024-07-10 18:24:35',0),
-	(9660,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:24:35','2024-07-10 18:24:35',0),
-	(9661,0,'Added delegation for user 165 for topic 474',0,'','2024-07-10 18:25:00','2024-07-10 18:25:00',0),
-	(9662,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:05','2024-07-10 18:25:05',0),
-	(9663,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:40','2024-07-10 18:25:40',0),
-	(9664,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:25:44','2024-07-10 18:25:44',0),
-	(9665,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:44','2024-07-10 18:25:44',0),
-	(9666,0,'Added delegation for user 165 for topic 474',0,'','2024-07-10 18:25:50','2024-07-10 18:25:50',0),
-	(9667,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:50','2024-07-10 18:25:50',0),
-	(9668,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:25:54','2024-07-10 18:25:54',0),
-	(9669,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:54','2024-07-10 18:25:54',0),
-	(9670,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:27:41','2024-07-10 18:27:41',0),
-	(9671,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:27:41','2024-07-10 18:27:41',0),
-	(9672,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:29:46','2024-07-10 18:29:46',0),
-	(9673,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:29:46','2024-07-10 18:29:46',0),
-	(9674,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:32:04','2024-07-10 18:32:04',0),
-	(9675,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:32:04','2024-07-10 18:32:04',0),
-	(9676,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:32:04','2024-07-10 18:32:04',0),
-	(9677,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:32:04','2024-07-10 18:32:04',0),
-	(9678,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-11 09:13:16','2024-07-11 09:13:16',0),
-	(9679,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-11 09:13:16','2024-07-11 09:13:16',0),
-	(9680,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-11 09:13:18','2024-07-11 09:13:18',0),
-	(9681,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-11 09:13:18','2024-07-11 09:13:18',0),
-	(9682,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-11 09:13:18','2024-07-11 09:13:18',0),
-	(9683,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-11 09:13:18','2024-07-11 09:13:18',0),
-	(9684,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-11 09:13:20','2024-07-11 09:13:20',0),
-	(9685,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-11 09:13:20','2024-07-11 09:13:20',0),
-	(9686,0,'Successful login user 165',0,'','2024-07-13 10:55:58','2024-07-13 10:55:58',0),
-	(9687,1,'DB Error login user teste',0,'','2024-07-13 14:59:07','2024-07-13 14:59:07',0),
-	(9688,1,'DB Error login user teste',0,'','2024-07-13 15:03:39','2024-07-13 15:03:39',0),
-	(9689,1,'DB Error login user teste',0,'','2024-07-13 15:04:04','2024-07-13 15:04:04',0),
-	(9690,1,'DB Error login user s',0,'','2024-07-13 15:21:02','2024-07-13 15:21:02',0),
-	(9691,1,'DB Error login user s',0,'','2024-07-13 15:21:05','2024-07-13 15:21:05',0),
-	(9692,1,'DB Error login user s',0,'','2024-07-13 15:21:28','2024-07-13 15:21:28',0),
-	(9693,1,'DB Error login user ss',0,'','2024-07-13 15:21:53','2024-07-13 15:21:53',0),
-	(9694,1,'DB Error login user ss',0,'','2024-07-13 15:22:24','2024-07-13 15:22:24',0),
-	(9695,1,'DB Error login user ss',0,'','2024-07-13 15:22:28','2024-07-13 15:22:28',0),
-	(9696,1,'DB Error login user ss',0,'','2024-07-13 15:22:58','2024-07-13 15:22:58',0),
-	(9697,1,'DB Error login user ss',0,'','2024-07-13 15:23:40','2024-07-13 15:23:40',0),
-	(9698,1,'DB Error login user ss',0,'','2024-07-13 15:23:55','2024-07-13 15:23:55',0),
-	(9699,1,'DB Error login user ss',0,'','2024-07-13 15:24:06','2024-07-13 15:24:06',0),
-	(9700,1,'DB Error login user ss',0,'','2024-07-13 15:24:17','2024-07-13 15:24:17',0),
-	(9701,1,'DB Error login user ss',0,'','2024-07-13 15:24:22','2024-07-13 15:24:22',0),
-	(9702,1,'DB Error login user ss',0,'','2024-07-13 15:24:23','2024-07-13 15:24:23',0),
-	(9703,1,'DB Error login user ss',0,'','2024-07-13 15:24:24','2024-07-13 15:24:24',0),
-	(9704,1,'DB Error login user ss',0,'','2024-07-13 15:24:26','2024-07-13 15:24:26',0),
-	(9705,1,'DB Error login user ss',0,'','2024-07-13 15:24:35','2024-07-13 15:24:35',0),
-	(9706,1,'DB Error login user ss',0,'','2024-07-13 15:24:48','2024-07-13 15:24:48',0),
-	(9707,1,'DB Error login user ss',0,'','2024-07-13 15:24:52','2024-07-13 15:24:52',0),
-	(9708,1,'DB Error login user ss',0,'','2024-07-13 15:25:13','2024-07-13 15:25:13',0),
-	(9709,1,'DB Error login user ss',0,'','2024-07-13 15:25:16','2024-07-13 15:25:16',0),
-	(9710,1,'DB Error login user ss',0,'','2024-07-13 15:25:19','2024-07-13 15:25:19',0),
-	(9711,1,'DB Error login user ss',0,'','2024-07-13 15:25:22','2024-07-13 15:25:22',0),
-	(9712,1,'DB Error login user ss',0,'','2024-07-13 15:25:26','2024-07-13 15:25:26',0),
-	(9713,1,'DB Error login user asas',0,'','2024-07-13 15:26:15','2024-07-13 15:26:15',0),
-	(9714,1,'DB Error login user asas',0,'','2024-07-13 15:26:20','2024-07-13 15:26:20',0),
-	(9715,0,'Successful login user 165',0,'','2024-07-14 14:09:13','2024-07-14 14:09:13',0),
-	(9716,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:49:18','2024-07-15 10:49:18',0),
-	(9717,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:49:18','2024-07-15 10:49:18',0),
-	(9718,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:13','2024-07-15 10:55:13',0),
-	(9719,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:13','2024-07-15 10:55:13',0),
-	(9720,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:50','2024-07-15 10:55:50',0),
-	(9721,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:50','2024-07-15 10:55:50',0),
-	(9722,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:56','2024-07-15 10:55:56',0),
-	(9723,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:56','2024-07-15 10:55:56',0),
-	(9724,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:56:18','2024-07-15 10:56:18',0),
-	(9725,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:56:18','2024-07-15 10:56:18',0),
-	(9726,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:58:58','2024-07-15 10:58:58',0),
-	(9727,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:58:58','2024-07-15 10:58:58',0),
-	(9728,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:09','2024-07-15 10:59:09',0),
-	(9729,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:09','2024-07-15 10:59:09',0),
-	(9730,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:20','2024-07-15 10:59:20',0),
-	(9731,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:20','2024-07-15 10:59:20',0),
-	(9732,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:33','2024-07-15 10:59:33',0),
-	(9733,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:33','2024-07-15 10:59:33',0),
-	(9734,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:42','2024-07-15 10:59:42',0),
-	(9735,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:42','2024-07-15 10:59:42',0),
-	(9736,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:01:28','2024-07-15 11:01:28',0),
-	(9737,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:01:28','2024-07-15 11:01:28',0),
-	(9738,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:02:22','2024-07-15 11:02:22',0),
-	(9739,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:02:22','2024-07-15 11:02:22',0),
-	(9740,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:15:18','2024-07-15 11:15:18',0),
-	(9741,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:15:18','2024-07-15 11:15:18',0),
-	(9742,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:16:45','2024-07-15 11:16:45',0),
-	(9743,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:16:45','2024-07-15 11:16:45',0),
-	(9744,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:16:50','2024-07-15 11:16:50',0),
-	(9745,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:18:33','2024-07-15 11:18:33',0),
-	(9746,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:18:33','2024-07-15 11:18:33',0),
-	(9747,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:18:50','2024-07-15 11:18:50',0),
-	(9748,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:18:50','2024-07-15 11:18:50',0),
-	(9749,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:19:00','2024-07-15 11:19:00',0),
-	(9750,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:19:00','2024-07-15 11:19:00',0),
-	(9751,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:05','2024-07-15 11:19:05',0),
-	(9752,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:05','2024-07-15 11:19:05',0),
-	(9753,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:05','2024-07-15 11:19:05',0),
-	(9754,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:05','2024-07-15 11:19:05',0),
-	(9755,0,'Added delegation for user 165 for topic 474',0,'','2024-07-15 11:19:11','2024-07-15 11:19:11',0),
-	(9756,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:11','2024-07-15 11:19:11',0),
-	(9757,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:20:15','2024-07-15 11:20:15',0),
-	(9758,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:20:15','2024-07-15 11:20:15',0),
-	(9759,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:20:19','2024-07-15 11:20:19',0),
-	(9760,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:20:19','2024-07-15 11:20:19',0),
-	(9761,0,'Successful login user 165',0,'','2024-07-16 10:10:44','2024-07-16 10:10:44',0),
-	(9762,0,'Successful login user ',0,'','2024-07-16 10:29:06','2024-07-16 10:29:06',0),
-	(9763,0,'Successful login user ',0,'','2024-07-16 10:32:12','2024-07-16 10:32:12',0),
-	(9764,0,'Successful login user admin',0,'','2024-07-16 10:33:55','2024-07-16 10:33:55',0),
-	(9765,0,'Successful login user admin',0,'','2024-07-16 10:34:40','2024-07-16 10:34:40',0),
-	(9766,0,'Successful login user admin',0,'','2024-07-16 10:35:01','2024-07-16 10:35:01',0),
-	(9767,0,'Successful login user admin',0,'','2024-07-16 10:36:33','2024-07-16 10:36:33',0),
-	(9768,0,'Successful login user admin',0,'','2024-07-16 10:38:06','2024-07-16 10:38:06',0),
-	(9769,0,'Successful login user admin',0,'','2024-07-16 10:40:22','2024-07-16 10:40:22',0),
-	(9770,0,'Successful login user admin',0,'','2024-07-16 10:42:09','2024-07-16 10:42:09',0),
-	(9771,0,'Successful login user admin',0,'','2024-07-16 10:43:45','2024-07-16 10:43:45',0),
-	(9772,0,'Successful login user admin',0,'','2024-07-16 10:43:57','2024-07-16 10:43:57',0),
-	(9773,0,'Successful login user admin',0,'','2024-07-16 10:45:36','2024-07-16 10:45:36',0),
-	(9774,0,'Successful login user admin',0,'','2024-07-16 10:46:13','2024-07-16 10:46:13',0),
-	(9775,0,'Successful login user admin',0,'','2024-07-16 10:46:41','2024-07-16 10:46:41',0),
-	(9776,0,'Successful login user admin',0,'','2024-07-16 10:48:18','2024-07-16 10:48:18',0),
-	(9777,0,'Successful login user admin',0,'','2024-07-16 10:48:42','2024-07-16 10:48:42',0),
-	(9778,0,'Successful login user admin',0,'','2024-07-16 10:49:02','2024-07-16 10:49:02',0),
-	(9779,0,'Successful login user admin',0,'','2024-07-16 10:49:23','2024-07-16 10:49:23',0),
-	(9780,0,'Successful login user admin',0,'','2024-07-16 10:49:39','2024-07-16 10:49:39',0),
-	(9781,0,'Successful login user admin',0,'','2024-07-16 10:49:55','2024-07-16 10:49:55',0),
-	(9782,0,'Successful login user admin',0,'','2024-07-16 10:50:29','2024-07-16 10:50:29',0),
-	(9783,0,'Successful login user admin',0,'','2024-07-16 10:51:14','2024-07-16 10:51:14',0),
-	(9784,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:22:47','2024-07-16 15:22:47',0),
-	(9785,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:22:47','2024-07-16 15:22:47',0),
-	(9786,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:22:47','2024-07-16 15:22:47',0),
-	(9787,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:22:48','2024-07-16 15:22:48',0),
-	(9788,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:01','2024-07-16 15:23:01',0),
-	(9789,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:01','2024-07-16 15:23:01',0),
-	(9790,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:01','2024-07-16 15:23:01',0),
-	(9791,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:01','2024-07-16 15:23:01',0),
-	(9792,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:18','2024-07-16 15:23:18',0),
-	(9793,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:18','2024-07-16 15:23:18',0),
-	(9794,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:18','2024-07-16 15:23:18',0),
-	(9795,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:18','2024-07-16 15:23:18',0),
-	(9796,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:24','2024-07-16 15:23:24',0),
-	(9797,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:24','2024-07-16 15:23:24',0),
-	(9798,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:24','2024-07-16 15:23:24',0),
-	(9799,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:24','2024-07-16 15:23:24',0),
-	(9800,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:28','2024-07-16 15:23:28',0),
-	(9801,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:28','2024-07-16 15:23:28',0),
-	(9802,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:28','2024-07-16 15:23:28',0),
-	(9803,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:28','2024-07-16 15:23:28',0),
-	(9804,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:42','2024-07-16 15:23:42',0),
-	(9805,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:42','2024-07-16 15:23:42',0),
-	(9806,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:42','2024-07-16 15:23:42',0),
-	(9807,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:43','2024-07-16 15:23:43',0),
-	(9808,0,'Idea  263 votes set to 0',0,'','2024-07-16 15:36:00','2024-07-16 15:36:00',0),
-	(9809,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-16 15:36:00','2024-07-16 15:36:00',0),
-	(9810,0,'Idea  263 number of votes given set to 1',0,'','2024-07-16 15:36:00','2024-07-16 15:36:00',0),
-	(9811,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-16 15:36:00','2024-07-16 15:36:00',0),
-	(9812,0,'Idea  263 votes set to 0',0,'','2024-07-16 15:36:03','2024-07-16 15:36:03',0),
-	(9813,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-16 15:36:03','2024-07-16 15:36:03',0),
-	(9814,0,'Idea  263 number of votes given set to 1',0,'','2024-07-16 15:36:03','2024-07-16 15:36:03',0),
-	(9815,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-16 15:36:03','2024-07-16 15:36:03',0),
-	(9816,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:29:35','2024-07-17 09:29:35',0),
-	(9817,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:29:35','2024-07-17 09:29:35',0),
-	(9818,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:29:35','2024-07-17 09:29:35',0),
-	(9819,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:29:35','2024-07-17 09:29:35',0),
-	(9820,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:37','2024-07-17 09:29:37',0),
-	(9821,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:37','2024-07-17 09:29:37',0),
-	(9822,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:37','2024-07-17 09:29:37',0),
-	(9823,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:37','2024-07-17 09:29:37',0),
-	(9824,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
-	(9825,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
-	(9826,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
-	(9827,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
-	(9828,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
-	(9829,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
-	(9830,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
-	(9831,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
-	(9832,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:39','2024-07-17 09:29:39',0),
-	(9833,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:39','2024-07-17 09:29:39',0),
-	(9834,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:39','2024-07-17 09:29:39',0),
-	(9835,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:29:39','2024-07-17 09:29:39',0),
-	(9836,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
-	(9837,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
-	(9838,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
-	(9839,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
-	(9840,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
-	(9841,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
-	(9842,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
-	(9843,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
-	(9844,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
-	(9845,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
-	(9846,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
-	(9847,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
-	(9848,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
-	(9849,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
-	(9850,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
-	(9851,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
-	(9852,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
-	(9853,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
-	(9854,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
-	(9855,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
-	(9856,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
-	(9857,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
-	(9858,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
-	(9859,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
-	(9860,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:43','2024-07-17 09:29:43',0),
-	(9861,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:43','2024-07-17 09:29:43',0),
-	(9862,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:43','2024-07-17 09:29:43',0),
-	(9863,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:43','2024-07-17 09:29:43',0),
-	(9864,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:44','2024-07-17 09:29:44',0),
-	(9865,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:44','2024-07-17 09:29:44',0),
-	(9866,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:44','2024-07-17 09:29:44',0),
-	(9867,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:29:44','2024-07-17 09:29:44',0),
-	(9868,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:18','2024-07-17 09:30:18',0),
-	(9869,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:18','2024-07-17 09:30:18',0),
-	(9870,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:18','2024-07-17 09:30:18',0),
-	(9871,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:18','2024-07-17 09:30:18',0),
-	(9872,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:30:22','2024-07-17 09:30:22',0),
-	(9873,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:30:22','2024-07-17 09:30:22',0),
-	(9874,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:30:22','2024-07-17 09:30:22',0),
-	(9875,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:30:22','2024-07-17 09:30:22',0),
-	(9876,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:30:24','2024-07-17 09:30:24',0),
-	(9877,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:30:24','2024-07-17 09:30:24',0),
-	(9878,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:30:24','2024-07-17 09:30:24',0),
-	(9879,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:30:24','2024-07-17 09:30:24',0),
-	(9880,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:30:25','2024-07-17 09:30:25',0),
-	(9881,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:30:25','2024-07-17 09:30:25',0),
-	(9882,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:30:25','2024-07-17 09:30:25',0),
-	(9883,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:30:25','2024-07-17 09:30:25',0),
-	(9884,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:28','2024-07-17 09:30:28',0),
-	(9885,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:28','2024-07-17 09:30:28',0),
-	(9886,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:28','2024-07-17 09:30:28',0),
-	(9887,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:28','2024-07-17 09:30:28',0),
-	(9888,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:30:30','2024-07-17 09:30:30',0),
-	(9889,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:30:30','2024-07-17 09:30:30',0),
-	(9890,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:30:30','2024-07-17 09:30:30',0),
-	(9891,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:30:30','2024-07-17 09:30:30',0),
-	(9892,0,'Added new idea (#277) It would be a great thing to have more ideas for testing purposes!',0,'','2024-07-17 10:15:45','2024-07-17 10:15:45',0),
-	(9893,0,'Idea deleted, id=277 by 0',0,'','2024-07-17 10:17:56','2024-07-17 10:17:56',0),
-	(9894,0,'Added new idea (#278) Maybe we could create more ideas for testing the app!',0,'','2024-07-17 10:18:37','2024-07-17 10:18:37',0),
-	(9895,0,'Edited idea 278 by 165',0,'','2024-07-17 10:44:35','2024-07-17 10:44:35',0),
-	(9896,0,'Added new comment (#0) user: 165',0,'','2024-07-17 14:04:23','2024-07-17 14:04:23',0),
-	(9897,0,'Comment content changed 32 by 165',0,'','2024-07-17 14:18:16','2024-07-17 14:18:16',0),
-	(9898,0,'Added new topic (#477) A great testing envoironment',0,'','2024-07-17 14:37:05','2024-07-17 14:37:05',0),
-	(9899,0,'Added new topic (#478) A great testing envoironment',0,'','2024-07-17 14:37:50','2024-07-17 14:37:50',0),
-	(9900,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:02:57','2024-07-17 15:02:57',0),
-	(9901,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:02:57','2024-07-17 15:02:57',0),
-	(9902,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:00','2024-07-17 15:03:00',0),
-	(9903,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:00','2024-07-17 15:03:00',0),
-	(9904,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:08','2024-07-17 15:03:08',0),
-	(9905,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:08','2024-07-17 15:03:08',0),
-	(9906,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:03:32','2024-07-17 15:03:32',0),
-	(9907,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:03:32','2024-07-17 15:03:32',0),
-	(9908,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:37','2024-07-17 15:03:37',0),
-	(9909,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:37','2024-07-17 15:03:37',0),
-	(9910,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:04:50','2024-07-17 15:04:50',0),
-	(9911,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:05:51','2024-07-17 15:05:51',0),
-	(9912,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:07:13','2024-07-17 15:07:13',0),
-	(9913,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:07:19','2024-07-17 15:07:19',0),
-	(9914,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:09:37','2024-07-17 15:09:37',0),
-	(9915,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:09:37','2024-07-17 15:09:37',0),
-	(9916,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:09:46','2024-07-17 15:09:46',0),
-	(9917,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:09:46','2024-07-17 15:09:46',0),
-	(9918,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:09:49','2024-07-17 15:09:49',0),
-	(9919,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:09:49','2024-07-17 15:09:49',0),
-	(9920,0,'Edited topic (#478) A new testing envoironment',0,'','2024-07-17 16:18:04','2024-07-17 16:18:04',0),
-	(9921,0,'Edited topic (#478) A new testing envoironment',0,'','2024-07-17 16:18:29','2024-07-17 16:18:29',0),
-	(9922,0,'Topic deleted, id=478 by 0',0,'','2024-07-17 16:18:32','2024-07-17 16:18:32',0),
-	(9923,0,'Added new topic (#479) A new testing envoironment',0,'','2024-07-17 16:18:57','2024-07-17 16:18:57',0),
-	(9924,0,'Added new topic (#480) test',0,'','2024-07-17 16:21:30','2024-07-17 16:21:30',0),
-	(9925,0,'Topic deleted, id=478 by 0',0,'','2024-07-17 16:21:37','2024-07-17 16:21:37',0),
-	(9926,0,'Topic deleted, id=480 by 0',0,'','2024-07-17 16:21:37','2024-07-17 16:21:37',0),
-	(9927,0,'Added new room (#107) test',0,'','2024-07-17 16:27:14','2024-07-17 16:27:14',0),
-	(9928,0,'Room deleted with id 107 by 0',0,'','2024-07-17 16:27:18','2024-07-17 16:27:18',0),
-	(9929,0,'Added new topic (#481) test',0,'','2024-07-17 16:27:32','2024-07-17 16:27:32',0),
-	(9930,0,'Topic deleted, id=481 by 0',0,'','2024-07-17 16:27:35','2024-07-17 16:27:35',0),
-	(9931,0,'Added new idea (#279) aaa',0,'','2024-07-17 16:27:48','2024-07-17 16:27:48',0),
-	(9932,0,'Edited idea 279 by 165',0,'','2024-07-17 16:27:55','2024-07-17 16:27:55',0),
-	(9933,0,'Idea deleted, id=279 by 0',0,'','2024-07-17 16:27:58','2024-07-17 16:27:58',0),
-	(9934,0,'Added new text (#13) creator: 0',0,'','2024-07-17 16:28:26','2024-07-17 16:28:26',0),
-	(9935,0,'Edited text (#13) by : 165',0,'','2024-07-17 16:34:30','2024-07-17 16:34:30',0),
-	(9936,0,'Edited text (#13) by : 165',0,'','2024-07-17 16:34:37','2024-07-17 16:34:37',0),
-	(9937,0,'Consent values updated by value -1',0,'','2024-07-17 16:34:41','2024-07-17 16:34:41',0),
-	(9938,0,'Text deleted, id = 13 by 0',0,'','2024-07-17 16:34:41','2024-07-17 16:34:41',0),
-	(9939,0,'Added new text (#14) creator: 165',0,'','2024-07-17 16:36:29','2024-07-17 16:36:29',0),
-	(9940,0,'Consent values updated by value -1',0,'','2024-07-17 16:37:09','2024-07-17 16:37:09',0),
-	(9941,0,'Text deleted, id = 13 by 0',0,'','2024-07-17 16:37:09','2024-07-17 16:37:09',0),
-	(9942,0,'Consent values updated by value -1',0,'','2024-07-17 16:37:09','2024-07-17 16:37:09',0),
-	(9943,0,'Text deleted, id = 14 by 0',0,'','2024-07-17 16:37:09','2024-07-17 16:37:09',0),
-	(9944,0,'Comment deleted, id=32 by 0',0,'','2024-07-17 16:57:27','2024-07-17 16:57:27',0),
-	(9945,0,'Added new comment (#0) user: 165',0,'','2024-07-17 16:59:04','2024-07-17 16:59:04',0),
-	(9946,0,'Added new comment (#0) user: 165',0,'','2024-07-17 16:59:28','2024-07-17 16:59:28',0),
-	(9947,0,'Added new comment (#0) user: 165',0,'','2024-07-17 17:18:17','2024-07-17 17:18:17',0),
-	(9948,0,'Comment content changed 35 by 165',0,'','2024-07-17 17:19:23','2024-07-17 17:19:23',0),
-	(9949,0,'Added new comment (#0) user: 165',0,'','2024-07-17 17:19:33','2024-07-17 17:19:33',0),
-	(9950,0,'Comment deleted, id=36 by 0',0,'','2024-07-17 17:19:38','2024-07-17 17:19:38',0),
-	(9951,0,'Edited idea 278 by 165',0,'','2024-07-17 17:20:10','2024-07-17 17:20:10',0),
-	(9952,0,'Delegation status retrieved: user_id: 165, topic_id: 479',0,'','2024-07-17 17:20:37','2024-07-17 17:20:37',0),
-	(9953,0,'Delegation status retrieved: user_id: 165, topic_id: 479',0,'','2024-07-17 17:20:37','2024-07-17 17:20:37',0),
-	(9954,0,'Topic deleted, id=479 by 0',0,'','2024-07-17 17:20:41','2024-07-17 17:20:41',0),
-	(9955,0,'Added new user 271',0,'','2024-07-17 17:26:23','2024-07-17 17:26:23',0),
-	(9956,0,'User delegation(s) deleted with id 271 for topic 0',0,'','2024-07-17 17:26:28','2024-07-17 17:26:28',0),
-	(9957,0,'User delegation(s) deleted with id 271 for topic 0',0,'','2024-07-17 17:26:28','2024-07-17 17:26:28',0),
-	(9958,0,'User deleted with id 271 by 0',0,'','2024-07-17 17:26:28','2024-07-17 17:26:28',0),
-	(9959,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:53','2024-07-18 13:14:53',0),
-	(9960,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:53','2024-07-18 13:14:53',0),
-	(9961,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:53','2024-07-18 13:14:53',0),
-	(9962,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:53','2024-07-18 13:14:53',0),
-	(9963,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-18 13:14:55','2024-07-18 13:14:55',0),
-	(9964,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:55','2024-07-18 13:14:55',0),
-	(9965,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:32:35','2024-07-18 13:32:35',0),
-	(9966,0,'Added new topic (#482) test',0,'','2024-07-18 14:54:40','2024-07-18 14:54:40',0),
-	(9967,0,'Topic deleted, id=482 by 0',0,'','2024-07-18 14:55:46','2024-07-18 14:55:46',0),
-	(9968,0,'Added new topic (#483) test',0,'','2024-07-18 14:56:05','2024-07-18 14:56:05',0),
-	(9969,0,'Topic deleted, id=483 by 0',0,'','2024-07-18 14:56:10','2024-07-18 14:56:10',0),
-	(9970,0,'Added new topic (#484) test',0,'','2024-07-18 15:07:52','2024-07-18 15:07:52',0),
-	(9971,0,'Topic deleted, id=484 by 0',0,'','2024-07-18 15:08:00','2024-07-18 15:08:00',0),
-	(9972,0,'Added new topic (#485) Test',0,'','2024-07-18 15:16:03','2024-07-18 15:16:03',0),
-	(9973,0,'Delegation status retrieved: user_id: 165, topic_id: 485',0,'','2024-07-18 15:16:19','2024-07-18 15:16:19',0),
-	(9974,0,'Delegation status retrieved: user_id: 165, topic_id: 485',0,'','2024-07-18 15:16:19','2024-07-18 15:16:19',0),
-	(9975,0,'Delegation status retrieved: user_id: 165, topic_id: 485',0,'','2024-07-18 15:16:20','2024-07-18 15:16:20',0),
-	(9976,0,'Delegation status retrieved: user_id: 165, topic_id: 485',0,'','2024-07-18 15:16:20','2024-07-18 15:16:20',0),
-	(9977,0,'Topic deleted, id=485 by 0',0,'','2024-07-18 15:16:25','2024-07-18 15:16:25',0),
-	(9978,0,'Added new topic (#486) test',0,'','2024-07-18 15:30:41','2024-07-18 15:30:41',0),
-	(9979,0,'Added new topic (#487) test',0,'','2024-07-18 15:39:41','2024-07-18 15:39:41',0),
-	(9980,0,'Topic deleted, id=486 by 0',0,'','2024-07-18 15:40:34','2024-07-18 15:40:34',0),
-	(9981,0,'Topic deleted, id=487 by 0',0,'','2024-07-18 15:40:37','2024-07-18 15:40:37',0),
-	(9982,0,'Added new topic (#488) test',0,'','2024-07-18 15:41:01','2024-07-18 15:41:01',0),
-	(9983,0,'Delegation status retrieved: user_id: 165, topic_id: 488',0,'','2024-07-18 15:41:03','2024-07-18 15:41:03',0),
-	(9984,0,'Delegation status retrieved: user_id: 165, topic_id: 488',0,'','2024-07-18 15:41:03','2024-07-18 15:41:03',0),
-	(9985,0,'Delegation status retrieved: user_id: 165, topic_id: 488',0,'','2024-07-18 15:41:03','2024-07-18 15:41:03',0),
-	(9986,0,'Delegation status retrieved: user_id: 165, topic_id: 488',0,'','2024-07-18 15:41:03','2024-07-18 15:41:03',0),
-	(9987,0,'Topic deleted, id=488 by 0',0,'','2024-07-18 15:41:45','2024-07-18 15:41:45',0),
-	(9988,0,'Added new topic (#489) Box on Voting phase',0,'','2024-07-18 15:44:33','2024-07-18 15:44:33',0),
-	(9989,0,'Added idea 278 to topic 489',0,'','2024-07-18 15:44:33','2024-07-18 15:44:33',0),
-	(9990,0,'Delegation status retrieved: user_id: 165, topic_id: 489',0,'','2024-07-18 15:44:35','2024-07-18 15:44:35',0),
-	(9991,0,'Delegation status retrieved: user_id: 165, topic_id: 489',0,'','2024-07-18 15:44:35','2024-07-18 15:44:35',0),
-	(9992,0,'Delegation status retrieved: user_id: 165, topic_id: 489',0,'','2024-07-18 15:44:35','2024-07-18 15:44:35',0),
-	(9993,0,'Delegation status retrieved: user_id: 165, topic_id: 489',0,'','2024-07-18 15:44:35','2024-07-18 15:44:35',0),
-	(9994,0,'Topic deleted, id=489 by 0',0,'','2024-07-18 15:45:09','2024-07-18 15:45:09',0),
-	(9995,0,'Added new idea (#280) test',0,'','2024-07-18 16:10:03','2024-07-18 16:10:03',0),
-	(9996,0,'Added new room (#108) test',0,'','2024-07-18 16:13:21','2024-07-18 16:13:21',0),
-	(9997,0,'Added user 264 to room 108',0,'','2024-07-18 16:13:21','2024-07-18 16:13:21',0),
-	(9998,0,'Added user 268 to room 108',0,'','2024-07-18 16:13:21','2024-07-18 16:13:21',0),
-	(9999,0,'Room deleted with id 108 by 0',0,'','2024-07-18 16:14:12','2024-07-18 16:14:12',0),
-	(10000,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-18 18:11:06','2024-07-18 18:11:06',0),
-	(10001,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-18 18:11:06','2024-07-18 18:11:06',0),
-	(10002,0,'Added idea 280 to topic 472',0,'','2024-07-18 18:11:15','2024-07-18 18:11:15',0),
-	(10003,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 12:33:37','2024-07-20 12:33:37',0),
-	(10004,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 12:33:37','2024-07-20 12:33:37',0),
-	(10005,0,'Successful login user admin',0,'','2024-07-20 12:41:53','2024-07-20 12:41:53',0),
-	(10006,0,'Added new idea (#281) test',0,'','2024-07-20 13:27:11','2024-07-20 13:27:11',0),
-	(10007,0,'Added new topic (#490) test',0,'','2024-07-20 13:27:25','2024-07-20 13:27:25',0),
-	(10008,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:27:32','2024-07-20 13:27:32',0),
-	(10009,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:27:32','2024-07-20 13:27:32',0),
-	(10010,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:28:11','2024-07-20 13:28:11',0),
-	(10011,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:28:11','2024-07-20 13:28:11',0),
-	(10012,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:28:49','2024-07-20 13:28:49',0),
-	(10013,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:28:49','2024-07-20 13:28:49',0),
-	(10014,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:29:04','2024-07-20 13:29:04',0),
-	(10015,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:29:04','2024-07-20 13:29:04',0),
-	(10016,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:32:54','2024-07-20 13:32:54',0),
-	(10017,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:32:54','2024-07-20 13:32:54',0),
-	(10018,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:37:16','2024-07-20 13:37:16',0),
-	(10019,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:37:16','2024-07-20 13:37:16',0),
-	(10020,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:38:19','2024-07-20 13:38:19',0),
-	(10021,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:38:19','2024-07-20 13:38:19',0),
-	(10022,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:39:01','2024-07-20 13:39:01',0),
-	(10023,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:39:01','2024-07-20 13:39:01',0),
-	(10024,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:48:07','2024-07-20 13:48:07',0),
-	(10025,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:48:07','2024-07-20 13:48:07',0),
-	(10026,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:50:05','2024-07-20 13:50:05',0),
-	(10027,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:50:05','2024-07-20 13:50:05',0),
-	(10028,0,'Added idea 281 to topic 472',0,'','2024-07-20 13:51:27','2024-07-20 13:51:27',0),
-	(10029,0,'Added idea 272 to topic 472',0,'','2024-07-20 13:52:16','2024-07-20 13:52:16',0),
-	(10030,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:52:32','2024-07-20 13:52:32',0),
-	(10031,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:52:32','2024-07-20 13:52:32',0),
-	(10032,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:52:35','2024-07-20 13:52:35',0),
-	(10033,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:52:35','2024-07-20 13:52:35',0),
-	(10034,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:57:12','2024-07-20 13:57:12',0),
-	(10035,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:57:12','2024-07-20 13:57:12',0),
-	(10036,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:03:45','2024-07-20 14:03:45',0),
-	(10037,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:03:45','2024-07-20 14:03:45',0),
-	(10038,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:05:10','2024-07-20 14:05:10',0),
-	(10039,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:05:10','2024-07-20 14:05:10',0),
-	(10040,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:14:52','2024-07-20 14:14:52',0),
-	(10041,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:14:52','2024-07-20 14:14:52',0),
-	(10042,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:15:53','2024-07-20 14:15:53',0),
-	(10043,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:16:04','2024-07-20 14:16:04',0),
-	(10044,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:16:04','2024-07-20 14:16:04',0),
-	(10045,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:16:11','2024-07-20 14:16:11',0),
-	(10046,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:16:11','2024-07-20 14:16:11',0),
-	(10047,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:16:17','2024-07-20 14:16:17',0),
-	(10048,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 14:16:17','2024-07-20 14:16:17',0),
-	(10049,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:16:48','2024-07-20 14:16:48',0),
-	(10050,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:16:48','2024-07-20 14:16:48',0),
-	(10051,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:17:39','2024-07-20 14:17:39',0),
-	(10052,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:17:39','2024-07-20 14:17:39',0),
-	(10053,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:18:26','2024-07-20 14:18:26',0),
-	(10054,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:18:26','2024-07-20 14:18:26',0),
-	(10055,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:18:41','2024-07-20 14:18:41',0),
-	(10056,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:18:41','2024-07-20 14:18:41',0),
-	(10057,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:18:50','2024-07-20 14:18:50',0),
-	(10058,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 14:18:50','2024-07-20 14:18:50',0),
-	(10059,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:18:56','2024-07-20 14:18:56',0),
-	(10060,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 14:18:56','2024-07-20 14:18:56',0),
-	(10061,0,'Added idea 281 to topic 490',0,'','2024-07-20 14:19:12','2024-07-20 14:19:12',0),
-	(10062,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-20 14:19:12','2024-07-20 14:19:12',0),
-	(10063,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:23:34','2024-07-20 14:23:34',0),
-	(10064,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:23:34','2024-07-20 14:23:34',0),
-	(10065,0,'Added idea 281 to topic 490',0,'','2024-07-20 14:23:37','2024-07-20 14:23:37',0),
-	(10066,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-20 14:23:37','2024-07-20 14:23:37',0),
-	(10067,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 14:23:40','2024-07-20 14:23:40',0),
-	(10068,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:23:58','2024-07-20 14:23:58',0),
-	(10069,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:23:58','2024-07-20 14:23:58',0),
-	(10070,0,'Added idea 280 to topic 472',0,'','2024-07-20 14:24:14','2024-07-20 14:24:14',0),
-	(10071,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:24:14','2024-07-20 14:24:14',0),
-	(10072,0,'Added idea 281 to topic 472',0,'','2024-07-20 14:24:17','2024-07-20 14:24:17',0),
-	(10073,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 14:24:17','2024-07-20 14:24:17',0),
-	(10074,0,'Added idea 280 to topic 472',0,'','2024-07-20 14:24:47','2024-07-20 14:24:47',0),
-	(10075,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:24:47','2024-07-20 14:24:47',0),
-	(10076,0,'Added idea 281 to topic 472',0,'','2024-07-20 14:25:57','2024-07-20 14:25:57',0),
-	(10077,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 14:25:57','2024-07-20 14:25:57',0),
-	(10078,0,'Added idea 281 to topic 472',0,'','2024-07-20 14:27:06','2024-07-20 14:27:06',0),
-	(10079,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 14:27:06','2024-07-20 14:27:06',0),
-	(10080,0,'Added idea 280 to topic 472',0,'','2024-07-20 14:31:39','2024-07-20 14:31:39',0),
-	(10081,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:31:39','2024-07-20 14:31:39',0),
-	(10082,0,'Added idea 280 to topic 472',0,'','2024-07-20 14:31:40','2024-07-20 14:31:40',0),
-	(10083,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:31:40','2024-07-20 14:31:40',0),
-	(10084,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:00:22','2024-07-20 15:00:22',0),
-	(10085,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:00:22','2024-07-20 15:00:22',0),
-	(10086,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:01:54','2024-07-20 15:01:54',0),
-	(10087,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:01:54','2024-07-20 15:01:54',0),
-	(10088,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:01:54','2024-07-20 15:01:54',0),
-	(10089,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:01:54','2024-07-20 15:01:54',0),
-	(10090,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:02:14','2024-07-20 15:02:14',0),
-	(10091,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:02:25','2024-07-20 15:02:25',0),
-	(10092,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:02:28','2024-07-20 15:02:28',0),
-	(10093,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:02:28','2024-07-20 15:02:28',0),
-	(10094,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:02:59','2024-07-20 15:02:59',0),
-	(10095,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:03:01','2024-07-20 15:03:01',0),
-	(10096,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:03:02','2024-07-20 15:03:02',0),
-	(10097,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:03:04','2024-07-20 15:03:04',0),
-	(10098,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:05','2024-07-20 15:03:05',0),
-	(10099,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:05','2024-07-20 15:03:05',0),
-	(10100,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:08','2024-07-20 15:03:08',0),
-	(10101,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:08','2024-07-20 15:03:08',0),
-	(10102,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:09','2024-07-20 15:03:09',0),
-	(10103,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:09','2024-07-20 15:03:09',0),
-	(10104,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:10','2024-07-20 15:03:10',0),
-	(10105,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:10','2024-07-20 15:03:10',0),
-	(10106,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:23','2024-07-20 15:03:23',0),
-	(10107,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:30','2024-07-20 15:03:30',0),
-	(10108,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:30','2024-07-20 15:03:30',0),
-	(10109,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:32','2024-07-20 15:03:32',0),
-	(10110,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 15:03:39','2024-07-20 15:03:39',0),
-	(10111,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 15:03:39','2024-07-20 15:03:39',0),
-	(10112,0,'Added idea 280 to topic 490',0,'','2024-07-20 15:03:45','2024-07-20 15:03:45',0),
-	(10113,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 15:03:45','2024-07-20 15:03:45',0),
-	(10114,0,'Added idea 281 to topic 490',0,'','2024-07-20 15:03:51','2024-07-20 15:03:51',0),
-	(10115,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-20 15:03:51','2024-07-20 15:03:51',0),
-	(10116,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:06','2024-07-20 15:04:06',0),
-	(10117,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:06','2024-07-20 15:04:06',0),
-	(10118,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:04:13','2024-07-20 15:04:13',0),
-	(10119,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:29','2024-07-20 15:04:29',0),
-	(10120,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:29','2024-07-20 15:04:29',0),
-	(10121,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:04:37','2024-07-20 15:04:37',0),
-	(10122,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:49','2024-07-20 15:04:49',0),
-	(10123,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:49','2024-07-20 15:04:49',0),
-	(10124,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:20','2024-07-20 15:07:20',0),
-	(10125,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:20','2024-07-20 15:07:20',0),
-	(10126,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:07:29','2024-07-20 15:07:29',0),
-	(10127,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:07:29','2024-07-20 15:07:29',0),
-	(10128,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:52','2024-07-20 15:07:52',0),
-	(10129,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:57','2024-07-20 15:07:57',0),
-	(10130,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:57','2024-07-20 15:07:57',0),
-	(10131,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:11','2024-07-20 15:08:11',0),
-	(10132,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:11','2024-07-20 15:08:11',0),
-	(10133,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:08:15','2024-07-20 15:08:15',0),
-	(10134,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:08:15','2024-07-20 15:08:15',0),
-	(10135,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:29','2024-07-20 15:08:29',0),
-	(10136,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:29','2024-07-20 15:08:29',0),
-	(10137,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
-	(10138,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
-	(10139,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
-	(10140,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
-	(10141,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
-	(10142,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
-	(10143,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
-	(10144,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
-	(10145,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:11:25','2024-07-20 15:11:25',0),
-	(10146,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:11:25','2024-07-20 15:11:25',0),
-	(10147,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:11:27','2024-07-20 15:11:27',0),
-	(10148,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:11:27','2024-07-20 15:11:27',0),
-	(10149,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:11:37','2024-07-20 15:11:37',0),
-	(10150,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:11:38','2024-07-20 15:11:38',0),
-	(10151,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:11:38','2024-07-20 15:11:38',0),
-	(10152,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:11:41','2024-07-20 15:11:41',0),
-	(10153,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:11:41','2024-07-20 15:11:41',0),
-	(10154,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:21:25','2024-07-20 16:21:25',0),
-	(10155,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:21:25','2024-07-20 16:21:25',0),
-	(10156,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:22:40','2024-07-20 16:22:40',0),
-	(10157,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:22:47','2024-07-20 16:22:47',0),
-	(10158,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:22:55','2024-07-20 16:22:55',0),
-	(10159,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:23:04','2024-07-20 16:23:04',0),
-	(10160,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:24:44','2024-07-20 16:24:44',0),
-	(10161,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:24:44','2024-07-20 16:24:44',0),
-	(10162,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:25:16','2024-07-20 16:25:16',0),
-	(10163,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:25:16','2024-07-20 16:25:16',0),
-	(10164,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:27:17','2024-07-20 16:27:17',0),
-	(10165,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:29:26','2024-07-20 16:29:26',0),
-	(10166,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:29:26','2024-07-20 16:29:26',0),
-	(10167,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:32:38','2024-07-20 16:32:38',0),
-	(10168,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:32:38','2024-07-20 16:32:38',0),
-	(10169,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:32:40','2024-07-20 16:32:40',0),
-	(10170,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:32:40','2024-07-20 16:32:40',0),
-	(10171,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:33:20','2024-07-20 16:33:20',0),
-	(10172,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:33:20','2024-07-20 16:33:20',0),
-	(10173,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:33:31','2024-07-20 16:33:31',0),
-	(10174,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:33:31','2024-07-20 16:33:31',0),
-	(10175,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:33:47','2024-07-20 16:33:47',0),
-	(10176,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:33:55','2024-07-20 16:33:55',0),
-	(10177,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:34:05','2024-07-20 16:34:05',0),
-	(10178,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:34:22','2024-07-20 16:34:22',0),
-	(10179,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:34:36','2024-07-20 16:34:36',0),
-	(10180,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:35:12','2024-07-20 16:35:12',0),
-	(10181,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:35:17','2024-07-20 16:35:17',0),
-	(10182,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:36:39','2024-07-20 16:36:39',0),
-	(10183,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:36:44','2024-07-20 16:36:44',0),
-	(10184,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:36:46','2024-07-20 16:36:46',0),
-	(10185,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:39:59','2024-07-20 16:39:59',0),
-	(10186,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:39:59','2024-07-20 16:39:59',0),
-	(10187,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:40:55','2024-07-20 16:40:55',0),
-	(10188,0,'Added idea 281 to topic 472',0,'','2024-07-20 16:41:00','2024-07-20 16:41:00',0),
-	(10189,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 16:41:00','2024-07-20 16:41:00',0),
-	(10190,0,'Added idea 281 to topic 472',0,'','2024-07-20 16:41:01','2024-07-20 16:41:01',0),
-	(10191,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 16:41:01','2024-07-20 16:41:01',0),
-	(10192,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:41:16','2024-07-20 16:41:16',0),
-	(10193,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:45:06','2024-07-20 16:45:06',0),
-	(10194,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:45:06','2024-07-20 16:45:06',0),
-	(10195,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:47:33','2024-07-20 16:47:33',0),
-	(10196,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:47:33','2024-07-20 16:47:33',0),
-	(10197,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:49:38','2024-07-20 16:49:38',0),
-	(10198,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:49:38','2024-07-20 16:49:38',0),
-	(10199,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:49:42','2024-07-20 16:49:42',0),
-	(10200,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:49:42','2024-07-20 16:49:42',0),
-	(10201,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:50:08','2024-07-20 16:50:08',0),
-	(10202,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:50:08','2024-07-20 16:50:08',0),
-	(10203,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:31','2024-07-20 16:52:31',0),
-	(10204,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:31','2024-07-20 16:52:31',0),
-	(10205,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:48','2024-07-20 16:52:48',0),
-	(10206,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:48','2024-07-20 16:52:48',0),
-	(10207,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:51','2024-07-20 16:52:51',0),
-	(10208,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:51','2024-07-20 16:52:51',0),
-	(10209,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:53:05','2024-07-20 16:53:05',0),
-	(10210,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:58:41','2024-07-20 16:58:41',0),
-	(10211,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:58:41','2024-07-20 16:58:41',0),
-	(10212,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:01:29','2024-07-20 17:01:29',0),
-	(10213,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:01:29','2024-07-20 17:01:29',0),
-	(10214,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:01:55','2024-07-20 17:01:55',0),
-	(10215,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:02:01','2024-07-20 17:02:01',0),
-	(10216,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:02:25','2024-07-20 17:02:25',0),
-	(10217,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:02:25','2024-07-20 17:02:25',0),
-	(10218,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:02:50','2024-07-20 17:02:50',0),
-	(10219,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:02:50','2024-07-20 17:02:50',0),
-	(10220,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:02:54','2024-07-20 17:02:54',0),
-	(10221,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:02:54','2024-07-20 17:02:54',0),
-	(10222,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:03:25','2024-07-20 17:03:25',0),
-	(10223,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:03:25','2024-07-20 17:03:25',0),
-	(10224,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:04:27','2024-07-20 17:04:27',0),
-	(10225,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:04:27','2024-07-20 17:04:27',0),
-	(10226,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:29','2024-07-20 17:04:29',0),
-	(10227,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:29','2024-07-20 17:04:29',0),
-	(10228,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:33','2024-07-20 17:04:33',0),
-	(10229,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:40','2024-07-20 17:04:40',0),
-	(10230,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:04:47','2024-07-20 17:04:47',0),
-	(10231,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:04:47','2024-07-20 17:04:47',0),
-	(10232,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:49','2024-07-20 17:04:49',0),
-	(10233,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:49','2024-07-20 17:04:49',0),
-	(10234,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:32:36','2024-07-21 10:32:36',0),
-	(10235,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:32:36','2024-07-21 10:32:36',0),
-	(10236,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:32:44','2024-07-21 10:32:44',0),
-	(10237,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:32:44','2024-07-21 10:32:44',0),
-	(10238,0,'Added new idea (#282) teste',0,'','2024-07-21 10:33:32','2024-07-21 10:33:32',0),
-	(10239,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:33:36','2024-07-21 10:33:36',0),
-	(10240,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:33:36','2024-07-21 10:33:36',0),
-	(10241,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:33:40','2024-07-21 10:33:40',0),
-	(10242,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:33:40','2024-07-21 10:33:40',0),
-	(10243,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:34:31','2024-07-21 10:34:31',0),
-	(10244,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:34:31','2024-07-21 10:34:31',0),
-	(10245,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:34:38','2024-07-21 10:34:38',0),
-	(10246,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:34:38','2024-07-21 10:34:38',0),
-	(10247,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:34:45','2024-07-21 10:34:45',0),
-	(10248,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:34:45','2024-07-21 10:34:45',0),
-	(10249,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:34:48','2024-07-21 10:34:48',0),
-	(10250,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:34:48','2024-07-21 10:34:48',0),
-	(10251,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:39:42','2024-07-21 10:39:42',0),
-	(10252,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:39:42','2024-07-21 10:39:42',0),
-	(10253,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:40:07','2024-07-21 10:40:07',0),
-	(10254,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:40:19','2024-07-21 10:40:19',0),
-	(10255,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:40:19','2024-07-21 10:40:19',0),
-	(10256,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:41:44','2024-07-21 10:41:44',0),
-	(10257,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:42:02','2024-07-21 10:42:02',0),
-	(10258,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:42:04','2024-07-21 10:42:04',0),
-	(10259,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:42:08','2024-07-21 10:42:08',0),
-	(10260,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:42:11','2024-07-21 10:42:11',0),
-	(10261,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:42:11','2024-07-21 10:42:11',0),
-	(10262,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:42:13','2024-07-21 10:42:13',0),
-	(10263,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:42:15','2024-07-21 10:42:15',0),
-	(10264,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:42:16','2024-07-21 10:42:16',0),
-	(10265,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:42:17','2024-07-21 10:42:17',0),
-	(10266,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:42:24','2024-07-21 10:42:24',0),
-	(10267,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:42:24','2024-07-21 10:42:24',0),
-	(10268,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:42:25','2024-07-21 10:42:25',0),
-	(10269,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:42:27','2024-07-21 10:42:27',0),
-	(10270,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:42:28','2024-07-21 10:42:28',0),
-	(10271,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:42:28','2024-07-21 10:42:28',0),
-	(10272,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:42:32','2024-07-21 10:42:32',0),
-	(10273,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:42:33','2024-07-21 10:42:33',0),
-	(10274,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:42:37','2024-07-21 10:42:37',0),
-	(10275,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:42:41','2024-07-21 10:42:41',0),
-	(10276,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:42:42','2024-07-21 10:42:42',0),
-	(10277,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:42:42','2024-07-21 10:42:42',0),
-	(10278,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:26','2024-07-21 10:43:26',0),
-	(10279,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:26','2024-07-21 10:43:26',0),
-	(10280,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:43:28','2024-07-21 10:43:28',0),
-	(10281,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:43:31','2024-07-21 10:43:31',0),
-	(10282,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:38','2024-07-21 10:43:38',0),
-	(10283,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:38','2024-07-21 10:43:38',0),
-	(10284,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:43:40','2024-07-21 10:43:40',0),
-	(10285,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:43:42','2024-07-21 10:43:42',0),
-	(10286,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:43:43','2024-07-21 10:43:43',0),
-	(10287,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:43:46','2024-07-21 10:43:46',0),
-	(10288,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:43:47','2024-07-21 10:43:47',0),
-	(10289,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:43:48','2024-07-21 10:43:48',0),
-	(10290,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:57','2024-07-21 10:43:57',0),
-	(10291,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:57','2024-07-21 10:43:57',0),
-	(10292,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:45:41','2024-07-21 10:45:41',0),
-	(10293,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:45:42','2024-07-21 10:45:42',0),
-	(10294,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:51:04','2024-07-21 10:51:04',0),
-	(10295,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:51:05','2024-07-21 10:51:05',0),
-	(10296,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:51:06','2024-07-21 10:51:06',0),
-	(10297,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:51:07','2024-07-21 10:51:07',0),
-	(10298,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:51:08','2024-07-21 10:51:08',0),
-	(10299,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:51:09','2024-07-21 10:51:09',0),
-	(10300,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:51:10','2024-07-21 10:51:10',0),
-	(10301,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:51:10','2024-07-21 10:51:10',0),
-	(10302,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:51:11','2024-07-21 10:51:11',0),
-	(10303,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:51:12','2024-07-21 10:51:12',0),
-	(10304,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:51:20','2024-07-21 10:51:20',0),
-	(10305,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:51:21','2024-07-21 10:51:21',0),
-	(10306,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:51:25','2024-07-21 10:51:25',0),
-	(10307,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:51:29','2024-07-21 10:51:29',0),
-	(10308,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:51:29','2024-07-21 10:51:29',0),
-	(10309,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:51:30','2024-07-21 10:51:30',0),
-	(10310,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-21 10:52:10','2024-07-21 10:52:10',0),
-	(10311,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-21 10:52:10','2024-07-21 10:52:10',0),
-	(10312,0,'Added idea 280 to topic 472',0,'','2024-07-21 10:52:12','2024-07-21 10:52:12',0),
-	(10313,0,'Added idea 281 to topic 472',0,'','2024-07-21 10:52:12','2024-07-21 10:52:12',0),
-	(10314,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-21 10:52:16','2024-07-21 10:52:16',0),
-	(10315,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-21 10:52:17','2024-07-21 10:52:17',0),
-	(10316,0,'Added idea 280 to topic 472',0,'','2024-07-21 10:53:36','2024-07-21 10:53:36',0),
-	(10317,0,'Added idea 281 to topic 472',0,'','2024-07-21 10:53:37','2024-07-21 10:53:37',0),
-	(10318,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-21 10:53:37','2024-07-21 10:53:37',0),
-	(10319,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-21 10:53:38','2024-07-21 10:53:38',0),
-	(10320,0,'Topic deleted, id=490 by 0',0,'','2024-07-21 10:53:48','2024-07-21 10:53:48',0),
-	(10321,0,'Idea deleted, id=282 by 0',0,'','2024-07-21 10:54:03','2024-07-21 10:54:03',0),
-	(10322,0,'Idea deleted, id=278 by 0',0,'','2024-07-21 10:54:03','2024-07-21 10:54:03',0),
-	(10323,0,'Idea deleted, id=282 by 0',0,'','2024-07-21 10:54:10','2024-07-21 10:54:10',0),
-	(10324,0,'Idea deleted, id=278 by 0',0,'','2024-07-21 10:54:10','2024-07-21 10:54:10',0),
-	(10325,0,'Idea deleted, id=281 by 0',0,'','2024-07-21 10:54:10','2024-07-21 10:54:10',0),
-	(10326,0,'Idea deleted, id=280 by 0',0,'','2024-07-21 10:54:10','2024-07-21 10:54:10',0),
-	(10327,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-21 10:54:17','2024-07-21 10:54:17',0),
-	(10328,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-21 10:54:17','2024-07-21 10:54:17',0),
-	(10329,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-21 10:54:17','2024-07-21 10:54:17',0),
-	(10330,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-21 10:54:17','2024-07-21 10:54:17',0),
-	(10331,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-21 10:54:25','2024-07-21 10:54:25',0),
-	(10332,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-21 10:54:25','2024-07-21 10:54:25',0),
-	(10333,0,'Added user 165 to room 106',0,'','2024-07-21 11:02:07','2024-07-21 11:02:07',0),
-	(10334,0,'Added user 165 to room 106',0,'','2024-07-21 11:02:07','2024-07-21 11:02:07',0),
-	(10335,0,'Added user 265 to room 106',0,'','2024-07-21 11:02:07','2024-07-21 11:02:07',0),
-	(10336,0,'Added user 265 to room 106',0,'','2024-07-21 11:02:07','2024-07-21 11:02:07',0),
-	(10337,0,'Added user 264 to room 106',0,'','2024-07-21 11:02:08','2024-07-21 11:02:08',0),
-	(10338,0,'Added user 264 to room 106',0,'','2024-07-21 11:02:08','2024-07-21 11:02:08',0),
-	(10339,0,'Added user 268 to room 106',0,'','2024-07-21 11:02:11','2024-07-21 11:02:11',0),
-	(10340,0,'Added user 268 to room 106',0,'','2024-07-21 11:02:11','2024-07-21 11:02:11',0),
-	(10341,0,'Added user 267 to room 106',0,'','2024-07-21 11:02:11','2024-07-21 11:02:11',0),
-	(10342,0,'Added user 267 to room 106',0,'','2024-07-21 11:02:11','2024-07-21 11:02:11',0),
-	(10343,0,'Added user 270 to room 106',0,'','2024-07-21 11:02:12','2024-07-21 11:02:12',0),
-	(10344,0,'Added user 270 to room 106',0,'','2024-07-21 11:02:12','2024-07-21 11:02:12',0),
-	(10345,0,'Added user 269 to room 106',0,'','2024-07-21 11:02:13','2024-07-21 11:02:13',0),
-	(10346,0,'Added user 269 to room 106',0,'','2024-07-21 11:02:13','2024-07-21 11:02:13',0),
-	(10347,0,'Added user 266 to room 106',0,'','2024-07-21 11:02:14','2024-07-21 11:02:14',0),
-	(10348,0,'Added user 266 to room 106',0,'','2024-07-21 11:02:14','2024-07-21 11:02:14',0),
-	(10349,0,'Successful login user admin',0,'','2024-07-22 09:49:22','2024-07-22 09:49:22',0),
-	(10350,0,'Added new topic (#491) test',0,'','2024-07-23 13:44:32','2024-07-23 13:44:32',0),
-	(10351,0,'Topic deleted, id=491 by 0',0,'','2024-07-23 13:44:40','2024-07-23 13:44:40',0),
-	(10352,0,'Successful login user admin',0,'','2024-07-23 13:47:21','2024-07-23 13:47:21',0),
-	(10353,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:15:36','2024-07-23 14:15:36',0),
-	(10354,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:15:36','2024-07-23 14:15:36',0),
-	(10355,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:15:36','2024-07-23 14:15:36',0),
-	(10356,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:15:36','2024-07-23 14:15:36',0),
-	(10357,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:05','2024-07-23 14:17:05',0),
-	(10358,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:05','2024-07-23 14:17:05',0),
-	(10359,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:12','2024-07-23 14:17:12',0),
-	(10360,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:12','2024-07-23 14:17:12',0),
-	(10361,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:39','2024-07-23 14:17:39',0),
-	(10362,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:39','2024-07-23 14:17:39',0),
-	(10363,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:56','2024-07-23 14:17:56',0),
-	(10364,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:56','2024-07-23 14:17:56',0),
-	(10365,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:18:27','2024-07-23 14:18:27',0),
-	(10366,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:18:27','2024-07-23 14:18:27',0),
-	(10367,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:18:45','2024-07-23 14:18:45',0),
-	(10368,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:18:45','2024-07-23 14:18:45',0),
-	(10369,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:20:20','2024-07-23 14:20:20',0),
-	(10370,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:20:20','2024-07-23 14:20:20',0),
-	(10371,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:21:52','2024-07-23 14:21:52',0),
-	(10372,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:21:52','2024-07-23 14:21:52',0),
-	(10373,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:21:53','2024-07-23 14:21:53',0),
-	(10374,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:21:53','2024-07-23 14:21:53',0),
-	(10375,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:22:25','2024-07-23 14:22:25',0),
-	(10376,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:22:25','2024-07-23 14:22:25',0),
-	(10377,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:22:26','2024-07-23 14:22:26',0),
-	(10378,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:22:26','2024-07-23 14:22:26',0),
-	(10379,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 14:24:31','2024-07-23 14:24:31',0),
-	(10380,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 14:24:31','2024-07-23 14:24:31',0),
-	(10381,0,'Idea  268 decrementing likes',0,'','2024-07-23 14:24:35','2024-07-23 14:24:35',0),
-	(10382,0,'Idea  268 incremented likes',0,'','2024-07-23 14:24:35','2024-07-23 14:24:35',0),
-	(10383,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:25:01','2024-07-23 14:25:01',0),
-	(10384,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:25:01','2024-07-23 14:25:01',0),
-	(10385,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:25:01','2024-07-23 14:25:01',0),
-	(10386,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:25:01','2024-07-23 14:25:01',0),
-	(10387,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 14:28:09','2024-07-23 14:28:09',0),
-	(10388,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 14:28:09','2024-07-23 14:28:09',0),
-	(10389,0,'Successful login user admin',0,'','2024-07-23 15:05:02','2024-07-23 15:05:02',0),
-	(10390,0,'Successful login user admin',0,'','2024-07-23 15:08:04','2024-07-23 15:08:04',0),
-	(10391,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 15:43:12','2024-07-23 15:43:12',0),
-	(10392,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 15:43:12','2024-07-23 15:43:12',0),
-	(10393,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 15:43:12','2024-07-23 15:43:12',0),
-	(10394,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 15:43:12','2024-07-23 15:43:12',0),
-	(10395,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 15:56:55','2024-07-23 15:56:55',0),
-	(10396,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 15:56:55','2024-07-23 15:56:55',0),
-	(10397,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 15:57:04','2024-07-23 15:57:04',0),
-	(10398,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 15:57:04','2024-07-23 15:57:04',0),
-	(10399,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 15:57:06','2024-07-23 15:57:06',0),
-	(10400,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 15:57:06','2024-07-23 15:57:06',0),
-	(10401,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:16','2024-07-23 16:04:16',0),
-	(10402,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:16','2024-07-23 16:04:16',0),
-	(10403,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:04:22','2024-07-23 16:04:22',0),
-	(10404,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:04:22','2024-07-23 16:04:22',0),
-	(10405,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:24','2024-07-23 16:04:24',0),
-	(10406,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:24','2024-07-23 16:04:24',0),
-	(10407,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:04:25','2024-07-23 16:04:25',0),
-	(10408,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:04:25','2024-07-23 16:04:25',0),
-	(10409,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:04:25','2024-07-23 16:04:25',0),
-	(10410,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:04:26','2024-07-23 16:04:26',0),
-	(10411,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:39','2024-07-23 16:04:39',0),
-	(10412,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:39','2024-07-23 16:04:39',0),
-	(10413,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:05:35','2024-07-23 16:05:35',0),
-	(10414,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:05:35','2024-07-23 16:05:35',0),
-	(10415,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:05:35','2024-07-23 16:05:35',0),
-	(10416,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:05:35','2024-07-23 16:05:35',0),
-	(10417,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:05:38','2024-07-23 16:05:38',0),
-	(10418,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:05:38','2024-07-23 16:05:38',0),
-	(10419,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:05:53','2024-07-23 16:05:53',0),
-	(10420,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:05:53','2024-07-23 16:05:53',0),
-	(10421,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:06:58','2024-07-23 16:06:58',0),
-	(10422,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:15:42','2024-07-23 16:15:42',0),
-	(10423,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:15:42','2024-07-23 16:15:42',0),
-	(10424,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:19:17','2024-07-23 16:19:17',0),
-	(10425,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:20:16','2024-07-23 16:20:16',0),
-	(10426,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:20:16','2024-07-23 16:20:16',0),
-	(10427,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:20:21','2024-07-23 16:20:21',0),
-	(10428,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:20:21','2024-07-23 16:20:21',0),
-	(10429,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:20:25','2024-07-23 16:20:25',0),
-	(10430,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:20:25','2024-07-23 16:20:25',0),
-	(10431,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:20:25','2024-07-23 16:20:25',0),
-	(10432,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:20:26','2024-07-23 16:20:26',0),
-	(10433,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:10','2024-07-23 16:21:10',0),
-	(10434,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:10','2024-07-23 16:21:10',0),
-	(10435,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:11','2024-07-23 16:21:11',0),
-	(10436,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:11','2024-07-23 16:21:11',0),
-	(10437,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:21:39','2024-07-23 16:21:39',0),
-	(10438,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:21:39','2024-07-23 16:21:39',0),
-	(10439,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:43','2024-07-23 16:21:43',0),
-	(10440,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:43','2024-07-23 16:21:43',0),
-	(10441,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:43','2024-07-23 16:21:43',0),
-	(10442,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:43','2024-07-23 16:21:43',0),
-	(10443,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:10','2024-07-23 16:22:10',0),
-	(10444,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:10','2024-07-23 16:22:10',0),
-	(10445,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:29','2024-07-23 16:22:29',0),
-	(10446,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:29','2024-07-23 16:22:29',0),
-	(10447,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:29','2024-07-23 16:22:29',0),
-	(10448,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:29','2024-07-23 16:22:29',0),
-	(10449,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:39','2024-07-23 16:22:39',0),
-	(10450,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:39','2024-07-23 16:22:39',0),
-	(10451,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:39','2024-07-23 16:22:39',0),
-	(10452,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:39','2024-07-23 16:22:39',0),
-	(10453,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:23:00','2024-07-23 16:23:00',0),
-	(10454,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:23:00','2024-07-23 16:23:00',0),
-	(10455,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:23:00','2024-07-23 16:23:00',0),
-	(10456,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:23:00','2024-07-23 16:23:00',0),
-	(10457,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:25:28','2024-07-23 16:25:28',0),
-	(10458,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:25:28','2024-07-23 16:25:28',0),
-	(10459,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:25:28','2024-07-23 16:25:28',0),
-	(10460,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:25:28','2024-07-23 16:25:28',0),
-	(10461,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:26:37','2024-07-23 16:26:37',0),
-	(10462,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:26:37','2024-07-23 16:26:37',0),
-	(10463,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:26:37','2024-07-23 16:26:37',0),
-	(10464,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:26:37','2024-07-23 16:26:37',0),
-	(10465,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:27:33','2024-07-23 16:27:33',0),
-	(10466,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:27:33','2024-07-23 16:27:33',0),
-	(10467,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:27:33','2024-07-23 16:27:33',0),
-	(10468,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:27:33','2024-07-23 16:27:33',0),
-	(10469,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:28:07','2024-07-23 16:28:07',0),
-	(10470,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:28:07','2024-07-23 16:28:07',0),
-	(10471,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:28:07','2024-07-23 16:28:07',0),
-	(10472,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:28:07','2024-07-23 16:28:07',0),
-	(10473,0,'Idea  264 number of votes given set to 1',0,'','2024-07-23 16:29:05','2024-07-23 16:29:05',0),
-	(10474,0,'Idea (#264) added Vote - value: 0 by 165',0,'','2024-07-23 16:29:05','2024-07-23 16:29:05',0),
-	(10475,0,'Idea  264 votes set to 0',0,'','2024-07-23 16:30:28','2024-07-23 16:30:28',0),
-	(10476,0,'Idea  264 number of votes given set to 1',0,'','2024-07-23 16:30:28','2024-07-23 16:30:28',0),
-	(10477,0,'Idea (#264) added Vote - value: 1 by 165',0,'','2024-07-23 16:30:28','2024-07-23 16:30:28',0),
-	(10478,0,'Idea  264 votes set to 0',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
-	(10479,0,'Idea  264 number of votes given set to 1',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
-	(10480,0,'Idea (#264) added Vote - value: -1 by 165',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
-	(10481,0,'Idea  264 votes set to 0',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
-	(10482,0,'Idea  264 number of votes given set to 1',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
-	(10483,0,'Idea (#264) added Vote - value: 0 by 165',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
-	(10484,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:30:32','2024-07-23 16:30:32',0),
-	(10485,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:30:32','2024-07-23 16:30:32',0),
-	(10486,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:30:32','2024-07-23 16:30:32',0),
-	(10487,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:30:32','2024-07-23 16:30:32',0),
-	(10488,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:33:51','2024-07-23 16:33:51',0),
-	(10489,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:33:51','2024-07-23 16:33:51',0),
-	(10490,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:33:56','2024-07-23 16:33:56',0),
-	(10491,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:33:56','2024-07-23 16:33:56',0),
-	(10492,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:33:58','2024-07-23 16:33:58',0),
-	(10493,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:33:58','2024-07-23 16:33:58',0),
-	(10494,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:33:58','2024-07-23 16:33:58',0),
-	(10495,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:33:58','2024-07-23 16:33:58',0),
-	(10496,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:34:01','2024-07-23 16:34:01',0),
-	(10497,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:34:01','2024-07-23 16:34:01',0),
-	(10498,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:34:03','2024-07-23 16:34:03',0),
-	(10499,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:34:03','2024-07-23 16:34:03',0),
-	(10500,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:34:04','2024-07-23 16:34:04',0),
-	(10501,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:34:04','2024-07-23 16:34:04',0),
-	(10502,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:34:24','2024-07-23 16:34:24',0),
-	(10503,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:34:24','2024-07-23 16:34:24',0),
-	(10504,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:36:45','2024-07-23 16:36:45',0),
-	(10505,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:36:45','2024-07-23 16:36:45',0),
-	(10506,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:36:53','2024-07-23 16:36:53',0),
-	(10507,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:36:53','2024-07-23 16:36:53',0),
-	(10508,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:36:56','2024-07-23 16:36:56',0),
-	(10509,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:36:56','2024-07-23 16:36:56',0),
-	(10510,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:36:57','2024-07-23 16:36:57',0),
-	(10511,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:36:57','2024-07-23 16:36:57',0),
-	(10512,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:37:00','2024-07-23 16:37:00',0),
-	(10513,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:37:00','2024-07-23 16:37:00',0),
-	(10514,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:10:51','2024-07-23 17:10:51',0),
-	(10515,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:10:51','2024-07-23 17:10:51',0),
-	(10516,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:10:51','2024-07-23 17:10:51',0),
-	(10517,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:10:52','2024-07-23 17:10:52',0),
-	(10518,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:11:47','2024-07-23 17:11:47',0),
-	(10519,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:11:47','2024-07-23 17:11:47',0),
-	(10520,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:36','2024-07-23 17:20:36',0),
-	(10521,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:36','2024-07-23 17:20:36',0),
-	(10522,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:47','2024-07-23 17:20:47',0),
-	(10523,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:47','2024-07-23 17:20:47',0),
-	(10524,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:57','2024-07-23 17:20:57',0),
-	(10525,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:57','2024-07-23 17:20:57',0),
-	(10526,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:21:01','2024-07-23 17:21:01',0),
-	(10527,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:21:01','2024-07-23 17:21:01',0),
-	(10528,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:25:13','2024-07-23 17:25:13',0),
-	(10529,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:25:13','2024-07-23 17:25:13',0),
-	(10530,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:25:16','2024-07-23 17:25:16',0),
-	(10531,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:25:16','2024-07-23 17:25:16',0),
-	(10532,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:18','2024-07-23 17:25:18',0),
-	(10533,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:18','2024-07-23 17:25:18',0),
-	(10534,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:18','2024-07-23 17:25:18',0),
-	(10535,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:18','2024-07-23 17:25:18',0),
-	(10536,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:23','2024-07-23 17:25:23',0),
-	(10537,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:23','2024-07-23 17:25:23',0),
-	(10538,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:23','2024-07-23 17:25:23',0),
-	(10539,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:23','2024-07-23 17:25:23',0),
-	(10540,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:25','2024-07-23 17:25:25',0),
-	(10541,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:25','2024-07-23 17:25:25',0),
-	(10542,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:25','2024-07-23 17:25:25',0),
-	(10543,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:25','2024-07-23 17:25:25',0),
-	(10544,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:29','2024-07-23 17:25:29',0),
-	(10545,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:29','2024-07-23 17:25:29',0),
-	(10546,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:32','2024-07-23 17:25:32',0),
-	(10547,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:32','2024-07-23 17:25:32',0),
-	(10548,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:36','2024-07-23 17:25:36',0),
-	(10549,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:36','2024-07-23 17:25:36',0),
-	(10550,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:41','2024-07-23 17:25:41',0),
-	(10551,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:41','2024-07-23 17:25:41',0),
-	(10552,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:26:37','2024-07-23 17:26:37',0),
-	(10553,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:26:37','2024-07-23 17:26:37',0),
-	(10554,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 17:26:42','2024-07-23 17:26:42',0),
-	(10555,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 17:26:42','2024-07-23 17:26:42',0),
-	(10556,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:26:46','2024-07-23 17:26:46',0),
-	(10557,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:26:46','2024-07-23 17:26:46',0),
-	(10558,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:28:23','2024-07-23 17:28:23',0),
-	(10559,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:28:23','2024-07-23 17:28:23',0),
-	(10560,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:28:23','2024-07-23 17:28:23',0),
-	(10561,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:28:23','2024-07-23 17:28:23',0),
-	(10562,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-24 10:24:11','2024-07-24 10:24:11',0),
-	(10563,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-24 10:24:11','2024-07-24 10:24:11',0),
-	(10564,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-24 10:24:59','2024-07-24 10:24:59',0),
-	(10565,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-24 10:24:59','2024-07-24 10:24:59',0),
-	(10566,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-24 10:24:59','2024-07-24 10:24:59',0),
-	(10567,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-24 10:24:59','2024-07-24 10:24:59',0),
-	(10568,0,'Edited room 106 by 165',0,'','2024-07-25 16:22:28','2024-07-25 16:22:28',0),
-	(10569,0,'Edited room 106 by 165',0,'','2024-07-25 16:22:37','2024-07-25 16:22:37',0),
-	(10570,0,'Edited room 106 by 165',0,'','2024-07-25 16:25:56','2024-07-25 16:25:56',0),
-	(10571,0,'Edited room 106 by 165',0,'','2024-07-25 16:43:46','2024-07-25 16:43:46',0),
-	(10572,0,'Added new category (#1) help',0,'','2024-07-29 14:43:15','2024-07-29 14:43:15',0),
-	(10573,0,'Edited idea 268 by 165',0,'','2024-07-29 14:43:29','2024-07-29 14:43:29',0),
-	(10574,0,'Added idea 268 to category 1',0,'','2024-07-29 14:43:29','2024-07-29 14:43:29',0),
-	(10575,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 14:51:34','2024-07-29 14:51:34',0),
-	(10576,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 14:51:34','2024-07-29 14:51:34',0),
-	(10577,0,'Edited idea 272 by 165',0,'','2024-07-29 14:58:50','2024-07-29 14:58:50',0),
-	(10578,0,'Added idea 272 to category 1',0,'','2024-07-29 14:58:50','2024-07-29 14:58:50',0),
-	(10579,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:00:12','2024-07-29 15:00:12',0),
-	(10580,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:00:12','2024-07-29 15:00:12',0),
-	(10581,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:00:44','2024-07-29 15:00:44',0),
-	(10582,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:00:44','2024-07-29 15:00:44',0),
-	(10583,0,'Added new category (#2) Occult',0,'','2024-07-29 15:03:10','2024-07-29 15:03:10',0),
-	(10584,0,'Edited idea 261 by 165',0,'','2024-07-29 15:03:18','2024-07-29 15:03:18',0),
-	(10585,0,'Added idea 261 to category 2',0,'','2024-07-29 15:03:18','2024-07-29 15:03:18',0),
-	(10586,0,'Edited idea 262 by 165',0,'','2024-07-29 15:03:41','2024-07-29 15:03:41',0),
-	(10587,0,'Added idea 262 to category 2',0,'','2024-07-29 15:03:41','2024-07-29 15:03:41',0),
-	(10588,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:09:28','2024-07-29 15:09:28',0),
-	(10589,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:09:28','2024-07-29 15:09:28',0),
-	(10590,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:25:27','2024-07-29 15:25:27',0),
-	(10591,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:25:27','2024-07-29 15:25:27',0),
-	(10592,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:26:31','2024-07-29 15:26:31',0),
-	(10593,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:26:31','2024-07-29 15:26:31',0),
-	(10594,0,'Edited idea 268 by 165',0,'','2024-07-29 15:26:43','2024-07-29 15:26:43',0),
-	(10595,0,'Added idea 268 to category 2',0,'','2024-07-29 15:26:43','2024-07-29 15:26:43',0),
-	(10596,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:26:48','2024-07-29 15:26:48',0),
-	(10597,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:26:48','2024-07-29 15:26:48',0),
-	(10598,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:34:21','2024-07-29 15:34:21',0),
-	(10599,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:34:21','2024-07-29 15:34:21',0),
-	(10600,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:52:04','2024-07-29 15:52:04',0),
-	(10601,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:52:04','2024-07-29 15:52:04',0),
-	(10602,0,'Added new category (#3) General',0,'','2024-07-29 15:54:41','2024-07-29 15:54:41',0),
-	(10603,0,'Edited idea 268 by 165',0,'','2024-07-29 15:54:55','2024-07-29 15:54:55',0),
-	(10604,0,'Added idea 268 to category 3',0,'','2024-07-29 15:54:55','2024-07-29 15:54:55',0),
-	(10605,0,'Edited idea 266 by 165',0,'','2024-07-29 15:55:02','2024-07-29 15:55:02',0),
-	(10606,0,'Added idea 266 to category 3',0,'','2024-07-29 15:55:02','2024-07-29 15:55:02',0),
-	(10607,0,'Edited idea 260 by 165',0,'','2024-07-29 15:55:07','2024-07-29 15:55:07',0),
-	(10608,0,'Added idea 260 to category 3',0,'','2024-07-29 15:55:07','2024-07-29 15:55:07',0),
-	(10609,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:55:16','2024-07-29 15:55:16',0),
-	(10610,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:55:16','2024-07-29 15:55:16',0),
-	(10611,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-29 15:55:20','2024-07-29 15:55:20',0),
-	(10612,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-29 15:55:20','2024-07-29 15:55:20',0),
-	(10613,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
-	(10614,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
-	(10615,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
-	(10616,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
-	(10617,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-29 15:55:30','2024-07-29 15:55:30',0),
-	(10618,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-29 15:55:30','2024-07-29 15:55:30',0),
-	(10619,0,'Added new message (#25) test88',0,'','2024-09-04 07:46:00','2024-09-04 07:46:00',0),
-	(10620,0,'Added new comment (#0) user: 165',0,'','2024-09-06 06:35:19','2024-09-06 06:35:19',0);
-
+INSERT INTO `au_systemlog` VALUES
+(9166,0,'Edited user 84 by 0',0,'','2024-06-18 13:15:02','2024-06-18 13:15:02',0),
+(9167,0,'Edited user 204 by 0',0,'','2024-06-18 13:16:26','2024-06-18 13:16:26',0),
+(9168,0,'Added new room (#104) Default Class',0,'','2024-06-18 13:20:07','2024-06-18 13:20:07',0),
+(9169,0,'Added new idea (#246) Some Wild Idea',0,'','2024-06-18 13:22:48','2024-06-18 13:22:48',0),
+(9170,0,'Edited user 165 by 0',0,'','2024-06-18 13:36:08','2024-06-18 13:36:08',0),
+(9171,0,'Successful login user 165',0,'','2024-06-18 15:31:25','2024-06-18 15:31:25',0),
+(9172,0,'Added new topic (#465) First Box',0,'','2024-06-19 17:42:56','2024-06-19 17:42:56',0),
+(9173,0,'Added new topic (#466) Second Box',0,'','2024-06-20 12:50:24','2024-06-20 12:50:24',0),
+(9174,0,'Edited topic (#) Second Box',0,'','2024-06-20 20:00:05','2024-06-20 20:00:05',0),
+(9175,0,'Added new topic (#467) Second Box',0,'','2024-06-20 20:00:56','2024-06-20 20:00:56',0),
+(9176,0,'Topic deleted, id=467 by 0',0,'','2024-06-20 20:04:39','2024-06-20 20:04:39',0),
+(9177,0,'Topic deleted, id=466 by 0',0,'','2024-06-20 20:04:58','2024-06-20 20:04:58',0),
+(9178,0,'Added new topic (#468) Box on Approval Phase',0,'','2024-06-20 20:06:33','2024-06-20 20:06:33',0),
+(9179,0,'Edited topic (#) First Box',0,'','2024-06-21 13:46:53','2024-06-21 13:46:53',0),
+(9180,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-21 13:47:09','2024-06-21 13:47:09',0),
+(9181,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-21 13:48:13','2024-06-21 13:48:13',0),
+(9182,0,'Successful login user 165',0,'','2024-06-22 14:24:47','2024-06-22 14:24:47',0),
+(9183,0,'Edited topic (#) First Box',0,'','2024-06-22 19:29:34','2024-06-22 19:29:34',0),
+(9184,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-22 19:29:58','2024-06-22 19:29:58',0),
+(9185,0,'Added new user 262',0,'','2024-06-22 20:49:34','2024-06-22 20:49:34',0),
+(9186,0,'User delegation(s) deleted with id 262 for topic 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
+(9187,0,'User delegation(s) deleted with id 262 for topic 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
+(9188,0,'User deleted with id 262 by 0',0,'','2024-06-22 20:49:41','2024-06-22 20:49:41',0),
+(9189,0,'Added new room (#105) Test Room',0,'','2024-06-22 20:50:03','2024-06-22 20:50:03',0),
+(9190,0,'Room deleted with id 105 by 0',0,'','2024-06-22 20:50:06','2024-06-22 20:50:06',0),
+(9191,0,'Edited topic (#) Box on Approval Phase',0,'','2024-06-22 21:17:17','2024-06-22 21:17:17',0),
+(9192,0,'Added new text (#6) creator: 0',0,'','2024-06-22 21:41:02','2024-06-22 21:41:02',0),
+(9193,0,'Consent values updated by value -1',0,'','2024-06-22 21:43:31','2024-06-22 21:43:31',0),
+(9194,0,'Text deleted, id = 6 by 0',0,'','2024-06-22 21:43:31','2024-06-22 21:43:31',0),
+(9195,0,'Added new text (#7) creator: 0',0,'','2024-06-22 21:43:55','2024-06-22 21:43:55',0),
+(9196,0,'Consent values updated by value -1',0,'','2024-06-22 21:44:00','2024-06-22 21:44:00',0),
+(9197,0,'Text deleted, id = 7 by 0',0,'','2024-06-22 21:44:00','2024-06-22 21:44:00',0),
+(9198,0,'Added new user 263',0,'','2024-06-22 21:53:33','2024-06-22 21:53:33',0),
+(9199,0,'User delegation(s) deleted with id 263 for topic 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
+(9200,0,'User delegation(s) deleted with id 263 for topic 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
+(9201,0,'User deleted with id 263 by 0',0,'','2024-06-22 21:53:38','2024-06-22 21:53:38',0),
+(9202,0,'Added new idea (#247) test idea',0,'','2024-06-22 22:06:37','2024-06-22 22:06:37',0),
+(9203,0,'Idea deleted, id=247 by 0',0,'','2024-06-22 22:06:47','2024-06-22 22:06:47',0),
+(9204,0,'Edited topic (#468) Box on Approval Phase',0,'','2024-06-22 22:13:42','2024-06-22 22:13:42',0),
+(9205,0,'Added new topic (#469) Box on Voting phase',0,'','2024-06-22 22:19:52','2024-06-22 22:19:52',0),
+(9206,0,'Edited topic (#465) First Box',0,'','2024-06-22 22:22:30','2024-06-22 22:22:30',0),
+(9207,0,'Topic deleted, id=465 by 0',0,'','2024-06-22 22:24:03','2024-06-22 22:24:03',0),
+(9208,0,'Added new text (#8) creator: 0',0,'','2024-06-22 22:30:30','2024-06-22 22:30:30',0),
+(9209,0,'Added new topic (#470) Box on Discussion Phase',0,'','2024-06-22 22:39:57','2024-06-22 22:39:57',0),
+(9210,0,'Edited topic (#468) Box on Approval Phase',0,'','2024-06-22 22:40:05','2024-06-22 22:40:05',0),
+(9211,0,'Edited topic (#469) Box on Voting phase',0,'','2024-06-22 22:40:11','2024-06-22 22:40:11',0),
+(9212,0,'Added new topic (#471) Box on Results Phase',0,'','2024-06-22 22:40:33','2024-06-22 22:40:33',0),
+(9213,0,'Added new text (#9) creator: 0',0,'','2024-06-23 12:27:27','2024-06-23 12:27:27',0),
+(9214,0,'Consent values updated by value 1',0,'','2024-06-23 12:27:27','2024-06-23 12:27:27',0),
+(9215,0,'Added new text (#10) creator: 0',0,'','2024-06-23 12:30:58','2024-06-23 12:30:58',0),
+(9216,0,'Added consent for user 165 for text 9',0,'','2024-06-23 12:45:18','2024-06-23 12:45:18',0),
+(9217,0,'Added new text (#11) creator: 0',0,'','2024-06-23 12:47:07','2024-06-23 12:47:07',0),
+(9218,0,'Consent values updated by value 1',0,'','2024-06-23 12:47:07','2024-06-23 12:47:07',0),
+(9219,0,'Added consent for user 165 for text 11',0,'','2024-06-23 12:47:20','2024-06-23 12:47:20',0),
+(9220,0,'Edited idea 246 by 165',0,'','2024-06-24 10:04:44','2024-06-24 10:04:44',0),
+(9221,0,'Added new idea (#248) Some wild idea to work with',0,'','2024-06-24 10:12:42','2024-06-24 10:12:42',0),
+(9222,0,'Added new idea (#249) There is a need for a discussion idea for testing purposes.',0,'','2024-06-24 10:13:23','2024-06-24 10:13:23',0),
+(9223,0,'Added new idea (#250) Is there anything to be discussed here? I don\'t think so. We should all agree.',0,'','2024-06-24 10:14:10','2024-06-24 10:14:10',0),
+(9224,0,'Added new idea (#251) This idea is a mock up for the approval phase.',0,'','2024-06-24 10:18:24','2024-06-24 10:18:24',0),
+(9225,0,'Added new idea (#252) Unfortunately, this was not approved',0,'','2024-06-24 10:19:13','2024-06-24 10:19:13',0),
+(9226,0,'Added new idea (#253) Vote for this idea!',0,'','2024-06-24 10:19:34','2024-06-24 10:19:34',0),
+(9227,0,'Added new idea (#254) We don\'t support nor reject this idea.',0,'','2024-06-24 10:20:13','2024-06-24 10:20:13',0),
+(9228,0,'Added new idea (#255) People don\'t want this idea to be the selected one.',0,'','2024-06-24 10:21:17','2024-06-24 10:21:17',0),
+(9229,0,'Added new idea (#256) This is a winner idea on the results phase.',0,'','2024-06-24 10:21:50','2024-06-24 10:21:50',0),
+(9230,0,'Added new idea (#257) This idea was not approved by the voters.',0,'','2024-06-24 10:22:20','2024-06-24 10:22:20',0),
+(9231,0,'Idea  257 incremented likes',0,'','2024-06-24 13:29:35','2024-06-24 13:29:35',0),
+(9232,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:29:37','2024-06-24 13:29:37',0),
+(9233,0,'Idea  257 incremented likes',0,'','2024-06-24 13:29:38','2024-06-24 13:29:38',0),
+(9234,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:29:38','2024-06-24 13:29:38',0),
+(9235,0,'Idea  257 incremented likes',0,'','2024-06-24 13:36:28','2024-06-24 13:36:28',0),
+(9236,0,'Idea  257 decrementing likes',0,'','2024-06-24 13:36:29','2024-06-24 13:36:29',0),
+(9237,0,'Added new comment (#12) user: 165',0,'','2024-06-24 13:40:13','2024-06-24 13:40:13',0),
+(9238,0,'Idea  246 incremented likes',0,'','2024-06-24 13:40:34','2024-06-24 13:40:34',0),
+(9239,0,'Idea  246 decrementing likes',0,'','2024-06-24 13:51:03','2024-06-24 13:51:03',0),
+(9240,0,'Added idea 255 to topic 469',0,'','2024-06-24 14:12:42','2024-06-24 14:12:42',0),
+(9241,0,'Added idea 253 to topic 469',0,'','2024-06-24 14:12:42','2024-06-24 14:12:42',0),
+(9242,0,'Added idea 249 to topic 470',0,'','2024-06-24 14:13:06','2024-06-24 14:13:06',0),
+(9243,0,'Added idea 250 to topic 470',0,'','2024-06-24 14:13:06','2024-06-24 14:13:06',0),
+(9244,0,'Added idea 257 to topic 471',0,'','2024-06-24 14:16:33','2024-06-24 14:16:33',0),
+(9245,0,'Added idea 256 to topic 471',0,'','2024-06-24 14:16:33','2024-06-24 14:16:33',0),
+(9246,0,'Added idea 253 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
+(9247,0,'Added idea 255 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
+(9248,0,'Added idea 254 to topic 469',0,'','2024-06-24 14:16:42','2024-06-24 14:16:42',0),
+(9249,0,'Added idea 251 to topic 468',0,'','2024-06-24 14:17:04','2024-06-24 14:17:04',0),
+(9250,0,'Added idea 252 to topic 468',0,'','2024-06-24 14:17:04','2024-06-24 14:17:04',0),
+(9251,0,'Added new comment (#0) user: 165',0,'','2024-06-24 14:58:16','2024-06-24 14:58:16',0),
+(9252,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:17','2024-06-24 16:00:17',0),
+(9253,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:17','2024-06-24 16:00:17',0),
+(9254,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
+(9255,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
+(9256,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:18','2024-06-24 16:00:18',0),
+(9257,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
+(9258,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
+(9259,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:00:19','2024-06-24 16:00:19',0),
+(9260,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
+(9261,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
+(9262,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:23','2024-06-24 16:00:23',0),
+(9263,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
+(9264,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
+(9265,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
+(9266,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
+(9267,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
+(9268,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:00:24','2024-06-24 16:00:24',0),
+(9269,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
+(9270,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
+(9271,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:00:58','2024-06-24 16:00:58',0),
+(9272,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
+(9273,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
+(9274,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:00:59','2024-06-24 16:00:59',0),
+(9275,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
+(9276,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
+(9277,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:02','2024-06-24 16:01:02',0),
+(9278,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
+(9279,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
+(9280,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:03','2024-06-24 16:01:03',0),
+(9281,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
+(9282,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
+(9283,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:04','2024-06-24 16:01:04',0),
+(9284,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
+(9285,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
+(9286,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:05','2024-06-24 16:01:05',0),
+(9287,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
+(9288,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
+(9289,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:06','2024-06-24 16:01:06',0),
+(9290,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
+(9291,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
+(9292,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
+(9293,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
+(9294,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
+(9295,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:07','2024-06-24 16:01:07',0),
+(9296,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
+(9297,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
+(9298,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:09','2024-06-24 16:01:09',0),
+(9299,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
+(9300,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
+(9301,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
+(9302,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
+(9303,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
+(9304,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:12','2024-06-24 16:01:12',0),
+(9305,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
+(9306,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
+(9307,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:01:16','2024-06-24 16:01:16',0),
+(9308,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
+(9309,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
+(9310,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:01:17','2024-06-24 16:01:17',0),
+(9311,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
+(9312,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
+(9313,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:01:18','2024-06-24 16:01:18',0),
+(9314,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
+(9315,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
+(9316,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:07:06','2024-06-24 16:07:06',0),
+(9317,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
+(9318,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
+(9319,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:07:07','2024-06-24 16:07:07',0),
+(9320,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
+(9321,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
+(9322,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:07:08','2024-06-24 16:07:08',0),
+(9323,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
+(9324,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
+(9325,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:06','2024-06-24 16:08:06',0),
+(9326,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
+(9327,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
+(9328,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:07','2024-06-24 16:08:07',0),
+(9329,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
+(9330,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
+(9331,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:08','2024-06-24 16:08:08',0),
+(9332,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
+(9333,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
+(9334,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:09','2024-06-24 16:08:09',0),
+(9335,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
+(9336,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
+(9337,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:10','2024-06-24 16:08:10',0),
+(9338,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
+(9339,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
+(9340,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:11','2024-06-24 16:08:11',0),
+(9341,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
+(9342,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
+(9343,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
+(9344,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
+(9345,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
+(9346,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:13','2024-06-24 16:08:13',0),
+(9347,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
+(9348,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
+(9349,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:19','2024-06-24 16:08:19',0),
+(9350,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
+(9351,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
+(9352,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:20','2024-06-24 16:08:20',0),
+(9353,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
+(9354,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
+(9355,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:32','2024-06-24 16:08:32',0),
+(9356,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
+(9357,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
+(9358,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:08:37','2024-06-24 16:08:37',0),
+(9359,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
+(9360,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
+(9361,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:08:38','2024-06-24 16:08:38',0),
+(9362,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
+(9363,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
+(9364,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:08:39','2024-06-24 16:08:39',0),
+(9365,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
+(9366,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
+(9367,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:24:07','2024-06-24 16:24:07',0),
+(9368,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
+(9369,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
+(9370,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:24:09','2024-06-24 16:24:09',0),
+(9371,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
+(9372,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
+(9373,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:24:17','2024-06-24 16:24:17',0),
+(9374,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
+(9375,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
+(9376,0,'Idea (#255) added Vote - value: 0 by 165',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
+(9377,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
+(9378,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
+(9379,0,'Idea (#255) added Vote - value: 1 by 165',0,'','2024-06-24 16:24:19','2024-06-24 16:24:19',0),
+(9380,0,'Idea  255 votes set to 0',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
+(9381,0,'Idea  255 number of votes given set to 1',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
+(9382,0,'Idea (#255) added Vote - value: -1 by 165',0,'','2024-06-24 16:24:23','2024-06-24 16:24:23',0),
+(9383,0,'Topic deleted, id=470 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
+(9384,0,'Topic deleted, id=468 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
+(9385,0,'Topic deleted, id=471 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
+(9386,0,'Topic deleted, id=469 by 0',0,'','2024-06-24 21:42:52','2024-06-24 21:42:52',0),
+(9387,0,'Idea deleted, id=252 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9388,0,'Idea deleted, id=255 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9389,0,'Idea deleted, id=256 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9390,0,'Idea deleted, id=246 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9391,0,'Idea deleted, id=250 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9392,0,'Idea deleted, id=257 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9393,0,'Idea deleted, id=249 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9394,0,'Idea deleted, id=254 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9395,0,'Idea deleted, id=253 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9396,0,'Idea deleted, id=251 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9397,0,'Idea deleted, id=248 by 0',0,'','2024-06-24 21:43:05','2024-06-24 21:43:05',0),
+(9398,0,'Room deleted with id 104 by 0',0,'','2024-06-24 21:47:47','2024-06-24 21:47:47',0),
+(9399,0,'Added new room (#106) The Innovation Hub',0,'','2024-06-24 21:48:04','2024-06-24 21:48:04',0),
+(9400,0,'Added new topic (#472) Green Innovations Vault',0,'','2024-06-24 21:51:34','2024-06-24 21:51:34',0),
+(9401,0,'Added new topic (#473) Tech Frontier',0,'','2024-06-24 21:52:11','2024-06-24 21:52:11',0),
+(9402,0,'Added new topic (#474) Creative Canvas',0,'','2024-06-24 21:53:20','2024-06-24 21:53:20',0),
+(9403,0,'Added new topic (#475) Service Heart',0,'','2024-06-24 21:54:04','2024-06-24 21:54:04',0),
+(9404,0,'Added new idea (#258) Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',0,'','2024-06-24 22:00:54','2024-06-24 22:00:54',0),
+(9405,0,'Added new idea (#259) Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',0,'','2024-06-24 22:01:35','2024-06-24 22:01:35',0),
+(9406,0,'Added new idea (#260) Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',0,'','2024-06-24 22:01:53','2024-06-24 22:01:53',0),
+(9407,0,'Added idea 258 to topic 473',0,'','2024-06-24 22:02:00','2024-06-24 22:02:00',0),
+(9408,0,'Added idea 259 to topic 473',0,'','2024-06-24 22:02:00','2024-06-24 22:02:00',0),
+(9409,0,'Added new idea (#261) Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',0,'','2024-06-24 22:02:38','2024-06-24 22:02:38',0),
+(9410,0,'Added new idea (#262) Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,'','2024-06-24 22:02:54','2024-06-24 22:02:54',0),
+(9411,0,'Added idea 262 to topic 474',0,'','2024-06-24 22:03:23','2024-06-24 22:03:23',0),
+(9412,0,'Added idea 261 to topic 474',0,'','2024-06-24 22:03:23','2024-06-24 22:03:23',0),
+(9413,0,'Added idea 262 to topic 473',0,'','2024-06-24 22:03:33','2024-06-24 22:03:33',0),
+(9414,0,'Added idea 261 to topic 473',0,'','2024-06-24 22:03:33','2024-06-24 22:03:33',0),
+(9415,0,'Added new idea (#263) Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,'','2024-06-24 22:04:12','2024-06-24 22:04:12',0),
+(9416,0,'Added new idea (#264) Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,'','2024-06-24 22:04:28','2024-06-24 22:04:28',0),
+(9417,0,'Added idea 264 to topic 474',0,'','2024-06-24 22:04:46','2024-06-24 22:04:46',0),
+(9418,0,'Added idea 263 to topic 474',0,'','2024-06-24 22:04:46','2024-06-24 22:04:46',0),
+(9419,0,'Added new idea (#265) Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',0,'','2024-06-24 22:05:21','2024-06-24 22:05:21',0),
+(9420,0,'Added new idea (#266) Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,'','2024-06-24 22:05:52','2024-06-24 22:05:52',0),
+(9421,0,'Added idea 266 to topic 475',0,'','2024-06-24 22:06:13','2024-06-24 22:06:13',0),
+(9422,0,'Added idea 265 to topic 475',0,'','2024-06-24 22:06:13','2024-06-24 22:06:13',0),
+(9423,0,'Idea deleted, id=258 by 0',0,'','2024-06-24 22:07:15','2024-06-24 22:07:15',0),
+(9424,0,'Idea deleted, id=259 by 0',0,'','2024-06-24 22:07:15','2024-06-24 22:07:15',0),
+(9425,0,'Added new idea (#267) Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',0,'','2024-06-24 22:07:32','2024-06-24 22:07:32',0),
+(9426,0,'Added new idea (#268) Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',0,'','2024-06-24 22:07:47','2024-06-24 22:07:47',0),
+(9427,0,'Added idea 268 to topic 472',0,'','2024-06-24 22:08:15','2024-06-24 22:08:15',0),
+(9428,0,'Added idea 267 to topic 472',0,'','2024-06-24 22:08:15','2024-06-24 22:08:15',0),
+(9429,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:09:28','2024-06-24 22:09:28',0),
+(9430,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:19:47','2024-06-24 22:19:47',0),
+(9431,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:20:58','2024-06-24 22:20:58',0),
+(9432,0,'Idea  267 incremented likes',0,'','2024-06-24 22:20:59','2024-06-24 22:20:59',0),
+(9433,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:21:53','2024-06-24 22:21:53',0),
+(9434,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:22:59','2024-06-24 22:22:59',0),
+(9435,0,'Idea  268 incremented likes',0,'','2024-06-24 22:23:03','2024-06-24 22:23:03',0),
+(9436,0,'Comment  18 incremented likes',0,'','2024-06-24 22:23:03','2024-06-24 22:23:03',0),
+(9437,0,'Idea  268 decrementing likes',0,'','2024-06-24 22:23:05','2024-06-24 22:23:05',0),
+(9438,0,'Idea  268 incremented likes',0,'','2024-06-24 22:23:06','2024-06-24 22:23:06',0),
+(9439,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:23:20','2024-06-24 22:23:20',0),
+(9440,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:24:51','2024-06-24 22:24:51',0),
+(9441,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:26:07','2024-06-24 22:26:07',0),
+(9442,0,'Idea  261 incremented likes',0,'','2024-06-24 22:26:09','2024-06-24 22:26:09',0),
+(9443,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:12','2024-06-24 22:28:12',0),
+(9444,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:25','2024-06-24 22:28:25',0),
+(9445,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:28:34','2024-06-24 22:28:34',0),
+(9446,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:29:30','2024-06-24 22:29:30',0),
+(9447,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:29:46','2024-06-24 22:29:46',0),
+(9448,0,'Idea  265 incremented likes',0,'','2024-06-24 22:29:47','2024-06-24 22:29:47',0),
+(9449,0,'Comment  25 incremented likes',0,'','2024-06-24 22:29:49','2024-06-24 22:29:49',0),
+(9450,0,'Added idea 263 to topic 474',0,'','2024-06-24 22:35:46','2024-06-24 22:35:46',0),
+(9451,0,'Added idea 264 to topic 474',0,'','2024-06-24 22:35:46','2024-06-24 22:35:46',0),
+(9452,0,'Added new comment (#0) user: 165',0,'','2024-06-24 22:39:05','2024-06-24 22:39:05',0),
+(9453,0,'Comment  27 incremented likes',0,'','2024-06-24 22:39:20','2024-06-24 22:39:20',0),
+(9454,0,'Edited idea 266 by 165',0,'','2024-06-25 00:51:18','2024-06-25 00:51:18',0),
+(9455,0,'Edited idea 266 by 165',0,'','2024-06-25 00:52:09','2024-06-25 00:52:09',0),
+(9456,0,'Edited idea 265 by 165',0,'','2024-06-25 00:53:34','2024-06-25 00:53:34',0),
+(9457,0,'Edited idea 264 by 165',0,'','2024-06-25 00:55:37','2024-06-25 00:55:37',0),
+(9458,0,'Edited idea 263 by 165',0,'','2024-06-25 00:56:25','2024-06-25 00:56:25',0),
+(9459,0,'Edited idea 261 by 165',0,'','2024-06-25 00:58:44','2024-06-25 00:58:44',0),
+(9460,0,'Edited idea 262 by 165',0,'','2024-06-25 00:59:49','2024-06-25 00:59:49',0),
+(9461,0,'Idea  263 number of votes given set to 1',0,'','2024-06-25 01:16:21','2024-06-25 01:16:21',0),
+(9462,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-25 01:16:21','2024-06-25 01:16:21',0),
+(9463,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
+(9464,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
+(9465,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-06-26 14:52:09','2024-06-26 14:52:09',0),
+(9466,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
+(9467,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
+(9468,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-06-26 14:52:12','2024-06-26 14:52:12',0),
+(9469,0,'Idea  263 votes set to 0',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
+(9470,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
+(9471,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-26 14:52:19','2024-06-26 14:52:19',0),
+(9472,0,'Idea  263 votes set to 0',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
+(9473,0,'Idea  263 number of votes given set to 1',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
+(9474,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-06-26 16:50:23','2024-06-26 16:50:23',0),
+(9475,0,'Added new idea (#269) The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,'','2024-06-26 17:26:59','2024-06-26 17:26:59',0),
+(9476,0,'Added new idea (#270) The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,'','2024-06-26 17:32:49','2024-06-26 17:32:49',0),
+(9477,0,'Added new idea (#271) This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,'','2024-06-26 17:34:33','2024-06-26 17:34:33',0),
+(9478,0,'Added idea 271 to topic 474',0,'','2024-06-26 17:34:49','2024-06-26 17:34:49',0),
+(9479,0,'Added idea 270 to topic 473',0,'','2024-06-26 17:35:11','2024-06-26 17:35:11',0),
+(9480,0,'Idea  271 number of votes given set to 1',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
+(9481,0,'Idea (#271) added Vote - value: -1 by 165',0,'','2024-06-26 17:35:30','2024-06-26 17:35:30',0),
+(9482,0,'Added new idea (#272) Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,'','2024-06-26 18:18:58','2024-06-26 18:18:58',0),
+(9483,0,'Idea  260 incremented likes',0,'','2024-06-26 18:19:02','2024-06-26 18:19:02',0),
+(9484,0,'Edited idea 272 by 165',0,'','2024-06-30 11:24:24','2024-06-30 11:24:24',0),
+(9485,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:09','2024-06-30 11:25:09',0),
+(9486,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:44','2024-06-30 11:25:44',0),
+(9487,0,'Edited idea 272 by 165',0,'','2024-06-30 11:25:53','2024-06-30 11:25:53',0),
+(9488,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:09','2024-06-30 11:26:09',0),
+(9489,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:10','2024-06-30 11:26:10',0),
+(9490,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:28','2024-06-30 11:26:28',0),
+(9491,0,'Edited idea 272 by 165',0,'','2024-06-30 11:26:35','2024-06-30 11:26:35',0),
+(9492,0,'Edited idea 272 by 165',0,'','2024-06-30 12:16:25','2024-06-30 12:16:25',0),
+(9493,0,'Edited idea 272 by 165',0,'','2024-06-30 12:16:45','2024-06-30 12:16:45',0),
+(9494,0,'Edited idea 272 by 165',0,'','2024-06-30 12:18:36','2024-06-30 12:18:36',0),
+(9495,0,'Edited idea 272 by 165',0,'','2024-06-30 12:18:43','2024-06-30 12:18:43',0),
+(9496,0,'Edited idea 272 by 165',0,'','2024-06-30 12:19:20','2024-06-30 12:19:20',0),
+(9497,0,'Edited idea 272 by 165',0,'','2024-06-30 12:19:27','2024-06-30 12:19:27',0),
+(9498,0,'Edited idea 272 by 165',0,'','2024-06-30 12:20:17','2024-06-30 12:20:17',0),
+(9499,0,'Edited idea 272 by 165',0,'','2024-06-30 12:20:26','2024-06-30 12:20:26',0),
+(9500,0,'Edited idea 263 by 165',0,'','2024-06-30 12:21:05','2024-06-30 12:21:05',0),
+(9501,0,'Edited idea 263 by 165',0,'','2024-06-30 12:21:11','2024-06-30 12:21:11',0),
+(9502,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:29:58','2024-06-30 12:29:58',0),
+(9503,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:30:09','2024-06-30 12:30:09',0),
+(9504,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:30:16','2024-06-30 12:30:16',0),
+(9505,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:30:34','2024-06-30 12:30:34',0),
+(9506,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:30:39','2024-06-30 12:30:39',0),
+(9507,0,'Edited topic (#474) Creative Canvas.',0,'','2024-06-30 12:31:07','2024-06-30 12:31:07',0),
+(9508,0,'Edited topic (#474) Creative Canvas',0,'','2024-06-30 12:31:12','2024-06-30 12:31:12',0),
+(9509,0,'Edited idea 266 by 165',0,'','2024-06-30 12:36:15','2024-06-30 12:36:15',0),
+(9510,0,'Edited idea 266 by 165',0,'','2024-06-30 12:36:20','2024-06-30 12:36:20',0),
+(9511,0,'Edited idea 0 by 165',0,'','2024-06-30 12:37:43','2024-06-30 12:37:43',0),
+(9512,0,'Edited idea 0 by 165',0,'','2024-06-30 12:48:58','2024-06-30 12:48:58',0),
+(9513,0,'Added new idea (#273) testing',0,'','2024-06-30 12:51:49','2024-06-30 12:51:49',0),
+(9514,0,'Idea deleted, id=273 by 0',0,'','2024-06-30 12:51:59','2024-06-30 12:51:59',0),
+(9515,0,'Added new idea (#274) adsdads',0,'','2024-06-30 12:52:30','2024-06-30 12:52:30',0),
+(9516,0,'Idea deleted, id=274 by 0',0,'','2024-06-30 12:52:41','2024-06-30 12:52:41',0),
+(9517,0,'Added new idea (#275) sad',0,'','2024-06-30 12:55:30','2024-06-30 12:55:30',0),
+(9518,0,'Idea deleted, id=275 by 0',0,'','2024-06-30 12:55:35','2024-06-30 12:55:35',0),
+(9519,0,'Added new idea (#276) test',0,'','2024-06-30 13:00:19','2024-06-30 13:00:19',0),
+(9520,0,'Edited idea 276 by 165',0,'','2024-06-30 13:00:27','2024-06-30 13:00:27',0),
+(9521,0,'Idea deleted, id=276 by 0',0,'','2024-06-30 13:00:40','2024-06-30 13:00:40',0),
+(9522,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:03:21','2024-06-30 13:03:21',0),
+(9523,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:03:51','2024-06-30 13:03:51',0),
+(9524,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:08:00','2024-06-30 13:08:00',0),
+(9525,0,'Added new comment (#0) user: 165',0,'','2024-06-30 13:11:42','2024-06-30 13:11:42',0),
+(9526,0,'Added new text (#12) creator: 0',0,'','2024-06-30 13:14:10','2024-06-30 13:14:10',0),
+(9527,0,'Consent values updated by value -1',0,'','2024-06-30 13:14:23','2024-06-30 13:14:23',0),
+(9528,0,'Text deleted, id = 12 by 0',0,'','2024-06-30 13:14:23','2024-06-30 13:14:23',0),
+(9529,0,'Added new topic (#476) New Box',0,'','2024-06-30 13:14:41','2024-06-30 13:14:41',0),
+(9530,0,'Edited topic (#476) New Box.',0,'','2024-06-30 13:14:46','2024-06-30 13:14:46',0),
+(9531,0,'Topic deleted, id=476 by 0',0,'','2024-06-30 13:14:50','2024-06-30 13:14:50',0),
+(9532,0,'Successful login user 165',0,'','2024-07-01 08:12:36','2024-07-01 08:12:36',0),
+(9533,1,'DB Error login user admin',0,'','2024-07-03 14:44:20','2024-07-03 14:44:20',0),
+(9534,0,'Successful login user 165',0,'','2024-07-03 14:44:26','2024-07-03 14:44:26',0),
+(9535,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
+(9536,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
+(9537,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:01:47','2024-07-03 15:01:47',0),
+(9538,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
+(9539,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
+(9540,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:01:48','2024-07-03 15:01:48',0),
+(9541,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
+(9542,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
+(9543,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
+(9544,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:32','2024-07-03 15:02:32',0),
+(9545,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:33','2024-07-03 15:02:33',0),
+(9546,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-03 15:02:33','2024-07-03 15:02:33',0),
+(9547,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9548,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9549,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9550,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9551,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9552,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:02:34','2024-07-03 15:02:34',0),
+(9553,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
+(9554,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
+(9555,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-03 15:22:37','2024-07-03 15:22:37',0),
+(9556,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9557,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9558,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9559,0,'Idea  263 votes set to 0',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9560,0,'Idea  263 number of votes given set to 1',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9561,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-03 15:22:38','2024-07-03 15:22:38',0),
+(9562,0,'Added new user 264',0,'','2024-07-03 16:31:19','2024-07-03 16:31:19',0),
+(9563,0,'Added new user 265',0,'','2024-07-03 16:32:37','2024-07-03 16:32:37',0),
+(9564,0,'Added new user 266',0,'','2024-07-03 16:33:24','2024-07-03 16:33:24',0),
+(9565,0,'Added new user 267',0,'','2024-07-03 16:34:58','2024-07-03 16:34:58',0),
+(9566,0,'Added new user 268',0,'','2024-07-03 16:35:38','2024-07-03 16:35:38',0),
+(9567,0,'Added new user 269',0,'','2024-07-03 16:36:51','2024-07-03 16:36:51',0),
+(9568,0,'Added new user 270',0,'','2024-07-03 16:37:53','2024-07-03 16:37:53',0),
+(9569,0,'Added delegation for user 165 for topic 474',0,'','2024-07-10 10:28:47','2024-07-10 10:28:47',0),
+(9570,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:20:26','2024-07-10 17:20:26',0),
+(9571,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:24:56','2024-07-10 17:24:56',0),
+(9572,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:24:58','2024-07-10 17:24:58',0),
+(9573,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:21','2024-07-10 17:25:21',0),
+(9574,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:21','2024-07-10 17:25:21',0),
+(9575,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-10 17:25:30','2024-07-10 17:25:30',0),
+(9576,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-10 17:25:30','2024-07-10 17:25:30',0),
+(9577,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:41','2024-07-10 17:25:41',0),
+(9578,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:41','2024-07-10 17:25:41',0),
+(9579,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:41','2024-07-10 17:25:41',0),
+(9580,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:25:41','2024-07-10 17:25:41',0),
+(9581,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:26:57','2024-07-10 17:26:57',0),
+(9582,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:26:57','2024-07-10 17:26:57',0),
+(9583,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:26:57','2024-07-10 17:26:57',0),
+(9584,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:26:57','2024-07-10 17:26:57',0),
+(9585,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:51:49','2024-07-10 17:51:49',0),
+(9586,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:51:49','2024-07-10 17:51:49',0),
+(9587,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:51:50','2024-07-10 17:51:50',0),
+(9588,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:51:50','2024-07-10 17:51:50',0),
+(9589,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:52:42','2024-07-10 17:52:42',0),
+(9590,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:52:42','2024-07-10 17:52:42',0),
+(9591,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:53:06','2024-07-10 17:53:06',0),
+(9592,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:53:06','2024-07-10 17:53:06',0),
+(9593,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:53:06','2024-07-10 17:53:06',0),
+(9594,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:53:06','2024-07-10 17:53:06',0),
+(9595,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:54:05','2024-07-10 17:54:05',0),
+(9596,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:54:05','2024-07-10 17:54:05',0),
+(9597,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:54:05','2024-07-10 17:54:05',0),
+(9598,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:54:05','2024-07-10 17:54:05',0),
+(9599,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:02','2024-07-10 17:57:02',0),
+(9600,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:02','2024-07-10 17:57:02',0),
+(9601,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:02','2024-07-10 17:57:02',0),
+(9602,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:03','2024-07-10 17:57:03',0),
+(9603,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:09','2024-07-10 17:57:09',0),
+(9604,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:09','2024-07-10 17:57:09',0),
+(9605,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:09','2024-07-10 17:57:09',0),
+(9606,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:09','2024-07-10 17:57:09',0),
+(9607,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:11','2024-07-10 17:57:11',0),
+(9608,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:11','2024-07-10 17:57:11',0),
+(9609,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:11','2024-07-10 17:57:11',0),
+(9610,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 17:57:11','2024-07-10 17:57:11',0),
+(9611,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:05','2024-07-10 18:06:05',0),
+(9612,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:05','2024-07-10 18:06:05',0),
+(9613,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:05','2024-07-10 18:06:05',0),
+(9614,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:05','2024-07-10 18:06:05',0),
+(9615,0,'User delegation(s) deleted with id 165 for topic ',0,'','2024-07-10 18:06:24','2024-07-10 18:06:24',0),
+(9616,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:29','2024-07-10 18:06:29',0),
+(9617,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:29','2024-07-10 18:06:29',0),
+(9618,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:29','2024-07-10 18:06:29',0),
+(9619,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:06:29','2024-07-10 18:06:29',0),
+(9620,0,'User delegation(s) deleted with id 165 for topic ',0,'','2024-07-10 18:06:34','2024-07-10 18:06:34',0),
+(9621,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:39','2024-07-10 18:07:39',0),
+(9622,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:39','2024-07-10 18:07:39',0),
+(9623,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:39','2024-07-10 18:07:39',0),
+(9624,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:39','2024-07-10 18:07:39',0),
+(9625,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:07:41','2024-07-10 18:07:41',0),
+(9626,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:47','2024-07-10 18:07:47',0),
+(9627,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:47','2024-07-10 18:07:47',0),
+(9628,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:47','2024-07-10 18:07:47',0),
+(9629,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:07:47','2024-07-10 18:07:47',0),
+(9630,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:08:38','2024-07-10 18:08:38',0),
+(9631,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:08:38','2024-07-10 18:08:38',0),
+(9632,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:08:41','2024-07-10 18:08:41',0),
+(9633,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:08:56','2024-07-10 18:08:56',0),
+(9634,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:09:24','2024-07-10 18:09:24',0),
+(9635,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:09:24','2024-07-10 18:09:24',0),
+(9636,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:09:24','2024-07-10 18:09:24',0),
+(9637,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:09:24','2024-07-10 18:09:24',0),
+(9638,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:12:33','2024-07-10 18:12:33',0),
+(9639,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:12:33','2024-07-10 18:12:33',0),
+(9640,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:14:55','2024-07-10 18:14:55',0),
+(9641,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:14:57','2024-07-10 18:14:57',0),
+(9642,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:19:44','2024-07-10 18:19:44',0),
+(9643,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:19:58','2024-07-10 18:19:58',0),
+(9644,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:01','2024-07-10 18:20:01',0),
+(9645,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:01','2024-07-10 18:20:01',0),
+(9646,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:01','2024-07-10 18:20:01',0),
+(9647,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:01','2024-07-10 18:20:01',0),
+(9648,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:20:05','2024-07-10 18:20:05',0),
+(9649,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:22:59','2024-07-10 18:22:59',0),
+(9650,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:22:59','2024-07-10 18:22:59',0),
+(9651,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:03','2024-07-10 18:23:03',0),
+(9652,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:03','2024-07-10 18:23:03',0),
+(9653,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:06','2024-07-10 18:23:06',0),
+(9654,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:06','2024-07-10 18:23:06',0),
+(9655,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:06','2024-07-10 18:23:06',0),
+(9656,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:23:06','2024-07-10 18:23:06',0),
+(9657,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:24:35','2024-07-10 18:24:35',0),
+(9658,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:24:35','2024-07-10 18:24:35',0),
+(9659,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:24:35','2024-07-10 18:24:35',0),
+(9660,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:24:35','2024-07-10 18:24:35',0),
+(9661,0,'Added delegation for user 165 for topic 474',0,'','2024-07-10 18:25:00','2024-07-10 18:25:00',0),
+(9662,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:05','2024-07-10 18:25:05',0),
+(9663,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:40','2024-07-10 18:25:40',0),
+(9664,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:25:44','2024-07-10 18:25:44',0),
+(9665,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:44','2024-07-10 18:25:44',0),
+(9666,0,'Added delegation for user 165 for topic 474',0,'','2024-07-10 18:25:50','2024-07-10 18:25:50',0),
+(9667,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:50','2024-07-10 18:25:50',0),
+(9668,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-10 18:25:54','2024-07-10 18:25:54',0),
+(9669,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:25:54','2024-07-10 18:25:54',0),
+(9670,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:27:41','2024-07-10 18:27:41',0),
+(9671,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:27:41','2024-07-10 18:27:41',0),
+(9672,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:29:46','2024-07-10 18:29:46',0),
+(9673,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:29:46','2024-07-10 18:29:46',0),
+(9674,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:32:04','2024-07-10 18:32:04',0),
+(9675,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:32:04','2024-07-10 18:32:04',0),
+(9676,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:32:04','2024-07-10 18:32:04',0),
+(9677,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-10 18:32:04','2024-07-10 18:32:04',0),
+(9678,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-11 09:13:16','2024-07-11 09:13:16',0),
+(9679,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-11 09:13:16','2024-07-11 09:13:16',0),
+(9680,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-11 09:13:18','2024-07-11 09:13:18',0),
+(9681,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-11 09:13:18','2024-07-11 09:13:18',0),
+(9682,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-11 09:13:18','2024-07-11 09:13:18',0),
+(9683,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-11 09:13:18','2024-07-11 09:13:18',0),
+(9684,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-11 09:13:20','2024-07-11 09:13:20',0),
+(9685,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-11 09:13:20','2024-07-11 09:13:20',0),
+(9686,0,'Successful login user 165',0,'','2024-07-13 10:55:58','2024-07-13 10:55:58',0),
+(9687,1,'DB Error login user teste',0,'','2024-07-13 14:59:07','2024-07-13 14:59:07',0),
+(9688,1,'DB Error login user teste',0,'','2024-07-13 15:03:39','2024-07-13 15:03:39',0),
+(9689,1,'DB Error login user teste',0,'','2024-07-13 15:04:04','2024-07-13 15:04:04',0),
+(9690,1,'DB Error login user s',0,'','2024-07-13 15:21:02','2024-07-13 15:21:02',0),
+(9691,1,'DB Error login user s',0,'','2024-07-13 15:21:05','2024-07-13 15:21:05',0),
+(9692,1,'DB Error login user s',0,'','2024-07-13 15:21:28','2024-07-13 15:21:28',0),
+(9693,1,'DB Error login user ss',0,'','2024-07-13 15:21:53','2024-07-13 15:21:53',0),
+(9694,1,'DB Error login user ss',0,'','2024-07-13 15:22:24','2024-07-13 15:22:24',0),
+(9695,1,'DB Error login user ss',0,'','2024-07-13 15:22:28','2024-07-13 15:22:28',0),
+(9696,1,'DB Error login user ss',0,'','2024-07-13 15:22:58','2024-07-13 15:22:58',0),
+(9697,1,'DB Error login user ss',0,'','2024-07-13 15:23:40','2024-07-13 15:23:40',0),
+(9698,1,'DB Error login user ss',0,'','2024-07-13 15:23:55','2024-07-13 15:23:55',0),
+(9699,1,'DB Error login user ss',0,'','2024-07-13 15:24:06','2024-07-13 15:24:06',0),
+(9700,1,'DB Error login user ss',0,'','2024-07-13 15:24:17','2024-07-13 15:24:17',0),
+(9701,1,'DB Error login user ss',0,'','2024-07-13 15:24:22','2024-07-13 15:24:22',0),
+(9702,1,'DB Error login user ss',0,'','2024-07-13 15:24:23','2024-07-13 15:24:23',0),
+(9703,1,'DB Error login user ss',0,'','2024-07-13 15:24:24','2024-07-13 15:24:24',0),
+(9704,1,'DB Error login user ss',0,'','2024-07-13 15:24:26','2024-07-13 15:24:26',0),
+(9705,1,'DB Error login user ss',0,'','2024-07-13 15:24:35','2024-07-13 15:24:35',0),
+(9706,1,'DB Error login user ss',0,'','2024-07-13 15:24:48','2024-07-13 15:24:48',0),
+(9707,1,'DB Error login user ss',0,'','2024-07-13 15:24:52','2024-07-13 15:24:52',0),
+(9708,1,'DB Error login user ss',0,'','2024-07-13 15:25:13','2024-07-13 15:25:13',0),
+(9709,1,'DB Error login user ss',0,'','2024-07-13 15:25:16','2024-07-13 15:25:16',0),
+(9710,1,'DB Error login user ss',0,'','2024-07-13 15:25:19','2024-07-13 15:25:19',0),
+(9711,1,'DB Error login user ss',0,'','2024-07-13 15:25:22','2024-07-13 15:25:22',0),
+(9712,1,'DB Error login user ss',0,'','2024-07-13 15:25:26','2024-07-13 15:25:26',0),
+(9713,1,'DB Error login user asas',0,'','2024-07-13 15:26:15','2024-07-13 15:26:15',0),
+(9714,1,'DB Error login user asas',0,'','2024-07-13 15:26:20','2024-07-13 15:26:20',0),
+(9715,0,'Successful login user 165',0,'','2024-07-14 14:09:13','2024-07-14 14:09:13',0),
+(9716,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:49:18','2024-07-15 10:49:18',0),
+(9717,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:49:18','2024-07-15 10:49:18',0),
+(9718,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:13','2024-07-15 10:55:13',0),
+(9719,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:13','2024-07-15 10:55:13',0),
+(9720,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:50','2024-07-15 10:55:50',0),
+(9721,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:50','2024-07-15 10:55:50',0),
+(9722,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:56','2024-07-15 10:55:56',0),
+(9723,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:55:56','2024-07-15 10:55:56',0),
+(9724,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:56:18','2024-07-15 10:56:18',0),
+(9725,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:56:18','2024-07-15 10:56:18',0),
+(9726,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:58:58','2024-07-15 10:58:58',0),
+(9727,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:58:58','2024-07-15 10:58:58',0),
+(9728,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:09','2024-07-15 10:59:09',0),
+(9729,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:09','2024-07-15 10:59:09',0),
+(9730,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:20','2024-07-15 10:59:20',0),
+(9731,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:20','2024-07-15 10:59:20',0),
+(9732,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:33','2024-07-15 10:59:33',0),
+(9733,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:33','2024-07-15 10:59:33',0),
+(9734,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:42','2024-07-15 10:59:42',0),
+(9735,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 10:59:42','2024-07-15 10:59:42',0),
+(9736,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:01:28','2024-07-15 11:01:28',0),
+(9737,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:01:28','2024-07-15 11:01:28',0),
+(9738,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:02:22','2024-07-15 11:02:22',0),
+(9739,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:02:22','2024-07-15 11:02:22',0),
+(9740,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:15:18','2024-07-15 11:15:18',0),
+(9741,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:15:18','2024-07-15 11:15:18',0),
+(9742,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:16:45','2024-07-15 11:16:45',0),
+(9743,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:16:45','2024-07-15 11:16:45',0),
+(9744,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:16:50','2024-07-15 11:16:50',0),
+(9745,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:18:33','2024-07-15 11:18:33',0),
+(9746,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:18:33','2024-07-15 11:18:33',0),
+(9747,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:18:50','2024-07-15 11:18:50',0),
+(9748,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:18:50','2024-07-15 11:18:50',0),
+(9749,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:19:00','2024-07-15 11:19:00',0),
+(9750,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:19:00','2024-07-15 11:19:00',0),
+(9751,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:05','2024-07-15 11:19:05',0),
+(9752,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:05','2024-07-15 11:19:05',0),
+(9753,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:05','2024-07-15 11:19:05',0),
+(9754,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:05','2024-07-15 11:19:05',0),
+(9755,0,'Added delegation for user 165 for topic 474',0,'','2024-07-15 11:19:11','2024-07-15 11:19:11',0),
+(9756,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-15 11:19:11','2024-07-15 11:19:11',0),
+(9757,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:20:15','2024-07-15 11:20:15',0),
+(9758,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-15 11:20:15','2024-07-15 11:20:15',0),
+(9759,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:20:19','2024-07-15 11:20:19',0),
+(9760,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-15 11:20:19','2024-07-15 11:20:19',0),
+(9761,0,'Successful login user 165',0,'','2024-07-16 10:10:44','2024-07-16 10:10:44',0),
+(9762,0,'Successful login user ',0,'','2024-07-16 10:29:06','2024-07-16 10:29:06',0),
+(9763,0,'Successful login user ',0,'','2024-07-16 10:32:12','2024-07-16 10:32:12',0),
+(9764,0,'Successful login user admin',0,'','2024-07-16 10:33:55','2024-07-16 10:33:55',0),
+(9765,0,'Successful login user admin',0,'','2024-07-16 10:34:40','2024-07-16 10:34:40',0),
+(9766,0,'Successful login user admin',0,'','2024-07-16 10:35:01','2024-07-16 10:35:01',0),
+(9767,0,'Successful login user admin',0,'','2024-07-16 10:36:33','2024-07-16 10:36:33',0),
+(9768,0,'Successful login user admin',0,'','2024-07-16 10:38:06','2024-07-16 10:38:06',0),
+(9769,0,'Successful login user admin',0,'','2024-07-16 10:40:22','2024-07-16 10:40:22',0),
+(9770,0,'Successful login user admin',0,'','2024-07-16 10:42:09','2024-07-16 10:42:09',0),
+(9771,0,'Successful login user admin',0,'','2024-07-16 10:43:45','2024-07-16 10:43:45',0),
+(9772,0,'Successful login user admin',0,'','2024-07-16 10:43:57','2024-07-16 10:43:57',0),
+(9773,0,'Successful login user admin',0,'','2024-07-16 10:45:36','2024-07-16 10:45:36',0),
+(9774,0,'Successful login user admin',0,'','2024-07-16 10:46:13','2024-07-16 10:46:13',0),
+(9775,0,'Successful login user admin',0,'','2024-07-16 10:46:41','2024-07-16 10:46:41',0),
+(9776,0,'Successful login user admin',0,'','2024-07-16 10:48:18','2024-07-16 10:48:18',0),
+(9777,0,'Successful login user admin',0,'','2024-07-16 10:48:42','2024-07-16 10:48:42',0),
+(9778,0,'Successful login user admin',0,'','2024-07-16 10:49:02','2024-07-16 10:49:02',0),
+(9779,0,'Successful login user admin',0,'','2024-07-16 10:49:23','2024-07-16 10:49:23',0),
+(9780,0,'Successful login user admin',0,'','2024-07-16 10:49:39','2024-07-16 10:49:39',0),
+(9781,0,'Successful login user admin',0,'','2024-07-16 10:49:55','2024-07-16 10:49:55',0),
+(9782,0,'Successful login user admin',0,'','2024-07-16 10:50:29','2024-07-16 10:50:29',0),
+(9783,0,'Successful login user admin',0,'','2024-07-16 10:51:14','2024-07-16 10:51:14',0),
+(9784,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:22:47','2024-07-16 15:22:47',0),
+(9785,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:22:47','2024-07-16 15:22:47',0),
+(9786,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:22:47','2024-07-16 15:22:47',0),
+(9787,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:22:48','2024-07-16 15:22:48',0),
+(9788,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:01','2024-07-16 15:23:01',0),
+(9789,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:01','2024-07-16 15:23:01',0),
+(9790,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:01','2024-07-16 15:23:01',0),
+(9791,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:01','2024-07-16 15:23:01',0),
+(9792,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:18','2024-07-16 15:23:18',0),
+(9793,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:18','2024-07-16 15:23:18',0),
+(9794,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:18','2024-07-16 15:23:18',0),
+(9795,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:18','2024-07-16 15:23:18',0),
+(9796,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:24','2024-07-16 15:23:24',0),
+(9797,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:24','2024-07-16 15:23:24',0),
+(9798,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:24','2024-07-16 15:23:24',0),
+(9799,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:24','2024-07-16 15:23:24',0),
+(9800,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:28','2024-07-16 15:23:28',0),
+(9801,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:28','2024-07-16 15:23:28',0),
+(9802,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:28','2024-07-16 15:23:28',0),
+(9803,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:28','2024-07-16 15:23:28',0),
+(9804,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:42','2024-07-16 15:23:42',0),
+(9805,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:42','2024-07-16 15:23:42',0),
+(9806,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:42','2024-07-16 15:23:42',0),
+(9807,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-16 15:23:43','2024-07-16 15:23:43',0),
+(9808,0,'Idea  263 votes set to 0',0,'','2024-07-16 15:36:00','2024-07-16 15:36:00',0),
+(9809,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-16 15:36:00','2024-07-16 15:36:00',0),
+(9810,0,'Idea  263 number of votes given set to 1',0,'','2024-07-16 15:36:00','2024-07-16 15:36:00',0),
+(9811,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-16 15:36:00','2024-07-16 15:36:00',0),
+(9812,0,'Idea  263 votes set to 0',0,'','2024-07-16 15:36:03','2024-07-16 15:36:03',0),
+(9813,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-16 15:36:03','2024-07-16 15:36:03',0),
+(9814,0,'Idea  263 number of votes given set to 1',0,'','2024-07-16 15:36:03','2024-07-16 15:36:03',0),
+(9815,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-16 15:36:03','2024-07-16 15:36:03',0),
+(9816,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:29:35','2024-07-17 09:29:35',0),
+(9817,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:29:35','2024-07-17 09:29:35',0),
+(9818,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:29:35','2024-07-17 09:29:35',0),
+(9819,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:29:35','2024-07-17 09:29:35',0),
+(9820,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:37','2024-07-17 09:29:37',0),
+(9821,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:37','2024-07-17 09:29:37',0),
+(9822,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:37','2024-07-17 09:29:37',0),
+(9823,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:37','2024-07-17 09:29:37',0),
+(9824,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
+(9825,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
+(9826,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
+(9827,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
+(9828,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
+(9829,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
+(9830,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
+(9831,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:38','2024-07-17 09:29:38',0),
+(9832,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:39','2024-07-17 09:29:39',0),
+(9833,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:39','2024-07-17 09:29:39',0),
+(9834,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:39','2024-07-17 09:29:39',0),
+(9835,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:29:39','2024-07-17 09:29:39',0),
+(9836,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
+(9837,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
+(9838,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
+(9839,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
+(9840,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
+(9841,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
+(9842,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
+(9843,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-17 09:29:40','2024-07-17 09:29:40',0),
+(9844,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
+(9845,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
+(9846,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
+(9847,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
+(9848,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
+(9849,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
+(9850,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
+(9851,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:29:41','2024-07-17 09:29:41',0),
+(9852,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
+(9853,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
+(9854,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
+(9855,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
+(9856,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
+(9857,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
+(9858,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
+(9859,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-07-17 09:29:42','2024-07-17 09:29:42',0),
+(9860,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:43','2024-07-17 09:29:43',0),
+(9861,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:43','2024-07-17 09:29:43',0),
+(9862,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:43','2024-07-17 09:29:43',0),
+(9863,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:29:43','2024-07-17 09:29:43',0),
+(9864,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:29:44','2024-07-17 09:29:44',0),
+(9865,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:29:44','2024-07-17 09:29:44',0),
+(9866,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:29:44','2024-07-17 09:29:44',0),
+(9867,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:29:44','2024-07-17 09:29:44',0),
+(9868,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:18','2024-07-17 09:30:18',0),
+(9869,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:18','2024-07-17 09:30:18',0),
+(9870,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:18','2024-07-17 09:30:18',0),
+(9871,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:18','2024-07-17 09:30:18',0),
+(9872,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:30:22','2024-07-17 09:30:22',0),
+(9873,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:30:22','2024-07-17 09:30:22',0),
+(9874,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:30:22','2024-07-17 09:30:22',0),
+(9875,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:30:22','2024-07-17 09:30:22',0),
+(9876,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:30:24','2024-07-17 09:30:24',0),
+(9877,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:30:24','2024-07-17 09:30:24',0),
+(9878,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:30:24','2024-07-17 09:30:24',0),
+(9879,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:30:24','2024-07-17 09:30:24',0),
+(9880,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:30:25','2024-07-17 09:30:25',0),
+(9881,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:30:25','2024-07-17 09:30:25',0),
+(9882,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:30:25','2024-07-17 09:30:25',0),
+(9883,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-07-17 09:30:25','2024-07-17 09:30:25',0),
+(9884,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:28','2024-07-17 09:30:28',0),
+(9885,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:28','2024-07-17 09:30:28',0),
+(9886,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:28','2024-07-17 09:30:28',0),
+(9887,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-17 09:30:28','2024-07-17 09:30:28',0),
+(9888,0,'Idea  263 votes set to 0',0,'','2024-07-17 09:30:30','2024-07-17 09:30:30',0),
+(9889,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-07-17 09:30:30','2024-07-17 09:30:30',0),
+(9890,0,'Idea  263 number of votes given set to 1',0,'','2024-07-17 09:30:30','2024-07-17 09:30:30',0),
+(9891,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-07-17 09:30:30','2024-07-17 09:30:30',0),
+(9892,0,'Added new idea (#277) It would be a great thing to have more ideas for testing purposes!',0,'','2024-07-17 10:15:45','2024-07-17 10:15:45',0),
+(9893,0,'Idea deleted, id=277 by 0',0,'','2024-07-17 10:17:56','2024-07-17 10:17:56',0),
+(9894,0,'Added new idea (#278) Maybe we could create more ideas for testing the app!',0,'','2024-07-17 10:18:37','2024-07-17 10:18:37',0),
+(9895,0,'Edited idea 278 by 165',0,'','2024-07-17 10:44:35','2024-07-17 10:44:35',0),
+(9896,0,'Added new comment (#0) user: 165',0,'','2024-07-17 14:04:23','2024-07-17 14:04:23',0),
+(9897,0,'Comment content changed 32 by 165',0,'','2024-07-17 14:18:16','2024-07-17 14:18:16',0),
+(9898,0,'Added new topic (#477) A great testing envoironment',0,'','2024-07-17 14:37:05','2024-07-17 14:37:05',0),
+(9899,0,'Added new topic (#478) A great testing envoironment',0,'','2024-07-17 14:37:50','2024-07-17 14:37:50',0),
+(9900,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:02:57','2024-07-17 15:02:57',0),
+(9901,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:02:57','2024-07-17 15:02:57',0),
+(9902,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:00','2024-07-17 15:03:00',0),
+(9903,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:00','2024-07-17 15:03:00',0),
+(9904,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:08','2024-07-17 15:03:08',0),
+(9905,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:08','2024-07-17 15:03:08',0),
+(9906,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:03:32','2024-07-17 15:03:32',0),
+(9907,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:03:32','2024-07-17 15:03:32',0),
+(9908,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:37','2024-07-17 15:03:37',0),
+(9909,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:03:37','2024-07-17 15:03:37',0),
+(9910,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:04:50','2024-07-17 15:04:50',0),
+(9911,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:05:51','2024-07-17 15:05:51',0),
+(9912,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:07:13','2024-07-17 15:07:13',0),
+(9913,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:07:19','2024-07-17 15:07:19',0),
+(9914,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:09:37','2024-07-17 15:09:37',0),
+(9915,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:09:37','2024-07-17 15:09:37',0),
+(9916,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:09:46','2024-07-17 15:09:46',0),
+(9917,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-17 15:09:46','2024-07-17 15:09:46',0),
+(9918,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:09:49','2024-07-17 15:09:49',0),
+(9919,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-07-17 15:09:49','2024-07-17 15:09:49',0),
+(9920,0,'Edited topic (#478) A new testing envoironment',0,'','2024-07-17 16:18:04','2024-07-17 16:18:04',0),
+(9921,0,'Edited topic (#478) A new testing envoironment',0,'','2024-07-17 16:18:29','2024-07-17 16:18:29',0),
+(9922,0,'Topic deleted, id=478 by 0',0,'','2024-07-17 16:18:32','2024-07-17 16:18:32',0),
+(9923,0,'Added new topic (#479) A new testing envoironment',0,'','2024-07-17 16:18:57','2024-07-17 16:18:57',0),
+(9924,0,'Added new topic (#480) test',0,'','2024-07-17 16:21:30','2024-07-17 16:21:30',0),
+(9925,0,'Topic deleted, id=478 by 0',0,'','2024-07-17 16:21:37','2024-07-17 16:21:37',0),
+(9926,0,'Topic deleted, id=480 by 0',0,'','2024-07-17 16:21:37','2024-07-17 16:21:37',0),
+(9927,0,'Added new room (#107) test',0,'','2024-07-17 16:27:14','2024-07-17 16:27:14',0),
+(9928,0,'Room deleted with id 107 by 0',0,'','2024-07-17 16:27:18','2024-07-17 16:27:18',0),
+(9929,0,'Added new topic (#481) test',0,'','2024-07-17 16:27:32','2024-07-17 16:27:32',0),
+(9930,0,'Topic deleted, id=481 by 0',0,'','2024-07-17 16:27:35','2024-07-17 16:27:35',0),
+(9931,0,'Added new idea (#279) aaa',0,'','2024-07-17 16:27:48','2024-07-17 16:27:48',0),
+(9932,0,'Edited idea 279 by 165',0,'','2024-07-17 16:27:55','2024-07-17 16:27:55',0),
+(9933,0,'Idea deleted, id=279 by 0',0,'','2024-07-17 16:27:58','2024-07-17 16:27:58',0),
+(9934,0,'Added new text (#13) creator: 0',0,'','2024-07-17 16:28:26','2024-07-17 16:28:26',0),
+(9935,0,'Edited text (#13) by : 165',0,'','2024-07-17 16:34:30','2024-07-17 16:34:30',0),
+(9936,0,'Edited text (#13) by : 165',0,'','2024-07-17 16:34:37','2024-07-17 16:34:37',0),
+(9937,0,'Consent values updated by value -1',0,'','2024-07-17 16:34:41','2024-07-17 16:34:41',0),
+(9938,0,'Text deleted, id = 13 by 0',0,'','2024-07-17 16:34:41','2024-07-17 16:34:41',0),
+(9939,0,'Added new text (#14) creator: 165',0,'','2024-07-17 16:36:29','2024-07-17 16:36:29',0),
+(9940,0,'Consent values updated by value -1',0,'','2024-07-17 16:37:09','2024-07-17 16:37:09',0),
+(9941,0,'Text deleted, id = 13 by 0',0,'','2024-07-17 16:37:09','2024-07-17 16:37:09',0),
+(9942,0,'Consent values updated by value -1',0,'','2024-07-17 16:37:09','2024-07-17 16:37:09',0),
+(9943,0,'Text deleted, id = 14 by 0',0,'','2024-07-17 16:37:09','2024-07-17 16:37:09',0),
+(9944,0,'Comment deleted, id=32 by 0',0,'','2024-07-17 16:57:27','2024-07-17 16:57:27',0),
+(9945,0,'Added new comment (#0) user: 165',0,'','2024-07-17 16:59:04','2024-07-17 16:59:04',0),
+(9946,0,'Added new comment (#0) user: 165',0,'','2024-07-17 16:59:28','2024-07-17 16:59:28',0),
+(9947,0,'Added new comment (#0) user: 165',0,'','2024-07-17 17:18:17','2024-07-17 17:18:17',0),
+(9948,0,'Comment content changed 35 by 165',0,'','2024-07-17 17:19:23','2024-07-17 17:19:23',0),
+(9949,0,'Added new comment (#0) user: 165',0,'','2024-07-17 17:19:33','2024-07-17 17:19:33',0),
+(9950,0,'Comment deleted, id=36 by 0',0,'','2024-07-17 17:19:38','2024-07-17 17:19:38',0),
+(9951,0,'Edited idea 278 by 165',0,'','2024-07-17 17:20:10','2024-07-17 17:20:10',0),
+(9952,0,'Delegation status retrieved: user_id: 165, topic_id: 479',0,'','2024-07-17 17:20:37','2024-07-17 17:20:37',0),
+(9953,0,'Delegation status retrieved: user_id: 165, topic_id: 479',0,'','2024-07-17 17:20:37','2024-07-17 17:20:37',0),
+(9954,0,'Topic deleted, id=479 by 0',0,'','2024-07-17 17:20:41','2024-07-17 17:20:41',0),
+(9955,0,'Added new user 271',0,'','2024-07-17 17:26:23','2024-07-17 17:26:23',0),
+(9956,0,'User delegation(s) deleted with id 271 for topic 0',0,'','2024-07-17 17:26:28','2024-07-17 17:26:28',0),
+(9957,0,'User delegation(s) deleted with id 271 for topic 0',0,'','2024-07-17 17:26:28','2024-07-17 17:26:28',0),
+(9958,0,'User deleted with id 271 by 0',0,'','2024-07-17 17:26:28','2024-07-17 17:26:28',0),
+(9959,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:53','2024-07-18 13:14:53',0),
+(9960,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:53','2024-07-18 13:14:53',0),
+(9961,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:53','2024-07-18 13:14:53',0),
+(9962,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:53','2024-07-18 13:14:53',0),
+(9963,0,'User delegation(s) deleted with id 165 for topic 474',0,'','2024-07-18 13:14:55','2024-07-18 13:14:55',0),
+(9964,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:14:55','2024-07-18 13:14:55',0),
+(9965,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-18 13:32:35','2024-07-18 13:32:35',0),
+(9966,0,'Added new topic (#482) test',0,'','2024-07-18 14:54:40','2024-07-18 14:54:40',0),
+(9967,0,'Topic deleted, id=482 by 0',0,'','2024-07-18 14:55:46','2024-07-18 14:55:46',0),
+(9968,0,'Added new topic (#483) test',0,'','2024-07-18 14:56:05','2024-07-18 14:56:05',0),
+(9969,0,'Topic deleted, id=483 by 0',0,'','2024-07-18 14:56:10','2024-07-18 14:56:10',0),
+(9970,0,'Added new topic (#484) test',0,'','2024-07-18 15:07:52','2024-07-18 15:07:52',0),
+(9971,0,'Topic deleted, id=484 by 0',0,'','2024-07-18 15:08:00','2024-07-18 15:08:00',0),
+(9972,0,'Added new topic (#485) Test',0,'','2024-07-18 15:16:03','2024-07-18 15:16:03',0),
+(9973,0,'Delegation status retrieved: user_id: 165, topic_id: 485',0,'','2024-07-18 15:16:19','2024-07-18 15:16:19',0),
+(9974,0,'Delegation status retrieved: user_id: 165, topic_id: 485',0,'','2024-07-18 15:16:19','2024-07-18 15:16:19',0),
+(9975,0,'Delegation status retrieved: user_id: 165, topic_id: 485',0,'','2024-07-18 15:16:20','2024-07-18 15:16:20',0),
+(9976,0,'Delegation status retrieved: user_id: 165, topic_id: 485',0,'','2024-07-18 15:16:20','2024-07-18 15:16:20',0),
+(9977,0,'Topic deleted, id=485 by 0',0,'','2024-07-18 15:16:25','2024-07-18 15:16:25',0),
+(9978,0,'Added new topic (#486) test',0,'','2024-07-18 15:30:41','2024-07-18 15:30:41',0),
+(9979,0,'Added new topic (#487) test',0,'','2024-07-18 15:39:41','2024-07-18 15:39:41',0),
+(9980,0,'Topic deleted, id=486 by 0',0,'','2024-07-18 15:40:34','2024-07-18 15:40:34',0),
+(9981,0,'Topic deleted, id=487 by 0',0,'','2024-07-18 15:40:37','2024-07-18 15:40:37',0),
+(9982,0,'Added new topic (#488) test',0,'','2024-07-18 15:41:01','2024-07-18 15:41:01',0),
+(9983,0,'Delegation status retrieved: user_id: 165, topic_id: 488',0,'','2024-07-18 15:41:03','2024-07-18 15:41:03',0),
+(9984,0,'Delegation status retrieved: user_id: 165, topic_id: 488',0,'','2024-07-18 15:41:03','2024-07-18 15:41:03',0),
+(9985,0,'Delegation status retrieved: user_id: 165, topic_id: 488',0,'','2024-07-18 15:41:03','2024-07-18 15:41:03',0),
+(9986,0,'Delegation status retrieved: user_id: 165, topic_id: 488',0,'','2024-07-18 15:41:03','2024-07-18 15:41:03',0),
+(9987,0,'Topic deleted, id=488 by 0',0,'','2024-07-18 15:41:45','2024-07-18 15:41:45',0),
+(9988,0,'Added new topic (#489) Box on Voting phase',0,'','2024-07-18 15:44:33','2024-07-18 15:44:33',0),
+(9989,0,'Added idea 278 to topic 489',0,'','2024-07-18 15:44:33','2024-07-18 15:44:33',0),
+(9990,0,'Delegation status retrieved: user_id: 165, topic_id: 489',0,'','2024-07-18 15:44:35','2024-07-18 15:44:35',0),
+(9991,0,'Delegation status retrieved: user_id: 165, topic_id: 489',0,'','2024-07-18 15:44:35','2024-07-18 15:44:35',0),
+(9992,0,'Delegation status retrieved: user_id: 165, topic_id: 489',0,'','2024-07-18 15:44:35','2024-07-18 15:44:35',0),
+(9993,0,'Delegation status retrieved: user_id: 165, topic_id: 489',0,'','2024-07-18 15:44:35','2024-07-18 15:44:35',0),
+(9994,0,'Topic deleted, id=489 by 0',0,'','2024-07-18 15:45:09','2024-07-18 15:45:09',0),
+(9995,0,'Added new idea (#280) test',0,'','2024-07-18 16:10:03','2024-07-18 16:10:03',0),
+(9996,0,'Added new room (#108) test',0,'','2024-07-18 16:13:21','2024-07-18 16:13:21',0),
+(9997,0,'Added user 264 to room 108',0,'','2024-07-18 16:13:21','2024-07-18 16:13:21',0),
+(9998,0,'Added user 268 to room 108',0,'','2024-07-18 16:13:21','2024-07-18 16:13:21',0),
+(9999,0,'Room deleted with id 108 by 0',0,'','2024-07-18 16:14:12','2024-07-18 16:14:12',0),
+(10000,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-18 18:11:06','2024-07-18 18:11:06',0),
+(10001,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-18 18:11:06','2024-07-18 18:11:06',0),
+(10002,0,'Added idea 280 to topic 472',0,'','2024-07-18 18:11:15','2024-07-18 18:11:15',0),
+(10003,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 12:33:37','2024-07-20 12:33:37',0),
+(10004,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 12:33:37','2024-07-20 12:33:37',0),
+(10005,0,'Successful login user admin',0,'','2024-07-20 12:41:53','2024-07-20 12:41:53',0),
+(10006,0,'Added new idea (#281) test',0,'','2024-07-20 13:27:11','2024-07-20 13:27:11',0),
+(10007,0,'Added new topic (#490) test',0,'','2024-07-20 13:27:25','2024-07-20 13:27:25',0),
+(10008,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:27:32','2024-07-20 13:27:32',0),
+(10009,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:27:32','2024-07-20 13:27:32',0),
+(10010,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:28:11','2024-07-20 13:28:11',0),
+(10011,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:28:11','2024-07-20 13:28:11',0),
+(10012,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:28:49','2024-07-20 13:28:49',0),
+(10013,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:28:49','2024-07-20 13:28:49',0),
+(10014,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:29:04','2024-07-20 13:29:04',0),
+(10015,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:29:04','2024-07-20 13:29:04',0),
+(10016,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:32:54','2024-07-20 13:32:54',0),
+(10017,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:32:54','2024-07-20 13:32:54',0),
+(10018,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:37:16','2024-07-20 13:37:16',0),
+(10019,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:37:16','2024-07-20 13:37:16',0),
+(10020,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:38:19','2024-07-20 13:38:19',0),
+(10021,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:38:19','2024-07-20 13:38:19',0),
+(10022,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:39:01','2024-07-20 13:39:01',0),
+(10023,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:39:01','2024-07-20 13:39:01',0),
+(10024,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:48:07','2024-07-20 13:48:07',0),
+(10025,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:48:07','2024-07-20 13:48:07',0),
+(10026,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:50:05','2024-07-20 13:50:05',0),
+(10027,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:50:05','2024-07-20 13:50:05',0),
+(10028,0,'Added idea 281 to topic 472',0,'','2024-07-20 13:51:27','2024-07-20 13:51:27',0),
+(10029,0,'Added idea 272 to topic 472',0,'','2024-07-20 13:52:16','2024-07-20 13:52:16',0),
+(10030,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:52:32','2024-07-20 13:52:32',0),
+(10031,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 13:52:32','2024-07-20 13:52:32',0),
+(10032,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:52:35','2024-07-20 13:52:35',0),
+(10033,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:52:35','2024-07-20 13:52:35',0),
+(10034,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:57:12','2024-07-20 13:57:12',0),
+(10035,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 13:57:12','2024-07-20 13:57:12',0),
+(10036,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:03:45','2024-07-20 14:03:45',0),
+(10037,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:03:45','2024-07-20 14:03:45',0),
+(10038,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:05:10','2024-07-20 14:05:10',0),
+(10039,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:05:10','2024-07-20 14:05:10',0),
+(10040,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:14:52','2024-07-20 14:14:52',0),
+(10041,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:14:52','2024-07-20 14:14:52',0),
+(10042,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:15:53','2024-07-20 14:15:53',0),
+(10043,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:16:04','2024-07-20 14:16:04',0),
+(10044,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 14:16:04','2024-07-20 14:16:04',0),
+(10045,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:16:11','2024-07-20 14:16:11',0),
+(10046,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:16:11','2024-07-20 14:16:11',0),
+(10047,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:16:17','2024-07-20 14:16:17',0),
+(10048,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 14:16:17','2024-07-20 14:16:17',0),
+(10049,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:16:48','2024-07-20 14:16:48',0),
+(10050,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:16:48','2024-07-20 14:16:48',0),
+(10051,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:17:39','2024-07-20 14:17:39',0),
+(10052,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:17:39','2024-07-20 14:17:39',0),
+(10053,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:18:26','2024-07-20 14:18:26',0),
+(10054,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:18:26','2024-07-20 14:18:26',0),
+(10055,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:18:41','2024-07-20 14:18:41',0),
+(10056,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:18:41','2024-07-20 14:18:41',0),
+(10057,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:18:50','2024-07-20 14:18:50',0),
+(10058,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 14:18:50','2024-07-20 14:18:50',0),
+(10059,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:18:56','2024-07-20 14:18:56',0),
+(10060,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 14:18:56','2024-07-20 14:18:56',0),
+(10061,0,'Added idea 281 to topic 490',0,'','2024-07-20 14:19:12','2024-07-20 14:19:12',0),
+(10062,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-20 14:19:12','2024-07-20 14:19:12',0),
+(10063,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:23:34','2024-07-20 14:23:34',0),
+(10064,0,'Added idea 280 to topic 490',0,'','2024-07-20 14:23:34','2024-07-20 14:23:34',0),
+(10065,0,'Added idea 281 to topic 490',0,'','2024-07-20 14:23:37','2024-07-20 14:23:37',0),
+(10066,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-20 14:23:37','2024-07-20 14:23:37',0),
+(10067,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 14:23:40','2024-07-20 14:23:40',0),
+(10068,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:23:58','2024-07-20 14:23:58',0),
+(10069,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 14:23:58','2024-07-20 14:23:58',0),
+(10070,0,'Added idea 280 to topic 472',0,'','2024-07-20 14:24:14','2024-07-20 14:24:14',0),
+(10071,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:24:14','2024-07-20 14:24:14',0),
+(10072,0,'Added idea 281 to topic 472',0,'','2024-07-20 14:24:17','2024-07-20 14:24:17',0),
+(10073,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 14:24:17','2024-07-20 14:24:17',0),
+(10074,0,'Added idea 280 to topic 472',0,'','2024-07-20 14:24:47','2024-07-20 14:24:47',0),
+(10075,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:24:47','2024-07-20 14:24:47',0),
+(10076,0,'Added idea 281 to topic 472',0,'','2024-07-20 14:25:57','2024-07-20 14:25:57',0),
+(10077,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 14:25:57','2024-07-20 14:25:57',0),
+(10078,0,'Added idea 281 to topic 472',0,'','2024-07-20 14:27:06','2024-07-20 14:27:06',0),
+(10079,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 14:27:06','2024-07-20 14:27:06',0),
+(10080,0,'Added idea 280 to topic 472',0,'','2024-07-20 14:31:39','2024-07-20 14:31:39',0),
+(10081,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:31:39','2024-07-20 14:31:39',0),
+(10082,0,'Added idea 280 to topic 472',0,'','2024-07-20 14:31:40','2024-07-20 14:31:40',0),
+(10083,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 14:31:40','2024-07-20 14:31:40',0),
+(10084,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:00:22','2024-07-20 15:00:22',0),
+(10085,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:00:22','2024-07-20 15:00:22',0),
+(10086,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:01:54','2024-07-20 15:01:54',0),
+(10087,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:01:54','2024-07-20 15:01:54',0),
+(10088,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:01:54','2024-07-20 15:01:54',0),
+(10089,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:01:54','2024-07-20 15:01:54',0),
+(10090,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:02:14','2024-07-20 15:02:14',0),
+(10091,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:02:25','2024-07-20 15:02:25',0),
+(10092,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:02:28','2024-07-20 15:02:28',0),
+(10093,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:02:28','2024-07-20 15:02:28',0),
+(10094,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:02:59','2024-07-20 15:02:59',0),
+(10095,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:03:01','2024-07-20 15:03:01',0),
+(10096,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:03:02','2024-07-20 15:03:02',0),
+(10097,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:03:04','2024-07-20 15:03:04',0),
+(10098,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:05','2024-07-20 15:03:05',0),
+(10099,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:05','2024-07-20 15:03:05',0),
+(10100,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:08','2024-07-20 15:03:08',0),
+(10101,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:08','2024-07-20 15:03:08',0),
+(10102,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:09','2024-07-20 15:03:09',0),
+(10103,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:09','2024-07-20 15:03:09',0),
+(10104,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:10','2024-07-20 15:03:10',0),
+(10105,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:10','2024-07-20 15:03:10',0),
+(10106,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:23','2024-07-20 15:03:23',0),
+(10107,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:30','2024-07-20 15:03:30',0),
+(10108,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:03:30','2024-07-20 15:03:30',0),
+(10109,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:03:32','2024-07-20 15:03:32',0),
+(10110,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 15:03:39','2024-07-20 15:03:39',0),
+(10111,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 15:03:39','2024-07-20 15:03:39',0),
+(10112,0,'Added idea 280 to topic 490',0,'','2024-07-20 15:03:45','2024-07-20 15:03:45',0),
+(10113,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-20 15:03:45','2024-07-20 15:03:45',0),
+(10114,0,'Added idea 281 to topic 490',0,'','2024-07-20 15:03:51','2024-07-20 15:03:51',0),
+(10115,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-20 15:03:51','2024-07-20 15:03:51',0),
+(10116,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:06','2024-07-20 15:04:06',0),
+(10117,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:06','2024-07-20 15:04:06',0),
+(10118,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:04:13','2024-07-20 15:04:13',0),
+(10119,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:29','2024-07-20 15:04:29',0),
+(10120,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:29','2024-07-20 15:04:29',0),
+(10121,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:04:37','2024-07-20 15:04:37',0),
+(10122,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:49','2024-07-20 15:04:49',0),
+(10123,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:04:49','2024-07-20 15:04:49',0),
+(10124,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:20','2024-07-20 15:07:20',0),
+(10125,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:20','2024-07-20 15:07:20',0),
+(10126,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:07:29','2024-07-20 15:07:29',0),
+(10127,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:07:29','2024-07-20 15:07:29',0),
+(10128,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:52','2024-07-20 15:07:52',0),
+(10129,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:57','2024-07-20 15:07:57',0),
+(10130,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 15:07:57','2024-07-20 15:07:57',0),
+(10131,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:11','2024-07-20 15:08:11',0),
+(10132,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:11','2024-07-20 15:08:11',0),
+(10133,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:08:15','2024-07-20 15:08:15',0),
+(10134,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:08:15','2024-07-20 15:08:15',0),
+(10135,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:29','2024-07-20 15:08:29',0),
+(10136,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:29','2024-07-20 15:08:29',0),
+(10137,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
+(10138,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
+(10139,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
+(10140,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
+(10141,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
+(10142,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
+(10143,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
+(10144,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:08:30','2024-07-20 15:08:30',0),
+(10145,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:11:25','2024-07-20 15:11:25',0),
+(10146,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:11:25','2024-07-20 15:11:25',0),
+(10147,0,'Added idea 280 to topic 472',0,'','2024-07-20 15:11:27','2024-07-20 15:11:27',0),
+(10148,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-20 15:11:27','2024-07-20 15:11:27',0),
+(10149,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:11:37','2024-07-20 15:11:37',0),
+(10150,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:11:38','2024-07-20 15:11:38',0),
+(10151,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:11:38','2024-07-20 15:11:38',0),
+(10152,0,'Added idea 281 to topic 472',0,'','2024-07-20 15:11:41','2024-07-20 15:11:41',0),
+(10153,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 15:11:41','2024-07-20 15:11:41',0),
+(10154,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:21:25','2024-07-20 16:21:25',0),
+(10155,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:21:25','2024-07-20 16:21:25',0),
+(10156,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:22:40','2024-07-20 16:22:40',0),
+(10157,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:22:47','2024-07-20 16:22:47',0),
+(10158,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:22:55','2024-07-20 16:22:55',0),
+(10159,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:23:04','2024-07-20 16:23:04',0),
+(10160,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:24:44','2024-07-20 16:24:44',0),
+(10161,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:24:44','2024-07-20 16:24:44',0),
+(10162,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:25:16','2024-07-20 16:25:16',0),
+(10163,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:25:16','2024-07-20 16:25:16',0),
+(10164,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:27:17','2024-07-20 16:27:17',0),
+(10165,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:29:26','2024-07-20 16:29:26',0),
+(10166,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:29:26','2024-07-20 16:29:26',0),
+(10167,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:32:38','2024-07-20 16:32:38',0),
+(10168,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:32:38','2024-07-20 16:32:38',0),
+(10169,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:32:40','2024-07-20 16:32:40',0),
+(10170,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:32:40','2024-07-20 16:32:40',0),
+(10171,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:33:20','2024-07-20 16:33:20',0),
+(10172,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:33:20','2024-07-20 16:33:20',0),
+(10173,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:33:31','2024-07-20 16:33:31',0),
+(10174,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:33:31','2024-07-20 16:33:31',0),
+(10175,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:33:47','2024-07-20 16:33:47',0),
+(10176,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:33:55','2024-07-20 16:33:55',0),
+(10177,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:34:05','2024-07-20 16:34:05',0),
+(10178,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:34:22','2024-07-20 16:34:22',0),
+(10179,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:34:36','2024-07-20 16:34:36',0),
+(10180,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:35:12','2024-07-20 16:35:12',0),
+(10181,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:35:17','2024-07-20 16:35:17',0),
+(10182,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:36:39','2024-07-20 16:36:39',0),
+(10183,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:36:44','2024-07-20 16:36:44',0),
+(10184,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:36:46','2024-07-20 16:36:46',0),
+(10185,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:39:59','2024-07-20 16:39:59',0),
+(10186,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:39:59','2024-07-20 16:39:59',0),
+(10187,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:40:55','2024-07-20 16:40:55',0),
+(10188,0,'Added idea 281 to topic 472',0,'','2024-07-20 16:41:00','2024-07-20 16:41:00',0),
+(10189,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 16:41:00','2024-07-20 16:41:00',0),
+(10190,0,'Added idea 281 to topic 472',0,'','2024-07-20 16:41:01','2024-07-20 16:41:01',0),
+(10191,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-20 16:41:01','2024-07-20 16:41:01',0),
+(10192,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:41:16','2024-07-20 16:41:16',0),
+(10193,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:45:06','2024-07-20 16:45:06',0),
+(10194,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:45:06','2024-07-20 16:45:06',0),
+(10195,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:47:33','2024-07-20 16:47:33',0),
+(10196,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:47:33','2024-07-20 16:47:33',0),
+(10197,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:49:38','2024-07-20 16:49:38',0),
+(10198,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:49:38','2024-07-20 16:49:38',0),
+(10199,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:49:42','2024-07-20 16:49:42',0),
+(10200,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:49:42','2024-07-20 16:49:42',0),
+(10201,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:50:08','2024-07-20 16:50:08',0),
+(10202,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:50:08','2024-07-20 16:50:08',0),
+(10203,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:31','2024-07-20 16:52:31',0),
+(10204,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:31','2024-07-20 16:52:31',0),
+(10205,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:48','2024-07-20 16:52:48',0),
+(10206,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:48','2024-07-20 16:52:48',0),
+(10207,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:51','2024-07-20 16:52:51',0),
+(10208,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:52:51','2024-07-20 16:52:51',0),
+(10209,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 16:53:05','2024-07-20 16:53:05',0),
+(10210,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:58:41','2024-07-20 16:58:41',0),
+(10211,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 16:58:41','2024-07-20 16:58:41',0),
+(10212,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:01:29','2024-07-20 17:01:29',0),
+(10213,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:01:29','2024-07-20 17:01:29',0),
+(10214,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:01:55','2024-07-20 17:01:55',0),
+(10215,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:02:01','2024-07-20 17:02:01',0),
+(10216,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:02:25','2024-07-20 17:02:25',0),
+(10217,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:02:25','2024-07-20 17:02:25',0),
+(10218,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:02:50','2024-07-20 17:02:50',0),
+(10219,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:02:50','2024-07-20 17:02:50',0),
+(10220,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:02:54','2024-07-20 17:02:54',0),
+(10221,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:02:54','2024-07-20 17:02:54',0),
+(10222,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:03:25','2024-07-20 17:03:25',0),
+(10223,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:03:25','2024-07-20 17:03:25',0),
+(10224,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:04:27','2024-07-20 17:04:27',0),
+(10225,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:04:27','2024-07-20 17:04:27',0),
+(10226,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:29','2024-07-20 17:04:29',0),
+(10227,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:29','2024-07-20 17:04:29',0),
+(10228,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:33','2024-07-20 17:04:33',0),
+(10229,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:40','2024-07-20 17:04:40',0),
+(10230,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:04:47','2024-07-20 17:04:47',0),
+(10231,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-20 17:04:47','2024-07-20 17:04:47',0),
+(10232,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:49','2024-07-20 17:04:49',0),
+(10233,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-20 17:04:49','2024-07-20 17:04:49',0),
+(10234,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:32:36','2024-07-21 10:32:36',0),
+(10235,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:32:36','2024-07-21 10:32:36',0),
+(10236,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:32:44','2024-07-21 10:32:44',0),
+(10237,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:32:44','2024-07-21 10:32:44',0),
+(10238,0,'Added new idea (#282) teste',0,'','2024-07-21 10:33:32','2024-07-21 10:33:32',0),
+(10239,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:33:36','2024-07-21 10:33:36',0),
+(10240,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:33:36','2024-07-21 10:33:36',0),
+(10241,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:33:40','2024-07-21 10:33:40',0),
+(10242,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:33:40','2024-07-21 10:33:40',0),
+(10243,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:34:31','2024-07-21 10:34:31',0),
+(10244,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:34:31','2024-07-21 10:34:31',0),
+(10245,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:34:38','2024-07-21 10:34:38',0),
+(10246,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:34:38','2024-07-21 10:34:38',0),
+(10247,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:34:45','2024-07-21 10:34:45',0),
+(10248,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:34:45','2024-07-21 10:34:45',0),
+(10249,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:34:48','2024-07-21 10:34:48',0),
+(10250,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:34:48','2024-07-21 10:34:48',0),
+(10251,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:39:42','2024-07-21 10:39:42',0),
+(10252,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:39:42','2024-07-21 10:39:42',0),
+(10253,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:40:07','2024-07-21 10:40:07',0),
+(10254,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:40:19','2024-07-21 10:40:19',0),
+(10255,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:40:19','2024-07-21 10:40:19',0),
+(10256,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:41:44','2024-07-21 10:41:44',0),
+(10257,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:42:02','2024-07-21 10:42:02',0),
+(10258,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:42:04','2024-07-21 10:42:04',0),
+(10259,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:42:08','2024-07-21 10:42:08',0),
+(10260,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:42:11','2024-07-21 10:42:11',0),
+(10261,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:42:11','2024-07-21 10:42:11',0),
+(10262,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:42:13','2024-07-21 10:42:13',0),
+(10263,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:42:15','2024-07-21 10:42:15',0),
+(10264,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:42:16','2024-07-21 10:42:16',0),
+(10265,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:42:17','2024-07-21 10:42:17',0),
+(10266,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:42:24','2024-07-21 10:42:24',0),
+(10267,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:42:24','2024-07-21 10:42:24',0),
+(10268,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:42:25','2024-07-21 10:42:25',0),
+(10269,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:42:27','2024-07-21 10:42:27',0),
+(10270,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:42:28','2024-07-21 10:42:28',0),
+(10271,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:42:28','2024-07-21 10:42:28',0),
+(10272,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:42:32','2024-07-21 10:42:32',0),
+(10273,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:42:33','2024-07-21 10:42:33',0),
+(10274,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:42:37','2024-07-21 10:42:37',0),
+(10275,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:42:41','2024-07-21 10:42:41',0),
+(10276,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:42:42','2024-07-21 10:42:42',0),
+(10277,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:42:42','2024-07-21 10:42:42',0),
+(10278,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:26','2024-07-21 10:43:26',0),
+(10279,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:26','2024-07-21 10:43:26',0),
+(10280,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:43:28','2024-07-21 10:43:28',0),
+(10281,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:43:31','2024-07-21 10:43:31',0),
+(10282,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:38','2024-07-21 10:43:38',0),
+(10283,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:38','2024-07-21 10:43:38',0),
+(10284,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:43:40','2024-07-21 10:43:40',0),
+(10285,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:43:42','2024-07-21 10:43:42',0),
+(10286,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:43:43','2024-07-21 10:43:43',0),
+(10287,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:43:46','2024-07-21 10:43:46',0),
+(10288,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:43:47','2024-07-21 10:43:47',0),
+(10289,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:43:48','2024-07-21 10:43:48',0),
+(10290,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:57','2024-07-21 10:43:57',0),
+(10291,0,'Delegation status retrieved: user_id: 165, topic_id: 490',0,'','2024-07-21 10:43:57','2024-07-21 10:43:57',0),
+(10292,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:45:41','2024-07-21 10:45:41',0),
+(10293,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:45:42','2024-07-21 10:45:42',0),
+(10294,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:51:04','2024-07-21 10:51:04',0),
+(10295,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:51:05','2024-07-21 10:51:05',0),
+(10296,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:51:06','2024-07-21 10:51:06',0),
+(10297,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:51:07','2024-07-21 10:51:07',0),
+(10298,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:51:08','2024-07-21 10:51:08',0),
+(10299,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:51:09','2024-07-21 10:51:09',0),
+(10300,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:51:10','2024-07-21 10:51:10',0),
+(10301,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:51:10','2024-07-21 10:51:10',0),
+(10302,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:51:11','2024-07-21 10:51:11',0),
+(10303,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:51:12','2024-07-21 10:51:12',0),
+(10304,0,'Added idea 280 to topic 490',0,'','2024-07-21 10:51:20','2024-07-21 10:51:20',0),
+(10305,0,'Added idea 281 to topic 490',0,'','2024-07-21 10:51:21','2024-07-21 10:51:21',0),
+(10306,0,'Added idea 282 to topic 490',0,'','2024-07-21 10:51:25','2024-07-21 10:51:25',0),
+(10307,0,'Succesfully moved idea 282 to topic 490',0,'','2024-07-21 10:51:29','2024-07-21 10:51:29',0),
+(10308,0,'Succesfully moved idea 281 to topic 490',0,'','2024-07-21 10:51:29','2024-07-21 10:51:29',0),
+(10309,0,'Succesfully moved idea 280 to topic 490',0,'','2024-07-21 10:51:30','2024-07-21 10:51:30',0),
+(10310,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-21 10:52:10','2024-07-21 10:52:10',0),
+(10311,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-21 10:52:10','2024-07-21 10:52:10',0),
+(10312,0,'Added idea 280 to topic 472',0,'','2024-07-21 10:52:12','2024-07-21 10:52:12',0),
+(10313,0,'Added idea 281 to topic 472',0,'','2024-07-21 10:52:12','2024-07-21 10:52:12',0),
+(10314,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-21 10:52:16','2024-07-21 10:52:16',0),
+(10315,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-21 10:52:17','2024-07-21 10:52:17',0),
+(10316,0,'Added idea 280 to topic 472',0,'','2024-07-21 10:53:36','2024-07-21 10:53:36',0),
+(10317,0,'Added idea 281 to topic 472',0,'','2024-07-21 10:53:37','2024-07-21 10:53:37',0),
+(10318,0,'Succesfully moved idea 281 to topic 472',0,'','2024-07-21 10:53:37','2024-07-21 10:53:37',0),
+(10319,0,'Succesfully moved idea 280 to topic 472',0,'','2024-07-21 10:53:38','2024-07-21 10:53:38',0),
+(10320,0,'Topic deleted, id=490 by 0',0,'','2024-07-21 10:53:48','2024-07-21 10:53:48',0),
+(10321,0,'Idea deleted, id=282 by 0',0,'','2024-07-21 10:54:03','2024-07-21 10:54:03',0),
+(10322,0,'Idea deleted, id=278 by 0',0,'','2024-07-21 10:54:03','2024-07-21 10:54:03',0),
+(10323,0,'Idea deleted, id=282 by 0',0,'','2024-07-21 10:54:10','2024-07-21 10:54:10',0),
+(10324,0,'Idea deleted, id=278 by 0',0,'','2024-07-21 10:54:10','2024-07-21 10:54:10',0),
+(10325,0,'Idea deleted, id=281 by 0',0,'','2024-07-21 10:54:10','2024-07-21 10:54:10',0),
+(10326,0,'Idea deleted, id=280 by 0',0,'','2024-07-21 10:54:10','2024-07-21 10:54:10',0),
+(10327,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-21 10:54:17','2024-07-21 10:54:17',0),
+(10328,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-21 10:54:17','2024-07-21 10:54:17',0),
+(10329,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-21 10:54:17','2024-07-21 10:54:17',0),
+(10330,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-21 10:54:17','2024-07-21 10:54:17',0),
+(10331,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-21 10:54:25','2024-07-21 10:54:25',0),
+(10332,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-21 10:54:25','2024-07-21 10:54:25',0),
+(10333,0,'Added user 165 to room 106',0,'','2024-07-21 11:02:07','2024-07-21 11:02:07',0),
+(10334,0,'Added user 165 to room 106',0,'','2024-07-21 11:02:07','2024-07-21 11:02:07',0),
+(10335,0,'Added user 265 to room 106',0,'','2024-07-21 11:02:07','2024-07-21 11:02:07',0),
+(10336,0,'Added user 265 to room 106',0,'','2024-07-21 11:02:07','2024-07-21 11:02:07',0),
+(10337,0,'Added user 264 to room 106',0,'','2024-07-21 11:02:08','2024-07-21 11:02:08',0),
+(10338,0,'Added user 264 to room 106',0,'','2024-07-21 11:02:08','2024-07-21 11:02:08',0),
+(10339,0,'Added user 268 to room 106',0,'','2024-07-21 11:02:11','2024-07-21 11:02:11',0),
+(10340,0,'Added user 268 to room 106',0,'','2024-07-21 11:02:11','2024-07-21 11:02:11',0),
+(10341,0,'Added user 267 to room 106',0,'','2024-07-21 11:02:11','2024-07-21 11:02:11',0),
+(10342,0,'Added user 267 to room 106',0,'','2024-07-21 11:02:11','2024-07-21 11:02:11',0),
+(10343,0,'Added user 270 to room 106',0,'','2024-07-21 11:02:12','2024-07-21 11:02:12',0),
+(10344,0,'Added user 270 to room 106',0,'','2024-07-21 11:02:12','2024-07-21 11:02:12',0),
+(10345,0,'Added user 269 to room 106',0,'','2024-07-21 11:02:13','2024-07-21 11:02:13',0),
+(10346,0,'Added user 269 to room 106',0,'','2024-07-21 11:02:13','2024-07-21 11:02:13',0),
+(10347,0,'Added user 266 to room 106',0,'','2024-07-21 11:02:14','2024-07-21 11:02:14',0),
+(10348,0,'Added user 266 to room 106',0,'','2024-07-21 11:02:14','2024-07-21 11:02:14',0),
+(10349,0,'Successful login user admin',0,'','2024-07-22 09:49:22','2024-07-22 09:49:22',0),
+(10350,0,'Added new topic (#491) test',0,'','2024-07-23 13:44:32','2024-07-23 13:44:32',0),
+(10351,0,'Topic deleted, id=491 by 0',0,'','2024-07-23 13:44:40','2024-07-23 13:44:40',0),
+(10352,0,'Successful login user admin',0,'','2024-07-23 13:47:21','2024-07-23 13:47:21',0),
+(10353,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:15:36','2024-07-23 14:15:36',0),
+(10354,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:15:36','2024-07-23 14:15:36',0),
+(10355,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:15:36','2024-07-23 14:15:36',0),
+(10356,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:15:36','2024-07-23 14:15:36',0),
+(10357,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:05','2024-07-23 14:17:05',0),
+(10358,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:05','2024-07-23 14:17:05',0),
+(10359,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:12','2024-07-23 14:17:12',0),
+(10360,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:12','2024-07-23 14:17:12',0),
+(10361,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:39','2024-07-23 14:17:39',0),
+(10362,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:39','2024-07-23 14:17:39',0),
+(10363,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:56','2024-07-23 14:17:56',0),
+(10364,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:17:56','2024-07-23 14:17:56',0),
+(10365,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:18:27','2024-07-23 14:18:27',0),
+(10366,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:18:27','2024-07-23 14:18:27',0),
+(10367,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:18:45','2024-07-23 14:18:45',0),
+(10368,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:18:45','2024-07-23 14:18:45',0),
+(10369,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:20:20','2024-07-23 14:20:20',0),
+(10370,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:20:20','2024-07-23 14:20:20',0),
+(10371,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:21:52','2024-07-23 14:21:52',0),
+(10372,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:21:52','2024-07-23 14:21:52',0),
+(10373,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:21:53','2024-07-23 14:21:53',0),
+(10374,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:21:53','2024-07-23 14:21:53',0),
+(10375,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:22:25','2024-07-23 14:22:25',0),
+(10376,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:22:25','2024-07-23 14:22:25',0),
+(10377,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:22:26','2024-07-23 14:22:26',0),
+(10378,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:22:26','2024-07-23 14:22:26',0),
+(10379,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 14:24:31','2024-07-23 14:24:31',0),
+(10380,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 14:24:31','2024-07-23 14:24:31',0),
+(10381,0,'Idea  268 decrementing likes',0,'','2024-07-23 14:24:35','2024-07-23 14:24:35',0),
+(10382,0,'Idea  268 incremented likes',0,'','2024-07-23 14:24:35','2024-07-23 14:24:35',0),
+(10383,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:25:01','2024-07-23 14:25:01',0),
+(10384,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:25:01','2024-07-23 14:25:01',0),
+(10385,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:25:01','2024-07-23 14:25:01',0),
+(10386,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 14:25:01','2024-07-23 14:25:01',0),
+(10387,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 14:28:09','2024-07-23 14:28:09',0),
+(10388,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 14:28:09','2024-07-23 14:28:09',0),
+(10389,0,'Successful login user admin',0,'','2024-07-23 15:05:02','2024-07-23 15:05:02',0),
+(10390,0,'Successful login user admin',0,'','2024-07-23 15:08:04','2024-07-23 15:08:04',0),
+(10391,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 15:43:12','2024-07-23 15:43:12',0),
+(10392,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 15:43:12','2024-07-23 15:43:12',0),
+(10393,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 15:43:12','2024-07-23 15:43:12',0),
+(10394,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 15:43:12','2024-07-23 15:43:12',0),
+(10395,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 15:56:55','2024-07-23 15:56:55',0),
+(10396,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 15:56:55','2024-07-23 15:56:55',0),
+(10397,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 15:57:04','2024-07-23 15:57:04',0),
+(10398,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 15:57:04','2024-07-23 15:57:04',0),
+(10399,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 15:57:06','2024-07-23 15:57:06',0),
+(10400,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 15:57:06','2024-07-23 15:57:06',0),
+(10401,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:16','2024-07-23 16:04:16',0),
+(10402,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:16','2024-07-23 16:04:16',0),
+(10403,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:04:22','2024-07-23 16:04:22',0),
+(10404,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:04:22','2024-07-23 16:04:22',0),
+(10405,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:24','2024-07-23 16:04:24',0),
+(10406,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:24','2024-07-23 16:04:24',0),
+(10407,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:04:25','2024-07-23 16:04:25',0),
+(10408,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:04:25','2024-07-23 16:04:25',0),
+(10409,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:04:25','2024-07-23 16:04:25',0),
+(10410,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:04:26','2024-07-23 16:04:26',0),
+(10411,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:39','2024-07-23 16:04:39',0),
+(10412,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:04:39','2024-07-23 16:04:39',0),
+(10413,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:05:35','2024-07-23 16:05:35',0),
+(10414,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:05:35','2024-07-23 16:05:35',0),
+(10415,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:05:35','2024-07-23 16:05:35',0),
+(10416,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:05:35','2024-07-23 16:05:35',0),
+(10417,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:05:38','2024-07-23 16:05:38',0),
+(10418,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:05:38','2024-07-23 16:05:38',0),
+(10419,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:05:53','2024-07-23 16:05:53',0),
+(10420,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:05:53','2024-07-23 16:05:53',0),
+(10421,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:06:58','2024-07-23 16:06:58',0),
+(10422,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:15:42','2024-07-23 16:15:42',0),
+(10423,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:15:42','2024-07-23 16:15:42',0),
+(10424,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:19:17','2024-07-23 16:19:17',0),
+(10425,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:20:16','2024-07-23 16:20:16',0),
+(10426,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:20:16','2024-07-23 16:20:16',0),
+(10427,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:20:21','2024-07-23 16:20:21',0),
+(10428,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:20:21','2024-07-23 16:20:21',0),
+(10429,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:20:25','2024-07-23 16:20:25',0),
+(10430,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:20:25','2024-07-23 16:20:25',0),
+(10431,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:20:25','2024-07-23 16:20:25',0),
+(10432,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:20:26','2024-07-23 16:20:26',0),
+(10433,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:10','2024-07-23 16:21:10',0),
+(10434,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:10','2024-07-23 16:21:10',0),
+(10435,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:11','2024-07-23 16:21:11',0),
+(10436,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:11','2024-07-23 16:21:11',0),
+(10437,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:21:39','2024-07-23 16:21:39',0),
+(10438,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:21:39','2024-07-23 16:21:39',0),
+(10439,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:43','2024-07-23 16:21:43',0),
+(10440,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:43','2024-07-23 16:21:43',0),
+(10441,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:43','2024-07-23 16:21:43',0),
+(10442,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:21:43','2024-07-23 16:21:43',0),
+(10443,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:10','2024-07-23 16:22:10',0),
+(10444,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:10','2024-07-23 16:22:10',0),
+(10445,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:29','2024-07-23 16:22:29',0),
+(10446,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:29','2024-07-23 16:22:29',0),
+(10447,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:29','2024-07-23 16:22:29',0),
+(10448,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:29','2024-07-23 16:22:29',0),
+(10449,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:39','2024-07-23 16:22:39',0),
+(10450,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:39','2024-07-23 16:22:39',0),
+(10451,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:39','2024-07-23 16:22:39',0),
+(10452,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:22:39','2024-07-23 16:22:39',0),
+(10453,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:23:00','2024-07-23 16:23:00',0),
+(10454,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:23:00','2024-07-23 16:23:00',0),
+(10455,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:23:00','2024-07-23 16:23:00',0),
+(10456,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:23:00','2024-07-23 16:23:00',0),
+(10457,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:25:28','2024-07-23 16:25:28',0),
+(10458,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:25:28','2024-07-23 16:25:28',0),
+(10459,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:25:28','2024-07-23 16:25:28',0),
+(10460,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:25:28','2024-07-23 16:25:28',0),
+(10461,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:26:37','2024-07-23 16:26:37',0),
+(10462,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:26:37','2024-07-23 16:26:37',0),
+(10463,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:26:37','2024-07-23 16:26:37',0),
+(10464,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:26:37','2024-07-23 16:26:37',0),
+(10465,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:27:33','2024-07-23 16:27:33',0),
+(10466,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:27:33','2024-07-23 16:27:33',0),
+(10467,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:27:33','2024-07-23 16:27:33',0),
+(10468,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:27:33','2024-07-23 16:27:33',0),
+(10469,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:28:07','2024-07-23 16:28:07',0),
+(10470,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:28:07','2024-07-23 16:28:07',0),
+(10471,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:28:07','2024-07-23 16:28:07',0),
+(10472,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:28:07','2024-07-23 16:28:07',0),
+(10473,0,'Idea  264 number of votes given set to 1',0,'','2024-07-23 16:29:05','2024-07-23 16:29:05',0),
+(10474,0,'Idea (#264) added Vote - value: 0 by 165',0,'','2024-07-23 16:29:05','2024-07-23 16:29:05',0),
+(10475,0,'Idea  264 votes set to 0',0,'','2024-07-23 16:30:28','2024-07-23 16:30:28',0),
+(10476,0,'Idea  264 number of votes given set to 1',0,'','2024-07-23 16:30:28','2024-07-23 16:30:28',0),
+(10477,0,'Idea (#264) added Vote - value: 1 by 165',0,'','2024-07-23 16:30:28','2024-07-23 16:30:28',0),
+(10478,0,'Idea  264 votes set to 0',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
+(10479,0,'Idea  264 number of votes given set to 1',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
+(10480,0,'Idea (#264) added Vote - value: -1 by 165',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
+(10481,0,'Idea  264 votes set to 0',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
+(10482,0,'Idea  264 number of votes given set to 1',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
+(10483,0,'Idea (#264) added Vote - value: 0 by 165',0,'','2024-07-23 16:30:29','2024-07-23 16:30:29',0),
+(10484,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:30:32','2024-07-23 16:30:32',0),
+(10485,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:30:32','2024-07-23 16:30:32',0),
+(10486,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:30:32','2024-07-23 16:30:32',0),
+(10487,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:30:32','2024-07-23 16:30:32',0),
+(10488,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:33:51','2024-07-23 16:33:51',0),
+(10489,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:33:51','2024-07-23 16:33:51',0),
+(10490,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:33:56','2024-07-23 16:33:56',0),
+(10491,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:33:56','2024-07-23 16:33:56',0),
+(10492,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:33:58','2024-07-23 16:33:58',0),
+(10493,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:33:58','2024-07-23 16:33:58',0),
+(10494,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:33:58','2024-07-23 16:33:58',0),
+(10495,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:33:58','2024-07-23 16:33:58',0),
+(10496,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:34:01','2024-07-23 16:34:01',0),
+(10497,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:34:01','2024-07-23 16:34:01',0),
+(10498,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:34:03','2024-07-23 16:34:03',0),
+(10499,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:34:03','2024-07-23 16:34:03',0),
+(10500,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:34:04','2024-07-23 16:34:04',0),
+(10501,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:34:04','2024-07-23 16:34:04',0),
+(10502,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:34:24','2024-07-23 16:34:24',0),
+(10503,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:34:24','2024-07-23 16:34:24',0),
+(10504,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:36:45','2024-07-23 16:36:45',0),
+(10505,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 16:36:45','2024-07-23 16:36:45',0),
+(10506,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:36:53','2024-07-23 16:36:53',0),
+(10507,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 16:36:53','2024-07-23 16:36:53',0),
+(10508,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:36:56','2024-07-23 16:36:56',0),
+(10509,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:36:56','2024-07-23 16:36:56',0),
+(10510,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:36:57','2024-07-23 16:36:57',0),
+(10511,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 16:36:57','2024-07-23 16:36:57',0),
+(10512,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:37:00','2024-07-23 16:37:00',0),
+(10513,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 16:37:00','2024-07-23 16:37:00',0),
+(10514,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:10:51','2024-07-23 17:10:51',0),
+(10515,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:10:51','2024-07-23 17:10:51',0),
+(10516,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:10:51','2024-07-23 17:10:51',0),
+(10517,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:10:52','2024-07-23 17:10:52',0),
+(10518,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:11:47','2024-07-23 17:11:47',0),
+(10519,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:11:47','2024-07-23 17:11:47',0),
+(10520,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:36','2024-07-23 17:20:36',0),
+(10521,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:36','2024-07-23 17:20:36',0),
+(10522,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:47','2024-07-23 17:20:47',0),
+(10523,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:47','2024-07-23 17:20:47',0),
+(10524,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:57','2024-07-23 17:20:57',0),
+(10525,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:20:57','2024-07-23 17:20:57',0),
+(10526,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:21:01','2024-07-23 17:21:01',0),
+(10527,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:21:01','2024-07-23 17:21:01',0),
+(10528,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:25:13','2024-07-23 17:25:13',0),
+(10529,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:25:13','2024-07-23 17:25:13',0),
+(10530,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:25:16','2024-07-23 17:25:16',0),
+(10531,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:25:16','2024-07-23 17:25:16',0),
+(10532,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:18','2024-07-23 17:25:18',0),
+(10533,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:18','2024-07-23 17:25:18',0),
+(10534,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:18','2024-07-23 17:25:18',0),
+(10535,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:18','2024-07-23 17:25:18',0),
+(10536,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:23','2024-07-23 17:25:23',0),
+(10537,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:23','2024-07-23 17:25:23',0),
+(10538,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:23','2024-07-23 17:25:23',0),
+(10539,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:23','2024-07-23 17:25:23',0),
+(10540,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:25','2024-07-23 17:25:25',0),
+(10541,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:25','2024-07-23 17:25:25',0),
+(10542,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:25','2024-07-23 17:25:25',0),
+(10543,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:25:25','2024-07-23 17:25:25',0),
+(10544,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:29','2024-07-23 17:25:29',0),
+(10545,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:29','2024-07-23 17:25:29',0),
+(10546,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:32','2024-07-23 17:25:32',0),
+(10547,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:32','2024-07-23 17:25:32',0),
+(10548,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:36','2024-07-23 17:25:36',0),
+(10549,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:36','2024-07-23 17:25:36',0),
+(10550,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:41','2024-07-23 17:25:41',0),
+(10551,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:25:41','2024-07-23 17:25:41',0),
+(10552,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:26:37','2024-07-23 17:26:37',0),
+(10553,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-23 17:26:37','2024-07-23 17:26:37',0),
+(10554,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 17:26:42','2024-07-23 17:26:42',0),
+(10555,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-23 17:26:42','2024-07-23 17:26:42',0),
+(10556,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:26:46','2024-07-23 17:26:46',0),
+(10557,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-23 17:26:46','2024-07-23 17:26:46',0),
+(10558,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:28:23','2024-07-23 17:28:23',0),
+(10559,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:28:23','2024-07-23 17:28:23',0),
+(10560,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:28:23','2024-07-23 17:28:23',0),
+(10561,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-23 17:28:23','2024-07-23 17:28:23',0),
+(10562,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-24 10:24:11','2024-07-24 10:24:11',0),
+(10563,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-24 10:24:11','2024-07-24 10:24:11',0),
+(10564,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-24 10:24:59','2024-07-24 10:24:59',0),
+(10565,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-24 10:24:59','2024-07-24 10:24:59',0),
+(10566,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-24 10:24:59','2024-07-24 10:24:59',0),
+(10567,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-24 10:24:59','2024-07-24 10:24:59',0),
+(10568,0,'Edited room 106 by 165',0,'','2024-07-25 16:22:28','2024-07-25 16:22:28',0),
+(10569,0,'Edited room 106 by 165',0,'','2024-07-25 16:22:37','2024-07-25 16:22:37',0),
+(10570,0,'Edited room 106 by 165',0,'','2024-07-25 16:25:56','2024-07-25 16:25:56',0),
+(10571,0,'Edited room 106 by 165',0,'','2024-07-25 16:43:46','2024-07-25 16:43:46',0),
+(10572,0,'Added new category (#1) help',0,'','2024-07-29 14:43:15','2024-07-29 14:43:15',0),
+(10573,0,'Edited idea 268 by 165',0,'','2024-07-29 14:43:29','2024-07-29 14:43:29',0),
+(10574,0,'Added idea 268 to category 1',0,'','2024-07-29 14:43:29','2024-07-29 14:43:29',0),
+(10575,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 14:51:34','2024-07-29 14:51:34',0),
+(10576,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 14:51:34','2024-07-29 14:51:34',0),
+(10577,0,'Edited idea 272 by 165',0,'','2024-07-29 14:58:50','2024-07-29 14:58:50',0),
+(10578,0,'Added idea 272 to category 1',0,'','2024-07-29 14:58:50','2024-07-29 14:58:50',0),
+(10579,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:00:12','2024-07-29 15:00:12',0),
+(10580,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:00:12','2024-07-29 15:00:12',0),
+(10581,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:00:44','2024-07-29 15:00:44',0),
+(10582,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:00:44','2024-07-29 15:00:44',0),
+(10583,0,'Added new category (#2) Occult',0,'','2024-07-29 15:03:10','2024-07-29 15:03:10',0),
+(10584,0,'Edited idea 261 by 165',0,'','2024-07-29 15:03:18','2024-07-29 15:03:18',0),
+(10585,0,'Added idea 261 to category 2',0,'','2024-07-29 15:03:18','2024-07-29 15:03:18',0),
+(10586,0,'Edited idea 262 by 165',0,'','2024-07-29 15:03:41','2024-07-29 15:03:41',0),
+(10587,0,'Added idea 262 to category 2',0,'','2024-07-29 15:03:41','2024-07-29 15:03:41',0),
+(10588,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:09:28','2024-07-29 15:09:28',0),
+(10589,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:09:28','2024-07-29 15:09:28',0),
+(10590,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:25:27','2024-07-29 15:25:27',0),
+(10591,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:25:27','2024-07-29 15:25:27',0),
+(10592,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:26:31','2024-07-29 15:26:31',0),
+(10593,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:26:31','2024-07-29 15:26:31',0),
+(10594,0,'Edited idea 268 by 165',0,'','2024-07-29 15:26:43','2024-07-29 15:26:43',0),
+(10595,0,'Added idea 268 to category 2',0,'','2024-07-29 15:26:43','2024-07-29 15:26:43',0),
+(10596,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:26:48','2024-07-29 15:26:48',0),
+(10597,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:26:48','2024-07-29 15:26:48',0),
+(10598,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:34:21','2024-07-29 15:34:21',0),
+(10599,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:34:21','2024-07-29 15:34:21',0),
+(10600,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:52:04','2024-07-29 15:52:04',0),
+(10601,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:52:04','2024-07-29 15:52:04',0),
+(10602,0,'Added new category (#3) General',0,'','2024-07-29 15:54:41','2024-07-29 15:54:41',0),
+(10603,0,'Edited idea 268 by 165',0,'','2024-07-29 15:54:55','2024-07-29 15:54:55',0),
+(10604,0,'Added idea 268 to category 3',0,'','2024-07-29 15:54:55','2024-07-29 15:54:55',0),
+(10605,0,'Edited idea 266 by 165',0,'','2024-07-29 15:55:02','2024-07-29 15:55:02',0),
+(10606,0,'Added idea 266 to category 3',0,'','2024-07-29 15:55:02','2024-07-29 15:55:02',0),
+(10607,0,'Edited idea 260 by 165',0,'','2024-07-29 15:55:07','2024-07-29 15:55:07',0),
+(10608,0,'Added idea 260 to category 3',0,'','2024-07-29 15:55:07','2024-07-29 15:55:07',0),
+(10609,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:55:16','2024-07-29 15:55:16',0),
+(10610,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-07-29 15:55:16','2024-07-29 15:55:16',0),
+(10611,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-29 15:55:20','2024-07-29 15:55:20',0),
+(10612,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-07-29 15:55:20','2024-07-29 15:55:20',0),
+(10613,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
+(10614,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
+(10615,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
+(10616,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-07-29 15:55:28','2024-07-29 15:55:28',0),
+(10617,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-29 15:55:30','2024-07-29 15:55:30',0),
+(10618,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-07-29 15:55:30','2024-07-29 15:55:30',0),
+(10619,0,'Added new message (#25) test88',0,'','2024-09-04 07:46:00','2024-09-04 07:46:00',0),
+(10620,0,'Online mode set to 1',0,'','2024-09-06 09:24:28','2024-09-06 09:24:28',0),
+(10621,0,'Online mode set to 1',0,'','2024-09-06 09:24:28','2024-09-06 09:24:28',0),
+(10622,0,'Online mode set to 1',0,'','2024-09-06 09:24:29','2024-09-06 09:24:29',0),
+(10623,0,'Allow registration set to 0',0,'','2024-09-06 09:24:29','2024-09-06 09:24:29',0),
+(10624,0,'Online mode set to 1',0,'','2024-09-06 09:24:29','2024-09-06 09:24:29',0),
+(10625,0,'status for OAUTH set to 0',0,'','2024-09-06 09:24:29','2024-09-06 09:24:29',0),
+(10626,0,'status for OAUTH set to 0',0,'','2024-09-06 09:24:29','2024-09-06 09:24:29',0),
+(10627,0,'Allow registration set to 0',0,'','2024-09-06 09:24:29','2024-09-06 09:24:29',0),
+(10628,0,'Message status changed 25 by 165',0,'','2024-09-07 11:13:03','2024-09-07 11:13:03',0),
+(10629,0,'Added new message (#26) Test Message',0,'','2024-09-07 11:36:32','2024-09-07 11:36:32',0),
+(10630,0,'Added new message (#27) Bug report',0,'','2024-09-07 11:54:09','2024-09-07 11:54:09',0),
+(10631,0,'Message status changed 27 by 165',0,'','2024-09-07 12:48:35','2024-09-07 12:48:35',0),
+(10632,0,'Message status changed 27 by 165',0,'','2024-09-07 12:49:28','2024-09-07 12:49:28',0),
+(10633,0,'Message status changed 27 by 165',0,'','2024-09-07 12:49:51','2024-09-07 12:49:51',0),
+(10634,0,'Message status changed 27 by 165',0,'','2024-09-07 13:09:32','2024-09-07 13:09:32',0),
+(10635,0,'Added new message (#28) sdadsad',0,'','2024-09-07 13:11:34','2024-09-07 13:11:34',0),
+(10636,0,'Message deleted, id=25 by 165',0,'','2024-09-07 13:45:17','2024-09-07 13:45:17',0),
+(10637,0,'Message deleted, id=27 by 165',0,'','2024-09-07 13:45:17','2024-09-07 13:45:17',0),
+(10638,0,'Added new message (#29) Bug report',0,'','2024-09-07 13:45:25','2024-09-07 13:45:25',0),
+(10639,0,'Message deleted, id=29 by 165',0,'','2024-09-07 13:50:37','2024-09-07 13:50:37',0),
+(10640,0,'Added new message (#30) Bug report',0,'','2024-09-07 13:50:41','2024-09-07 13:50:41',0),
+(10641,0,'Added new message (#31) Bug report',0,'','2024-09-07 13:51:11','2024-09-07 13:51:11',0),
+(10642,0,'Added new message (#32) Bug report',0,'','2024-09-07 13:51:22','2024-09-07 13:51:22',0),
+(10643,0,'Added new message (#33) Bug report',0,'','2024-09-07 13:52:01','2024-09-07 13:52:01',0),
+(10644,0,'Message status changed 33 by 165',0,'','2024-09-07 13:53:03','2024-09-07 13:53:03',0),
+(10645,0,'Message status changed 33 by 165',0,'','2024-09-07 13:53:07','2024-09-07 13:53:07',0),
+(10646,0,'Added new message (#34) ',0,'','2024-09-07 14:28:42','2024-09-07 14:28:42',0),
+(10647,0,'Message deleted, id=34 by 165',0,'','2024-09-07 14:28:48','2024-09-07 14:28:48',0),
+(10648,0,'Edited topic (#473) Tech Frontier',0,'','2024-09-07 17:17:32','2024-09-07 17:17:32',0),
+(10649,0,'Edited topic (#474) Creative Canvas',0,'','2024-09-07 17:24:00','2024-09-07 17:24:00',0),
+(10650,0,'Edited topic (#473) Tech Frontier',0,'','2024-09-07 17:27:25','2024-09-07 17:27:25',0),
+(10651,0,'Added new message (#35) sadds',0,'','2024-09-09 13:11:54','2024-09-09 13:11:54',0),
+(10652,0,'Added new message (#36) sdadsa',0,'','2024-09-09 13:12:36','2024-09-09 13:12:36',0),
+(10653,0,'Message deleted, id=28 by 165',0,'','2024-09-09 13:12:53','2024-09-09 13:12:53',0),
+(10654,0,'Message deleted, id=36 by 165',0,'','2024-09-09 13:12:53','2024-09-09 13:12:53',0),
+(10655,0,'Message deleted, id=26 by 165',0,'','2024-09-09 15:15:59','2024-09-09 15:15:59',0),
+(10656,0,'Added new message (#37) test message',0,'','2024-09-09 15:20:38','2024-09-09 15:20:38',0),
+(10657,0,'Added new message (#38) Test message',0,'','2024-09-09 15:23:16','2024-09-09 15:23:16',0),
+(10658,1,'Error adding message Test message x',0,'','2024-09-09 15:50:30','2024-09-09 15:50:30',0),
+(10659,1,'Error adding message Test message x',0,'','2024-09-09 15:50:41','2024-09-09 15:50:41',0),
+(10660,1,'Error adding message Test message x',0,'','2024-09-09 15:54:09','2024-09-09 15:54:09',0),
+(10661,1,'Error adding message Test message x',0,'','2024-09-09 15:56:46','2024-09-09 15:56:46',0),
+(10662,0,'Added new message (#0) Test message x',0,'','2024-09-09 15:59:26','2024-09-09 15:59:26',0),
+(10663,0,'Added new message (#0) Test message',0,'','2024-09-09 15:59:34','2024-09-09 15:59:34',0),
+(10664,0,'Added new message (#39) Test',0,'','2024-09-09 16:00:28','2024-09-09 16:00:28',0),
+(10665,0,'Added new message (#40) test',0,'','2024-09-09 16:20:52','2024-09-09 16:20:52',0),
+(10666,0,'Online mode set to 1',0,'','2024-09-09 16:28:57','2024-09-09 16:28:57',0),
+(10667,0,'status for OAUTH set to 0',0,'','2024-09-09 16:28:57','2024-09-09 16:28:57',0),
+(10668,0,'Allow registration set to 0',0,'','2024-09-09 16:28:57','2024-09-09 16:28:57',0),
+(10669,0,'Online mode set to 1',0,'','2024-09-09 16:28:57','2024-09-09 16:28:57',0),
+(10670,0,'Online mode set to 1',0,'','2024-09-09 16:28:57','2024-09-09 16:28:57',0),
+(10671,0,'status for OAUTH set to 0',0,'','2024-09-09 16:28:57','2024-09-09 16:28:57',0),
+(10672,0,'Allow registration set to 0',0,'','2024-09-09 16:28:57','2024-09-09 16:28:57',0),
+(10673,0,'Online mode set to 1',0,'','2024-09-09 16:28:57','2024-09-09 16:28:57',0),
+(10674,0,'Online mode set to 1',0,'','2024-09-10 09:48:31','2024-09-10 09:48:31',0),
+(10675,0,'Online mode set to 1',0,'','2024-09-10 09:48:31','2024-09-10 09:48:31',0),
+(10676,0,'Allow registration set to 0',0,'','2024-09-10 09:48:31','2024-09-10 09:48:31',0),
+(10677,0,'Online mode set to 1',0,'','2024-09-10 09:48:31','2024-09-10 09:48:31',0),
+(10678,0,'Online mode set to 1',0,'','2024-09-10 09:48:31','2024-09-10 09:48:31',0),
+(10679,0,'status for OAUTH set to 0',0,'','2024-09-10 09:48:31','2024-09-10 09:48:31',0),
+(10680,0,'Allow registration set to 0',0,'','2024-09-10 09:48:31','2024-09-10 09:48:31',0),
+(10681,0,'status for OAUTH set to 0',0,'','2024-09-10 09:48:31','2024-09-10 09:48:31',0),
+(10682,0,'Allow registration set to 0',0,'','2024-09-10 09:50:30','2024-09-10 09:50:30',0),
+(10683,0,'Online mode set to 1',0,'','2024-09-10 09:50:30','2024-09-10 09:50:30',0),
+(10684,0,'Online mode set to 1',0,'','2024-09-10 09:50:30','2024-09-10 09:50:30',0),
+(10685,0,'status for OAUTH set to 0',0,'','2024-09-10 09:50:30','2024-09-10 09:50:30',0),
+(10686,0,'status for OAUTH set to 0',0,'','2024-09-10 09:50:30','2024-09-10 09:50:30',0),
+(10687,0,'Online mode set to 1',0,'','2024-09-10 09:50:30','2024-09-10 09:50:30',0),
+(10688,0,'Allow registration set to 0',0,'','2024-09-10 09:50:30','2024-09-10 09:50:30',0),
+(10689,0,'Online mode set to 1',0,'','2024-09-10 09:50:30','2024-09-10 09:50:30',0),
+(10690,0,'status for OAUTH set to 0',0,'','2024-09-10 09:55:34','2024-09-10 09:55:34',0),
+(10691,0,'Online mode set to 1',0,'','2024-09-10 09:55:34','2024-09-10 09:55:34',0),
+(10692,0,'Online mode set to 1',0,'','2024-09-10 09:55:34','2024-09-10 09:55:34',0),
+(10693,0,'status for OAUTH set to 0',0,'','2024-09-10 09:55:34','2024-09-10 09:55:34',0),
+(10694,0,'Online mode set to 1',0,'','2024-09-10 09:55:34','2024-09-10 09:55:34',0),
+(10695,0,'Allow registration set to 0',0,'','2024-09-10 09:55:34','2024-09-10 09:55:34',0),
+(10696,0,'Online mode set to 1',0,'','2024-09-10 09:55:34','2024-09-10 09:55:34',0),
+(10697,0,'Allow registration set to 0',0,'','2024-09-10 09:55:34','2024-09-10 09:55:34',0),
+(10698,0,'Allow registration set to 0',0,'','2024-09-10 10:01:52','2024-09-10 10:01:52',0),
+(10699,0,'Online mode set to 1',0,'','2024-09-10 10:01:52','2024-09-10 10:01:52',0),
+(10700,0,'status for OAUTH set to 0',0,'','2024-09-10 10:01:52','2024-09-10 10:01:52',0),
+(10701,0,'Online mode set to 1',0,'','2024-09-10 10:01:52','2024-09-10 10:01:52',0),
+(10702,0,'Online mode set to 1',0,'','2024-09-10 10:01:52','2024-09-10 10:01:52',0),
+(10703,0,'status for OAUTH set to 0',0,'','2024-09-10 10:01:52','2024-09-10 10:01:52',0),
+(10704,0,'Allow registration set to 0',0,'','2024-09-10 10:01:52','2024-09-10 10:01:52',0),
+(10705,0,'Online mode set to 1',0,'','2024-09-10 10:01:52','2024-09-10 10:01:52',0),
+(10706,0,'Allow registration set to 0',0,'','2024-09-10 10:12:24','2024-09-10 10:12:24',0),
+(10707,0,'Online mode set to 1',0,'','2024-09-10 10:12:24','2024-09-10 10:12:24',0),
+(10708,0,'Online mode set to 1',0,'','2024-09-10 10:12:24','2024-09-10 10:12:24',0),
+(10709,0,'status for OAUTH set to 0',0,'','2024-09-10 10:12:24','2024-09-10 10:12:24',0),
+(10710,0,'Online mode set to 1',0,'','2024-09-10 10:12:24','2024-09-10 10:12:24',0),
+(10711,0,'status for OAUTH set to 0',0,'','2024-09-10 10:12:24','2024-09-10 10:12:24',0),
+(10712,0,'Allow registration set to 0',0,'','2024-09-10 10:12:24','2024-09-10 10:12:24',0),
+(10713,0,'Online mode set to 1',0,'','2024-09-10 10:12:24','2024-09-10 10:12:24',0),
+(10714,0,'Online mode set to 1',0,'','2024-09-10 10:23:20','2024-09-10 10:23:20',0),
+(10715,0,'status for OAUTH set to 0',0,'','2024-09-10 10:23:20','2024-09-10 10:23:20',0),
+(10716,0,'Allow registration set to 0',0,'','2024-09-10 10:23:20','2024-09-10 10:23:20',0),
+(10717,0,'Online mode set to 1',0,'','2024-09-10 10:23:20','2024-09-10 10:23:20',0),
+(10718,0,'Online mode set to 1',0,'','2024-09-10 10:23:20','2024-09-10 10:23:20',0),
+(10719,0,'status for OAUTH set to 0',0,'','2024-09-10 10:23:20','2024-09-10 10:23:20',0),
+(10720,0,'Allow registration set to 0',0,'','2024-09-10 10:23:20','2024-09-10 10:23:20',0),
+(10721,0,'Online mode set to 1',0,'','2024-09-10 10:23:20','2024-09-10 10:23:20',0),
+(10722,0,'Online mode set to 1',0,'','2024-09-10 10:23:42','2024-09-10 10:23:42',0),
+(10723,0,'Online mode set to 1',0,'','2024-09-10 10:23:42','2024-09-10 10:23:42',0),
+(10724,0,'Allow registration set to 0',0,'','2024-09-10 10:23:42','2024-09-10 10:23:42',0),
+(10725,0,'status for OAUTH set to 0',0,'','2024-09-10 10:23:42','2024-09-10 10:23:42',0),
+(10726,0,'Online mode set to 1',0,'','2024-09-10 10:23:42','2024-09-10 10:23:42',0),
+(10727,0,'status for OAUTH set to 0',0,'','2024-09-10 10:23:42','2024-09-10 10:23:42',0),
+(10728,0,'Allow registration set to 0',0,'','2024-09-10 10:23:42','2024-09-10 10:23:42',0),
+(10729,0,'Online mode set to 1',0,'','2024-09-10 10:23:42','2024-09-10 10:23:42',0),
+(10730,0,'Allow registration set to 0',0,'','2024-09-10 10:23:45','2024-09-10 10:23:45',0),
+(10731,0,'Online mode set to 1',0,'','2024-09-10 10:23:45','2024-09-10 10:23:45',0),
+(10732,0,'status for OAUTH set to 0',0,'','2024-09-10 10:23:45','2024-09-10 10:23:45',0),
+(10733,0,'Online mode set to 1',0,'','2024-09-10 10:23:45','2024-09-10 10:23:45',0),
+(10734,0,'Online mode set to 1',0,'','2024-09-10 10:23:45','2024-09-10 10:23:45',0),
+(10735,0,'status for OAUTH set to 0',0,'','2024-09-10 10:23:45','2024-09-10 10:23:45',0),
+(10736,0,'Allow registration set to 0',0,'','2024-09-10 10:23:45','2024-09-10 10:23:45',0),
+(10737,0,'Online mode set to 1',0,'','2024-09-10 10:23:45','2024-09-10 10:23:45',0),
+(10738,0,'Added new group (#1) Test',0,'','2024-09-10 10:24:34','2024-09-10 10:24:34',0),
+(10739,0,'Online mode set to 1',0,'','2024-09-10 10:25:05','2024-09-10 10:25:05',0),
+(10740,0,'Allow registration set to 0',0,'','2024-09-10 10:25:05','2024-09-10 10:25:05',0),
+(10741,0,'Online mode set to 1',0,'','2024-09-10 10:25:05','2024-09-10 10:25:05',0),
+(10742,0,'Online mode set to 1',0,'','2024-09-10 10:25:05','2024-09-10 10:25:05',0),
+(10743,0,'status for OAUTH set to 0',0,'','2024-09-10 10:25:05','2024-09-10 10:25:05',0),
+(10744,0,'Allow registration set to 0',0,'','2024-09-10 10:25:05','2024-09-10 10:25:05',0),
+(10745,0,'Online mode set to 1',0,'','2024-09-10 10:25:05','2024-09-10 10:25:05',0),
+(10746,0,'status for OAUTH set to 0',0,'','2024-09-10 10:25:05','2024-09-10 10:25:05',0),
+(10747,0,'Group deleted with id 1 by 165',0,'','2024-09-10 10:25:11','2024-09-10 10:25:11',0),
+(10748,0,'Added new group (#2) Gruop',0,'','2024-09-10 10:25:29','2024-09-10 10:25:29',0),
+(10749,0,'Online mode set to 1',0,'','2024-09-10 10:28:17','2024-09-10 10:28:17',0),
+(10750,0,'status for OAUTH set to 0',0,'','2024-09-10 10:28:17','2024-09-10 10:28:17',0),
+(10751,0,'Allow registration set to 0',0,'','2024-09-10 10:28:17','2024-09-10 10:28:17',0),
+(10752,0,'Online mode set to 1',0,'','2024-09-10 10:28:17','2024-09-10 10:28:17',0),
+(10753,0,'Online mode set to 1',0,'','2024-09-10 10:28:17','2024-09-10 10:28:17',0),
+(10754,0,'status for OAUTH set to 0',0,'','2024-09-10 10:28:17','2024-09-10 10:28:17',0),
+(10755,0,'Allow registration set to 0',0,'','2024-09-10 10:28:17','2024-09-10 10:28:17',0),
+(10756,0,'Online mode set to 1',0,'','2024-09-10 10:28:17','2024-09-10 10:28:17',0),
+(10757,0,'Online mode set to 1',0,'','2024-09-10 10:34:10','2024-09-10 10:34:10',0),
+(10758,0,'status for OAUTH set to 0',0,'','2024-09-10 10:34:10','2024-09-10 10:34:10',0),
+(10759,0,'Allow registration set to 0',0,'','2024-09-10 10:34:10','2024-09-10 10:34:10',0),
+(10760,0,'Online mode set to 1',0,'','2024-09-10 10:34:10','2024-09-10 10:34:10',0),
+(10761,0,'Online mode set to 1',0,'','2024-09-10 10:34:10','2024-09-10 10:34:10',0),
+(10762,0,'status for OAUTH set to 0',0,'','2024-09-10 10:34:10','2024-09-10 10:34:10',0),
+(10763,0,'Allow registration set to 0',0,'','2024-09-10 10:34:10','2024-09-10 10:34:10',0),
+(10764,0,'Online mode set to 1',0,'','2024-09-10 10:34:10','2024-09-10 10:34:10',0),
+(10765,0,'Group deleted with id 2 by 165',0,'','2024-09-10 10:34:14','2024-09-10 10:34:14',0),
+(10766,0,'Added new group (#3) Test',0,'','2024-09-10 10:34:34','2024-09-10 10:34:34',0),
+(10767,0,'Added user 265 to group 3',0,'','2024-09-10 10:34:34','2024-09-10 10:34:34',0),
+(10768,0,'Added user 268 to group 3',0,'','2024-09-10 10:34:34','2024-09-10 10:34:34',0),
+(10769,0,'Added user 264 to group 3',0,'','2024-09-10 10:34:34','2024-09-10 10:34:34',0),
+(10770,0,'Allow registration set to 0',0,'','2024-09-10 10:39:46','2024-09-10 10:39:46',0),
+(10771,0,'Online mode set to 1',0,'','2024-09-10 10:39:46','2024-09-10 10:39:46',0),
+(10772,0,'Online mode set to 1',0,'','2024-09-10 10:39:46','2024-09-10 10:39:46',0),
+(10773,0,'status for OAUTH set to 0',0,'','2024-09-10 10:39:46','2024-09-10 10:39:46',0),
+(10774,0,'Online mode set to 1',0,'','2024-09-10 10:39:46','2024-09-10 10:39:46',0),
+(10775,0,'status for OAUTH set to 0',0,'','2024-09-10 10:39:46','2024-09-10 10:39:46',0),
+(10776,0,'Allow registration set to 0',0,'','2024-09-10 10:39:46','2024-09-10 10:39:46',0),
+(10777,0,'Online mode set to 1',0,'','2024-09-10 10:39:46','2024-09-10 10:39:46',0),
+(10778,0,'Allow registration set to 0',0,'','2024-09-10 10:41:24','2024-09-10 10:41:24',0),
+(10779,0,'Online mode set to 1',0,'','2024-09-10 10:41:24','2024-09-10 10:41:24',0),
+(10780,0,'Online mode set to 1',0,'','2024-09-10 10:41:24','2024-09-10 10:41:24',0),
+(10781,0,'Online mode set to 1',0,'','2024-09-10 10:41:24','2024-09-10 10:41:24',0),
+(10782,0,'status for OAUTH set to 0',0,'','2024-09-10 10:41:24','2024-09-10 10:41:24',0),
+(10783,0,'status for OAUTH set to 0',0,'','2024-09-10 10:41:24','2024-09-10 10:41:24',0),
+(10784,0,'Allow registration set to 0',0,'','2024-09-10 10:41:24','2024-09-10 10:41:24',0),
+(10785,0,'Online mode set to 1',0,'','2024-09-10 10:41:24','2024-09-10 10:41:24',0),
+(10786,0,'Allow registration set to 0',0,'','2024-09-10 10:54:03','2024-09-10 10:54:03',0),
+(10787,0,'Online mode set to 1',0,'','2024-09-10 10:54:03','2024-09-10 10:54:03',0),
+(10788,0,'Online mode set to 1',0,'','2024-09-10 10:54:03','2024-09-10 10:54:03',0),
+(10789,0,'status for OAUTH set to 0',0,'','2024-09-10 10:54:03','2024-09-10 10:54:03',0),
+(10790,0,'Online mode set to 1',0,'','2024-09-10 10:54:03','2024-09-10 10:54:03',0),
+(10791,0,'status for OAUTH set to 0',0,'','2024-09-10 10:54:03','2024-09-10 10:54:03',0),
+(10792,0,'Allow registration set to 0',0,'','2024-09-10 10:54:03','2024-09-10 10:54:03',0),
+(10793,0,'Online mode set to 1',0,'','2024-09-10 10:54:03','2024-09-10 10:54:03',0),
+(10794,0,'Allow registration set to 0',0,'','2024-09-10 10:54:41','2024-09-10 10:54:41',0),
+(10795,0,'Online mode set to 1',0,'','2024-09-10 10:54:41','2024-09-10 10:54:41',0),
+(10796,0,'Online mode set to 1',0,'','2024-09-10 10:54:41','2024-09-10 10:54:41',0),
+(10797,0,'status for OAUTH set to 0',0,'','2024-09-10 10:54:41','2024-09-10 10:54:41',0),
+(10798,0,'Online mode set to 1',0,'','2024-09-10 10:54:41','2024-09-10 10:54:41',0),
+(10799,0,'status for OAUTH set to 0',0,'','2024-09-10 10:54:41','2024-09-10 10:54:41',0),
+(10800,0,'Online mode set to 1',0,'','2024-09-10 10:54:41','2024-09-10 10:54:41',0),
+(10801,0,'Allow registration set to 0',0,'','2024-09-10 10:54:41','2024-09-10 10:54:41',0),
+(10802,0,'Allow registration set to 0',0,'','2024-09-10 10:55:51','2024-09-10 10:55:51',0),
+(10803,0,'Online mode set to 1',0,'','2024-09-10 10:55:51','2024-09-10 10:55:51',0),
+(10804,0,'Online mode set to 1',0,'','2024-09-10 10:55:51','2024-09-10 10:55:51',0),
+(10805,0,'status for OAUTH set to 0',0,'','2024-09-10 10:55:51','2024-09-10 10:55:51',0),
+(10806,0,'Online mode set to 1',0,'','2024-09-10 10:55:51','2024-09-10 10:55:51',0),
+(10807,0,'status for OAUTH set to 0',0,'','2024-09-10 10:55:51','2024-09-10 10:55:51',0),
+(10808,0,'Allow registration set to 0',0,'','2024-09-10 10:55:51','2024-09-10 10:55:51',0),
+(10809,0,'Online mode set to 1',0,'','2024-09-10 10:55:51','2024-09-10 10:55:51',0),
+(10810,0,'Online mode set to 1',0,'','2024-09-10 11:03:03','2024-09-10 11:03:03',0),
+(10811,0,'status for OAUTH set to 0',0,'','2024-09-10 11:03:03','2024-09-10 11:03:03',0),
+(10812,0,'Allow registration set to 0',0,'','2024-09-10 11:03:03','2024-09-10 11:03:03',0),
+(10813,0,'Online mode set to 1',0,'','2024-09-10 11:03:03','2024-09-10 11:03:03',0),
+(10814,0,'Online mode set to 1',0,'','2024-09-10 11:03:03','2024-09-10 11:03:03',0),
+(10815,0,'status for OAUTH set to 0',0,'','2024-09-10 11:03:03','2024-09-10 11:03:03',0),
+(10816,0,'Allow registration set to 0',0,'','2024-09-10 11:03:03','2024-09-10 11:03:03',0),
+(10817,0,'Online mode set to 1',0,'','2024-09-10 11:03:03','2024-09-10 11:03:03',0),
+(10818,0,'Allow registration set to 0',0,'','2024-09-10 16:43:03','2024-09-10 16:43:03',0),
+(10819,0,'Online mode set to 1',0,'','2024-09-10 16:43:03','2024-09-10 16:43:03',0),
+(10820,0,'status for OAUTH set to 0',0,'','2024-09-10 16:43:03','2024-09-10 16:43:03',0),
+(10821,0,'Online mode set to 1',0,'','2024-09-10 16:43:03','2024-09-10 16:43:03',0),
+(10822,0,'Online mode set to 1',0,'','2024-09-10 16:43:03','2024-09-10 16:43:03',0),
+(10823,0,'status for OAUTH set to 0',0,'','2024-09-10 16:43:03','2024-09-10 16:43:03',0),
+(10824,0,'Allow registration set to 0',0,'','2024-09-10 16:43:03','2024-09-10 16:43:03',0),
+(10825,0,'Online mode set to 1',0,'','2024-09-10 16:43:03','2024-09-10 16:43:03',0),
+(10826,0,'Added new message (#41) Bug report',0,'','2024-09-10 23:23:35','2024-09-10 23:23:35',0),
+(10827,0,'Online mode set to 1',0,'','2024-09-10 23:23:46','2024-09-10 23:23:46',0),
+(10828,0,'status for OAUTH set to 0',0,'','2024-09-10 23:23:46','2024-09-10 23:23:46',0),
+(10829,0,'Allow registration set to 0',0,'','2024-09-10 23:23:46','2024-09-10 23:23:46',0),
+(10830,0,'Online mode set to 1',0,'','2024-09-10 23:23:46','2024-09-10 23:23:46',0),
+(10831,0,'Online mode set to 1',0,'','2024-09-10 23:23:46','2024-09-10 23:23:46',0),
+(10832,0,'status for OAUTH set to 0',0,'','2024-09-10 23:23:46','2024-09-10 23:23:46',0),
+(10833,0,'Allow registration set to 0',0,'','2024-09-10 23:23:46','2024-09-10 23:23:46',0),
+(10834,0,'Online mode set to 1',0,'','2024-09-10 23:23:46','2024-09-10 23:23:46',0),
+(10835,0,'Online mode set to 1',0,'','2024-09-10 23:37:28','2024-09-10 23:37:28',0),
+(10836,0,'Online mode set to 1',0,'','2024-09-10 23:37:28','2024-09-10 23:37:28',0),
+(10837,0,'Added new message (#42) Account data export request for Admin User',0,'','2024-09-10 23:41:19','2024-09-10 23:41:19',0),
+(10838,0,'Added new message (#43) Account data export request for Admin User',0,'','2024-09-10 23:43:47','2024-09-10 23:43:47',0),
+(10839,0,'Online mode set to 1',0,'','2024-09-11 08:26:45','2024-09-11 08:26:45',0),
+(10840,0,'Online mode set to 1',0,'','2024-09-11 08:26:45','2024-09-11 08:26:45',0),
+(10841,0,'Online mode set to 1',0,'','2024-09-11 08:26:46','2024-09-11 08:26:46',0),
+(10842,0,'status for OAUTH set to 0',0,'','2024-09-11 08:26:46','2024-09-11 08:26:46',0),
+(10843,0,'status for OAUTH set to 0',0,'','2024-09-11 08:26:46','2024-09-11 08:26:46',0),
+(10844,0,'Allow registration set to 0',0,'','2024-09-11 08:26:46','2024-09-11 08:26:46',0),
+(10845,0,'Online mode set to 1',0,'','2024-09-11 08:26:46','2024-09-11 08:26:46',0),
+(10846,0,'Allow registration set to 0',0,'','2024-09-11 08:26:46','2024-09-11 08:26:46',0),
+(10847,0,'Allow registration set to 0',0,'','2024-09-11 08:46:54','2024-09-11 08:46:54',0),
+(10848,0,'Online mode set to 1',0,'','2024-09-11 08:46:54','2024-09-11 08:46:54',0),
+(10849,0,'Online mode set to 1',0,'','2024-09-11 08:46:54','2024-09-11 08:46:54',0),
+(10850,0,'status for OAUTH set to 0',0,'','2024-09-11 08:46:54','2024-09-11 08:46:54',0),
+(10851,0,'Online mode set to 1',0,'','2024-09-11 08:46:54','2024-09-11 08:46:54',0),
+(10852,0,'status for OAUTH set to 0',0,'','2024-09-11 08:46:54','2024-09-11 08:46:54',0),
+(10853,0,'Online mode set to 1',0,'','2024-09-11 08:46:54','2024-09-11 08:46:54',0),
+(10854,0,'Allow registration set to 0',0,'','2024-09-11 08:46:54','2024-09-11 08:46:54',0),
+(10855,0,'Successful login user aula',0,'','2024-09-11 08:47:49','2024-09-11 08:47:49',0),
+(10856,0,'Allow registration set to 0',0,'','2024-09-11 08:48:01','2024-09-11 08:48:01',0),
+(10857,0,'Online mode set to 1',0,'','2024-09-11 08:48:01','2024-09-11 08:48:01',0),
+(10858,0,'status for OAUTH set to 0',0,'','2024-09-11 08:48:01','2024-09-11 08:48:01',0),
+(10859,0,'Online mode set to 1',0,'','2024-09-11 08:48:01','2024-09-11 08:48:01',0),
+(10860,0,'status for OAUTH set to 0',0,'','2024-09-11 08:48:01','2024-09-11 08:48:01',0),
+(10861,0,'Allow registration set to 0',0,'','2024-09-11 08:48:01','2024-09-11 08:48:01',0),
+(10862,0,'Online mode set to 1',0,'','2024-09-11 08:48:01','2024-09-11 08:48:01',0),
+(10863,0,'Online mode set to 1',0,'','2024-09-11 08:48:01','2024-09-11 08:48:01',0),
+(10864,0,'Online mode set to 0',0,'','2024-09-11 08:51:04','2024-09-11 08:51:04',0),
+(10865,0,'Online mode set to 0',0,'','2024-09-11 08:51:04','2024-09-11 08:51:04',0),
+(10866,0,'Online mode set to 1',0,'','2024-09-11 08:51:06','2024-09-11 08:51:06',0),
+(10867,0,'Online mode set to 1',0,'','2024-09-11 08:51:07','2024-09-11 08:51:07',0),
+(10868,0,'Online mode set to 0',0,'','2024-09-11 08:51:12','2024-09-11 08:51:12',0),
+(10869,0,'Online mode set to 0',0,'','2024-09-11 08:51:12','2024-09-11 08:51:12',0),
+(10870,0,'Successful login user aula',0,'','2024-09-11 08:51:26','2024-09-11 08:51:26',0),
+(10871,0,'Allow registration set to 0',0,'','2024-09-11 08:51:28','2024-09-11 08:51:28',0),
+(10872,0,'Online mode set to 0',0,'','2024-09-11 08:51:28','2024-09-11 08:51:28',0),
+(10873,0,'Online mode set to 0',0,'','2024-09-11 08:51:28','2024-09-11 08:51:28',0),
+(10874,0,'status for OAUTH set to 0',0,'','2024-09-11 08:51:28','2024-09-11 08:51:28',0),
+(10875,0,'Online mode set to 0',0,'','2024-09-11 08:51:28','2024-09-11 08:51:28',0),
+(10876,0,'status for OAUTH set to 0',0,'','2024-09-11 08:51:29','2024-09-11 08:51:29',0),
+(10877,0,'Allow registration set to 0',0,'','2024-09-11 08:51:29','2024-09-11 08:51:29',0),
+(10878,0,'Online mode set to 0',0,'','2024-09-11 08:51:29','2024-09-11 08:51:29',0),
+(10879,0,'Online mode set to 1',0,'','2024-09-11 08:51:32','2024-09-11 08:51:32',0),
+(10880,0,'Online mode set to 1',0,'','2024-09-11 08:51:32','2024-09-11 08:51:32',0),
+(10881,0,'Online mode set to 1',0,'','2024-09-11 10:52:20','2024-09-11 10:52:20',0),
+(10882,0,'status for OAUTH set to 0',0,'','2024-09-11 10:52:20','2024-09-11 10:52:20',0),
+(10883,0,'Allow registration set to 0',0,'','2024-09-11 10:52:20','2024-09-11 10:52:20',0),
+(10884,0,'Online mode set to 1',0,'','2024-09-11 10:52:20','2024-09-11 10:52:20',0),
+(10885,0,'Online mode set to 1',0,'','2024-09-11 10:52:20','2024-09-11 10:52:20',0),
+(10886,0,'status for OAUTH set to 0',0,'','2024-09-11 10:52:20','2024-09-11 10:52:20',0),
+(10887,0,'Allow registration set to 0',0,'','2024-09-11 10:52:20','2024-09-11 10:52:20',0),
+(10888,0,'Online mode set to 1',0,'','2024-09-11 10:52:20','2024-09-11 10:52:20',0),
+(10889,0,'Added new category (#4) sdsadsa',0,'','2024-09-11 10:52:41','2024-09-11 10:52:41',0),
+(10890,0,'Online mode set to 1',0,'','2024-09-11 10:52:45','2024-09-11 10:52:45',0),
+(10891,0,'status for OAUTH set to 0',0,'','2024-09-11 10:52:45','2024-09-11 10:52:45',0),
+(10892,0,'Allow registration set to 0',0,'','2024-09-11 10:52:45','2024-09-11 10:52:45',0),
+(10893,0,'Online mode set to 1',0,'','2024-09-11 10:52:45','2024-09-11 10:52:45',0),
+(10894,0,'Online mode set to 1',0,'','2024-09-11 10:52:45','2024-09-11 10:52:45',0),
+(10895,0,'status for OAUTH set to 0',0,'','2024-09-11 10:52:45','2024-09-11 10:52:45',0),
+(10896,0,'Allow registration set to 0',0,'','2024-09-11 10:52:45','2024-09-11 10:52:45',0),
+(10897,0,'Online mode set to 1',0,'','2024-09-11 10:52:45','2024-09-11 10:52:45',0),
+(10898,0,'Online mode set to 1',0,'','2024-09-11 10:57:13','2024-09-11 10:57:13',0),
+(10899,0,'status for OAUTH set to 0',0,'','2024-09-11 10:57:13','2024-09-11 10:57:13',0),
+(10900,0,'Allow registration set to 0',0,'','2024-09-11 10:57:13','2024-09-11 10:57:13',0),
+(10901,0,'Online mode set to 1',0,'','2024-09-11 10:57:13','2024-09-11 10:57:13',0),
+(10902,0,'Online mode set to 1',0,'','2024-09-11 10:57:13','2024-09-11 10:57:13',0),
+(10903,0,'status for OAUTH set to 0',0,'','2024-09-11 10:57:13','2024-09-11 10:57:13',0),
+(10904,0,'Allow registration set to 0',0,'','2024-09-11 10:57:13','2024-09-11 10:57:13',0),
+(10905,0,'Online mode set to 1',0,'','2024-09-11 10:57:13','2024-09-11 10:57:13',0),
+(10906,0,'Online mode set to 1',0,'','2024-09-11 10:59:21','2024-09-11 10:59:21',0),
+(10907,0,'status for OAUTH set to 0',0,'','2024-09-11 10:59:21','2024-09-11 10:59:21',0),
+(10908,0,'Allow registration set to 0',0,'','2024-09-11 10:59:21','2024-09-11 10:59:21',0),
+(10909,0,'Online mode set to 1',0,'','2024-09-11 10:59:21','2024-09-11 10:59:21',0),
+(10910,0,'Online mode set to 1',0,'','2024-09-11 10:59:21','2024-09-11 10:59:21',0),
+(10911,0,'status for OAUTH set to 0',0,'','2024-09-11 10:59:21','2024-09-11 10:59:21',0),
+(10912,0,'Allow registration set to 0',0,'','2024-09-11 10:59:21','2024-09-11 10:59:21',0),
+(10913,0,'Online mode set to 1',0,'','2024-09-11 10:59:21','2024-09-11 10:59:21',0),
+(10914,0,'Added new topic (#476) Test',0,'','2024-09-11 11:05:16','2024-09-11 11:05:16',0),
+(10915,0,'Added idea 260 to topic 476',0,'','2024-09-11 11:05:16','2024-09-11 11:05:16',0),
+(10916,0,'Edited topic (#476) Test',0,'','2024-09-11 11:05:42','2024-09-11 11:05:42',0),
+(10917,0,'Topic deleted, id=476 by 165',0,'','2024-09-11 11:05:46','2024-09-11 11:05:46',0),
+(10918,0,'Added new topic (#477) Test',0,'','2024-09-11 11:06:09','2024-09-11 11:06:09',0),
+(10919,0,'Added idea 260 to topic 477',0,'','2024-09-11 11:06:10','2024-09-11 11:06:10',0),
+(10920,0,'Delegation status retrieved: user_id: 165, topic_id: 477',0,'','2024-09-11 11:06:13','2024-09-11 11:06:13',0),
+(10921,0,'Delegation status retrieved: user_id: 165, topic_id: 477',0,'','2024-09-11 11:06:13','2024-09-11 11:06:13',0),
+(10922,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:10:16','2024-09-11 11:10:16',0),
+(10923,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:10:16','2024-09-11 11:10:16',0),
+(10924,0,'Added delegation for user 165 for topic 474',0,'','2024-09-11 11:10:24','2024-09-11 11:10:24',0),
+(10925,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:10:24','2024-09-11 11:10:24',0),
+(10926,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:35:06','2024-09-11 11:35:06',0),
+(10927,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:35:06','2024-09-11 11:35:06',0),
+(10928,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:35:10','2024-09-11 11:35:10',0),
+(10929,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:35:10','2024-09-11 11:35:10',0),
+(10930,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:43:55','2024-09-11 11:43:55',0),
+(10931,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:43:55','2024-09-11 11:43:55',0),
+(10932,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:44:01','2024-09-11 11:44:01',0),
+(10933,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:44:01','2024-09-11 11:44:01',0),
+(10934,0,'Allow registration set to 0',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10935,0,'Online mode set to 1',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10936,0,'Online mode set to 1',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10937,0,'Online mode set to 1',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10938,0,'Online mode set to 1',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10939,0,'status for OAUTH set to 0',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10940,0,'status for OAUTH set to 0',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10941,0,'Allow registration set to 0',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10942,0,'Online mode set to 1',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10943,0,'Online mode set to 1',0,'','2024-09-11 11:49:00','2024-09-11 11:49:00',0),
+(10944,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10945,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10946,0,'Online mode set to 1',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10947,0,'status for OAUTH set to 0',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10948,0,'Allow registration set to 0',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10949,0,'Online mode set to 1',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10950,0,'Online mode set to 1',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10951,0,'Online mode set to 1',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10952,0,'status for OAUTH set to 0',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10953,0,'Allow registration set to 0',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10954,0,'Online mode set to 1',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10955,0,'Online mode set to 1',0,'','2024-09-11 11:49:10','2024-09-11 11:49:10',0),
+(10956,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:55:33','2024-09-11 11:55:33',0),
+(10957,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:55:33','2024-09-11 11:55:33',0),
+(10958,0,'Online mode set to 1',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10959,0,'status for OAUTH set to 0',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10960,0,'Allow registration set to 0',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10961,0,'Online mode set to 1',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10962,0,'Online mode set to 1',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10963,0,'Online mode set to 1',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10964,0,'status for OAUTH set to 0',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10965,0,'Allow registration set to 0',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10966,0,'Online mode set to 1',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10967,0,'Online mode set to 1',0,'','2024-09-11 11:55:34','2024-09-11 11:55:34',0),
+(10968,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10969,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10970,0,'Online mode set to 1',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10971,0,'Allow registration set to 0',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10972,0,'status for OAUTH set to 0',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10973,0,'Online mode set to 1',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10974,0,'Online mode set to 1',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10975,0,'Online mode set to 1',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10976,0,'status for OAUTH set to 0',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10977,0,'Allow registration set to 0',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10978,0,'Online mode set to 1',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10979,0,'Online mode set to 1',0,'','2024-09-11 11:56:11','2024-09-11 11:56:11',0),
+(10980,0,'Online mode set to 1',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10981,0,'Allow registration set to 0',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10982,0,'status for OAUTH set to 0',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10983,0,'Online mode set to 1',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10984,0,'Online mode set to 1',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10985,0,'Online mode set to 1',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10986,0,'status for OAUTH set to 0',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10987,0,'Allow registration set to 0',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10988,0,'Online mode set to 1',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10989,0,'Online mode set to 1',0,'','2024-09-11 11:57:14','2024-09-11 11:57:14',0),
+(10990,0,'Online mode set to 1',0,'','2024-09-11 11:57:28','2024-09-11 11:57:28',0),
+(10991,0,'Online mode set to 1',0,'','2024-09-11 11:57:28','2024-09-11 11:57:28',0),
+(10992,0,'Online mode set to 1',0,'','2024-09-11 11:57:53','2024-09-11 11:57:53',0),
+(10993,0,'Online mode set to 1',0,'','2024-09-11 11:58:04','2024-09-11 11:58:04',0),
+(10994,0,'Online mode set to 1',0,'','2024-09-11 11:58:12','2024-09-11 11:58:12',0),
+(10995,0,'Online mode set to 1',0,'','2024-09-11 11:58:30','2024-09-11 11:58:30',0),
+(10996,0,'Online mode set to 1',0,'','2024-09-11 13:36:00','2024-09-11 13:36:00',0),
+(10997,0,'Online mode set to 1',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(10998,0,'Allow registration set to 0',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(10999,0,'status for OAUTH set to 0',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(11000,0,'Online mode set to 1',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(11001,0,'Online mode set to 1',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(11002,0,'Online mode set to 1',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(11003,0,'status for OAUTH set to 0',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(11004,0,'Allow registration set to 0',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(11005,0,'Online mode set to 1',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(11006,0,'Online mode set to 1',0,'','2024-09-11 13:37:12','2024-09-11 13:37:12',0),
+(11007,0,'Online mode set to 1',0,'','2024-09-11 13:37:20','2024-09-11 13:37:20',0),
+(11008,0,'Online mode set to 1',0,'','2024-09-11 13:38:49','2024-09-11 13:38:49',0),
+(11009,0,'Online mode set to 1',0,'','2024-09-11 13:39:00','2024-09-11 13:39:00',0),
+(11010,0,'Online mode set to 1',0,'','2024-09-11 13:46:56','2024-09-11 13:46:56',0),
+(11011,0,'Online mode set to 1',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11012,0,'status for OAUTH set to 0',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11013,0,'Allow registration set to 0',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11014,0,'Online mode set to 1',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11015,0,'Online mode set to 1',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11016,0,'Online mode set to 1',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11017,0,'status for OAUTH set to 0',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11018,0,'Allow registration set to 0',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11019,0,'Online mode set to 1',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11020,0,'Online mode set to 1',0,'','2024-09-11 13:48:56','2024-09-11 13:48:56',0),
+(11021,0,'Online mode set to 1',0,'','2024-09-11 13:49:06','2024-09-11 13:49:06',0),
+(11022,0,'Online mode set to 1',0,'','2024-09-11 13:49:20','2024-09-11 13:49:20',0),
+(11023,0,'Online mode set to 1',0,'','2024-09-11 13:49:32','2024-09-11 13:49:32',0),
+(11024,0,'Online mode set to 1',0,'','2024-09-11 13:49:49','2024-09-11 13:49:49',0),
+(11025,0,'Online mode set to 1',0,'','2024-09-11 13:56:38','2024-09-11 13:56:38',0),
+(11026,0,'Online mode set to 1',0,'','2024-09-11 13:56:45','2024-09-11 13:56:45',0),
+(11027,0,'Online mode set to 1',0,'','2024-09-11 13:56:54','2024-09-11 13:56:54',0),
+(11028,0,'Online mode set to 1',0,'','2024-09-11 13:58:05','2024-09-11 13:58:05',0),
+(11029,0,'Online mode set to 1',0,'','2024-09-11 13:58:28','2024-09-11 13:58:28',0),
+(11030,0,'Online mode set to 1',0,'','2024-09-11 14:12:43','2024-09-11 14:12:43',0),
+(11031,0,'status for OAUTH set to 0',0,'','2024-09-11 14:12:43','2024-09-11 14:12:43',0),
+(11032,0,'Allow registration set to 0',0,'','2024-09-11 14:12:43','2024-09-11 14:12:43',0),
+(11033,0,'Online mode set to 1',0,'','2024-09-11 14:12:43','2024-09-11 14:12:43',0),
+(11034,0,'Online mode set to 1',0,'','2024-09-11 14:12:43','2024-09-11 14:12:43',0),
+(11035,0,'status for OAUTH set to 0',0,'','2024-09-11 14:12:43','2024-09-11 14:12:43',0),
+(11036,0,'Allow registration set to 0',0,'','2024-09-11 14:12:43','2024-09-11 14:12:43',0),
+(11037,0,'Online mode set to 1',0,'','2024-09-11 14:12:43','2024-09-11 14:12:43',0),
+(11038,0,'Online mode set to 1',0,'','2024-09-11 14:13:02','2024-09-11 14:13:02',0),
+(11039,0,'status for OAUTH set to 0',0,'','2024-09-11 14:13:02','2024-09-11 14:13:02',0),
+(11040,0,'Allow registration set to 0',0,'','2024-09-11 14:13:02','2024-09-11 14:13:02',0),
+(11041,0,'Online mode set to 1',0,'','2024-09-11 14:13:02','2024-09-11 14:13:02',0),
+(11042,0,'Online mode set to 1',0,'','2024-09-11 14:13:02','2024-09-11 14:13:02',0),
+(11043,0,'status for OAUTH set to 0',0,'','2024-09-11 14:13:02','2024-09-11 14:13:02',0),
+(11044,0,'Allow registration set to 0',0,'','2024-09-11 14:13:02','2024-09-11 14:13:02',0),
+(11045,0,'Online mode set to 1',0,'','2024-09-11 14:13:02','2024-09-11 14:13:02',0),
+(11046,1,'Error adding category General',0,'','2024-09-11 16:25:34','2024-09-11 16:25:34',0),
+(11047,0,'Added new category (#5) ewqeqw',0,'','2024-09-11 16:52:28','2024-09-11 16:52:28',0),
+(11048,0,'Added new group (#4) wqeewqqew',0,'','2024-09-11 16:52:37','2024-09-11 16:52:37',0),
+(11049,0,'Group deleted with id 4 by 165',0,'','2024-09-11 16:52:39','2024-09-11 16:52:39',0),
+(11050,0,'Added new category (#0) sdsadsa',0,'','2024-09-11 16:53:56','2024-09-11 16:53:56',0),
+(11051,0,'Edited group 3 by 165',0,'','2024-09-11 16:54:59','2024-09-11 16:54:59',0),
+(11052,0,'Added user 264 to group 3',0,'','2024-09-11 16:55:32','2024-09-11 16:55:32',0),
+(11053,0,'Added user 265 to group 3',0,'','2024-09-11 16:55:32','2024-09-11 16:55:32',0),
+(11054,0,'Edited group 3 by 165',0,'','2024-09-11 16:55:33','2024-09-11 16:55:33',0),
+(11055,0,'Allow registration set to 0',0,'','2024-09-11 17:05:20','2024-09-11 17:05:20',0),
+(11056,0,'Online mode set to 1',0,'','2024-09-11 17:05:20','2024-09-11 17:05:20',0),
+(11057,0,'Online mode set to 1',0,'','2024-09-11 17:05:20','2024-09-11 17:05:20',0),
+(11058,0,'status for OAUTH set to 0',0,'','2024-09-11 17:05:20','2024-09-11 17:05:20',0),
+(11059,0,'Online mode set to 1',0,'','2024-09-11 17:05:21','2024-09-11 17:05:21',0),
+(11060,0,'status for OAUTH set to 0',0,'','2024-09-11 17:05:21','2024-09-11 17:05:21',0),
+(11061,0,'Online mode set to 1',0,'','2024-09-11 17:05:21','2024-09-11 17:05:21',0),
+(11062,0,'Allow registration set to 0',0,'','2024-09-11 17:05:21','2024-09-11 17:05:21',0),
+(11063,0,'Allow registration set to 0',0,'','2024-09-11 17:06:29','2024-09-11 17:06:29',0),
+(11064,0,'Online mode set to 1',0,'','2024-09-11 17:06:29','2024-09-11 17:06:29',0),
+(11065,0,'Online mode set to 1',0,'','2024-09-11 17:06:29','2024-09-11 17:06:29',0),
+(11066,0,'status for OAUTH set to 0',0,'','2024-09-11 17:06:29','2024-09-11 17:06:29',0),
+(11067,0,'Online mode set to 1',0,'','2024-09-11 17:06:29','2024-09-11 17:06:29',0),
+(11068,0,'status for OAUTH set to 0',0,'','2024-09-11 17:06:29','2024-09-11 17:06:29',0),
+(11069,0,'Allow registration set to 0',0,'','2024-09-11 17:06:29','2024-09-11 17:06:29',0),
+(11070,0,'Online mode set to 1',0,'','2024-09-11 17:06:29','2024-09-11 17:06:29',0),
+(11071,0,'Working days set to first: 1 and last: 5',0,'','2024-09-11 17:07:02','2024-09-11 17:07:02',0),
+(11072,0,'Daily time set to 2024-01-01 08:00:00',0,'','2024-09-11 17:07:02','2024-09-11 17:07:02',0),
+(11073,0,'Daily time set to 2024-01-01 16:00:00',0,'','2024-09-11 17:07:02','2024-09-11 17:07:02',0),
+(11074,0,'Online mode set to 1',0,'','2024-09-11 17:07:32','2024-09-11 17:07:32',0),
+(11075,0,'status for OAUTH set to 0',0,'','2024-09-11 17:07:32','2024-09-11 17:07:32',0),
+(11076,0,'Allow registration set to 0',0,'','2024-09-11 17:07:32','2024-09-11 17:07:32',0),
+(11077,0,'Online mode set to 1',0,'','2024-09-11 17:07:32','2024-09-11 17:07:32',0),
+(11078,0,'Online mode set to 1',0,'','2024-09-11 17:07:32','2024-09-11 17:07:32',0),
+(11079,0,'status for OAUTH set to 0',0,'','2024-09-11 17:07:32','2024-09-11 17:07:32',0),
+(11080,0,'Allow registration set to 0',0,'','2024-09-11 17:07:32','2024-09-11 17:07:32',0),
+(11081,0,'Online mode set to 1',0,'','2024-09-11 17:07:32','2024-09-11 17:07:32',0),
+(11082,0,'Online mode set to 1',0,'','2024-09-11 17:08:45','2024-09-11 17:08:45',0),
+(11083,0,'status for OAUTH set to 0',0,'','2024-09-11 17:08:45','2024-09-11 17:08:45',0),
+(11084,0,'Allow registration set to 0',0,'','2024-09-11 17:08:45','2024-09-11 17:08:45',0),
+(11085,0,'Online mode set to 1',0,'','2024-09-11 17:08:45','2024-09-11 17:08:45',0),
+(11086,0,'Online mode set to 1',0,'','2024-09-11 17:08:45','2024-09-11 17:08:45',0),
+(11087,0,'status for OAUTH set to 0',0,'','2024-09-11 17:08:45','2024-09-11 17:08:45',0),
+(11088,0,'Allow registration set to 0',0,'','2024-09-11 17:08:45','2024-09-11 17:08:45',0),
+(11089,0,'Online mode set to 1',0,'','2024-09-11 17:08:45','2024-09-11 17:08:45',0),
+(11090,0,'Allow registration set to 0',0,'','2024-09-11 17:12:34','2024-09-11 17:12:34',0),
+(11091,0,'Online mode set to 1',0,'','2024-09-11 17:12:34','2024-09-11 17:12:34',0),
+(11092,0,'Online mode set to 1',0,'','2024-09-11 17:12:34','2024-09-11 17:12:34',0),
+(11093,0,'status for OAUTH set to 0',0,'','2024-09-11 17:12:34','2024-09-11 17:12:34',0),
+(11094,0,'Online mode set to 1',0,'','2024-09-11 17:12:34','2024-09-11 17:12:34',0),
+(11095,0,'status for OAUTH set to 0',0,'','2024-09-11 17:12:34','2024-09-11 17:12:34',0),
+(11096,0,'Online mode set to 1',0,'','2024-09-11 17:12:34','2024-09-11 17:12:34',0),
+(11097,0,'Allow registration set to 0',0,'','2024-09-11 17:12:34','2024-09-11 17:12:34',0),
+(11098,0,'Online mode set to 1',0,'','2024-09-11 17:12:53','2024-09-11 17:12:53',0),
+(11099,0,'status for OAUTH set to 0',0,'','2024-09-11 17:12:53','2024-09-11 17:12:53',0),
+(11100,0,'Allow registration set to 0',0,'','2024-09-11 17:12:53','2024-09-11 17:12:53',0),
+(11101,0,'Online mode set to 1',0,'','2024-09-11 17:12:53','2024-09-11 17:12:53',0),
+(11102,0,'Online mode set to 1',0,'','2024-09-11 17:12:53','2024-09-11 17:12:53',0),
+(11103,0,'status for OAUTH set to 0',0,'','2024-09-11 17:12:53','2024-09-11 17:12:53',0),
+(11104,0,'Allow registration set to 0',0,'','2024-09-11 17:12:53','2024-09-11 17:12:53',0),
+(11105,0,'Online mode set to 1',0,'','2024-09-11 17:12:53','2024-09-11 17:12:53',0),
+(11106,0,'Online mode set to 1',0,'','2024-09-11 17:13:24','2024-09-11 17:13:24',0),
+(11107,0,'status for OAUTH set to 0',0,'','2024-09-11 17:13:24','2024-09-11 17:13:24',0),
+(11108,0,'Allow registration set to 0',0,'','2024-09-11 17:13:24','2024-09-11 17:13:24',0),
+(11109,0,'Online mode set to 1',0,'','2024-09-11 17:13:24','2024-09-11 17:13:24',0),
+(11110,0,'Online mode set to 1',0,'','2024-09-11 17:13:24','2024-09-11 17:13:24',0),
+(11111,0,'status for OAUTH set to 0',0,'','2024-09-11 17:13:24','2024-09-11 17:13:24',0),
+(11112,0,'Allow registration set to 0',0,'','2024-09-11 17:13:24','2024-09-11 17:13:24',0),
+(11113,0,'Online mode set to 1',0,'','2024-09-11 17:13:24','2024-09-11 17:13:24',0),
+(11114,0,'status for OAUTH set to 0',0,'','2024-09-11 17:15:03','2024-09-11 17:15:03',0),
+(11115,0,'Online mode set to 1',0,'','2024-09-11 17:15:03','2024-09-11 17:15:03',0),
+(11116,0,'Allow registration set to 0',0,'','2024-09-11 17:15:03','2024-09-11 17:15:03',0),
+(11117,0,'Online mode set to 1',0,'','2024-09-11 17:15:03','2024-09-11 17:15:03',0),
+(11118,0,'Online mode set to 1',0,'','2024-09-11 17:15:03','2024-09-11 17:15:03',0),
+(11119,0,'status for OAUTH set to 0',0,'','2024-09-11 17:15:03','2024-09-11 17:15:03',0),
+(11120,0,'Allow registration set to 0',0,'','2024-09-11 17:15:03','2024-09-11 17:15:03',0),
+(11121,0,'Online mode set to 1',0,'','2024-09-11 17:15:03','2024-09-11 17:15:03',0),
+(11122,0,'Online mode set to 1',0,'','2024-09-11 17:15:26','2024-09-11 17:15:26',0),
+(11123,0,'status for OAUTH set to 0',0,'','2024-09-11 17:15:26','2024-09-11 17:15:26',0),
+(11124,0,'Allow registration set to 0',0,'','2024-09-11 17:15:26','2024-09-11 17:15:26',0),
+(11125,0,'Online mode set to 1',0,'','2024-09-11 17:15:26','2024-09-11 17:15:26',0),
+(11126,0,'Online mode set to 1',0,'','2024-09-11 17:15:26','2024-09-11 17:15:26',0),
+(11127,0,'status for OAUTH set to 0',0,'','2024-09-11 17:15:26','2024-09-11 17:15:26',0),
+(11128,0,'Allow registration set to 0',0,'','2024-09-11 17:15:26','2024-09-11 17:15:26',0),
+(11129,0,'Online mode set to 1',0,'','2024-09-11 17:15:26','2024-09-11 17:15:26',0),
+(11130,0,'Allow registration set to 0',0,'','2024-09-11 17:21:26','2024-09-11 17:21:26',0),
+(11131,0,'Online mode set to 1',0,'','2024-09-11 17:21:26','2024-09-11 17:21:26',0),
+(11132,0,'Online mode set to 1',0,'','2024-09-11 17:21:26','2024-09-11 17:21:26',0),
+(11133,0,'status for OAUTH set to 0',0,'','2024-09-11 17:21:26','2024-09-11 17:21:26',0),
+(11134,0,'Online mode set to 1',0,'','2024-09-11 17:21:26','2024-09-11 17:21:26',0),
+(11135,0,'status for OAUTH set to 0',0,'','2024-09-11 17:21:26','2024-09-11 17:21:26',0),
+(11136,0,'Online mode set to 1',0,'','2024-09-11 17:21:26','2024-09-11 17:21:26',0),
+(11137,0,'Allow registration set to 0',0,'','2024-09-11 17:21:26','2024-09-11 17:21:26',0),
+(11138,0,'Online mode set to 1',0,'','2024-09-12 08:49:08','2024-09-12 08:49:08',0),
+(11139,0,'Online mode set to 1',0,'','2024-09-12 08:49:08','2024-09-12 08:49:08',0),
+(11140,0,'Online mode set to 1',0,'','2024-09-12 08:49:08','2024-09-12 08:49:08',0),
+(11141,0,'status for OAUTH set to 0',0,'','2024-09-12 08:49:08','2024-09-12 08:49:08',0),
+(11142,0,'Allow registration set to 0',0,'','2024-09-12 08:49:08','2024-09-12 08:49:08',0),
+(11143,0,'Allow registration set to 0',0,'','2024-09-12 08:49:08','2024-09-12 08:49:08',0),
+(11144,0,'status for OAUTH set to 0',0,'','2024-09-12 08:49:08','2024-09-12 08:49:08',0),
+(11145,0,'Online mode set to 1',0,'','2024-09-12 08:49:08','2024-09-12 08:49:08',0),
+(11146,0,'Online mode set to 1',0,'','2024-09-12 08:50:17','2024-09-12 08:50:17',0),
+(11147,0,'Online mode set to 1',0,'','2024-09-12 08:50:17','2024-09-12 08:50:17',0),
+(11148,0,'Online mode set to 1',0,'','2024-09-12 08:50:17','2024-09-12 08:50:17',0),
+(11149,0,'Allow registration set to 0',0,'','2024-09-12 08:50:17','2024-09-12 08:50:17',0),
+(11150,0,'status for OAUTH set to 0',0,'','2024-09-12 08:50:17','2024-09-12 08:50:17',0),
+(11151,0,'status for OAUTH set to 0',0,'','2024-09-12 08:50:17','2024-09-12 08:50:17',0),
+(11152,0,'Online mode set to 1',0,'','2024-09-12 08:50:17','2024-09-12 08:50:17',0),
+(11153,0,'Allow registration set to 0',0,'','2024-09-12 08:50:17','2024-09-12 08:50:17',0),
+(11154,0,'Online mode set to 1',0,'','2024-09-12 08:50:26','2024-09-12 08:50:26',0),
+(11155,0,'Online mode set to 1',0,'','2024-09-12 08:50:34','2024-09-12 08:50:34',0),
+(11156,0,'Online mode set to 1',0,'','2024-09-12 08:54:13','2024-09-12 08:54:13',0),
+(11157,0,'Allow registration set to 0',0,'','2024-09-12 08:58:42','2024-09-12 08:58:42',0),
+(11158,0,'status for OAUTH set to 0',0,'','2024-09-12 08:58:42','2024-09-12 08:58:42',0),
+(11159,0,'Online mode set to 1',0,'','2024-09-12 08:58:42','2024-09-12 08:58:42',0),
+(11160,0,'Online mode set to 1',0,'','2024-09-12 08:58:42','2024-09-12 08:58:42',0),
+(11161,0,'Online mode set to 1',0,'','2024-09-12 08:58:42','2024-09-12 08:58:42',0),
+(11162,0,'status for OAUTH set to 0',0,'','2024-09-12 08:58:42','2024-09-12 08:58:42',0),
+(11163,0,'Allow registration set to 0',0,'','2024-09-12 08:58:42','2024-09-12 08:58:42',0),
+(11164,0,'Online mode set to 1',0,'','2024-09-12 08:58:42','2024-09-12 08:58:42',0),
+(11165,0,'status for OAUTH set to 0',0,'','2024-09-12 08:58:43','2024-09-12 08:58:43',0),
+(11166,0,'Online mode set to 1',0,'','2024-09-12 08:58:43','2024-09-12 08:58:43',0),
+(11167,0,'Online mode set to 1',0,'','2024-09-12 08:58:43','2024-09-12 08:58:43',0),
+(11168,0,'Allow registration set to 0',0,'','2024-09-12 08:58:43','2024-09-12 08:58:43',0),
+(11169,0,'Online mode set to 1',0,'','2024-09-12 08:58:43','2024-09-12 08:58:43',0),
+(11170,0,'status for OAUTH set to 0',0,'','2024-09-12 08:58:43','2024-09-12 08:58:43',0),
+(11171,0,'Allow registration set to 0',0,'','2024-09-12 08:58:43','2024-09-12 08:58:43',0),
+(11172,0,'Online mode set to 1',0,'','2024-09-12 08:58:43','2024-09-12 08:58:43',0),
+(11173,0,'status for OAUTH set to 0',0,'','2024-09-12 08:59:01','2024-09-12 08:59:01',0),
+(11174,0,'Online mode set to 1',0,'','2024-09-12 08:59:01','2024-09-12 08:59:01',0),
+(11175,0,'Online mode set to 1',0,'','2024-09-12 08:59:01','2024-09-12 08:59:01',0),
+(11176,0,'Online mode set to 1',0,'','2024-09-12 08:59:01','2024-09-12 08:59:01',0),
+(11177,0,'Allow registration set to 0',0,'','2024-09-12 08:59:01','2024-09-12 08:59:01',0),
+(11178,0,'status for OAUTH set to 0',0,'','2024-09-12 08:59:01','2024-09-12 08:59:01',0),
+(11179,0,'Allow registration set to 0',0,'','2024-09-12 08:59:01','2024-09-12 08:59:01',0),
+(11180,0,'Online mode set to 1',0,'','2024-09-12 08:59:01','2024-09-12 08:59:01',0),
+(11181,0,'Allow registration set to 0',0,'','2024-09-12 09:00:12','2024-09-12 09:00:12',0),
+(11182,0,'status for OAUTH set to 0',0,'','2024-09-12 09:00:12','2024-09-12 09:00:12',0),
+(11183,0,'Online mode set to 1',0,'','2024-09-12 09:00:12','2024-09-12 09:00:12',0),
+(11184,0,'Online mode set to 1',0,'','2024-09-12 09:00:12','2024-09-12 09:00:12',0),
+(11185,0,'Online mode set to 1',0,'','2024-09-12 09:00:12','2024-09-12 09:00:12',0),
+(11186,0,'status for OAUTH set to 0',0,'','2024-09-12 09:00:12','2024-09-12 09:00:12',0),
+(11187,0,'Allow registration set to 0',0,'','2024-09-12 09:00:12','2024-09-12 09:00:12',0),
+(11188,0,'Online mode set to 1',0,'','2024-09-12 09:00:12','2024-09-12 09:00:12',0),
+(11189,0,'status for OAUTH set to 0',0,'','2024-09-12 09:00:29','2024-09-12 09:00:29',0),
+(11190,0,'Online mode set to 1',0,'','2024-09-12 09:00:29','2024-09-12 09:00:29',0),
+(11191,0,'Allow registration set to 0',0,'','2024-09-12 09:00:29','2024-09-12 09:00:29',0),
+(11192,0,'Online mode set to 1',0,'','2024-09-12 09:00:29','2024-09-12 09:00:29',0),
+(11193,0,'Online mode set to 1',0,'','2024-09-12 09:00:29','2024-09-12 09:00:29',0),
+(11194,0,'status for OAUTH set to 0',0,'','2024-09-12 09:00:29','2024-09-12 09:00:29',0),
+(11195,0,'Allow registration set to 0',0,'','2024-09-12 09:00:29','2024-09-12 09:00:29',0),
+(11196,0,'Online mode set to 1',0,'','2024-09-12 09:00:29','2024-09-12 09:00:29',0),
+(11197,0,'Allow registration set to 0',0,'','2024-09-12 09:04:27','2024-09-12 09:04:27',0),
+(11198,0,'Online mode set to 1',0,'','2024-09-12 09:04:27','2024-09-12 09:04:27',0),
+(11199,0,'Online mode set to 1',0,'','2024-09-12 09:04:27','2024-09-12 09:04:27',0),
+(11200,0,'status for OAUTH set to 0',0,'','2024-09-12 09:04:27','2024-09-12 09:04:27',0),
+(11201,0,'status for OAUTH set to 0',0,'','2024-09-12 09:04:27','2024-09-12 09:04:27',0),
+(11202,0,'Online mode set to 1',0,'','2024-09-12 09:04:27','2024-09-12 09:04:27',0),
+(11203,0,'Allow registration set to 0',0,'','2024-09-12 09:04:27','2024-09-12 09:04:27',0),
+(11204,0,'Online mode set to 1',0,'','2024-09-12 09:04:27','2024-09-12 09:04:27',0),
+(11205,0,'Allow registration set to 0',0,'','2024-09-12 09:05:04','2024-09-12 09:05:04',0),
+(11206,0,'Online mode set to 1',0,'','2024-09-12 09:05:04','2024-09-12 09:05:04',0),
+(11207,0,'Online mode set to 1',0,'','2024-09-12 09:05:04','2024-09-12 09:05:04',0),
+(11208,0,'Online mode set to 1',0,'','2024-09-12 09:05:04','2024-09-12 09:05:04',0),
+(11209,0,'status for OAUTH set to 0',0,'','2024-09-12 09:05:04','2024-09-12 09:05:04',0),
+(11210,0,'Allow registration set to 0',0,'','2024-09-12 09:05:04','2024-09-12 09:05:04',0),
+(11211,0,'status for OAUTH set to 0',0,'','2024-09-12 09:05:04','2024-09-12 09:05:04',0),
+(11212,0,'Online mode set to 1',0,'','2024-09-12 09:05:04','2024-09-12 09:05:04',0),
+(11213,0,'Allow registration set to 0',0,'','2024-09-12 09:05:18','2024-09-12 09:05:18',0),
+(11214,0,'Online mode set to 1',0,'','2024-09-12 09:05:18','2024-09-12 09:05:18',0),
+(11215,0,'status for OAUTH set to 0',0,'','2024-09-12 09:05:18','2024-09-12 09:05:18',0),
+(11216,0,'Online mode set to 1',0,'','2024-09-12 09:05:18','2024-09-12 09:05:18',0),
+(11217,0,'Online mode set to 1',0,'','2024-09-12 09:05:18','2024-09-12 09:05:18',0),
+(11218,0,'status for OAUTH set to 0',0,'','2024-09-12 09:05:18','2024-09-12 09:05:18',0),
+(11219,0,'Allow registration set to 0',0,'','2024-09-12 09:05:18','2024-09-12 09:05:18',0),
+(11220,0,'Online mode set to 1',0,'','2024-09-12 09:05:18','2024-09-12 09:05:18',0),
+(11221,0,'Allow registration set to 0',0,'','2024-09-12 09:05:25','2024-09-12 09:05:25',0),
+(11222,0,'Online mode set to 1',0,'','2024-09-12 09:05:25','2024-09-12 09:05:25',0),
+(11223,0,'status for OAUTH set to 0',0,'','2024-09-12 09:05:25','2024-09-12 09:05:25',0),
+(11224,0,'Online mode set to 1',0,'','2024-09-12 09:05:25','2024-09-12 09:05:25',0),
+(11225,0,'status for OAUTH set to 0',0,'','2024-09-12 09:05:25','2024-09-12 09:05:25',0),
+(11226,0,'Online mode set to 1',0,'','2024-09-12 09:05:25','2024-09-12 09:05:25',0),
+(11227,0,'Allow registration set to 0',0,'','2024-09-12 09:05:25','2024-09-12 09:05:25',0),
+(11228,0,'Online mode set to 1',0,'','2024-09-12 09:05:25','2024-09-12 09:05:25',0),
+(11229,0,'Allow registration set to 0',0,'','2024-09-12 09:15:37','2024-09-12 09:15:37',0),
+(11230,0,'Online mode set to 1',0,'','2024-09-12 09:15:37','2024-09-12 09:15:37',0),
+(11231,0,'Online mode set to 1',0,'','2024-09-12 09:15:37','2024-09-12 09:15:37',0),
+(11232,0,'Online mode set to 1',0,'','2024-09-12 09:15:37','2024-09-12 09:15:37',0),
+(11233,0,'status for OAUTH set to 0',0,'','2024-09-12 09:15:37','2024-09-12 09:15:37',0),
+(11234,0,'status for OAUTH set to 0',0,'','2024-09-12 09:15:37','2024-09-12 09:15:37',0),
+(11235,0,'Allow registration set to 0',0,'','2024-09-12 09:15:37','2024-09-12 09:15:37',0),
+(11236,0,'Online mode set to 1',0,'','2024-09-12 09:15:37','2024-09-12 09:15:37',0),
+(11237,0,'Allow registration set to 0',0,'','2024-09-12 09:16:16','2024-09-12 09:16:16',0),
+(11238,0,'Online mode set to 1',0,'','2024-09-12 09:16:16','2024-09-12 09:16:16',0),
+(11239,0,'status for OAUTH set to 0',0,'','2024-09-12 09:16:16','2024-09-12 09:16:16',0),
+(11240,0,'Online mode set to 1',0,'','2024-09-12 09:16:16','2024-09-12 09:16:16',0),
+(11241,0,'Online mode set to 1',0,'','2024-09-12 09:16:16','2024-09-12 09:16:16',0),
+(11242,0,'status for OAUTH set to 0',0,'','2024-09-12 09:16:16','2024-09-12 09:16:16',0),
+(11243,0,'Allow registration set to 0',0,'','2024-09-12 09:16:16','2024-09-12 09:16:16',0),
+(11244,0,'Online mode set to 1',0,'','2024-09-12 09:16:16','2024-09-12 09:16:16',0),
+(11245,0,'Online mode set to 1',0,'','2024-09-12 09:16:26','2024-09-12 09:16:26',0),
+(11246,0,'Online mode set to 1',0,'','2024-09-12 09:29:33','2024-09-12 09:29:33',0),
+(11247,0,'Online mode set to 1',0,'','2024-09-12 09:29:33','2024-09-12 09:29:33',0),
+(11248,0,'Allow registration set to 0',0,'','2024-09-12 09:29:34','2024-09-12 09:29:34',0),
+(11249,0,'Online mode set to 1',0,'','2024-09-12 09:29:34','2024-09-12 09:29:34',0),
+(11250,0,'status for OAUTH set to 0',0,'','2024-09-12 09:29:34','2024-09-12 09:29:34',0),
+(11251,0,'status for OAUTH set to 0',0,'','2024-09-12 09:29:34','2024-09-12 09:29:34',0),
+(11252,0,'Online mode set to 1',0,'','2024-09-12 09:29:34','2024-09-12 09:29:34',0),
+(11253,0,'Allow registration set to 0',0,'','2024-09-12 09:29:34','2024-09-12 09:29:34',0),
+(11254,0,'Allow registration set to 0',0,'','2024-09-12 09:44:22','2024-09-12 09:44:22',0),
+(11255,0,'Online mode set to 1',0,'','2024-09-12 09:44:22','2024-09-12 09:44:22',0),
+(11256,0,'Online mode set to 1',0,'','2024-09-12 09:44:22','2024-09-12 09:44:22',0),
+(11257,0,'status for OAUTH set to 0',0,'','2024-09-12 09:44:22','2024-09-12 09:44:22',0),
+(11258,0,'Online mode set to 1',0,'','2024-09-12 09:44:22','2024-09-12 09:44:22',0),
+(11259,0,'status for OAUTH set to 0',0,'','2024-09-12 09:44:22','2024-09-12 09:44:22',0),
+(11260,0,'Allow registration set to 0',0,'','2024-09-12 09:44:22','2024-09-12 09:44:22',0),
+(11261,0,'Online mode set to 1',0,'','2024-09-12 09:44:22','2024-09-12 09:44:22',0),
+(11262,0,'Online mode set to 1',0,'','2024-09-12 10:19:04','2024-09-12 10:19:04',0),
+(11263,0,'Allow registration set to 0',0,'','2024-09-12 10:20:14','2024-09-12 10:20:14',0),
+(11264,0,'Online mode set to 1',0,'','2024-09-12 10:20:14','2024-09-12 10:20:14',0),
+(11265,0,'Online mode set to 1',0,'','2024-09-12 10:20:14','2024-09-12 10:20:14',0),
+(11266,0,'Online mode set to 1',0,'','2024-09-12 10:20:14','2024-09-12 10:20:14',0),
+(11267,0,'status for OAUTH set to 0',0,'','2024-09-12 10:20:14','2024-09-12 10:20:14',0),
+(11268,0,'status for OAUTH set to 0',0,'','2024-09-12 10:20:14','2024-09-12 10:20:14',0),
+(11269,0,'Allow registration set to 0',0,'','2024-09-12 10:20:14','2024-09-12 10:20:14',0),
+(11270,0,'Online mode set to 1',0,'','2024-09-12 10:20:14','2024-09-12 10:20:14',0),
+(11271,0,'Allow registration set to 0',0,'','2024-09-12 10:21:30','2024-09-12 10:21:30',0),
+(11272,0,'Online mode set to 1',0,'','2024-09-12 10:21:30','2024-09-12 10:21:30',0),
+(11273,0,'Online mode set to 1',0,'','2024-09-12 10:21:30','2024-09-12 10:21:30',0),
+(11274,0,'status for OAUTH set to 0',0,'','2024-09-12 10:21:30','2024-09-12 10:21:30',0),
+(11275,0,'Online mode set to 1',0,'','2024-09-12 10:21:30','2024-09-12 10:21:30',0),
+(11276,0,'status for OAUTH set to 0',0,'','2024-09-12 10:21:30','2024-09-12 10:21:30',0),
+(11277,0,'Online mode set to 1',0,'','2024-09-12 10:21:30','2024-09-12 10:21:30',0),
+(11278,0,'Allow registration set to 0',0,'','2024-09-12 10:21:30','2024-09-12 10:21:30',0),
+(11279,0,'Allow registration set to 0',0,'','2024-09-12 10:22:40','2024-09-12 10:22:40',0),
+(11280,0,'Online mode set to 1',0,'','2024-09-12 10:22:40','2024-09-12 10:22:40',0),
+(11281,0,'Online mode set to 1',0,'','2024-09-12 10:22:40','2024-09-12 10:22:40',0),
+(11282,0,'Online mode set to 1',0,'','2024-09-12 10:22:40','2024-09-12 10:22:40',0),
+(11283,0,'status for OAUTH set to 0',0,'','2024-09-12 10:22:40','2024-09-12 10:22:40',0),
+(11284,0,'status for OAUTH set to 0',0,'','2024-09-12 10:22:40','2024-09-12 10:22:40',0),
+(11285,0,'Allow registration set to 0',0,'','2024-09-12 10:22:40','2024-09-12 10:22:40',0),
+(11286,0,'Online mode set to 1',0,'','2024-09-12 10:22:40','2024-09-12 10:22:40',0),
+(11287,0,'Online mode set to 1',0,'','2024-09-12 10:23:38','2024-09-12 10:23:38',0),
+(11288,0,'status for OAUTH set to 0',0,'','2024-09-12 10:23:38','2024-09-12 10:23:38',0),
+(11289,0,'Allow registration set to 0',0,'','2024-09-12 10:23:38','2024-09-12 10:23:38',0),
+(11290,0,'Online mode set to 1',0,'','2024-09-12 10:23:38','2024-09-12 10:23:38',0),
+(11291,0,'Online mode set to 1',0,'','2024-09-12 10:23:38','2024-09-12 10:23:38',0),
+(11292,0,'status for OAUTH set to 0',0,'','2024-09-12 10:23:38','2024-09-12 10:23:38',0),
+(11293,0,'Allow registration set to 0',0,'','2024-09-12 10:23:38','2024-09-12 10:23:38',0),
+(11294,0,'Online mode set to 1',0,'','2024-09-12 10:23:38','2024-09-12 10:23:38',0),
+(11295,0,'Allow registration set to 0',0,'','2024-09-12 10:23:55','2024-09-12 10:23:55',0),
+(11296,0,'Online mode set to 1',0,'','2024-09-12 10:23:55','2024-09-12 10:23:55',0),
+(11297,0,'Online mode set to 1',0,'','2024-09-12 10:23:55','2024-09-12 10:23:55',0),
+(11298,0,'status for OAUTH set to 0',0,'','2024-09-12 10:23:55','2024-09-12 10:23:55',0),
+(11299,0,'Online mode set to 1',0,'','2024-09-12 10:23:55','2024-09-12 10:23:55',0),
+(11300,0,'status for OAUTH set to 0',0,'','2024-09-12 10:23:55','2024-09-12 10:23:55',0),
+(11301,0,'Online mode set to 1',0,'','2024-09-12 10:23:55','2024-09-12 10:23:55',0),
+(11302,0,'Allow registration set to 0',0,'','2024-09-12 10:23:55','2024-09-12 10:23:55',0),
+(11303,0,'Online mode set to 1',0,'','2024-09-12 10:25:30','2024-09-12 10:25:30',0),
+(11304,0,'status for OAUTH set to 0',0,'','2024-09-12 10:25:30','2024-09-12 10:25:30',0),
+(11305,0,'Allow registration set to 0',0,'','2024-09-12 10:25:30','2024-09-12 10:25:30',0),
+(11306,0,'Online mode set to 1',0,'','2024-09-12 10:25:30','2024-09-12 10:25:30',0),
+(11307,0,'Online mode set to 1',0,'','2024-09-12 10:25:30','2024-09-12 10:25:30',0),
+(11308,0,'status for OAUTH set to 0',0,'','2024-09-12 10:25:30','2024-09-12 10:25:30',0),
+(11309,0,'Allow registration set to 0',0,'','2024-09-12 10:25:30','2024-09-12 10:25:30',0),
+(11310,0,'Online mode set to 1',0,'','2024-09-12 10:25:30','2024-09-12 10:25:30',0),
+(11311,0,'Allow registration set to 0',0,'','2024-09-12 10:26:44','2024-09-12 10:26:44',0),
+(11312,0,'Online mode set to 1',0,'','2024-09-12 10:26:44','2024-09-12 10:26:44',0),
+(11313,0,'status for OAUTH set to 0',0,'','2024-09-12 10:26:44','2024-09-12 10:26:44',0),
+(11314,0,'Online mode set to 1',0,'','2024-09-12 10:26:44','2024-09-12 10:26:44',0),
+(11315,0,'Online mode set to 1',0,'','2024-09-12 10:26:44','2024-09-12 10:26:44',0),
+(11316,0,'status for OAUTH set to 0',0,'','2024-09-12 10:26:44','2024-09-12 10:26:44',0),
+(11317,0,'Allow registration set to 0',0,'','2024-09-12 10:26:44','2024-09-12 10:26:44',0),
+(11318,0,'Online mode set to 1',0,'','2024-09-12 10:26:44','2024-09-12 10:26:44',0),
+(11319,0,'Added new command (#10 (instanceStatus)) by: 0',0,'','2024-09-12 10:28:27','2024-09-12 10:28:27',0),
+(11320,0,'Allow registration set to 0',0,'','2024-09-12 10:30:03','2024-09-12 10:30:03',0),
+(11321,0,'Online mode set to 1',0,'','2024-09-12 10:30:03','2024-09-12 10:30:03',0),
+(11322,0,'Online mode set to 1',0,'','2024-09-12 10:30:03','2024-09-12 10:30:03',0),
+(11323,0,'status for OAUTH set to 0',0,'','2024-09-12 10:30:03','2024-09-12 10:30:03',0),
+(11324,0,'Online mode set to 1',0,'','2024-09-12 10:30:03','2024-09-12 10:30:03',0),
+(11325,0,'status for OAUTH set to 0',0,'','2024-09-12 10:30:03','2024-09-12 10:30:03',0),
+(11326,0,'Allow registration set to 0',0,'','2024-09-12 10:30:03','2024-09-12 10:30:03',0),
+(11327,0,'Online mode set to 1',0,'','2024-09-12 10:30:03','2024-09-12 10:30:03',0),
+(11328,0,'Allow registration set to 0',0,'','2024-09-12 14:41:23','2024-09-12 14:41:23',0),
+(11329,0,'Online mode set to 1',0,'','2024-09-12 14:41:23','2024-09-12 14:41:23',0),
+(11330,0,'Online mode set to 1',0,'','2024-09-12 14:41:23','2024-09-12 14:41:23',0),
+(11331,0,'status for OAUTH set to 0',0,'','2024-09-12 14:41:23','2024-09-12 14:41:23',0),
+(11332,0,'Online mode set to 1',0,'','2024-09-12 14:41:23','2024-09-12 14:41:23',0),
+(11333,0,'status for OAUTH set to 0',0,'','2024-09-12 14:41:23','2024-09-12 14:41:23',0),
+(11334,0,'Allow registration set to 0',0,'','2024-09-12 14:41:23','2024-09-12 14:41:23',0),
+(11335,0,'Online mode set to 1',0,'','2024-09-12 14:41:23','2024-09-12 14:41:23',0),
+(11336,0,'Allow registration set to 0',0,'','2024-09-12 14:50:38','2024-09-12 14:50:38',0),
+(11337,0,'Online mode set to 1',0,'','2024-09-12 14:50:38','2024-09-12 14:50:38',0),
+(11338,0,'Online mode set to 1',0,'','2024-09-12 14:50:38','2024-09-12 14:50:38',0),
+(11339,0,'Online mode set to 1',0,'','2024-09-12 14:50:38','2024-09-12 14:50:38',0),
+(11340,0,'status for OAUTH set to 0',0,'','2024-09-12 14:50:38','2024-09-12 14:50:38',0),
+(11341,0,'status for OAUTH set to 0',0,'','2024-09-12 14:50:38','2024-09-12 14:50:38',0),
+(11342,0,'Allow registration set to 0',0,'','2024-09-12 14:50:38','2024-09-12 14:50:38',0),
+(11343,0,'Online mode set to 1',0,'','2024-09-12 14:50:38','2024-09-12 14:50:38',0),
+(11344,0,'Allow registration set to 0',0,'','2024-09-12 15:57:32','2024-09-12 15:57:32',0),
+(11345,0,'Online mode set to 1',0,'','2024-09-12 15:57:32','2024-09-12 15:57:32',0),
+(11346,0,'Online mode set to 1',0,'','2024-09-12 15:57:32','2024-09-12 15:57:32',0),
+(11347,0,'status for OAUTH set to 0',0,'','2024-09-12 15:57:32','2024-09-12 15:57:32',0),
+(11348,0,'Online mode set to 1',0,'','2024-09-12 15:57:32','2024-09-12 15:57:32',0),
+(11349,0,'status for OAUTH set to 0',0,'','2024-09-12 15:57:32','2024-09-12 15:57:32',0),
+(11350,0,'Allow registration set to 0',0,'','2024-09-12 15:57:32','2024-09-12 15:57:32',0),
+(11351,0,'Online mode set to 1',0,'','2024-09-12 15:57:32','2024-09-12 15:57:32',0),
+(11352,0,'Online mode set to 1',0,'','2024-09-12 15:57:59','2024-09-12 15:57:59',0),
+(11353,0,'Allow registration set to 0',0,'','2024-09-12 15:57:59','2024-09-12 15:57:59',0),
+(11354,0,'status for OAUTH set to 0',0,'','2024-09-12 15:57:59','2024-09-12 15:57:59',0),
+(11355,0,'Online mode set to 1',0,'','2024-09-12 15:57:59','2024-09-12 15:57:59',0),
+(11356,0,'Online mode set to 1',0,'','2024-09-12 15:57:59','2024-09-12 15:57:59',0),
+(11357,0,'status for OAUTH set to 0',0,'','2024-09-12 15:57:59','2024-09-12 15:57:59',0),
+(11358,0,'Allow registration set to 0',0,'','2024-09-12 15:57:59','2024-09-12 15:57:59',0),
+(11359,0,'Online mode set to 1',0,'','2024-09-12 15:57:59','2024-09-12 15:57:59',0),
+(11360,0,'Allow registration set to 0',0,'','2024-09-12 15:58:17','2024-09-12 15:58:17',0),
+(11361,0,'Online mode set to 1',0,'','2024-09-12 15:58:17','2024-09-12 15:58:17',0),
+(11362,0,'Online mode set to 1',0,'','2024-09-12 15:58:17','2024-09-12 15:58:17',0),
+(11363,0,'Online mode set to 1',0,'','2024-09-12 15:58:17','2024-09-12 15:58:17',0),
+(11364,0,'status for OAUTH set to 0',0,'','2024-09-12 15:58:17','2024-09-12 15:58:17',0),
+(11365,0,'status for OAUTH set to 0',0,'','2024-09-12 15:58:17','2024-09-12 15:58:17',0),
+(11366,0,'Allow registration set to 0',0,'','2024-09-12 15:58:17','2024-09-12 15:58:17',0),
+(11367,0,'Online mode set to 1',0,'','2024-09-12 15:58:17','2024-09-12 15:58:17',0),
+(11368,0,'Allow registration set to 0',0,'','2024-09-12 16:02:55','2024-09-12 16:02:55',0),
+(11369,0,'Online mode set to 1',0,'','2024-09-12 16:02:55','2024-09-12 16:02:55',0),
+(11370,0,'Online mode set to 1',0,'','2024-09-12 16:02:55','2024-09-12 16:02:55',0),
+(11371,0,'status for OAUTH set to 0',0,'','2024-09-12 16:02:55','2024-09-12 16:02:55',0),
+(11372,0,'Online mode set to 1',0,'','2024-09-12 16:02:55','2024-09-12 16:02:55',0),
+(11373,0,'status for OAUTH set to 0',0,'','2024-09-12 16:02:55','2024-09-12 16:02:55',0),
+(11374,0,'Online mode set to 1',0,'','2024-09-12 16:02:55','2024-09-12 16:02:55',0),
+(11375,0,'Allow registration set to 0',0,'','2024-09-12 16:02:55','2024-09-12 16:02:55',0),
+(11376,0,'Allow registration set to 0',0,'','2024-09-12 16:06:08','2024-09-12 16:06:08',0),
+(11377,0,'Online mode set to 1',0,'','2024-09-12 16:06:08','2024-09-12 16:06:08',0),
+(11378,0,'Online mode set to 1',0,'','2024-09-12 16:06:08','2024-09-12 16:06:08',0),
+(11379,0,'status for OAUTH set to 0',0,'','2024-09-12 16:06:08','2024-09-12 16:06:08',0),
+(11380,0,'Online mode set to 1',0,'','2024-09-12 16:06:08','2024-09-12 16:06:08',0),
+(11381,0,'status for OAUTH set to 0',0,'','2024-09-12 16:06:08','2024-09-12 16:06:08',0),
+(11382,0,'Online mode set to 1',0,'','2024-09-12 16:06:08','2024-09-12 16:06:08',0),
+(11383,0,'Allow registration set to 0',0,'','2024-09-12 16:06:08','2024-09-12 16:06:08',0),
+(11384,0,'Allow registration set to 0',0,'','2024-09-12 16:06:36','2024-09-12 16:06:36',0),
+(11385,0,'Online mode set to 1',0,'','2024-09-12 16:06:36','2024-09-12 16:06:36',0),
+(11386,0,'Online mode set to 1',0,'','2024-09-12 16:06:36','2024-09-12 16:06:36',0),
+(11387,0,'status for OAUTH set to 0',0,'','2024-09-12 16:06:36','2024-09-12 16:06:36',0),
+(11388,0,'Online mode set to 1',0,'','2024-09-12 16:06:36','2024-09-12 16:06:36',0),
+(11389,0,'status for OAUTH set to 0',0,'','2024-09-12 16:06:36','2024-09-12 16:06:36',0),
+(11390,0,'Allow registration set to 0',0,'','2024-09-12 16:06:36','2024-09-12 16:06:36',0),
+(11391,0,'Online mode set to 1',0,'','2024-09-12 16:06:36','2024-09-12 16:06:36',0),
+(11392,0,'Online mode set to 1',0,'','2024-09-12 16:17:20','2024-09-12 16:17:20',0),
+(11393,0,'status for OAUTH set to 0',0,'','2024-09-12 16:17:20','2024-09-12 16:17:20',0),
+(11394,0,'Allow registration set to 0',0,'','2024-09-12 16:17:20','2024-09-12 16:17:20',0),
+(11395,0,'Online mode set to 1',0,'','2024-09-12 16:17:20','2024-09-12 16:17:20',0),
+(11396,0,'Online mode set to 1',0,'','2024-09-12 16:17:20','2024-09-12 16:17:20',0),
+(11397,0,'status for OAUTH set to 0',0,'','2024-09-12 16:17:20','2024-09-12 16:17:20',0),
+(11398,0,'Allow registration set to 0',0,'','2024-09-12 16:17:20','2024-09-12 16:17:20',0),
+(11399,0,'Online mode set to 1',0,'','2024-09-12 16:17:20','2024-09-12 16:17:20',0),
+(11400,0,'Added new command (#20 (user)) by: 165',0,'','2024-09-12 16:23:35','2024-09-12 16:23:35',0),
+(11401,0,'Online mode set to 1',0,'','2024-09-12 16:26:22','2024-09-12 16:26:22',0),
+(11402,0,'status for OAUTH set to 0',0,'','2024-09-12 16:26:22','2024-09-12 16:26:22',0),
+(11403,0,'Allow registration set to 0',0,'','2024-09-12 16:26:22','2024-09-12 16:26:22',0),
+(11404,0,'Online mode set to 1',0,'','2024-09-12 16:26:22','2024-09-12 16:26:22',0),
+(11405,0,'Online mode set to 1',0,'','2024-09-12 16:26:22','2024-09-12 16:26:22',0),
+(11406,0,'status for OAUTH set to 0',0,'','2024-09-12 16:26:22','2024-09-12 16:26:22',0),
+(11407,0,'Allow registration set to 0',0,'','2024-09-12 16:26:22','2024-09-12 16:26:22',0),
+(11408,0,'Online mode set to 1',0,'','2024-09-12 16:26:22','2024-09-12 16:26:22',0),
+(11409,0,'Online mode set to 1',0,'','2024-09-12 16:28:16','2024-09-12 16:28:16',0),
+(11410,0,'status for OAUTH set to 0',0,'','2024-09-12 16:28:16','2024-09-12 16:28:16',0),
+(11411,0,'Allow registration set to 0',0,'','2024-09-12 16:28:16','2024-09-12 16:28:16',0),
+(11412,0,'Online mode set to 1',0,'','2024-09-12 16:28:16','2024-09-12 16:28:16',0),
+(11413,0,'Online mode set to 1',0,'','2024-09-12 16:28:16','2024-09-12 16:28:16',0),
+(11414,0,'status for OAUTH set to 0',0,'','2024-09-12 16:28:16','2024-09-12 16:28:16',0),
+(11415,0,'Allow registration set to 0',0,'','2024-09-12 16:28:16','2024-09-12 16:28:16',0),
+(11416,0,'Online mode set to 1',0,'','2024-09-12 16:28:16','2024-09-12 16:28:16',0),
+(11417,0,'status for OAUTH set to 0',0,'','2024-09-12 16:29:00','2024-09-12 16:29:00',0),
+(11418,0,'Online mode set to 1',0,'','2024-09-12 16:29:00','2024-09-12 16:29:00',0),
+(11419,0,'Allow registration set to 0',0,'','2024-09-12 16:29:00','2024-09-12 16:29:00',0),
+(11420,0,'Online mode set to 1',0,'','2024-09-12 16:29:00','2024-09-12 16:29:00',0),
+(11421,0,'Online mode set to 1',0,'','2024-09-12 16:29:00','2024-09-12 16:29:00',0),
+(11422,0,'status for OAUTH set to 0',0,'','2024-09-12 16:29:00','2024-09-12 16:29:00',0),
+(11423,0,'Allow registration set to 0',0,'','2024-09-12 16:29:00','2024-09-12 16:29:00',0),
+(11424,0,'Online mode set to 1',0,'','2024-09-12 16:29:01','2024-09-12 16:29:01',0),
+(11425,0,'Allow registration set to 0',0,'','2024-09-12 16:31:01','2024-09-12 16:31:01',0),
+(11426,0,'Online mode set to 1',0,'','2024-09-12 16:31:01','2024-09-12 16:31:01',0),
+(11427,0,'status for OAUTH set to 0',0,'','2024-09-12 16:31:01','2024-09-12 16:31:01',0),
+(11428,0,'Online mode set to 1',0,'','2024-09-12 16:31:01','2024-09-12 16:31:01',0),
+(11429,0,'Online mode set to 1',0,'','2024-09-12 16:31:01','2024-09-12 16:31:01',0),
+(11430,0,'status for OAUTH set to 0',0,'','2024-09-12 16:31:01','2024-09-12 16:31:01',0),
+(11431,0,'Allow registration set to 0',0,'','2024-09-12 16:31:01','2024-09-12 16:31:01',0),
+(11432,0,'Online mode set to 1',0,'','2024-09-12 16:31:01','2024-09-12 16:31:01',0),
+(11433,0,'Allow registration set to 0',0,'','2024-09-12 16:32:45','2024-09-12 16:32:45',0),
+(11434,0,'Online mode set to 1',0,'','2024-09-12 16:32:45','2024-09-12 16:32:45',0),
+(11435,0,'Online mode set to 1',0,'','2024-09-12 16:32:45','2024-09-12 16:32:45',0),
+(11436,0,'Online mode set to 1',0,'','2024-09-12 16:32:45','2024-09-12 16:32:45',0),
+(11437,0,'status for OAUTH set to 0',0,'','2024-09-12 16:32:45','2024-09-12 16:32:45',0),
+(11438,0,'status for OAUTH set to 0',0,'','2024-09-12 16:32:45','2024-09-12 16:32:45',0),
+(11439,0,'Allow registration set to 0',0,'','2024-09-12 16:32:45','2024-09-12 16:32:45',0),
+(11440,0,'Online mode set to 1',0,'','2024-09-12 16:32:45','2024-09-12 16:32:45',0),
+(11441,0,'Allow registration set to 0',0,'','2024-09-12 16:36:10','2024-09-12 16:36:10',0),
+(11442,0,'Online mode set to 1',0,'','2024-09-12 16:36:10','2024-09-12 16:36:10',0),
+(11443,0,'Online mode set to 1',0,'','2024-09-12 16:36:10','2024-09-12 16:36:10',0),
+(11444,0,'status for OAUTH set to 0',0,'','2024-09-12 16:36:10','2024-09-12 16:36:10',0),
+(11445,0,'Online mode set to 1',0,'','2024-09-12 16:36:10','2024-09-12 16:36:10',0),
+(11446,0,'status for OAUTH set to 0',0,'','2024-09-12 16:36:10','2024-09-12 16:36:10',0),
+(11447,0,'Allow registration set to 0',0,'','2024-09-12 16:36:10','2024-09-12 16:36:10',0),
+(11448,0,'Online mode set to 1',0,'','2024-09-12 16:36:10','2024-09-12 16:36:10',0),
+(11449,0,'Command deleted, id=1 by 165',0,'','2024-09-12 16:38:47','2024-09-12 16:38:47',0),
+(11450,0,'Allow registration set to 0',0,'','2024-09-12 16:45:54','2024-09-12 16:45:54',0),
+(11451,0,'Online mode set to 1',0,'','2024-09-12 16:45:54','2024-09-12 16:45:54',0),
+(11452,0,'Online mode set to 1',0,'','2024-09-12 16:45:54','2024-09-12 16:45:54',0),
+(11453,0,'status for OAUTH set to 0',0,'','2024-09-12 16:45:54','2024-09-12 16:45:54',0),
+(11454,0,'Online mode set to 1',0,'','2024-09-12 16:45:54','2024-09-12 16:45:54',0),
+(11455,0,'status for OAUTH set to 0',0,'','2024-09-12 16:45:54','2024-09-12 16:45:54',0),
+(11456,0,'Online mode set to 1',0,'','2024-09-12 16:45:54','2024-09-12 16:45:54',0),
+(11457,0,'Allow registration set to 0',0,'','2024-09-12 16:45:54','2024-09-12 16:45:54',0),
+(11458,0,'Allow registration set to 0',0,'','2024-09-12 16:50:47','2024-09-12 16:50:47',0),
+(11459,0,'status for OAUTH set to 0',0,'','2024-09-12 16:50:47','2024-09-12 16:50:47',0),
+(11460,0,'Online mode set to 1',0,'','2024-09-12 16:50:47','2024-09-12 16:50:47',0),
+(11461,0,'Online mode set to 1',0,'','2024-09-12 16:50:47','2024-09-12 16:50:47',0),
+(11462,0,'Online mode set to 1',0,'','2024-09-12 16:50:47','2024-09-12 16:50:47',0),
+(11463,0,'status for OAUTH set to 0',0,'','2024-09-12 16:50:47','2024-09-12 16:50:47',0),
+(11464,0,'Allow registration set to 0',0,'','2024-09-12 16:50:47','2024-09-12 16:50:47',0),
+(11465,0,'Online mode set to 1',0,'','2024-09-12 16:50:47','2024-09-12 16:50:47',0),
+(11466,0,'Successful login user fnietzsche',0,'','2024-09-12 17:00:06','2024-09-12 17:00:06',0),
+(11467,0,'Online mode set to 1',0,'','2024-09-12 17:00:07','2024-09-12 17:00:07',0),
+(11468,0,'status for OAUTH set to 0',0,'','2024-09-12 17:00:07','2024-09-12 17:00:07',0),
+(11469,0,'Allow registration set to 0',0,'','2024-09-12 17:00:07','2024-09-12 17:00:07',0),
+(11470,0,'Online mode set to 1',0,'','2024-09-12 17:00:07','2024-09-12 17:00:07',0),
+(11471,0,'Online mode set to 1',0,'','2024-09-12 17:00:07','2024-09-12 17:00:07',0),
+(11472,0,'status for OAUTH set to 0',0,'','2024-09-12 17:00:07','2024-09-12 17:00:07',0),
+(11473,0,'Allow registration set to 0',0,'','2024-09-12 17:00:07','2024-09-12 17:00:07',0),
+(11474,0,'Online mode set to 1',0,'','2024-09-12 17:00:07','2024-09-12 17:00:07',0),
+(11475,0,'Added consent for user 266 for text 11',0,'','2024-09-12 17:00:12','2024-09-12 17:00:12',0),
+(11476,0,'Added consent for user 266 for text 9',0,'','2024-09-12 17:00:13','2024-09-12 17:00:13',0),
+(11477,1,'DB Error login user admin',0,'','2024-09-12 17:02:44','2024-09-12 17:02:44',0),
+(11478,0,'Successful login user aula',0,'','2024-09-12 17:02:49','2024-09-12 17:02:49',0),
+(11479,0,'Message deleted, id=43 by 165',0,'','2024-09-13 08:17:42','2024-09-13 08:17:42',0),
+(11480,0,'Message deleted, id=42 by 165',0,'','2024-09-13 08:17:42','2024-09-13 08:17:42',0),
+(11481,0,'Added new message (#44) Bug report',0,'','2024-09-13 08:17:53','2024-09-13 08:17:53',0),
+(11482,0,'Message status changed 41 by 165',0,'','2024-09-13 08:18:28','2024-09-13 08:18:28',0),
+(11483,0,'Added new message (#45) This is a message for Admin only',0,'','2024-09-13 08:19:36','2024-09-13 08:19:36',0),
+(11484,0,'Delegation status retrieved: user_id: 165, topic_id: 477',0,'','2024-09-13 08:50:01','2024-09-13 08:50:01',0),
+(11485,0,'Delegation status retrieved: user_id: 165, topic_id: 477',0,'','2024-09-13 08:50:01','2024-09-13 08:50:01',0),
+(11486,0,'Topic deleted, id=477 by 165',0,'','2024-09-13 08:50:09','2024-09-13 08:50:09',0);
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_texts
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_texts`
+--
 
 DROP TABLE IF EXISTS `au_texts`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_texts` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
   `creator_id` int(11) DEFAULT NULL COMMENT 'user id of the creator',
@@ -2386,27 +3509,30 @@ CREATE TABLE `au_texts` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash_id of the text',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_texts`
+--
 
 LOCK TABLES `au_texts` WRITE;
 /*!40000 ALTER TABLE `au_texts` DISABLE KEYS */;
-
-INSERT INTO `au_texts` (`id`, `creator_id`, `headline`, `body`, `user_needs_to_consent`, `service_id_consent`, `consent_text`, `language_id`, `location`, `created`, `last_update`, `updater_id`, `hash_id`, `status`)
-VALUES
-	(8,0,'Sample Text','test message',0,0,'Agree',0,NULL,'2024-06-22 22:30:30','2024-06-22 22:30:30',165,'3ce902fa6d5fc806c02017188a2e0daa',1),
-	(9,0,'Test Mandatory message','test this message',2,0,'Agree',0,NULL,'2024-06-23 12:27:27','2024-06-23 12:27:27',165,'0a4f7789ffe37e398393af1fa120f4d0',1),
-	(10,0,'Optional consent message','This message is not mandatory',1,0,'Agree',0,NULL,'2024-06-23 12:30:58','2024-06-23 12:30:58',165,'faca362395a9bf1f4add5370aa6ee67d',1),
-	(11,0,'Another consent','Mandatory consent',2,0,'Agree',0,NULL,'2024-06-23 12:47:07','2024-06-23 12:47:07',165,'da35ed97b7014ba1a8f456c47e0f54ba',1);
-
+INSERT INTO `au_texts` VALUES
+(8,0,'Sample Text','test message',0,0,'Agree',0,NULL,'2024-06-22 22:30:30','2024-06-22 22:30:30',165,'3ce902fa6d5fc806c02017188a2e0daa',1),
+(9,0,'Test Mandatory message','test this message',2,0,'Agree',0,NULL,'2024-06-23 12:27:27','2024-06-23 12:27:27',165,'0a4f7789ffe37e398393af1fa120f4d0',1),
+(10,0,'Optional consent message','This message is not mandatory',1,0,'Agree',0,NULL,'2024-06-23 12:30:58','2024-06-23 12:30:58',165,'faca362395a9bf1f4add5370aa6ee67d',1),
+(11,0,'Another consent','Mandatory consent',2,0,'Agree',0,NULL,'2024-06-23 12:47:07','2024-06-23 12:47:07',165,'da35ed97b7014ba1a8f456c47e0f54ba',1);
 /*!40000 ALTER TABLE `au_texts` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_topics
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_topics`
+--
 
 DROP TABLE IF EXISTS `au_topics`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_topics` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id of the topic',
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of topic',
@@ -2428,27 +3554,30 @@ CREATE TABLE `au_topics` (
   `phase_duration_3` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   `phase_duration_4` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=478 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_topics`
+--
 
 LOCK TABLES `au_topics` WRITE;
 /*!40000 ALTER TABLE `au_topics` DISABLE KEYS */;
-
-INSERT INTO `au_topics` (`id`, `name`, `description_public`, `description_internal`, `status`, `order_importance`, `created`, `last_update`, `hash_id`, `updater_id`, `room_id`, `phase_id`, `wild_ideas_enabled`, `publishing_date`, `phase_duration_0`, `phase_duration_1`, `phase_duration_2`, `phase_duration_3`, `phase_duration_4`)
-VALUES
-	(472,'Green Innovations Vault','Ideas aimed at reducing our environmental footprint, promoting recycling initiatives, sustainable energy projects, and conservation efforts.','Internal description?',1,10,'2024-06-24 21:51:34','2024-06-24 21:51:34','7ba1cc8d79a7cb7457427a5254f69d41',165,106,10,1,NULL,14,14,14,14,14),
-	(473,'Tech Frontier','New apps, digital learning tools, robotics projects, smart solutions for the school, and advancements in virtual reality or augmented reality.','Internal description?',1,10,'2024-06-24 21:52:11','2024-06-24 21:52:11','ea45d51cb116ce44f5e69e992393146f',165,106,20,1,NULL,14,14,14,14,14),
-	(474,'Creative Canvas','Imaginative ideas spanning visual arts, music performances, theater productions, literary works and other art expression.','',1,10,'2024-06-24 21:53:20','2024-06-30 12:31:12','d2c9fb9871033f36407ab0bcf0e676a3',165,106,30,1,NULL,14,14,14,14,14),
-	(475,'Service Heart','Proposals for volunteer programs, fundraising events, social justice initiatives, outreach campaigns, and projects aimed at improving the well-being of others.','Internal description?',1,10,'2024-06-24 21:54:04','2024-06-24 21:54:04','aacc93c0cdabb2bf4106f9f1ce3bf2b5',165,106,40,1,NULL,14,14,14,14,14);
-
+INSERT INTO `au_topics` VALUES
+(472,'Green Innovations Vault','Ideas aimed at reducing our environmental footprint, promoting recycling initiatives, sustainable energy projects, and conservation efforts.','Internal description?',1,10,'2024-06-24 21:51:34','2024-06-24 21:51:34','7ba1cc8d79a7cb7457427a5254f69d41',165,106,10,1,NULL,14,14,14,14,14),
+(473,'Tech Frontier','New apps, digital learning tools, robotics projects, smart solutions for the school, and advancements in virtual reality or augmented reality.','',1,10,'2024-06-24 21:52:11','2024-09-07 17:27:25','ea45d51cb116ce44f5e69e992393146f',165,106,20,1,NULL,14,14,14,14,14),
+(474,'Creative Canvas','Imaginative ideas spanning visual arts, music performances, theater productions, literary works and other art expression.','',1,10,'2024-06-24 21:53:20','2024-09-07 17:24:00','d2c9fb9871033f36407ab0bcf0e676a3',165,106,30,1,NULL,14,14,14,14,14),
+(475,'Service Heart','Proposals for volunteer programs, fundraising events, social justice initiatives, outreach campaigns, and projects aimed at improving the well-being of others.','Internal description?',1,10,'2024-06-24 21:54:04','2024-06-24 21:54:04','aacc93c0cdabb2bf4106f9f1ce3bf2b5',165,106,40,1,NULL,14,14,14,14,14);
 /*!40000 ALTER TABLE `au_topics` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_triggers
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_triggers`
+--
 
 DROP TABLE IF EXISTS `au_triggers`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_triggers` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `trigger_id` int(11) DEFAULT NULL COMMENT 'id of the trigger',
@@ -2462,14 +3591,24 @@ CREATE TABLE `au_triggers` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the last updater',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_triggers`
+--
 
+LOCK TABLES `au_triggers` WRITE;
+/*!40000 ALTER TABLE `au_triggers` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_triggers` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_user_levels
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_user_levels`
+--
 
 DROP TABLE IF EXISTS `au_user_levels`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_user_levels` (
   `level` int(11) NOT NULL COMMENT 'id of level',
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of level',
@@ -2477,45 +3616,31 @@ CREATE TABLE `au_user_levels` (
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active',
   PRIMARY KEY (`level`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_user_levels`
+--
 
 LOCK TABLES `au_user_levels` WRITE;
 /*!40000 ALTER TABLE `au_user_levels` DISABLE KEYS */;
-
-INSERT INTO `au_user_levels` (`level`, `name`, `description`, `status`)
-VALUES
-	(10,'Guest','Read only',1),
-	(20,'Basic','Read, Create Ideas',1),
-	(30,'Moderator','Read ',1),
-	(40,'Super Moderator','',1),
-	(50,'Admin',' ',1),
-	(60,'Tech admin','',1);
-
+INSERT INTO `au_user_levels` VALUES
+(10,'Guest','Read only',1),
+(20,'Basic','Read, Create Ideas',1),
+(30,'Moderator','Read ',1),
+(40,'Super Moderator','',1),
+(50,'Admin',' ',1),
+(60,'Tech admin','',1);
 /*!40000 ALTER TABLE `au_user_levels` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_userlevel_methods
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_userlevel_methods`;
-
-CREATE TABLE `au_userlevel_methods` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `method_name` text DEFAULT NULL COMMENT 'Name of the method',
-  `user_level` int(11) DEFAULT NULL COMMENT 'Minimum userlevel needed to use method',
-  `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active',
-  `class` text DEFAULT NULL COMMENT 'class where method is found',
-  `info` text DEFAULT NULL COMMENT 'extra info',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
-
-# Tabellen-Dump au_users_basedata
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_users_basedata`
+--
 
 DROP TABLE IF EXISTS `au_users_basedata`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_users_basedata` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `realname` varchar(2048) DEFAULT NULL COMMENT 'real name of the user',
@@ -2545,31 +3670,34 @@ CREATE TABLE `au_users_basedata` (
   `consents_given` int(11) DEFAULT 0 COMMENT 'consents given',
   `consents_needed` int(11) DEFAULT 0 COMMENT 'needed consents',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=271 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_users_basedata`
+--
 
 LOCK TABLES `au_users_basedata` WRITE;
 /*!40000 ALTER TABLE `au_users_basedata` DISABLE KEYS */;
-
-INSERT INTO `au_users_basedata` (`id`, `realname`, `displayname`, `username`, `email`, `pw`, `position`, `hash_id`, `about_me`, `registration_status`, `status`, `created`, `last_update`, `updater_id`, `bi`, `userlevel`, `infinite_votes`, `last_login`, `presence`, `absent_until`, `auto_delegation`, `trustee_id`, `o1`, `o2`, `o3`, `consents_given`, `consents_needed`)
-VALUES
-	(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','0',NULL,1,'2023-06-17 14:58:43','2024-07-17 16:37:09',0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-07-16 10:10:44',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3),
-	(264,'Albrecht Durer','durer','adurer','adurer@aula.de','$2y$10$1NNLacyzYP3zI5Ipy1FgOOxbyP9Ezhuch3OkT5uSWIdRBaafJYpS2',NULL,'940ec2b51215d712b2228989e9d04863','description?',NULL,1,'2024-07-03 16:31:19','2024-07-17 16:37:09',165,'d47b6ae7477f77ac3c5ff48d0ca8cded',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,-3),
-	(265,'Alfred Doblin','doblin','adoblin','adoblin@aula.de','$2y$10$/4NX2p3PEK4YkXVrUHCfiOJL7Jve2kJzP21qMeTsJX5uQ/SjgLIV6',NULL,'599cf1b62ab5ac0b1b3facbd5f08c215','description?',NULL,1,'2024-07-03 16:32:37','2024-07-17 16:37:09',165,'4347d0beb442602471ae29cd56a73d9e',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,-3),
-	(266,'Friedrich Nietzsche','zaratustra','fnietzsche','fnietzsche@aula.de','$2y$10$YTH2z9ucipRCHxvqAE.Q3Oaj1/KF0r0u2Roflx.DNZVyNUXvOjzLe',NULL,'a50a9bb4f3f792eb7ea94f05629f0cc1','description?',NULL,1,'2024-07-03 16:33:24','2024-07-17 16:37:09',165,'e6d4d10df940311f3642f0bd7e19b22e',10,NULL,NULL,1,NULL,0,NULL,102,102,122,0,-3),
-	(267,'Marlene Dietrich','merlene','mdietrich','mdietrich@aula.de','$2y$10$vi3.uIrXyLj4vOQi87GWuegNQ13CLucA.SMYziQvCqvUaJypJu74u',NULL,'c4c1cdcdebf21ea35097c3137dc9c405','description?',NULL,1,'2024-07-03 16:34:58','2024-07-17 16:37:09',165,'5c6b5df6b09cfc0ee7dabaa8014aae6c',10,NULL,NULL,1,NULL,0,NULL,109,109,109,0,-3),
-	(268,'Hannah Arendt','hannah','harendt','harendt@aula.de','$2y$10$nThWaeYj9QdPzDVk5Hcsme3mrOKVsH9/y2acEWe3YyLkuaTzSqYvG',NULL,'67bb4e8a810b2d123b3172e75c69c57d','description?',NULL,1,'2024-07-03 16:35:38','2024-07-17 16:37:09',165,'cfa5a4515d77172fee99e37d30216efe',10,NULL,NULL,1,NULL,0,NULL,104,104,104,0,-3),
-	(269,'Zazie Beetz','Vanessa','zbeetz','zbeetz@aula.de','$2y$10$IOb9eH2qv7OkSj1yP7ySretynqD/nLY9WTPPVmcp9riuUF9swCmUG',NULL,'33908f14d6f6693ba059ffcfdc618e4d','description?',NULL,1,'2024-07-03 16:36:51','2024-07-17 16:37:09',165,'ee377903e5d1311d7f5f30bee4bfed33',10,NULL,NULL,1,NULL,0,NULL,122,122,118,0,-3),
-	(270,'Nastassja Kinski','nk','nkinski','nkinski@aula.de','$2y$10$hID/c4EKc7ntojB770cbFuqvQ24IqHz6v0rtC7f3WNc6D0BQyUIGK',NULL,'77993b028df7e814c3a20d17be57511c','description?',NULL,1,'2024-07-03 16:37:53','2024-07-17 16:37:09',165,'279c9e41c5082bdf3f3b4bcf699edbb1',10,NULL,NULL,1,NULL,0,NULL,110,110,110,0,-3);
-
+INSERT INTO `au_users_basedata` VALUES
+(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','0',NULL,1,'2023-06-17 14:58:43','2024-09-12 17:02:49',0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-09-12 17:02:49',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3),
+(264,'Albrecht Durer','durer','adurer','adurer@aula.de','$2y$10$1NNLacyzYP3zI5Ipy1FgOOxbyP9Ezhuch3OkT5uSWIdRBaafJYpS2',NULL,'940ec2b51215d712b2228989e9d04863','description?',NULL,1,'2024-07-03 16:31:19','2024-07-17 16:37:09',165,'d47b6ae7477f77ac3c5ff48d0ca8cded',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,-3),
+(265,'Alfred Doblin','doblin','adoblin','adoblin@aula.de','$2y$10$/4NX2p3PEK4YkXVrUHCfiOJL7Jve2kJzP21qMeTsJX5uQ/SjgLIV6',NULL,'599cf1b62ab5ac0b1b3facbd5f08c215','description?',NULL,1,'2024-07-03 16:32:37','2024-07-17 16:37:09',165,'4347d0beb442602471ae29cd56a73d9e',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,-3),
+(266,'Friedrich Nietzsche','zaratustra','fnietzsche','fnietzsche@aula.de','$2y$10$YTH2z9ucipRCHxvqAE.Q3Oaj1/KF0r0u2Roflx.DNZVyNUXvOjzLe',NULL,'a50a9bb4f3f792eb7ea94f05629f0cc1','description?',NULL,1,'2024-07-03 16:33:24','2024-09-12 17:00:06',165,'e6d4d10df940311f3642f0bd7e19b22e',60,NULL,'2024-09-12 17:00:06',1,NULL,0,NULL,102,102,122,0,-3),
+(267,'Marlene Dietrich','merlene','mdietrich','mdietrich@aula.de','$2y$10$vi3.uIrXyLj4vOQi87GWuegNQ13CLucA.SMYziQvCqvUaJypJu74u',NULL,'c4c1cdcdebf21ea35097c3137dc9c405','description?',NULL,1,'2024-07-03 16:34:58','2024-07-17 16:37:09',165,'5c6b5df6b09cfc0ee7dabaa8014aae6c',10,NULL,NULL,1,NULL,0,NULL,109,109,109,0,-3),
+(268,'Hannah Arendt','hannah','harendt','harendt@aula.de','$2y$10$nThWaeYj9QdPzDVk5Hcsme3mrOKVsH9/y2acEWe3YyLkuaTzSqYvG',NULL,'67bb4e8a810b2d123b3172e75c69c57d','description?',NULL,1,'2024-07-03 16:35:38','2024-07-17 16:37:09',165,'cfa5a4515d77172fee99e37d30216efe',10,NULL,NULL,1,NULL,0,NULL,104,104,104,0,-3),
+(269,'Zazie Beetz','Vanessa','zbeetz','zbeetz@aula.de','$2y$10$IOb9eH2qv7OkSj1yP7ySretynqD/nLY9WTPPVmcp9riuUF9swCmUG',NULL,'33908f14d6f6693ba059ffcfdc618e4d','description?',NULL,1,'2024-07-03 16:36:51','2024-07-17 16:37:09',165,'ee377903e5d1311d7f5f30bee4bfed33',10,NULL,NULL,1,NULL,0,NULL,122,122,118,0,-3),
+(270,'Nastassja Kinski','nk','nkinski','nkinski@aula.de','$2y$10$hID/c4EKc7ntojB770cbFuqvQ24IqHz6v0rtC7f3WNc6D0BQyUIGK',NULL,'77993b028df7e814c3a20d17be57511c','description?',NULL,1,'2024-07-03 16:37:53','2024-07-17 16:37:09',165,'279c9e41c5082bdf3f3b4bcf699edbb1',10,NULL,NULL,1,NULL,0,NULL,110,110,110,0,-3);
 /*!40000 ALTER TABLE `au_users_basedata` ENABLE KEYS */;
 UNLOCK TABLES;
 
-
-# Tabellen-Dump au_users_settings
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_users_settings`
+--
 
 DROP TABLE IF EXISTS `au_users_settings`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_users_settings` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL COMMENT 'id of the user',
@@ -2580,14 +3708,24 @@ CREATE TABLE `au_users_settings` (
   `external_service_id` int(11) DEFAULT NULL COMMENT 'id of the used service for authentication',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `au_users_settings`
+--
 
+LOCK TABLES `au_users_settings` WRITE;
+/*!40000 ALTER TABLE `au_users_settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `au_users_settings` ENABLE KEYS */;
+UNLOCK TABLES;
 
-# Tabellen-Dump au_votes
-# ------------------------------------------------------------
+--
+-- Table structure for table `au_votes`
+--
 
 DROP TABLE IF EXISTS `au_votes`;
-
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `au_votes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL COMMENT 'id of voting user',
@@ -2601,26 +3739,30 @@ CREATE TABLE `au_votes` (
   `number_of_delegations` int(11) DEFAULT NULL COMMENT 'number of delegated votes included',
   `comment` varchar(2048) DEFAULT NULL COMMENT 'Comment that the user added to a vote he did',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=149 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `au_votes`
+--
 
 LOCK TABLES `au_votes` WRITE;
 /*!40000 ALTER TABLE `au_votes` DISABLE KEYS */;
-
-INSERT INTO `au_votes` (`id`, `user_id`, `idea_id`, `vote_value`, `status`, `created`, `last_update`, `hash_id`, `vote_weight`, `number_of_delegations`, `comment`)
-VALUES
-	(111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,''),
-	(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,''),
-	(144,165,263,1,1,'2024-07-17 09:30:30','2024-07-17 09:30:30','1e77f623fec0bca95a01fa60e32ea967',1,0,''),
-	(148,165,264,0,1,'2024-07-23 16:30:29','2024-07-23 16:30:29','20e34c8db6e1e2b9034e052c63694587',1,0,'');
-
+INSERT INTO `au_votes` VALUES
+(111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,''),
+(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,''),
+(144,165,263,1,1,'2024-07-17 09:30:30','2024-07-17 09:30:30','1e77f623fec0bca95a01fa60e32ea967',1,0,''),
+(148,165,264,0,1,'2024-07-23 16:30:29','2024-07-23 16:30:29','20e34c8db6e1e2b9034e052c63694587',1,0,'');
 /*!40000 ALTER TABLE `au_votes` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
-
-
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
+
+-- Dump completed on 2024-09-13  8:51:06
