@@ -10,11 +10,11 @@ $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
 $jwt = new JWT($jwtKeyFile);
+$settings = new Settings($db, $crypt, $syslog);
 
 $json = file_get_contents('php://input');
 $input = json_decode($json, true);
 $check_jwt = $jwt->check_jwt();
-
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -24,9 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 if ($check_jwt) {
-
   $jwt_payload = $jwt->payload();
   $user_id = $jwt_payload->user_id;
+  $userlevel = $jwt_payload->userlevel;
+  
+  $current_settings = $settings->getInstanceSettings();
+  if ($current_settings["data"]["online_mode"] != 1 && $userlevel < 50) {
+    echo json_encode(["success" => "false",
+    "online_mode" => $current_settings["data"]["online_mode"]]);
+    return;
+  }
 
   if (array_key_exists("model", $input)) {
     $model_name = $input["model"];

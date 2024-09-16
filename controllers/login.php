@@ -10,6 +10,7 @@ $db = new Database();
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog($db); // systemlog
 $user = new User($db, $crypt, $syslog);
+$settings = new Settings($db, $crypt, $syslog);
 
 $jwt = new JWT($jwtKeyFile);
 
@@ -20,8 +21,16 @@ $json = file_get_contents('php://input');
 // Converts it into a PHP object
 $data = json_decode($json);
 
+
 $loginResult = $user->checkLogin($data->username, $data->password);
 if ($loginResult["success"] && $loginResult["error_code"] == 0) {
+  $current_settings = $settings->getInstanceSettings();
+  if ($current_settings["data"]["online_mode"] != 1 && $loginResult["data"]["userlevel"] < 50) {
+    echo json_encode(["success" => "false",
+    "online_mode" => $current_settings["data"]["online_mode"]]);
+    return;
+  }
+
   $jwt_token = $jwt->gen_jwt($loginResult["data"]);
   echo json_encode(['JWT' => $jwt_token, "success" => true]);
 } else {
