@@ -32,8 +32,7 @@ if ($check_jwt) {
   if ($current_settings["data"]["online_mode"] != 1 && $userlevel < 50) {
     echo json_encode([
       "success" => false,
-      "online_mode" => $current_settings["data"]["online_mode"],
-      "level" => $userlevel
+      "online_mode" => $current_settings["data"]["online_mode"]
     ]);
     return;
   }
