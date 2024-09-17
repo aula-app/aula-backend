@@ -709,7 +709,7 @@ class Message
     /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
     $headline is the headline of the mesage, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
     target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
-    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report )
+    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report, 5= requests )
     publish_date (datetime) specifies the date when this message should be published Format DB datetime (2023-06-14 14:21:03)
     level_of_detail (int) specifies how detailed the scope of this message is (low = general, high = very specific)
     only_on_dashboard (int 0,1) specifies if the message should only be displayed on the dashboard (1) or also pushed to the user (email / push notification)

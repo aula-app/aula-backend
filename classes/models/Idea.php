@@ -49,14 +49,16 @@ class Idea
       case 7:
         return "room_id";
       case 8:
-        return "sum_likes";
+        return "user_id";
       case 9:
-        return "sum_votes";
+        return "sum_likes";
       case 10:
-        return "order_importance";
+        return "sum_votes";
       case 11:
-        return "approved";
+        return "order_importance";
       case 12:
+        return "approved";
+      case 13:
         return "approval_comment";
 
       default:
