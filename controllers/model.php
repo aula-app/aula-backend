@@ -26,13 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 if ($check_jwt) {
   $jwt_payload = $jwt->payload();
   $user_id = $jwt_payload->user_id;
-  $userlevel = $jwt_payload->userlevel;
+  $userlevel = $jwt_payload->user_level;
 
   $current_settings = $settings->getInstanceSettings();
   if ($current_settings["data"]["online_mode"] != 1 && $userlevel < 50) {
     echo json_encode([
       "success" => false,
-      "online_mode" => $current_settings["data"]["online_mode"]
+      "online_mode" => $current_settings["data"]["online_mode"],
+      "level" => $userlevel
     ]);
     return;
   }
