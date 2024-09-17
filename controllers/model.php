@@ -1,14 +1,14 @@
 <?php
 
-require_once ('../base_config.php');
-require_once ('../error_msg.php');
-require ('../functions.php');
-require_once ($baseHelperDir.'Crypt.php');
-require_once ($baseHelperDir.'JWT.php');
+require_once('../base_config.php');
+require_once('../error_msg.php');
+require('../functions.php');
+require_once($baseHelperDir . 'Crypt.php');
+require_once($baseHelperDir . 'JWT.php');
 
 $db = new Database();
 $crypt = new Crypt($cryptFile);
-$syslog = new Systemlog ($db);
+$syslog = new Systemlog($db);
 $jwt = new JWT($jwtKeyFile);
 $settings = new Settings($db, $crypt, $syslog);
 
@@ -19,19 +19,21 @@ $check_jwt = $jwt->check_jwt();
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    return;
+  http_response_code(200);
+  return;
 }
 
 if ($check_jwt) {
   $jwt_payload = $jwt->payload();
   $user_id = $jwt_payload->user_id;
   $userlevel = $jwt_payload->userlevel;
-  
+
   $current_settings = $settings->getInstanceSettings();
   if ($current_settings["data"]["online_mode"] != 1 && $userlevel < 50) {
-    echo json_encode(["success" => "false",
-    "online_mode" => $current_settings["data"]["online_mode"]]);
+    echo json_encode([
+      "success" => false,
+      "online_mode" => $current_settings["data"]["online_mode"]
+    ]);
     return;
   }
 
@@ -62,7 +64,7 @@ if ($check_jwt) {
 
   if ($data['error_code'] == 1) {
     http_response_code(409);
-    echo json_encode(['success' => false, 'error' => 'Error fetching data for '.$model_name, 'detail' => $data]);
+    echo json_encode(['success' => false, 'error' => 'Error fetching data for ' . $model_name, 'detail' => $data]);
     return;
   } else if ($data['success']) {
     http_response_code(200);
@@ -95,7 +97,7 @@ if ($check_jwt) {
         return;
       }
     }
-      echo json_encode(['success' => true, 'count' => $data['count'], 'error_code' => $data['error_code'], 'data' => $data['data']]);
+    echo json_encode(['success' => true, 'count' => $data['count'], 'error_code' => $data['error_code'], 'data' => $data['data']]);
   } else {
     echo json_encode(['success' => true, 'count' => $data['count'], 'error_code' => $data['error_code'], 'data' => $data['data']]);
   }
