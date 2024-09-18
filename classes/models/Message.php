@@ -485,7 +485,7 @@ class Message
     }
   }// end function
 
-  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $room_id = 0, $user_id = 0, $creator_id = 0)
+  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $target_id = 0, $room_id = 0, $user_id = 0, $creator_id = 0)
   {
     /* returns message list (associative array) with start and limit provided
     msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report )
@@ -519,9 +519,26 @@ class Message
       $limit_string = "";
       $limit_active = false;
     }
+
+
     if ($target_group > 0) {
       // if a target group is set then add to where clause
-      $extra_where .= " AND target_group = " . $target_group;
+      $extra_where .= " AND (target_group = " . $target_group;
+    }
+
+    if ($target_id > 0) {
+      if ($target_group > 0) {
+        $extra_where .= " AND (";
+      } else {
+        $extra_where .= " OR ";
+      }
+      // if a target group is set then add to where clause
+      $extra_where .= "target_id = " . $target_id;
+    }
+
+    if ($target_group > 0 || $target_id > 0) {
+      // if a target group is set then add to where clause
+      $extra_where .= ")";
     }
 
     if ($user_id > 0) {
