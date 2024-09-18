@@ -956,7 +956,7 @@ class Idea
   public function getIdeaCategory($idea_id)
   {
     /* returns idea base data for a specified db id */
-    $categories = $this->getCategories(-1, -1, -1, $idea_id, -1, 3, 0, 0, "");
+    $categories = $this->getCategories(-1, -1, -1, $idea_id, -1, 0, 0, 0, "");
 
     if ($categories['success'] == true) {
       $returnvalue['success'] = true; // set return value

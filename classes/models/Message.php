@@ -528,9 +528,9 @@ class Message
 
     if ($target_id > 0) {
       if ($target_group > 0) {
-        $extra_where .= " AND (";
-      } else {
         $extra_where .= " OR ";
+      } else {
+        $extra_where .= " AND (";
       }
       // if a target group is set then add to where clause
       $extra_where .= "target_id = " . $target_id;
@@ -538,7 +538,7 @@ class Message
 
     if ($target_group > 0 || $target_id > 0) {
       // if a target group is set then add to where clause
-      $extra_where .= ")";
+      $extra_where .= ") ";
     }
 
     if ($user_id > 0) {
