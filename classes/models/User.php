@@ -2715,6 +2715,50 @@ class User
     }
   }// end function
 
+  public function setUserUsername($user_id, $username, $updater_id = 0)
+  {
+    /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
+     displayname = shown name of the user in the system
+    */
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET username= :username, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+    // bind all VALUES
+    $this->db->bind(':username', $this->crypt->encrypt($username));
+    $this->db->bind(':userid', $user_id); // user that is updated
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+    $err = false; // set error variable to false
+
+    try {
+      $action = $this->db->execute(); // do the query
+
+    } catch (Exception $e) {
+
+      $err = true;
+    }
+    if (!$err) {
+      $this->syslog->addSystemEvent(0, "User username name changed " . $user_id . " by " . $updater_id, 0, "", 1);
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = intval($this->db->rowCount()); // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+    } else {
+      //$this->syslog->addSystemEvent(1, "Error changing display name of user ".$user_id." by ".$updater_id, 0, "", 1);
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+  }// end function
+
   public function setUserPW($user_id, $pw, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
