@@ -59,6 +59,8 @@ class Topic
         return "phase_duration_2";
       case 13:
         return "phase_duration_3";
+      case 14:
+        return "phase_duration_4";
       default:
         return "last_update";
     }
