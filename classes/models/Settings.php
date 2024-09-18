@@ -628,7 +628,7 @@ class Settings
     $custom_field1_name = trim($custom_field1_name);
     $custom_field2_name = trim($custom_field2_name);
 
-    if (strlen($name) > 1) {
+    if (strlen($custom_field1_name) > 0) {
       $updater_id = $this->converters->checkUserId($updater_id);
 
       $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET custom_field1_name = :custom_field1_name, custom_field2_name = :custom_field2_name, last_update = NOW(), updater_id = :updater_id ');
