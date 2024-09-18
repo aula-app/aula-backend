@@ -46,8 +46,10 @@ class Topic
       case 6:
         return "description_public";
       case 7:
-        return "room_id";
+        return "description_internal";
       case 8:
+        return "room_id";
+      case 9:
         return "phase_id";
       default:
         return "last_update";
