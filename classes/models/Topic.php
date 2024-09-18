@@ -51,6 +51,14 @@ class Topic
         return "room_id";
       case 9:
         return "phase_id";
+      case 10:
+        return "phase_duration_0";
+      case 11:
+        return "phase_duration_1";
+      case 12:
+        return "phase_duration_2";
+      case 13:
+        return "phase_duration_3";
       default:
         return "last_update";
     }
