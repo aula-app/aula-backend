@@ -265,8 +265,8 @@ class Converters
 
     }
     // get minimum needed level to access method 
-    $stmt = $this->db->query('SELECT user_level FROM ' . $this->db->au_userlevel_methods . ' WHERE method_nane = :method_nane LIMIT 1');
-    $this->db->bind(':method_nane', $method_nane); // bind user_level
+    $stmt = $this->db->query('SELECT user_level FROM ' . $this->db->au_userlevel_methods . ' WHERE method_name = :method_name LIMIT 1');
+    $this->db->bind(':method_name', $method_name); // bind user_level
 
     $level = $this->db->resultSet();
 
@@ -299,6 +299,47 @@ class Converters
     return $returnvalue;
   } // end function
 
+  public function checkRoleAuthorization($user_level, $method_name)
+  {
+    /* checks if a user level is permitted
+     to use method with the name $method_name 
+    returns data = true (ok) or false (not ok) 
+    */
+    
+    // get minimum needed level to access method 
+    $stmt = $this->db->query('SELECT user_level FROM ' . $this->db->au_userlevel_methods . ' WHERE method_name = :method_name LIMIT 1');
+    $this->db->bind(':method_name', $method_name); // bind user_level
+
+    $level = $this->db->resultSet();
+
+    if (count($level) < 1) {
+      # method not existent, default to allow access (true), error code = 3
+      $result_check = true;
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 3; // error code (method not in authorization table)
+      $returnvalue['data'] = $result_check; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+
+      $method_level = intval($level[0]['user_level']);
+
+      if ($user_level == $method_level || $user_level > $method_level) {
+        // user is authorized
+        $result_check = true;
+      } else {
+        $result_check = false;
+      }
+    }
+
+    $returnvalue['success'] = true; // set return value to false
+    $returnvalue['error_code'] = 0; // error code - db error
+    $returnvalue['data'] = $result_check; // returned data
+    $returnvalue['count'] = 1; // returned count of datasets
+
+    return $returnvalue;
+  } // end function
 
   public function getLastDataChange()
   {
