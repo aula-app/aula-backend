@@ -171,7 +171,7 @@ class Settings
   public function setInstanceInfo($name, $description = "", $updater_id = 0)
   {
     // sets name  and description for the instance
-    
+
     // sanitize
     $name = trim($name);
     $description = trim($description);
@@ -226,7 +226,7 @@ class Settings
 
   } // end function
 
-  
+
 
   public function setAllowRegistration($status, $updater_id = 0)
   {
@@ -623,7 +623,7 @@ class Settings
   public function setCustomFields($custom_field1_name, $custom_field2_name = "", $updater_id = 0)
   {
     // sets names for the custom fields
-    
+
     // sanitize
     $custom_field1_name = trim($custom_field1_name);
     $custom_field2_name = trim($custom_field2_name);
@@ -636,7 +636,7 @@ class Settings
       // bind all VALUES
       $this->db->bind(':custom_field1_name', $custom_field1_name);
       $this->db->bind(':custom_field2_name', $custom_field2_name);
-      
+
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
       $err = false; // set error variable to false

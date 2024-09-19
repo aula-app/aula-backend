@@ -55,11 +55,16 @@ class Idea
       case 10:
         return "sum_votes";
       case 11:
-        return "order_importance";
+        return "custom_field1";
       case 12:
-        return "approved";
+        return "custom_field2";
       case 13:
+        return "approved";
+      case 14:
         return "approval_comment";
+      case 15:
+        return "order_importance";
+
 
       default:
         return "last_update";
