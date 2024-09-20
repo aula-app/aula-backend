@@ -219,40 +219,36 @@ class Command
     }
   }// end function
 
-  public function addCommand($cmd_id, $cmd_name, $parameters, $date_start, $updater_id)
+  public function addCommand($cmd_id, $command, $parameters, $date_start, $updater_id)
   {
     /* adds a new command
-    cmd_id is the id of the command (int) => 
-        10 = set online mode
-        20 = delete user
-        30 = delete group
-        40 = user deactivate
-        50 = user activate
-        etc.
-    $cmd_name is a human-readable name for the command (i.e. "activate user")
-
-    parameters is optional json string with parameters (for later use)
-    
-    date_start (format sql date) describes when cmd starts execution 
-
+    cmd_id is the id of the scope (int) =>
+      0 = system
+      10 = users
+      20 = groups
+      etc.
+    $command is the if of the command (int) =>
+      0 = Status
+      5 = delete
+    parameters is optional json string with parameters (for later use) => { value: number, target?: number }
+    date_start (format sql date) describes when cmd starts execution
     target_id describes the target of the action (i.e. user_id for command delete user xy)
-
-    cron job watches for commands and executes them 
+    cron job watches for commands and executes them
 */
 
     //sanitize the vars
     $cmd_id = intval($cmd_id);
-    $cmd_name = trim($cmd_name);
+    $command = intval($command);
     $parameters = trim($parameters);
     $date_start = trim($date_start);
 
     $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_commands . ' (cmd_id, command, date_start, parameters, active, status, created, last_update, updater_id) VALUES (:cmd_id, :cmd_name, :date_start, :parameters, 1, 0,NOW(), NOW(), :updater_id)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_commands . ' (cmd_id, command, date_start, parameters, active, status, created, last_update, updater_id) VALUES (:cmd_id, :command, :date_start, :parameters, 1, 0,NOW(), NOW(), :updater_id)');
     // bind all VALUES
 
     $this->db->bind(':cmd_id', $cmd_id);
-    $this->db->bind(':cmd_name', $cmd_name);
+    $this->db->bind(':command', $command);
     $this->db->bind(':parameters', $parameters);
     $this->db->bind(':date_start', $date_start);
 
@@ -270,7 +266,7 @@ class Command
     if (!$err) {
       $insertid = intval($this->db->lastInsertId());
 
-      $this->syslog->addSystemEvent(0, "Added new command (#" . $cmd_id . " (" . $cmd_name . ")) by: " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Added new command (#" . $cmd_id . " (" . $command . ")) by: " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $insertid; // returned data
