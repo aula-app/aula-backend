@@ -239,6 +239,7 @@ class Command
     $command = trim($command);
     $parameters = trim($parameters);
     $date_start = trim($date_start);
+    // auto set date to midnight for now
     $date_start = date_format(date_create($date_start),"Y-m-d 00:00:00");
 
     $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
