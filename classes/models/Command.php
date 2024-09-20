@@ -239,6 +239,7 @@ class Command
     $command = trim($command);
     $parameters = trim($parameters);
     $date_start = trim($date_start);
+    $date_start = date_format($date_start,"Y-m-d H:i:00");
 
     $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
