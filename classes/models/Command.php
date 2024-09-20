@@ -243,7 +243,7 @@ class Command
     //sanitize the vars
     $cmd_id = intval($cmd_id);
     $cmd_name = trim($cmd_name);
-    $parameters = intval($parameters);
+    $parameters = trim($parameters);
     $date_start = trim($date_start);
 
     $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
