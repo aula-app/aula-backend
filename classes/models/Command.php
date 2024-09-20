@@ -222,14 +222,12 @@ class Command
   public function addCommand($cmd_id, $command, $parameters, $date_start, $updater_id)
   {
     /* adds a new command
-    cmd_id is the id of the scope (int) =>
-      0 = system
-      10 = users
+    cmd_id is the id of the scope (int) + the command (int) =>
+      00 = system       0 => status change
+      10 = users    +   5 => delete
       20 = groups
       etc.
-    $command is the if of the command (int) =>
-      0 = Status
-      5 = delete
+    $command is an human readable format.
     parameters is optional json string with parameters (for later use) => { value: number, target?: number }
     date_start (format sql date) describes when cmd starts execution
     target_id describes the target of the action (i.e. user_id for command delete user xy)
@@ -238,7 +236,7 @@ class Command
 
     //sanitize the vars
     $cmd_id = intval($cmd_id);
-    $command = intval($command);
+    $command = trim($command);
     $parameters = trim($parameters);
     $date_start = trim($date_start);
 
