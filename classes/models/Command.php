@@ -223,9 +223,9 @@ class Command
   {
     /* adds a new command
     cmd_id is the id of the scope (int) + the command (int) =>
-      00 = system       0 => status change
-      10 = users    +   5 => delete
-      20 = groups
+      0 = system       0 => status change
+      1 = users    +   5 => delete
+      2 = groups
       etc.
     $command is an human readable format.
     parameters is optional json string with parameters (for later use) => { value: number, target?: number }
