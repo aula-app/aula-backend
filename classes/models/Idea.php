@@ -1750,7 +1750,7 @@ class Idea
   //public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
 
 
-  public function editIdea($idea_id, $content, $status = 1, $title = "", $votes_available_per_user = 1, $info = "", $order_importance = 10, $room_id = 0, $updater_id = 0, $approved = 0, $approval_comment = "")
+  public function editIdea($idea_id, $content, $status = 1, $title = "", $votes_available_per_user = 1, $info = "", $order_importance = 10, $room_id = 0, $updater_id = 0, $approved = 0, $approval_comment = "", $custom_field1 = "", $custom_field2 = "")
   {
     /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
 
@@ -1770,11 +1770,14 @@ class Idea
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET title = :title, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
     $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
     $this->db->bind(':title', $title); // title only shown in backend
     $this->db->bind(':info', $info); // info only shown in backend
+    $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
+    $this->db->bind(':custom_field2', $custom_field2); // custom field 2
+    
     $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin
     $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
     $this->db->bind(':room_id', $room_id); // room id
@@ -1815,7 +1818,7 @@ class Idea
     }
   }// end function
 
-  public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $customfield1 = "", $customfield2 = "")
+  public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "")
   {
     /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters
      content = actual content of the idea,
@@ -1833,11 +1836,14 @@ class Idea
     $title = trim($title);
     $info = trim($info);
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_ideas . ' (is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_ideas . ' (custom_field1, custom_field2, is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:custom_field1, custom_field2, 0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
     // bind all VALUES
 
     $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
-    $this->db->bind(':title', $title);
+    $this->db->bind(':title', $title); // title of idea
+    $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
+    $this->db->bind(':custom_field2', $custom_field2); // custom field 1 
+    
     $this->db->bind(':status', $status);
     $this->db->bind(':info', $info);
     $this->db->bind(':room_id', $room_id);
