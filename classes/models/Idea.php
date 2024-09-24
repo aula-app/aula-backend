@@ -843,7 +843,7 @@ class Idea
 
   }// end function
 
-  public function getIdeasByTopic($topic_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1)
+  public function getIdeasByTopic($topic_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $info = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -881,6 +881,12 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
+
+    if (strlen ($info) > 0) {
+      // if a info param is set then add to where clause
+      $extra_where .= " AND info = " . $info; // get specific info / status
+    }
+
 
     $orderby_field = $this->db->au_ideas . '.' . $this->getIdeaOrderId($orderby);
 
@@ -1078,7 +1084,7 @@ class Idea
     }
   }// end function getCategories
 
-  public function getIdeasByCategory($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $category_id)
+  public function getIdeasByCategory($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $category_id, $info = "")
   {
     /* returns category list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1116,6 +1122,11 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
+    if (strlen ($info) > 0) {
+      // if a info param is set then add to where clause
+      $extra_where .= " AND info = " . $info; // get specific info / status
+    }
+
 
     $orderby_field = $this->db->au_ideas . '.' . $this->getIdeaOrderId($orderby);
 
@@ -1222,7 +1233,7 @@ class Idea
   } // end function
 
 
-  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $extra_where = "")
+  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $extra_where = "", $info = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1230,6 +1241,7 @@ class Idea
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
+    $info is an optional info parameter passed in where clause
     */
 
     // sanitize
@@ -1263,6 +1275,11 @@ class Idea
       // if a room id is set then add to where clause
       $room_id = $this->converters->checkRoomId($room_id); // auto convert id
       $extra_where .= " AND room_id = " . $room_id; // get specific topics to a room
+    }
+
+    if (strlen ($info) > 0) {
+      // if a info param is set then add to where clause
+      $extra_where .= " AND info = " . $info; // get specific info / status
     }
 
     if ($wild_idea) {
@@ -1433,7 +1450,7 @@ class Idea
   }// end function
 
 
-  public function getIdeasByRoom($room_id, $offset = 0, $limit = 0, $orderby = 4, $asc = 0, $status = -1, $extra_where = "")
+  public function getIdeasByRoom($room_id, $offset = 0, $limit = 0, $orderby = 4, $asc = 0, $status = -1, $extra_where = "", $info = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1468,6 +1485,12 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
+
+    if (strlen ($info) > 0) {
+      // if a info param is set then add to where clause
+      $extra_where .= " AND info = " . $info; // get specific info / status
+    }
+
 
     $orderby_field = $this->getIdeaOrderId($orderby);
 
@@ -1533,7 +1556,7 @@ class Idea
     }
   }// end function
 
-  public function getIdeasByGroup($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $group_id, $room_id = -1)
+  public function getIdeasByGroup($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $group_id, $room_id = -1, $info =  "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1571,6 +1594,11 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
+    if (strlen ($info) > 0) {
+      // if a info param is set then add to where clause
+      $extra_where .= " AND info = " . $info; // get specific info / status
+    }
+
 
     if ($room_id > -1) {
       // specific status selected / -1 = get all status values
@@ -1641,7 +1669,7 @@ class Idea
     }
   }// end function
 
-  public function getIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $room_id = -1)
+  public function getIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $room_id = -1, $info = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1677,6 +1705,12 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
+
+    if (strlen ($info) > 0) {
+      // if a info param is set then add to where clause
+      $extra_where .= " AND info = " . $info; // get specific info / status
+    }
+
 
     if ($room_id > -1) {
       $room_id = $this->converters->checkRoomId($room_id); // auto convert id
@@ -1836,13 +1870,13 @@ class Idea
     $title = trim($title);
     $info = trim($info);
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_ideas . ' (custom_field1, custom_field2, is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:custom_field1, custom_field2, 0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_ideas . ' (custom_field1, custom_field2, is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:custom_field1, :custom_field2, 0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
     // bind all VALUES
 
     $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
     $this->db->bind(':title', $title); // title of idea
     $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
-    $this->db->bind(':custom_field2', $custom_field2); // custom field 1 
+    $this->db->bind(':custom_field2', $custom_field2); // custom field 2 
     
     $this->db->bind(':status', $status);
     $this->db->bind(':info', $info);
