@@ -1787,15 +1787,19 @@ class User
 
     $err = false; // set error variable to false
 
+    $insertid = 0;
+    
     try {
       $action = $this->db->execute(); // do the query
+      $insertid = intval($this->db->lastInsertId());
 
     } catch (Exception $e) {
 
       $err = true;
     }
 
-
+    
+      
     if (!$err) {
       // Send email to new user
       $not_created = true;
@@ -1856,7 +1860,6 @@ class User
 
       $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $realname, $secret, $secret));
 
-      $insertid = intval($this->db->lastInsertId());
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
