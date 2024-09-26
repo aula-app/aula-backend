@@ -60,6 +60,18 @@ if ($check_jwt) {
     $decrypt_fields = [];
   }
 
+  if (method_exists($model, "hasPermissions")) {
+    $permissions = $model->hasPermissions($user_id, $userlevel, $method, $arguments);
+  } else {
+    $permissions = ["allowed" => true];
+  }
+
+  if (!$permissions["allowed"]) {
+    http_response_code(403);
+    echo json_encode(["success" => false, "message" => $permissions["message"]]);
+    return;
+  }  
+
   $data = $model->$method(...$arguments);
 
   if ($data['error_code'] == 1) {

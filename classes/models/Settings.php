@@ -33,6 +33,15 @@ class Settings
     return md5($key);
   }
 
+  public function hasPermissions($user_id, $userlevel, $method, $arguments) 
+  {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
   public function getInstanceSettings()
   {
     /* returns base data for the instance */

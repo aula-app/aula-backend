@@ -37,6 +37,15 @@ class Converters
     return md5($key);
   }
 
+  public function hasPermissions($user_id, $userlevel, $method, $arguments) 
+  {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
   public function getToday()
   {
     $day = strtotime("today", $dt1);
