@@ -1414,7 +1414,7 @@ class User
   }// end function
 
 
-  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $status = -1)
+  public function getUsers($offset, $limit, $room_id = 0, $orderby = 0, $asc = 0, $extra_where = "", $status = -1)
   {
     /* returns userlist (associative array) with start and limit provided
     extra_where = SQL Clause that can be added to where in the query like AND status = 1
@@ -1444,6 +1444,10 @@ class User
       $extra_where .= " AND status = " . $status;
     }
 
+    if ($room_id > 0) {
+      $extra_where .= " AND room_id = :room_id";
+    }
+
     $orderby_field = $this->getUserOrderId($orderby);
 
     switch (intval($asc)) {
@@ -1465,6 +1469,10 @@ class User
       $this->db->bind(':limit', $limit); // bind limit
     }
     // $this->db->bind(':status', $status); // bind status
+
+    if ($room_id > 0) {
+      $this->db->bind(":room_id", $room_id);
+    }
 
     $err = false;
     try {
@@ -1586,7 +1594,7 @@ class User
         $asc_field = "DESC";
     }
 
-    $query = 'SELECT ' . $this->db->au_users_basedata . '.realname, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.id, ' . $this->db->au_users_basedata . '.username, ' . $this->db->au_users_basedata . '.email FROM ' . $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ' . $extra_where;
+    $query = 'SELECT ' . $this->db->au_users_basedata . '.* FROM ' . $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ' . $extra_where;
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
@@ -1597,6 +1605,7 @@ class User
       $rooms = $this->db->resultSet();
 
     } catch (Exception $e) {
+      echo $e;
       $err = true;
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 1; // error code - db error
