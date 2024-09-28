@@ -3656,6 +3656,7 @@ CREATE TABLE `au_users_basedata` (
   `created` datetime DEFAULT NULL COMMENT 'created time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user_id of the updater',
+  `creator_id` int(11) DEFAULT NULL COMMENT 'user_id of the creator',
   `bi` varchar(1024) DEFAULT NULL COMMENT 'blind index',
   `userlevel` int(11) DEFAULT NULL COMMENT 'level of the user (access rights)',
   `infinite_votes` int(11) DEFAULT NULL COMMENT '0=inactive 1= active (this user has infinite votes)',
