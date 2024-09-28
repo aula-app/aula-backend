@@ -71,6 +71,16 @@ class Idea
     }
   }// end function
 
+  public function validSearchField($search_field) {
+    return in_array($search_field, [
+      "title",
+      "content",
+      "custom_field1",
+      "custom_field2",
+      "approval_comment"
+    ]);
+  }
+
   public function getCategoryOrderId($orderby)
   {
     switch (intval($orderby)) {
@@ -1233,7 +1243,7 @@ class Idea
   } // end function
 
 
-  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $extra_where = "", $info = "")
+  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $search_field = "", $search_string = "", $extra_where = "", $info = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1264,6 +1274,16 @@ class Idea
     if ($offset == 0 && $limit == 0) {
       $limit_string = "";
       $limit_active = false;
+    }
+
+    $extra_where = "";
+
+    $search_field_valid = false;
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+      }
     }
 
     // check if a status was set (status > -1 default value)
@@ -1310,6 +1330,10 @@ class Idea
       $this->db->bind(':limit', $limit); // bind limit
     }
 
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%'.$search_text.'%');
+    }
+
     $err = false;
     try {
       $ideas = $this->db->resultSet();
@@ -1340,7 +1364,12 @@ class Idea
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status . $extra_where);
+        $total_datasets;
+        if ($search_field_valid) {
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, $status, $search_field, $search_text);
+        } else {
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status . $extra_where);
+        }
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code

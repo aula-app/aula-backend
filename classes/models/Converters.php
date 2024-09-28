@@ -1196,7 +1196,7 @@ class Converters
     }
   } // end function
 
-  public function getTotalDatasets($table, $extra_where = "")
+  public function getTotalDatasets($table, $extra_where = "", $search_field = "", $search_text = "")
   {
     /* returns the total number of rows with
     extra_where parameter (i.e. $extra_where = "status = 1 AND id >50");
@@ -1208,7 +1208,20 @@ class Converters
       $extra_where = " WHERE " . $extra_where;
     }
 
+    if ($search_field != "") {
+      $append_in_query = "";
+      if ($extra_where == "") {
+        $append_in_query = " WHERE ";
+      } else {
+        $append_in_query = " AND ";
+      }
+      $extra_where .= $append_in_query.$search_field." LIKE :search_text";
+    }
+
     $stmt = $this->db->query('SELECT COUNT(*) as total FROM ' . $table . $extra_where);
+    if ($search_text != "") {
+      $this->db->bind(":search_text", '%'.$search_text.'%');
+    }
     $res = $this->db->resultSet();
     $total_rows = $res[0]['total'];
     return $total_rows;

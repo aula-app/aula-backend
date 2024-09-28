@@ -1525,7 +1525,12 @@ class User
 
 
     } else {
-      $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, "id > 0");
+      $total_datasets;
+      if ($search_field_valid) {
+        $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, "id > 0", $search_field, $search_text);
+      } else {
+        $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, "id > 0");
+      }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $users; // returned data
