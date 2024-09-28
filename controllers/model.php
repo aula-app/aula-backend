@@ -63,6 +63,7 @@ if ($check_jwt) {
   if (method_exists($model, "hasPermissions")) {
     $permissions = $model->hasPermissions($user_id, $userlevel, $method, $arguments);
   } else {
+    // TODO: REMOVE THIS AFTER ALL METHODS HAVE THEIR PROPER PERMISSION CHECKS FUNCTIONS WRITTEN
     $permissions = ["allowed" => true];
   }
 
