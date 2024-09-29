@@ -64,6 +64,108 @@ class Idea
     }
   }
 
+  public function addIdeaToTopicPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other users have access to see all ideas
+    if ($userlevel < 50) {
+       return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+    } else {
+       return ["allowed" => true];
+    }
+  }
+
+  public function setToWinningPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other user roles can set idea to winner.
+    if ($userlevel < 50) {
+       return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+    } else {
+       return ["allowed" => true];
+    }
+  }
+
+  public function setToLosingPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other user roles can set idea to lost.
+    if ($userlevel < 50) {
+       return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+    } else {
+       return ["allowed" => true];
+    }
+  }
+
+  public function voteForIdeaPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if we need to check the phase of the topic first.
+    if ($userlevel < 50) {
+      $user = new User($this->db, $this->crypt, $this->syslog);
+      $idea = new Idea($this->db, $this->crypt, $this->syslog);
+
+      $ideaData = $idea->getIdeaBaseData($arguments["idea_id"]);
+
+      if ($ideaData["success"]) {
+        $userInRoom = $user->userInRoom($user_id, $ideaData["data"]["room_id"]);
+        if ($userInRoom) {
+          return ["allowed" => true];
+        } else {
+          return ["allowed" => false, "message" => "You can't vote ideas outside your room."];
+        }
+      } else {
+        return ["allowed" => false, "message" => "Idea not found."];
+      }
+    } else {
+      return ["allowed" => true];
+    }
+  }
+
+  public function getIdeaVoteStatsPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel < 50) {
+      $user = new User($this->db, $this->crypt, $this->syslog);
+      $idea = new Idea($this->db, $this->crypt, $this->syslog);
+
+      $ideaData = $idea->getIdeaBaseData($arguments["idea_id"]);
+
+      if ($ideaData["success"]) {
+        $userInRoom = $user->userInRoom($user_id, $ideaData["data"]["room_id"]);
+        if ($userInRoom) {
+          return ["allowed" => true];
+        } else {
+          return ["allowed" => false, "message" => "You can't access ideas outside your room."];
+        }
+      } else {
+        return ["allowed" => false, "message" => "Idea not found."];
+      }
+    } else {
+      return ["allowed" => true];
+    }
+  }
+
+  public function getIdeasByTopicPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other users have access to see all ideas
+    if ($userlevel < 50) {
+      $topic = new Topic($this->db, $this->crypt, $this->syslog);
+      $topicData = $topic->getTopicBaseData($arguments["topic_id"]);
+      if ($topicData["success"]) {
+        $user = new User($this->db, $this->crypt, $this->syslog);
+        $userInRoom = $user->userInRoom($user_id, $topicData["data"]["room_id"]);
+        if ($userInRoom) {
+          return ["allowed" => true];
+        } else {
+         return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+        }
+      } else {
+        return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+      }
+    } else {
+      return ["allowed" => true];
+    } 
+  }
+
+  public function getIdeasPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other users have access to see all ideas
+    if ($userlevel < 50) {
+       return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+    } else {
+       return ["allowed" => true];
+    }
+  }
+
   public function getIdeasByRoomPermission($user_id, $userlevel, $method, $arguments) {
     $user = new User($this->db, $this->crypt, $this->syslog);
     $room_id = $arguments["room_id"];
