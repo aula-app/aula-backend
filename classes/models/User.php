@@ -3078,5 +3078,15 @@ class User
 
   }// end function
 
+  public function userInRoom($user_id, $room_id) {
+    $room = new Room($this->db, $this->crypt, $this->syslog);
+    $userRooms = $room->getRoomsByUser($user_id);
+
+    if ($userRooms["success"]) {
+      return in_array($room_id, array_map(function($r) { return $r['id']; }, $userRooms["data"]));
+    } else {
+      return false; 
+    }
+  }
 }
 ?>

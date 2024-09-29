@@ -14,6 +14,7 @@ class Settings
 {
   private $db;
 
+  private $openMethods = ["getInstanceSettings", "getCustomfields"];
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -35,6 +36,14 @@ class Settings
 
   public function hasPermissions($user_id, $userlevel, $method, $arguments) 
   {
+    // TODO: Check if what is written down is correct. If not we will need to 
+    // write a less permissive method to return instance settings
+    // Everyone is able to check the instance settings
+    if (in_array($method, $this->openMethods)) {
+      return ["allowed" => true];
+    }
+
+    // If not an admin, block access
     if ($userlevel >= 50) {
       return ["allowed" => true];
     } else {

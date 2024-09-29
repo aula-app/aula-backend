@@ -8,12 +8,12 @@ if ($allowed_include == 1) {
   exit;
 }
 
-
-
 class Idea
 {
 
   private $db;
+
+  private $openMethods = ["getCategories"];
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -30,6 +30,148 @@ class Idea
     */
     #dele
   }// end function
+
+  public function hasPermissions($user_id, $userlevel, $method, $arguments)
+  {
+    // TODO: Check if what is written down is correct. If not we will need to 
+    // write a less permissive method to return instance settings
+    // Everyone is able to check the instance settings
+    if (in_array($method, $this->openMethods)) {
+      return ["allowed" => true];
+    }
+
+    if (method_exists($this, $method."Permission")) {
+      $methodPermission = $method."Permission";
+      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
+  public function getUpdatesByUserPermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments["user_id"]) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can only get your own updates."];
+    }
+  }
+
+  public function getDashboardByUserPermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments["user_id"]) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can only get your own updates."];
+    }
+  }
+
+  public function getIdeasByRoomPermission($user_id, $userlevel, $method, $arguments) {
+    $user = new User($this->db, $this->crypt, $this->syslog);
+    $room_id = $arguments["room_id"];
+    $userInRoom = $user->userInRoom($user_id, $room_id);
+    
+    if ($userInRoom) {
+        return ["allowed" => true]; 
+    } else {
+        return ["allowed" => false, "message" => "User is not in this room"]; 
+    } 
+  }
+
+  public function getIdeaCategoryPermission($user_id, $userlevel, $method, $arguments) {
+    return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+  }
+
+  public function getIdeaContentPermission($user_id, $userlevel, $method, $arguments) {
+    return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+  }
+
+  public function getIdeaTopicPermission($user_id, $userlevel, $method, $arguments) {
+    return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+  }
+
+  public function getIdeaBaseDataPermission($user_id, $userlevel, $method, $arguments) {
+    return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+  }
+
+  public function getLikeStatusPermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments['user_id']) {
+      return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "You can't check other users like status"]; 
+    }
+  }
+
+  public function IdeaAddLikePermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments['user_id']) {
+      return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "You can't check other users like status"]; 
+    }
+  }
+
+  public function getVoteValuePermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments['user_id']) {
+      return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "You can't check other users like status"]; 
+    }
+  }
+
+  public function userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments) {
+    $idea = $this->getIdeaBaseData($arguments["idea_id"]);
+  
+    if ($idea["success"]) {
+      $user = new User($this->db, $this->crypt, $this->syslog);
+      $userInRoom = $user->userInRoom($user_id, $idea["data"]["room_id"]);
+  
+      if ($userInRoom) {
+          return ["allowed" => true]; 
+      } else {
+          return ["allowed" => false, "message" => "User is not in this room."]; 
+      } 
+    } else {
+        return ["allowed" => false, "message" => "Idea not found."]; 
+    }
+  }
+
+  public function editIdeaPermission($user_id, $userlevel, $method, $arguments) {
+     if ($user_id == $arguments["updater_id"]) {
+      $idea = $this->getIdeaBaseData($arguments["idea_id"]);
+
+      if ($idea['success']) {
+        if ($userlevel < 50) {
+          if ($user_id == $idea["data"]["user_id"])  {
+            return ["allowed" => true];
+          } else {
+           return ["allowed" => false, "message" => "Can't edit other users ideas."];
+          }
+        } else {
+          return ["allowed" => true];  
+        }
+      } else {
+         return ["allowed" => false, "message" => "Idea not found."]; 
+      }
+     } else {
+         return ["allowed" => false, "message" => "updater_id for a new Idea must be equal user id doing the request."]; 
+     }
+  }
+
+  public function addIdeaPermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments["user_id"]) {
+      if ($user_id == $arguments["updater_id"]) {
+        $user = new User($this->db, $this->crypt, $this->syslog);
+        $userInRoom = $user->userInRoom($user_id, $arguments["room_id"]);
+        if ($userInRoom) {
+           return ["allowed" => true]; 
+        } else {
+           return ["allowed" => false, "message" => "User is not in this room."]; 
+        }     
+      } else {
+        return ["allowed" => false, "message" => "updater_id for a new Idea must be equal user id doing the request."]; 
+      }
+    } else {
+      return ["allowed" => false, "message" => "Creating Ideas for other users is not allowed."]; 
+    }
+  }
 
   public function getIdeaOrderId($orderby)
   {
@@ -95,7 +237,7 @@ class Idea
   {
     /* returns idea base data for a specified db id */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-    $stmt = $this->db->query('SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.custom_field1, ' . $this->db->au_ideas . '.custom_field2, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
+    $stmt = $this->db->query('SELECT '. $this->db->au_ideas . '.user_id, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.custom_field1, ' . $this->db->au_ideas . '.custom_field2, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
 
     $this->db->bind(':id', $idea_id); // bind idea id
     $ideas = $this->db->resultSet();
@@ -1804,17 +1946,26 @@ class Idea
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $update_query = 'UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id';
+  
+    if ($room_id != 0) {
+      $update_query .= ', room_id = :room_id';
+    }
+
+    $stmt = $this->db->query($update_query.' WHERE id= :idea_id');
     // bind all VALUES
     $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
     $this->db->bind(':title', $title); // title only shown in backend
     $this->db->bind(':info', $info); // info only shown in backend
-    $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
+    $this->db->bind(':custom_field1', $custom_field1); // custom field 1
     $this->db->bind(':custom_field2', $custom_field2); // custom field 2
-    
+
     $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin
     $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
-    $this->db->bind(':room_id', $room_id); // room id
+
+    if ($room_id != 0)
+      $this->db->bind(':room_id', $room_id); // room id
+
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
     $this->db->bind(':order_importance', $order_importance); // order for display in frontend
     $this->db->bind(':approved', $approved); // order for display in frontend
@@ -1875,9 +2026,9 @@ class Idea
 
     $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
     $this->db->bind(':title', $title); // title of idea
-    $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
-    $this->db->bind(':custom_field2', $custom_field2); // custom field 2 
-    
+    $this->db->bind(':custom_field1', $custom_field1); // custom field 1
+    $this->db->bind(':custom_field2', $custom_field2); // custom field 2
+
     $this->db->bind(':status', $status);
     $this->db->bind(':info', $info);
     $this->db->bind(':room_id', $room_id);
