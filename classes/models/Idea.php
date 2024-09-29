@@ -71,7 +71,8 @@ class Idea
     }
   }// end function
 
-  public function validSearchField($search_field) {
+  public function validSearchField($search_field)
+  {
     return in_array($search_field, [
       "title",
       "content",
@@ -892,7 +893,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1132,7 +1133,7 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1243,7 +1244,7 @@ class Idea
   } // end function
 
 
-  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $search_field = "", $search_string = "", $extra_where = "", $info = "")
+  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $search_field = "", $search_text = "", $extra_where = "", $info = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1282,7 +1283,7 @@ class Idea
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+        $extra_where .= " AND " . $search_field . " LIKE :search_text";
       }
     }
 
@@ -1297,7 +1298,7 @@ class Idea
       $extra_where .= " AND room_id = " . $room_id; // get specific topics to a room
     }
 
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1331,7 +1332,7 @@ class Idea
     }
 
     if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     $err = false;
@@ -1515,7 +1516,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1585,7 +1586,7 @@ class Idea
     }
   }// end function
 
-  public function getIdeasByGroup($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $group_id, $room_id = -1, $info =  "")
+  public function getIdeasByGroup($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $group_id, $room_id = -1, $info = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1623,7 +1624,7 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1735,7 +1736,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1840,7 +1841,7 @@ class Idea
     $this->db->bind(':info', $info); // info only shown in backend
     $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
     $this->db->bind(':custom_field2', $custom_field2); // custom field 2
-    
+
     $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin
     $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
     $this->db->bind(':room_id', $room_id); // room id
@@ -1906,7 +1907,7 @@ class Idea
     $this->db->bind(':title', $title); // title of idea
     $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
     $this->db->bind(':custom_field2', $custom_field2); // custom field 2 
-    
+
     $this->db->bind(':status', $status);
     $this->db->bind(':info', $info);
     $this->db->bind(':room_id', $room_id);
