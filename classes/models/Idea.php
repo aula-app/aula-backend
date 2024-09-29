@@ -92,6 +92,42 @@ class Idea
     return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
   }
 
+  public function addIdeaToCategoryPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel < 50) {
+      if ($user_id == $arguments["updater_id"]) {
+        $idea = $this->getIdeaBaseData($arguments["idea_id"]);
+          if ($idea["success"]) {
+            $user = new User($this->db, $this->crypt, $this->syslog);
+            $userInRoom = $user->userInRoom($user_id, $idea["data"]["room_id"]);
+       
+            if ($userInRoom) {
+              if ($user_id == $idea['data']['user_id']) {
+                return ["allowed" => true]; 
+              } else {
+                return ["allowed" => false, "message" => "You can't add a category for another user idea."]; 
+              }
+            } else {
+              return ["allowed" => false, "message" => "User is not in this room."]; 
+            } 
+          } else {
+            return ["allowed" => false, "message" => "Idea not found."]; 
+        }
+      } else {
+        return ["allowed" => false, "message" => "User is not in this room."]; 
+      }
+    } else {
+        return ["allowed" => true]; 
+    }
+  }
+
+  public function addCategoryPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel < 50) { 
+       return ["allowed" => false, "message" => "Your role is not allowed to create categories/"]; 
+    } else {
+        return ["allowed" => true];
+    }
+  }
+
   public function getLikeStatusPermission($user_id, $userlevel, $method, $arguments) {
     if ($user_id == $arguments['user_id']) {
       return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
