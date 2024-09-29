@@ -1,12 +1,13 @@
 name: copy files 
 
 on: 
-  push
+push:
+  branches:
+    - main
 
 jobs:
   build:
     runs-on: self-hosted
-    if: github.ref == 'refs/heads/master'
     env:
       CI: true
       LOCAL: test
