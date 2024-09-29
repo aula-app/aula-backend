@@ -66,7 +66,8 @@ class Topic
     }
   }// end function
 
-  public function validSearchField($search_field) {
+  public function validSearchField($search_field)
+  {
     return in_array($search_field, [
       "name",
       "description_public",
@@ -101,7 +102,7 @@ class Topic
     $phase_id = intval($phase_id);
     $room_id = $this->converters->checkRoomId($room_id);
 
-    return $this->getTopics($offset, $limit, $orderby, $asc, "", $status, $room_id, $phase_id);
+    return $this->getTopics($offset, $limit, $orderby, $asc, "", $room_id, $phase_id, $status);
   }
 
   public function reportTopic($topic_id, $user_id, $updater_id, $reason = "")
@@ -283,7 +284,7 @@ class Topic
 
 
 
-  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $search_field = "", $search_text = "", $status = 1, $room_id = 0, $phase_id = -1)
+  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $room_id = 0, $phase_id = -1, $status = 1, $search_field = "", $search_text = "")
   {
     /* returns topiclist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -338,7 +339,7 @@ class Topic
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+        $extra_where .= " AND " . $search_field . " LIKE :search_text";
       }
     }
 
