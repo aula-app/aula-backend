@@ -1228,7 +1228,7 @@ class Converters
 
   } // end function
 
-  public function getTotalDatasetsFree($query)
+  public function getTotalDatasetsFree($query, $search_field = "", $search_text = "")
   {
     /* returns the total number of rows with
     $query being the query string without select
@@ -1237,8 +1237,13 @@ class Converters
 
     $query = trim($query);
 
+    $append_in_query = "";
+    if ($search_field != "") {
+      $append_in_query = " AND ".$search_field." LIKE :search_text";
+    }
+
     try {
-      $stmt = $this->db->query($query);
+      $stmt = $this->db->query($query.$append_in_query);
       $res = $this->db->resultSet();
       $total_rows = count($res);
 

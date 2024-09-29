@@ -854,7 +854,7 @@ class Idea
 
   }// end function
 
-  public function getIdeasByTopic($topic_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $info = "")
+  public function getIdeasByTopic($topic_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $info = "", $search_field = "", $search_text = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -897,7 +897,14 @@ class Idea
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
-
+    $search_field_valid = false;
+    $search_where = "";
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $search_where = " AND ".$search_field." LIKE :search_text";   
+      }
+    }
 
     $orderby_field = $this->db->au_ideas . '.' . $this->getIdeaOrderId($orderby);
 
@@ -913,8 +920,8 @@ class Idea
     }
     $select_part = 'SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment FROM ' . $this->db->au_ideas;
     $join = 'INNER JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id)';
-    $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_rel_topics_ideas . '.topic_id= :topic_id ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_rel_topics_ideas . '.topic_id= :topic_id ' . $extra_where ;
+    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit_active) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -922,6 +929,10 @@ class Idea
     }
     //$this->db->bind(':status', $status); // bind status
     $this->db->bind(':topic_id', $topic_id); // bind group id
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%'.$search_text.'%');
+    }
 
     $err = false;
     try {
@@ -946,7 +957,11 @@ class Idea
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":topic_id", $topic_id, $select_part . ' ' . $join . ' ' . $where));
+        if ($search_field_valid) {
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":topic_id", $topic_id, $select_part . ' ' . $join . ' ' . $where), $search_field, $search_text);
+        } else {
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":topic_id", $topic_id, $select_part . ' ' . $join . ' ' . $where));
+        }
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code

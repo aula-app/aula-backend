@@ -61,6 +61,16 @@ class Message
     }
   }// end function
 
+  public function validSearchField($search_field) {
+    return in_array($search_field, [
+        "headline",
+        "msg_type",
+        "target_group",
+        "body",
+    ]);
+  }
+
+
   public function getMessageHashId($message_id)
   {
     /* returns hash_id of an message for a integer message id
@@ -317,11 +327,11 @@ class Message
       return $returnvalue; // return an array (associative) with all the data
     }
   }// end function
-  public function getMessagesByUser($user_id, $publish_date = 0)
+  public function getMessagesByUser($user_id, $publish_date = 0, $search_field = "", $search_text = "")
   {
     // returns all messages for this specific user
     $user_id = $this->converters->checkUserId($user_id);
-    return $this->getMessages(-1, 0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0);
+    return $this->getMessages(-1, 0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0, $search_field, $search_text);
   }
 
   public function getMessagesToReview($user_id = 0, $publish_date = 0)
@@ -485,7 +495,7 @@ class Message
     }
   }// end function
 
-  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $target_id = 0, $room_id = 0, $user_id = 0, $creator_id = 0)
+  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $target_id = 0, $room_id = 0, $user_id = 0, $creator_id = 0, $search_field = "", $search_text = "")
   {
     /* returns message list (associative array) with start and limit provided
     msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report )
@@ -524,6 +534,14 @@ class Message
     if ($target_group > 0) {
       // if a target group is set then add to where clause
       $extra_where .= " AND (target_group = " . $target_group;
+    }
+
+    $search_field_valid = false;
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+      }
     }
 
     if ($target_id > 0) {
@@ -593,6 +611,10 @@ class Message
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
+    }
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%'.$search_text.'%');
     }
 
     $err = false;
