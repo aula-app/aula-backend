@@ -1,9 +1,9 @@
 name: copy files 
 
 on: 
-push:
-  branches:
-    - main
+  push:
+    branches:
+      - main
 
 jobs:
   build:
