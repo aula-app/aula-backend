@@ -1215,7 +1215,7 @@ class Converters
       } else {
         $append_in_query = " AND ";
       }
-      $extra_where .= $append_in_query.$search_field." LIKE :search_text";
+      $extra_where .= $append_in_query.' '.$table.'.'.$search_field." LIKE :search_text";
     }
 
     $stmt = $this->db->query('SELECT COUNT(*) as total FROM ' . $table . $extra_where);
