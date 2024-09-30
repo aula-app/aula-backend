@@ -61,12 +61,14 @@ class Message
     }
   }// end function
 
-  public function validSearchField($search_field) {
+  public function validSearchField($search_field)
+  {
     return in_array($search_field, [
-        "headline",
-        "msg_type",
-        "target_group",
-        "body",
+      "headline",
+      "msg_type",
+      "target_group",
+      "room_id",
+      "body",
     ]);
   }
 
@@ -540,7 +542,7 @@ class Message
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+        $extra_where .= " AND " . $search_field . " LIKE :search_text";
       }
     }
 
@@ -614,7 +616,7 @@ class Message
     }
 
     if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     $err = false;
