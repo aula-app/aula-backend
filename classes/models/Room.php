@@ -48,6 +48,14 @@ class Room
     }
   }// end function
 
+  public function validSearchField($search_field)
+  {
+    return in_array($search_field, [
+      "room_name",
+      "description_public"
+    ]);
+  }
+
   public function getRoomBaseData($room_id)
   {
     /* returns user base data for a specified db id */
@@ -281,7 +289,7 @@ class Room
   }// end function
 
 
-  public function getRooms($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $extra_where = "")
+  public function getRooms($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $search_field = "", $search_text = "")
   {
     /* returns roomlist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -297,6 +305,8 @@ class Room
 
     $limit_string = " LIMIT " . $offset . " , " . $limit;
 
+    // additional conditions for the WHERE clause
+    $extra_where = "";
 
     // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
     if ($offset == 0 && $limit == 0) {
@@ -313,6 +323,15 @@ class Room
       $extra_where .= " AND status = " . $status;
     }
 
+    $search_field_valid = false;
+    $search_where = "";
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $search_where = " AND " . $search_field . " LIKE :search_text";
+      }
+    }
+
     $orderby_field = $this->getRoomOrderId($orderby);
 
     switch (intval($asc)) {
@@ -325,9 +344,12 @@ class Room
       default:
         $asc_field = "DESC";
     }
-
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_rooms . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
-    //$this->db->bind(':status', $status); // bind status
+    $select_part = 'SELECT * FROM ' . $this->db->au_rooms;
+    $where = ' WHERE id > 0 ' . $extra_where;
+    $stmt = $this->db->query($select_part . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%' . $search_text . '%');
+    }
 
     $err = false;
     try {
