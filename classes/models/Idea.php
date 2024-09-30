@@ -1298,7 +1298,7 @@ class Idea
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND " . $search_field . " LIKE :search_text";
+        $extra_where .= " AND ". $this->db->au_ideas .'.'. $search_field . " LIKE :search_text";
       }
     }
 
@@ -1310,7 +1310,7 @@ class Idea
     if ($room_id > 0) {
       // if a room id is set then add to where clause
       $room_id = $this->converters->checkRoomId($room_id); // auto convert id
-      $extra_where .= " AND room_id = " . $room_id; // get specific topics to a room
+      $extra_where .= " AND ". $this->db->au_ideas ."room_id = " . $room_id; // get specific topics to a room
     }
 
     if (strlen($info) > 0) {
@@ -1382,7 +1382,7 @@ class Idea
         // only newly calculate datasets if limits are active
         $total_datasets;
         if ($search_field_valid) {
-          $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, $status, $search_field, $search_text);
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status, $search_field, $search_text);
         } else {
           $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status . $extra_where);
         }
