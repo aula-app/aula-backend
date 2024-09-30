@@ -1204,21 +1204,27 @@ class Converters
     */
     $extra_where = trim($extra_where);
 
-    if (strlen($extra_where) > 0) {
+    if (strlen($extra_where) > 0 && !str_contains($table, 'WHERE')) {
       $extra_where = " WHERE " . $extra_where;
     }
 
     if ($search_field != "") {
       $append_in_query = "";
-      if ($extra_where == "") {
+      if ($extra_where == "" && !str_contains($table, 'WHERE')) {
         $append_in_query = " WHERE ";
       } else {
         $append_in_query = " AND ";
       }
-      $extra_where .= $append_in_query.' '.$table.'.'.$search_field." LIKE :search_text";
+
+      if (!str_contains($table, 'JOIN')) {
+        $extra_where .= $append_in_query.' '.$table.'.'.$search_field." LIKE :search_text";
+      } else {
+        $extra_where .= $append_in_query.' '.$search_field." LIKE :search_text";
+      }
     }
 
     $stmt = $this->db->query('SELECT COUNT(*) as total FROM ' . $table . $extra_where);
+
     if ($search_text != "") {
       $this->db->bind(":search_text", '%'.$search_text.'%');
     }
@@ -1244,6 +1250,7 @@ class Converters
 
     try {
       $stmt = $this->db->query($query.$append_in_query);
+
       $res = $this->db->resultSet();
       $total_rows = count($res);
 

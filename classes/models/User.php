@@ -1621,7 +1621,7 @@ class User
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+        $extra_where .= " AND ". $this->db->au_users_basedata . "." .$search_field." LIKE :search_text";   
       }
     }
 
@@ -1639,14 +1639,15 @@ class User
     }
 
     $query = 'SELECT ' . $this->db->au_users_basedata . '.* FROM ' . $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ' . $extra_where;
-
-    if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
-    }
+    $total_query = $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ';
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
     //$this->db->bind(':status', $status); // bind status
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%'.$search_text.'%');
+    }
 
     $err = false;
     try {
@@ -1676,9 +1677,9 @@ class User
       if ($limit_active) {
         // only newly calculate datasets if limits are active
         if ($search_field_valid) {
-          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $query), $search_field, $search_text);
+          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query), "", $search_field, $search_text );
         } else {
-          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $query));
+          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query));
         }
       }
 
