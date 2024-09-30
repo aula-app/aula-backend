@@ -46,8 +46,31 @@ class Settings
     // If not an admin, block access
     if ($userlevel >= 50) {
       return ["allowed" => true];
+    }
+
+    if (method_exists($this, $method."Permission")) {
+      $methodPermission = $method."Permission";
+      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
     } else {
       return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
+  public function getRoomsPermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($userlevel >= 40) {
+      return ["allowed" => true];
+    } else{
+      return ["allowed" => false, "message" => "You are not allowed to see all rooms."];
+    }
+  }
+
+  public function getRoomsByUserPermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($user_id == $arguments["user_id"]) {
+      return ["allowed" => true];
+    } else{
+      return ["allowed" => false, "message" => "You are not allowed to see other users rooms."];
     }
   }
 
