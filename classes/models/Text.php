@@ -277,10 +277,17 @@ class Text
     }
 
     $search_field_valid = false;
+    $search_query = "";
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+        if ($extra_where == "") {
+          $search_query = " WHERE ";
+        } else {
+           $search_query = " AND ";
+        }
+
+        $search_query .= $this->db->au_texts.".".$search_field." LIKE :search_text";   
       }
     }
 
@@ -330,23 +337,21 @@ class Text
         $asc_field = "DESC";
     }
 
-    if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
-    }
-
     $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
-    if ($limit) {
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . $extra_where . $search_query .' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    if ($limit_active) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
     }
 
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%'.$search_text.'%');
+    }
+
     $err = false;
     try {
       $texts = $this->db->resultSet();
-
-
     } catch (Exception $e) {
       $err = true;
       $returnvalue['success'] = false; // set return value to false
@@ -360,9 +365,9 @@ class Text
     if ($limit_active) {
       // only newly calculate datasets if limits are active
       if ($search_field_valid) {
-        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $status . $extra_where, $search_field, $search_text);
+        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $extra_where, $search_field, $search_text);
       } else {
-        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $status . $extra_where);
+        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $extra_where);
       }
     }
 
