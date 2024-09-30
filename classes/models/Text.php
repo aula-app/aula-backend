@@ -56,6 +56,14 @@ class Text
     }
   }// end function
 
+  public function validSearchField($search_field) {
+    return in_array($search_field, [
+        "headline",
+        "consent_text",
+        "body"
+    ]);
+  }
+
   public function getTextHashId($text_id)
   {
     /* returns hash_id of a text for a integer id
@@ -226,7 +234,7 @@ class Text
     return $ret_value;
   }
 
-  public function getTexts($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $last_update = 0, $location = 0, $creator_id = 0, $user_needs_to_consent = -1, $service_id_consent = -1)
+  public function getTexts($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $last_update = 0, $location = 0, $creator_id = 0, $user_needs_to_consent = -1, $service_id_consent = -1, $search_field = "", $search_text = "")
   {
     /* returns text list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -266,6 +274,21 @@ class Text
         $extra_where = " WHERE ";
       }
       $extra_where .= " location = " . $location; // get specific texts for a certain page (page id)
+    }
+
+    $search_field_valid = false;
+    $search_query = "";
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        if ($extra_where == "") {
+          $search_query = " WHERE ";
+        } else {
+           $search_query = " AND ";
+        }
+
+        $search_query .= $this->db->au_texts.".".$search_field." LIKE :search_text";   
+      }
     }
 
     if ($creator_id > 0) {
@@ -313,19 +336,22 @@ class Text
       default:
         $asc_field = "DESC";
     }
+
     $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
-    if ($limit) {
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . $extra_where . $search_query .' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    if ($limit_active) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
     }
 
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%'.$search_text.'%');
+    }
+
     $err = false;
     try {
       $texts = $this->db->resultSet();
-
-
     } catch (Exception $e) {
       $err = true;
       $returnvalue['success'] = false; // set return value to false
@@ -338,7 +364,11 @@ class Text
     $count_datasets = count($texts);
     if ($limit_active) {
       // only newly calculate datasets if limits are active
-      $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $status . $extra_where);
+      if ($search_field_valid) {
+        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $extra_where, $search_field, $search_text);
+      } else {
+        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $extra_where);
+      }
     }
 
     if ($count_datasets < 1) {

@@ -66,6 +66,15 @@ class Topic
     }
   }// end function
 
+  public function validSearchField($search_field)
+  {
+    return in_array($search_field, [
+      "name",
+      "description_public",
+      "description_internal"
+    ]);
+  }
+
   public function getTopicsByRoom($room_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1)
   {
     /* returns topiclist (associative array) with start and limit provided
@@ -93,7 +102,7 @@ class Topic
     $phase_id = intval($phase_id);
     $room_id = $this->converters->checkRoomId($room_id);
 
-    return $this->getTopics($offset, $limit, $orderby, $asc, "", $status, $room_id, $phase_id);
+    return $this->getTopics($offset, $limit, $orderby, $asc, "", $room_id, $phase_id, $status);
   }
 
   public function reportTopic($topic_id, $user_id, $updater_id, $reason = "")
@@ -275,7 +284,7 @@ class Topic
 
 
 
-  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $status = 1, $room_id = 0, $phase_id = -1)
+  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $room_id = 0, $phase_id = -1, $status = 1, $search_field = "", $search_text = "")
   {
     /* returns topiclist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -300,7 +309,7 @@ class Topic
 
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
-      $extra_where .= " AND " . $this->db->au_topics . ".status = " . $status;
+      $extra_where .= $this->db->au_topics . ".status = " . $status;
     }
 
     if ($room_id > 0) {
@@ -326,11 +335,24 @@ class Topic
         $asc_field = "DESC";
     }
 
-    $stmt = $this->db->query('SELECT count(' . $this->db->au_rel_topics_ideas . '.idea_id) as ideas_num, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.status, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_rel_topics_ideas . '.topic_id = ' . $this->db->au_topics . '.id WHERE ' . $this->db->au_topics . '.id> 0 ' . $extra_where . ' GROUP BY ' . $this->db->au_topics . '.id ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $search_field_valid = false;
+    $search_query = '';
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $search_query = " AND " . $this->db->au_topics . "." . $search_field . " LIKE :search_text";
+      }
+    }
+
+    $stmt = $this->db->query('SELECT count(' . $this->db->au_rel_topics_ideas . '.idea_id) as ideas_num, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.status, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_rel_topics_ideas . '.topic_id = ' . $this->db->au_topics . '.id WHERE ' . $this->db->au_topics . '.id > 0 ' . $extra_where . $search_query . ' GROUP BY ' . $this->db->au_topics . '.id ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
+    }
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     $err = false;
@@ -361,7 +383,12 @@ class Topic
       $total_datasets = count($topics);
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, $status . $extra_where);
+        $total_datasets;
+        if ($search_field_valid) {
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, $extra_where, $search_field, $search_text);
+        } else {
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, $extra_where);
+        }
       }
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // error code - db error

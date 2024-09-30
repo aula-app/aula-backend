@@ -61,6 +61,17 @@ class User
     }
   }// end function
 
+  public function validSearchField($search_field) {
+    return in_array($search_field, [
+        "displayname",
+        "realname",
+        "username",
+        "email",
+        "userlevel",
+        "about_me"
+    ]);
+  }
+
   public function getUserBaseData($user_id)
   {
     /* returns user base data for a specified db id */
@@ -1414,7 +1425,7 @@ class User
   }// end function
 
 
-  public function getUsers($offset, $limit, $room_id = 0, $orderby = 0, $asc = 0, $extra_where = "", $status = -1)
+  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $both_names = "", $search_field = "", $search_text = "", $extra_where = "", $status = -1)
   {
     /* returns userlist (associative array) with start and limit provided
     extra_where = SQL Clause that can be added to where in the query like AND status = 1
@@ -1439,6 +1450,10 @@ class User
       $limit_active = false;
     }
 
+    if ($both_names != "") {
+      $extra_where .= "AND (realname LIKE :both_names OR displayname LIKE :both_names)";
+    }
+
     if ($status > -1) {
       // specific status selected / -1 = get all status values
       $extra_where .= " AND status = " . $status;
@@ -1461,6 +1476,14 @@ class User
         $asc_field = "DESC";
     }
 
+    $search_field_valid = false;
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+      }
+    }
+
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit) {
@@ -1469,11 +1492,19 @@ class User
       $this->db->bind(':limit', $limit); // bind limit
     }
     // $this->db->bind(':status', $status); // bind status
+    
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%'.$search_text.'%');
+    }
 
     if ($room_id > 0) {
       $this->db->bind(":room_id", $room_id);
     }
 
+    if ($both_names != "") {
+       $this->db->bind(':both_names', '%'.$both_names.'%');
+    } 
+    
     $err = false;
     try {
       $users = $this->db->resultSet();
@@ -1502,7 +1533,12 @@ class User
 
 
     } else {
-      $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, "id > 0" . $extra_where);
+      $total_datasets;
+      if ($search_field_valid) {
+        $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, "id > 0", $search_field, $search_text);
+      } else {
+        $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, "id > 0");
+      }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $users; // returned data
@@ -1543,7 +1579,7 @@ class User
     }
   }
 
-  public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0)
+  public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $search_field = "", $search_text = "")
   {
     /* returns users (associative array)
     $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
@@ -1581,6 +1617,14 @@ class User
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
+    $search_field_valid = false;
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+      }
+    }
+
     $orderby_field = $this->db->au_users_basedata . "." . $this->getUserOrderId($orderby);
 
     switch (intval($asc)) {
@@ -1595,6 +1639,10 @@ class User
     }
 
     $query = 'SELECT ' . $this->db->au_users_basedata . '.* FROM ' . $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ' . $extra_where;
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%'.$search_text.'%');
+    }
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
@@ -1627,7 +1675,11 @@ class User
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":room_id", $room_id, $query . $extra_where));
+        if ($search_field_valid) {
+          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $query), $search_field, $search_text);
+        } else {
+          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $query));
+        }
       }
 
       $returnvalue['success'] = true; // set return value to false

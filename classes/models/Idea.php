@@ -71,6 +71,17 @@ class Idea
     }
   }// end function
 
+  public function validSearchField($search_field)
+  {
+    return in_array($search_field, [
+      "title",
+      "content",
+      "custom_field1",
+      "custom_field2",
+      "approval_comment"
+    ]);
+  }
+
   public function getCategoryOrderId($orderby)
   {
     switch (intval($orderby)) {
@@ -843,7 +854,7 @@ class Idea
 
   }// end function
 
-  public function getIdeasByTopic($topic_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $info = "")
+  public function getIdeasByTopic($topic_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $info = "", $search_field = "", $search_text = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -882,11 +893,18 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
-
+    $search_field_valid = false;
+    $search_where = "";
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $search_where = " AND " . $search_field . " LIKE :search_text";
+      }
+    }
 
     $orderby_field = $this->db->au_ideas . '.' . $this->getIdeaOrderId($orderby);
 
@@ -903,7 +921,7 @@ class Idea
     $select_part = 'SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment FROM ' . $this->db->au_ideas;
     $join = 'INNER JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id)';
     $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_rel_topics_ideas . '.topic_id= :topic_id ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit_active) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -911,6 +929,10 @@ class Idea
     }
     //$this->db->bind(':status', $status); // bind status
     $this->db->bind(':topic_id', $topic_id); // bind group id
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%' . $search_text . '%');
+    }
 
     $err = false;
     try {
@@ -935,7 +957,11 @@ class Idea
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":topic_id", $topic_id, $select_part . ' ' . $join . ' ' . $where));
+        if ($search_field_valid) {
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":topic_id", $topic_id, $select_part . ' ' . $join . ' ' . $where), $search_field, $search_text);
+        } else {
+          $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":topic_id", $topic_id, $select_part . ' ' . $join . ' ' . $where));
+        }
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
@@ -1122,7 +1148,7 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1233,7 +1259,7 @@ class Idea
   } // end function
 
 
-  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $extra_where = "", $info = "")
+  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $info = "", $search_field = "", $search_text = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1266,6 +1292,17 @@ class Idea
       $limit_active = false;
     }
 
+    $extra_where = "";
+
+    $search_field_valid = false;
+    $search_where = "";
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $extra_where .= " AND ". $this->db->au_ideas .'.'. $search_field . " LIKE :search_text";
+      }
+    }
+
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
@@ -1274,10 +1311,10 @@ class Idea
     if ($room_id > 0) {
       // if a room id is set then add to where clause
       $room_id = $this->converters->checkRoomId($room_id); // auto convert id
-      $extra_where .= " AND room_id = " . $room_id; // get specific topics to a room
+      $extra_where .= " AND ". $this->db->au_ideas ."room_id = " . $room_id; // get specific topics to a room
     }
 
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1300,14 +1337,18 @@ class Idea
         $asc_field = "DESC";
     }
 
-    #$stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.title, '.$this->db->au_ideas.'.approved, '.$this->db->au_ideas.'.approval_comment, '.$this->db->au_ideas.'.content, '.$this->db->au_ideas.'.hash_id, '.$this->db->au_ideas.'.id, '.$this->db->au_ideas.'.room_id, '.$this->db->au_ideas.'.sum_likes, '.$this->db->au_ideas.'.sum_votes, '.$this->db->au_ideas.'.number_of_votes, '.$this->db->au_ideas.'.last_update, '.$this->db->au_ideas.'.created, '.$this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
-    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_id AS phase_id,  ' . $this->db->au_topics . '.description_public AS topic_description,  ' . $this->db->au_topics . '.name AS topic_name, ' . $this->db->au_topics . '.id AS topic_id,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.status, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.user_id, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id)  WHERE ' . $this->db->au_ideas . '.id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
-    #$stmt = $this->db->query('SELECT '.$this->db->au_ideas.'.*, '.this->db->au_users_basedata.'.displayname FROM '.$this->db->au_ideas.' INNER JOIN '.$this->db->au_users_basedata.' ON ('.$this->db->au_ideas.'.user_id='.$this->db->au_users_basedata.'.id) WHERE '.$this->db->au_ideas.'.id > 0 '.$extra_where.' ORDER BY '.$orderby_field.' '.$asc_field.' '.$limit_string);
+    $select_part = 'SELECT ' . $this->db->au_topics . '.phase_id AS phase_id,  ' . $this->db->au_topics . '.description_public AS topic_description,  ' . $this->db->au_topics . '.name AS topic_name, ' . $this->db->au_topics . '.id AS topic_id,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.status, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.user_id, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id)';
+    $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 ' . $extra_where;
+    $stmt = $this->db->query($select_part . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit_active) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
+    }
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     $err = false;
@@ -1340,7 +1381,12 @@ class Idea
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status . $extra_where);
+        $total_datasets;
+        if ($search_field_valid) {
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status, $search_field, $search_text);
+        } else {
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status . $extra_where);
+        }
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code
@@ -1486,7 +1532,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1556,7 +1602,7 @@ class Idea
     }
   }// end function
 
-  public function getIdeasByGroup($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $group_id, $room_id = -1, $info =  "")
+  public function getIdeasByGroup($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $group_id, $room_id = -1, $info = "")
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1594,7 +1640,7 @@ class Idea
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1706,7 +1752,7 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
     }
 
-    if (strlen ($info) > 0) {
+    if (strlen($info) > 0) {
       // if a info param is set then add to where clause
       $extra_where .= " AND info = " . $info; // get specific info / status
     }
@@ -1811,7 +1857,7 @@ class Idea
     $this->db->bind(':info', $info); // info only shown in backend
     $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
     $this->db->bind(':custom_field2', $custom_field2); // custom field 2
-    
+
     $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin
     $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
     $this->db->bind(':room_id', $room_id); // room id
@@ -1877,7 +1923,7 @@ class Idea
     $this->db->bind(':title', $title); // title of idea
     $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
     $this->db->bind(':custom_field2', $custom_field2); // custom field 2 
-    
+
     $this->db->bind(':status', $status);
     $this->db->bind(':info', $info);
     $this->db->bind(':room_id', $room_id);
