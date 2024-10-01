@@ -61,6 +61,43 @@ class User
     }
   }// end function
 
+  public function hasPermissions($user_id, $userlevel, $method, $arguments)
+  {
+    if (method_exists($this, $method."Permission")) {
+      $methodPermission = $method."Permission";
+      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
+  public function getUsersPermission($user_id, $userlevel, $method, $arguments)
+  {
+    // TODO: Check if other roles can see all users
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else{
+      return ["allowed" => false, "message" => "You are not allowed to see all users."];
+    }
+  }
+
+  public function getUserBaseDataPermission($user_id, $userlevel, $method, $arguments)
+  {
+    // TODO: Check if other roles can see all users
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else{
+      $user = new User($this->db, $this->crypt, $this->syslog);
+      $userData = $user->getUserBaseData($arguments["user_id"]);
+
+      if ($userData["success"]) {
+      
+      } else {
+        return ["allowed" => false, "message" => "User not found."];
+      }
+    }
+  }
+
   public function getUserBaseData($user_id)
   {
     /* returns user base data for a specified db id */
