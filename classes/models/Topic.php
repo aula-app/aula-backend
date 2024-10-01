@@ -309,17 +309,17 @@ class Topic
 
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
-      $extra_where .= $this->db->au_topics . ".status = " . $status;
+      $extra_where .= " AND " . $this->db->au_topics . ".status = " . $status;
     }
 
     if ($room_id > 0) {
       // if a room id is set then add to where clause
-      $extra_where .= " AND room_id = " . $room_id; // get specific topics to a room
+      $extra_where .= " AND " . $this->db->au_topics . ".room_id = " . $room_id; // get specific topics to a room
     }
 
     if ($phase_id > -1) {
       // if a room id is set then add to where clause
-      $extra_where .= " AND phase_id = " . $phase_id; // get specific topics in a phase
+      $extra_where .= " AND " . $this->db->au_topics . ".phase_id = " . $phase_id; // get specific topics in a phase
     }
 
     $orderby_field = $this->getTopicOrderId($orderby);
