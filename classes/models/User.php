@@ -1692,6 +1692,31 @@ class User
     }
   }// end function
 
+
+function checkForCharacterCondition($string) {
+  return (bool) preg_match('/(?=.*([A-Z]))(?=.*([a-z]))(?=.*([0-9]))(?=.*([~`\!@#\$%\^&\*\(\)_\{\}\[\]]))/', $string);
+}
+
+function generate_pass($length = 8) {
+  // pw generator 
+
+  $j=1;
+  $allowedCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`!@#$%^&*()_{}[]';
+  $pass = '';
+  $max = mb_strlen($allowedCharacters, '8bit') - 1;
+  for ($i = 0; $i < $length; ++$i) {
+    $pass .= $allowedCharacters[random_int(0, $max)];
+  }
+
+  if (checkForCharacterCondition($pass)){
+        return $pass;
+    }else{
+        $j++;
+        return generate_pass();
+    }
+
+}
+
   public function getUsersByGroup($group_id, $status = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0)
   {
     /* returns users (associative array)
@@ -1823,7 +1848,7 @@ class User
     // generate blind index
     $bi = md5(strtolower(trim($username)));
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata . ' (o1, o2, o3, about_me, presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:o1, :o2, :o3, :about_me, 1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata . ' (temp_pw, pw_changed, o1, o2, o3, about_me, presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:temp_pw, :pw_changed, :o1, :o2, :o3, :about_me, 1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
     // bind all VALUES
     $this->db->bind(':username', $this->crypt->encrypt($username));
     $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -1847,6 +1872,20 @@ class User
     $this->db->bind(':o2', $o2);
     $this->db->bind(':o3', $o3);
 
+    #set flag so user has to change pw
+    $this->db->bind(':pw_changed', 0);
+    
+    $temp_pw = "";
+
+    if (!$send_email) {
+      # if email link option is not set, set a temp pw - 8 chars
+      $temp_pw =  generate_pass (8);
+    } 
+    
+    $this->db->bind(':temp_pw', $temp_pw);
+
+    $data = []; # init return array
+
     $err = false; // set error variable to false
 
     $insertid = 0;
@@ -1860,7 +1899,10 @@ class User
       $err = true;
     }
 
-    
+    # set output array
+    $data ['insert_id'] = $insertid;
+    $data ['temp_pw'] = $temp_pw;
+
       
     if (!$err) {
       if ($send_email) {
@@ -1927,7 +1969,7 @@ class User
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $insertid; // returned data
+      $returnvalue['data'] = $data; // returned data
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
