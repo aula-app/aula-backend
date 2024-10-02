@@ -1787,7 +1787,7 @@ class User
   }// end function
 
 
-  public function addUser($realname, $displayname, $username, $email, $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10)
+  public function addUser($realname, $displayname, $username, $email, $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10, $send_email = true)
   {
     /* adds a user and returns insert id (userid) if successful, accepts the above parameters
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
@@ -1863,64 +1863,66 @@ class User
     
       
     if (!$err) {
-      // Send email to new user
-      $not_created = true;
-      $secret = bin2hex(random_bytes(32));
+      if ($send_email) {
+        // Send email to new user
+        $not_created = true;
+        $secret = bin2hex(random_bytes(32));
 
-      while ($not_created) {
-        $stmt = $this->db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
+        while ($not_created) {
+          $stmt = $this->db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
+          $this->db->bind(':secret', $secret);
+
+          if (count($this->db->resultSet()) == 0) {
+            $not_created = false;
+          } else {
+            $secret = bin2hex(random_bytes(32));
+          }
+        }
+
+        $stmt = $this->db->query('SELECT id, realname FROM au_users_basedata WHERE email = :email');
+        $this->db->bind(':email', $email);
+        $user_id = $this->db->resultSet()[0]["id"];
+        $realname = $this->db->resultSet()[0]["realname"];
+
+
+        $stmt = $this->db->query('INSERT INTO au_change_password (user_id, secret) values (:user_id, :secret)');
+        $this->db->bind(':user_id', $user_id);
         $this->db->bind(':secret', $secret);
 
-        if (count($this->db->resultSet()) == 0) {
-          $not_created = false;
-        } else {
-          $secret = bin2hex(random_bytes(32));
-        }
+        $this->db->resultSet();
+
+        global $email_host;
+        global $email_port;
+        global $email_username;
+        global $email_password;
+        global $email_from;
+        global $email_address;
+        global $email_creation_subject;
+        global $email_creation_body;
+
+        $params = array(
+          'host' => $email_host,
+          'port' => $email_port,
+          'auth' => true,
+          'username' => $email_username,
+          'password' => $email_password
+        );
+
+        $smtp = Mail::factory('smtp', $params);
+        $content = "text/html; charset=utf-8";
+        $mime = "1.0";
+
+        $headers = array(
+          'From' => $email_from,
+          'To' => $email,
+          'Subject' => $email_creation_subject,
+          'Reply-To' => $email_address,
+          'MIME-Version' => $mime,
+          'Content-type' => $content
+        );
+
+        $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $realname, $secret, $secret));
       }
-
-      $stmt = $this->db->query('SELECT id, realname FROM au_users_basedata WHERE email = :email');
-      $this->db->bind(':email', $email);
-      $user_id = $this->db->resultSet()[0]["id"];
-      $realname = $this->db->resultSet()[0]["realname"];
-
-
-      $stmt = $this->db->query('INSERT INTO au_change_password (user_id, secret) values (:user_id, :secret)');
-      $this->db->bind(':user_id', $user_id);
-      $this->db->bind(':secret', $secret);
-
-      $this->db->resultSet();
-
-      global $email_host;
-      global $email_port;
-      global $email_username;
-      global $email_password;
-      global $email_from;
-      global $email_address;
-      global $email_creation_subject;
-      global $email_creation_body;
-
-      $params = array(
-        'host' => $email_host,
-        'port' => $email_port,
-        'auth' => true,
-        'username' => $email_username,
-        'password' => $email_password
-      );
-
-      $smtp = Mail::factory('smtp', $params);
-      $content = "text/html; charset=utf-8";
-      $mime = "1.0";
-
-      $headers = array(
-        'From' => $email_from,
-        'To' => $email,
-        'Subject' => $email_creation_subject,
-        'Reply-To' => $email_address,
-        'MIME-Version' => $mime,
-        'Content-type' => $content
-      );
-
-      $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $realname, $secret, $secret));
 
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
       $returnvalue['success'] = true; // set return value
