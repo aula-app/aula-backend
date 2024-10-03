@@ -1894,6 +1894,9 @@ function generate_pass($length = 8) {
       $action = $this->db->execute(); // do the query
       $insertid = intval($this->db->lastInsertId());
 
+      # add user to default room 0 (aula)
+      addUserToRoom ($insertid, 0);
+
     } catch (Exception $e) {
 
       $err = true;
