@@ -2212,6 +2212,178 @@ class Idea
     } // end else
   } // end function
 
+
+  public function addSurvey ($name, $description_public, $phase_duration_3, $idea_headline, $idea_content, $room_id = 0, $updater_id = 0)
+  {
+    /* adds a new survey (auto creates topic/box and idea) and returns insert id (box id) if successful, accepts the above parameters
+     name = name of the topic, description_internal = shown only to admins for internal use
+     desciption_public = shown in frontend, order_importance = order bias for sorting in the frontend
+     status = status of inserted topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+     $wild_ideas_enabled =  users can post ideas =  0=disabled,1=enabled (default)
+
+    */
+
+    $description_internal = "survey"; # human readable hint
+    $wild_ideas_enabled = 0; # users cant post ideas
+    $phase_id = 30; # voting phase
+    $status = 1; # default status for created box
+
+    //sanitize the vars
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $status = intval($status);
+    $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+
+    $order_importance = 10;
+    $description_public = trim($description_public);
+
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_topics . ' (phase_id, phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4, name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:phase_id, :phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4, :name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+    // bind all VALUES
+
+    $this->db->bind(':name', $this->crypt->encrypt($name));
+    $this->db->bind(':status', $status);
+    $this->db->bind(':phase_id', $phase_id); # set to voting
+    $this->db->bind(':phase_duration_0', 0);
+    $this->db->bind(':phase_duration_1', 0);
+    $this->db->bind(':phase_duration_2', 0);
+    $this->db->bind(':phase_duration_3', $phase_duration_3);
+    $this->db->bind(':phase_duration_4', 0);
+    $this->db->bind(':description_public', $this->crypt->encrypt($description_public));
+    $this->db->bind(':description_internal', $this->crypt->encrypt($description_internal));
+    $this->db->bind(':room_id', $room_id);
+    // generate unique hash for this topic
+    $testrand = rand(100, 10000000);
+    $appendix = microtime(true) . $testrand;
+    $hash_id = md5($name . $appendix); // create hash id for this topic
+    $this->db->bind(':hash_id', $hash_id);
+    $this->db->bind(':order_importance', 10); // order parameter
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+    $err = false; // set error variable to false
+
+    $insertid = 0;
+
+    try {
+      $action = $this->db->execute(); // do the query
+      $insertid = intval($this->db->lastInsertId()); # get insert id for box / topic
+
+      if ($insertid > -1) {
+        #add idea 
+        $idea_data = []; #init
+        $idea_data = $this->addIdea ($idea_content, $idea_headline, $updater_id, 1, $room_id, 10, $updater_id);
+        $idea_id = $idea_data['data'];
+        if ($idea_id) {
+          $idea_id = intval ($idea_id);
+          # add idea to topic / box
+          $this->addIdeaToTopic ($insertid, $idea_id, $updater_id);
+        }
+
+      } else {
+        $err = true;
+      }
+      
+    } catch (Exception $e) {
+
+      $err = true;
+    }
+    
+    if (!$err) {
+      $this->syslog->addSystemEvent(0, "Added new survey (#" . $insertid . ") " . $name, 0, "", 1);
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue['data'] = $insertid; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+
+    } else {
+      //$this->syslog->addSystemEvent(1, "Error adding topic ".$name, 0, "", 1);
+      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['error_code'] = 1; // error code - db error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+
+  }// end function
+
+  public function editSurvey ($name, $description_public, $phase_duration_3, $idea_id, $idea_headline, $idea_content, $room_id = 0, $updater_id = 0, $status = 1)
+  {
+    /* edits a survey (topic/box and idea) and returns insert id (topic id) if successful, accepts the above parameters
+     name = name of the topic, description_internal = shown only to admins for internal use
+     description_public = shown in frontend, order_importance = order bias for sorting in the frontend
+     status = status of inserted topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+     $wild_ideas_enabled =  users can post ideas =  0=disabled,1=enabled (default)
+
+    */
+    //sanitize the vars
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $status = intval($status);
+    $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+    $order_importance = 10;
+    $description_internal = 'survey';
+    $description_public = trim($description_public);
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_topics . ' SET phase_duration_0 = :phase_duration_0, phase_duration_1 = :phase_duration_1, phase_duration_2 = :phase_duration_2, phase_duration_3 = :phase_duration_3, phase_duration_4 = :phase_duration_4, phase_id = :phase_id, name = :name, description_internal = :description_internal , description_public = :description_public, status = :status, last_update = NOW(), updater_id = :updater_id, order_importance = :order_importance, room_id = :room_id WHERE id = :topic_id');
+
+    // bind all VALUES
+
+    $this->db->bind(':name', $this->crypt->encrypt($name));
+    $this->db->bind(':status', $status);
+    $this->db->bind(':phase_duration_0', $phase_duration_0);
+    $this->db->bind(':phase_duration_1', $phase_duration_1);
+    $this->db->bind(':phase_duration_2', $phase_duration_2);
+    $this->db->bind(':phase_duration_3', $phase_duration_3);
+    $this->db->bind(':phase_duration_4', $phase_duration_4);
+    $this->db->bind(':phase_id', $phase_id);
+    $this->db->bind(':description_public', $this->crypt->encrypt($description_public));
+    $this->db->bind(':description_internal', $this->crypt->encrypt($description_internal));
+    $this->db->bind(':room_id', $room_id);
+    $this->db->bind(':topic_id', $topic_id);
+    $this->db->bind(':order_importance', $order_importance); // order parameter
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+    $err = false; // set error variable to false
+
+    try {
+      $action = $this->db->execute(); // do the query
+      
+      # edit the idea part
+      
+      $this->editIdea($idea_id, $idea_content, $status, $idea_headline);
+
+    } catch (Exception $e) {
+
+      $err = true;
+    }
+
+    if (!$err) {
+      $this->syslog->addSystemEvent(0, "Edited topic (#" . $topic_id . ") " . $name, 0, "", 1);
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue['data'] = 1; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+
+    } else {
+      //$this->syslog->addSystemEvent(1, "Error editing topic ".$name, 0, "", 1);
+      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['error_code'] = 1; // error code - db error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+  }// end function editSurvey()
+
+
   public function setCategoryStatus($category_id, $status, $updater_id = 0)
   {
     /* edits a category and returns number of rows if successful, accepts the above parameters, all parameters are mandatory

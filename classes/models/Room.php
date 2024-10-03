@@ -1122,9 +1122,9 @@ class Room
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
     $room_id = intval ($room_id);
-    
-    if ($room_id < 1) {
 
+    if ($room_id < 1) {
+      # safety check to prevent deletion of main room
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 3; // error code - db error
       $returnvalue['data'] = false; // returned data
