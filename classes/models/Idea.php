@@ -1259,7 +1259,7 @@ class Idea
   } // end function
 
 
-  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $info = "", $search_field = "", $search_text = "")
+  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $info = "", $search_field = "", $search_text = "", $type = -1)
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1306,6 +1306,10 @@ class Idea
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
       $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
+    }
+
+    if ($type == 0) {
+      $extra_where .= " AND " . $this->db->au_ideas . ".type = " . $type;
     }
 
     if ($room_id > 0) {

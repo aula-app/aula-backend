@@ -284,7 +284,7 @@ class Topic
 
 
 
-  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $room_id = 0, $phase_id = -1, $status = 1, $search_field = "", $search_text = "")
+  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $room_id = 0, $phase_id = -1, $status = 1, $search_field = "", $search_text = "", $type = -1)
   {
     /* returns topiclist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -310,6 +310,10 @@ class Topic
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
       $extra_where .= " AND " . $this->db->au_topics . ".status = " . $status;
+    }
+
+    if ($status > -1) {
+      $extra_where .= " AND " . $this->db->au_topics . ".type = " . $type;
     }
 
     if ($room_id > 0) {
