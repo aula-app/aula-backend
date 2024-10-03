@@ -1898,7 +1898,7 @@ class Idea
     }
   }// end function
 
-  public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "")
+  public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $type = 0)
   {
     /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters
      content = actual content of the idea,
@@ -1915,8 +1915,9 @@ class Idea
     $content = trim($content);
     $title = trim($title);
     $info = trim($info);
+    $type = intval ($type);
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_ideas . ' (custom_field1, custom_field2, is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:custom_field1, :custom_field2, 0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_ideas . ' (type, custom_field1, custom_field2, is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:type, :custom_field1, :custom_field2, 0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
     // bind all VALUES
 
     $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
@@ -1925,6 +1926,7 @@ class Idea
     $this->db->bind(':custom_field2', $custom_field2); // custom field 2 
 
     $this->db->bind(':status', $status);
+    $this->db->bind(':type', $type);
     $this->db->bind(':info', $info);
     $this->db->bind(':room_id', $room_id);
     $this->db->bind(':user_id', $user_id);
@@ -2236,7 +2238,7 @@ class Idea
     $order_importance = 10;
     $description_public = trim($description_public);
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_topics . ' (phase_id, phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4, name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:phase_id, :phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4, :name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_topics . ' (type, phase_id, phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4, name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (1, :phase_id, :phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4, :name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
     // bind all VALUES
 
     $this->db->bind(':name', $this->crypt->encrypt($name));
@@ -2269,7 +2271,8 @@ class Idea
       if ($insertid > -1) {
         #add idea 
         $idea_data = []; #init
-        $idea_data = $this->addIdea ($idea_content, $idea_headline, $updater_id, 1, $room_id, 10, $updater_id);
+        #addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $type = 0)
+        $idea_data = $this->addIdea ($idea_content, $idea_headline, $updater_id, 1, $room_id, 10, $updater_id, 1, "survey", "", "", 1);
         $idea_id = $idea_data['data'];
         if ($idea_id) {
           $idea_id = intval ($idea_id);
@@ -2362,7 +2365,7 @@ class Idea
     }
 
     if (!$err) {
-      $this->syslog->addSystemEvent(0, "Edited topic (#" . $topic_id . ") " . $name, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Edited survey (#" . $topic_id . ") " . $name, 0, "", 1);
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // error code - db error
       $returnvalue['data'] = 1; // returned data
