@@ -1240,6 +1240,98 @@ class User
 
   }// end function
 
+  public function addCSV ($csv, $user_level = 20, $separator = ";") {
+    # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
+    # CSV must be in the following format:
+    # realname;displayname;username;email;about_me; 
+    # email, about_me, displayname are not mandatory (can be empty in CSV), realname and username are mandatory
+    # if no email is provided then a temp password is generated for the user
+    # no first line with field names!
+    # linebreak must be \n
+
+    # init output array
+    $output_user = [];
+    $line_counter = 0;
+          
+    if (strlen ($csv) > 1 && str_contains($csv, ';')) 
+    {
+      # basic check of CSV
+      $csv_lines = explode ("\n", $csv);
+      
+      foreach ($csv_lines as $line) 
+      {
+          $data = str_getcsv($line, $separator);
+          $line_counter ++;
+
+          $real_name = $data [0];
+          $display_name = $data [1];
+          $user_name = $data [2];
+          $email = $data [3];
+          $about_me = $data [4];
+
+          // check if user name is still available
+          $user_ok = false;
+          $attempts = 0; 
+          $base_user_name = $user_name;
+
+          
+          while ($user_ok == false && $attempts < 100) {
+            $temp_user = $this->checkUserExistsByUsername($user_name); // check username in db
+            $temp_user_id = $temp_user['data']; // get id from array
+
+            $attempts ++; # increment attempts to find a proper username
+
+            if ($temp_user_id > 0) 
+            {
+              # user exists
+              $user_ok = false;
+              #alter user name
+              $suffix =  generate_pass (3);
+              $user_name = $base_user_name . "_" . $suffix;
+            } else {
+              $user_ok = true;
+              if (strlen (trim ($email)) < 1) {
+                # email is not set, create temp password mode instead
+                $send_email = false;
+              } else {
+                # email is set, send link mode                 
+                $send_email = true;
+              }
+              # add user to db
+              $this->addUser ($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level, $send_email);
+
+              $user_array ['real_name'] = $real_name;
+              $user_array ['display_name'] = $display_name;
+              $user_array ['user_name'] = $user_name;
+              $user_array ['email'] = $email;
+              $user_array ['about_me'] = $about_me;
+              
+              array_push ($output_user,$user_array); 
+            }
+          } 
+   
+      } // end foreach
+    } else {
+      # error occurs on CSV parsing
+      $err = true;
+
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code (no data in csv or malformed)
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+    # return the array after import
+    $returnvalue['success'] = true; // set return value
+    $returnvalue['error_code'] = 0; // error code 0 = everything ok
+    $returnvalue['data'] = $output_user; // returned data
+    $returnvalue['count'] = $line_counter; // returned count of datasets
+
+    return $returnvalue;
+  } # end function
+
   public function addUserToGroup($user_id, $group_id, $updater_id, $status = 1)
   {
     /* adds a user to a group, accepts user_id (by hash or id) and group id (by hash or id)
