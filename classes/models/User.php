@@ -952,7 +952,7 @@ class User
 
     if ($ret_value['success']) {
       // only if removal was successful add to room 2
-      $ret_value = addUserToRoom($room_id2, $user_id);
+      $ret_value = $this->addUserToRoom($room_id2, $user_id);
 
       if ($ret_value['success']) {
         $returnvalue['success'] = true; // set return value
@@ -1895,7 +1895,7 @@ function generate_pass($length = 8) {
       $insertid = intval($this->db->lastInsertId());
 
       # add user to default room 0 (aula)
-      addUserToRoom ($insertid, 0);
+      $this->addUserToRoom ($insertid, 0);
 
     } catch (Exception $e) {
 
