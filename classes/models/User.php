@@ -1243,7 +1243,7 @@ class User
   public function addCSV ($csv, $user_level = 20, $separator = ";") {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
-    # realname;displayname;username;email;about_me; 
+    # realname;displayname;username;email;about_me; room_id
     # email, about_me, displayname are not mandatory (can be empty in CSV), realname and username are mandatory
     # if no email is provided then a temp password is generated for the user
     # no first line with field names!
@@ -1252,6 +1252,11 @@ class User
     # init output array
     $output_user = [];
     $line_counter = 0;
+    $real_name ="";
+    $display_name = "";
+    $email = "";
+    $about_me = "";
+    $room_id = 0;
           
     if (strlen ($csv) > 1 && str_contains($csv, ';')) 
     {
@@ -1268,6 +1273,7 @@ class User
           $user_name = $data [2];
           $email = $data [3];
           $about_me = $data [4];
+          $room_id = $data [5];
 
           // check if user name is still available
           $user_ok = false;
@@ -1298,15 +1304,20 @@ class User
                 $send_email = true;
               }
               # add user to db
-              $this->addUser ($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level, $send_email);
-
+              $data = $this->addUser ($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level, $send_email);
+              $insert_id = $data ['insert_id'];
+              # add to set room
+              if (isset ($room_id) && $room_id > 0) {
+                $this->addUserToRoom ($insert_id, $room_id);
+              }
+              
               $user_array ['real_name'] = $real_name;
               $user_array ['display_name'] = $display_name;
               $user_array ['user_name'] = $user_name;
               $user_array ['email'] = $email;
               $user_array ['about_me'] = $about_me;
               
-              array_push ($output_user,$user_array); 
+              array_push ($output_user, $user_array); 
             }
           } 
    
@@ -1358,6 +1369,7 @@ class User
 
       try {
         $action = $this->db->execute(); // do the query
+         
 
       } catch (Exception $e) {
 
