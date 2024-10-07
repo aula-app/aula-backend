@@ -31,6 +31,11 @@ if ($loginResult["success"] && $loginResult["error_code"] == 0) {
     return;
   }
 
+  if (!is_null($loginResult["data"]["temp_pw"])) {
+    $loginResult["data"]["temp_pw"] = true;
+  } else {
+    $loginResult["data"]["temp_pw"] = false;
+  }
   $jwt_token = $jwt->gen_jwt($loginResult["data"]);
   echo json_encode(['JWT' => $jwt_token, "success" => true]);
 } else {
