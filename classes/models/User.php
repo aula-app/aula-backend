@@ -56,19 +56,22 @@ class User
         return "userlevel";
       case 10:
         return "about_me";
+      case 11:
+        return "temp_pw";
       default:
         return "last_update";
     }
   }// end function
 
-  public function validSearchField($search_field) {
+  public function validSearchField($search_field)
+  {
     return in_array($search_field, [
-        "displayname",
-        "realname",
-        "username",
-        "email",
-        "userlevel",
-        "about_me"
+      "displayname",
+      "realname",
+      "username",
+      "email",
+      "userlevel",
+      "about_me"
     ]);
   }
 
@@ -1240,7 +1243,8 @@ class User
 
   }// end function
 
-  public function addCSV ($csv, $user_level = 20, $separator = ";") {
+  public function addCSV($csv, $user_level = 20, $separator = ";")
+  {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
     # realname;displayname;username;email;about_me; room_id
@@ -1252,68 +1256,65 @@ class User
     # init output array
     $output_user = [];
     $line_counter = 0;
-    $real_name ="";
+    $real_name = "";
     $display_name = "";
     $email = "";
     $about_me = "";
     $room_id = 0;
-          
-    if (strlen ($csv) > 1 && str_contains($csv, ';')) 
-    {
+
+    if (strlen($csv) > 1 && str_contains($csv, ';')) {
       # basic check of CSV
-      $csv_lines = explode ("\n", $csv);
-      
-      foreach ($csv_lines as $line) 
-      {
-          $data = str_getcsv($line, $separator);
-          $line_counter ++;
+      $csv_lines = explode("\n", $csv);
 
-          $real_name = $data [0];
-          $display_name = $data [1];
-          $user_name = $data [2];
-          $email = $data [3];
-          $about_me = $data [4];
-          $room_id = $data [5];
+      foreach ($csv_lines as $line) {
+        $data = str_getcsv($line, $separator);
+        $line_counter++;
 
-          // check if user name is still available
-          $user_ok = false;
-          $attempts = 0; 
-          $base_user_name = $user_name;
+        $real_name = $data[0];
+        $display_name = $data[1];
+        $user_name = $data[2];
+        $email = $data[3];
+        $about_me = $data[4];
+        $room_id = $data[5];
 
-          
-          while ($user_ok == false && $attempts < 100) {
-            $temp_user = $this->checkUserExistsByUsername($user_name); // check username in db
-            $temp_user_id = $temp_user['data']; // get id from array
+        // check if user name is still available
+        $user_ok = false;
+        $attempts = 0;
+        $base_user_name = $user_name;
 
-            $attempts ++; # increment attempts to find a proper username
 
-            if ($temp_user_id > 0) 
-            {
-              # user exists
-              $user_ok = false;
-              #alter user name
-              $suffix =  $this->generate_pass (3);
-              $user_name = $base_user_name . "_" . $suffix;
-            } else {
-              $user_ok = true;
-              # add user to db
-              $data = $this->addUser ($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level);
-              $insert_id = $data ['insert_id'];
-              # add to set room
-              if (isset ($room_id) && $room_id > 0) {
-                $this->addUserToRoom ($insert_id, $room_id);
-              }
-              
-              $user_array ['real_name'] = $real_name;
-              $user_array ['display_name'] = $display_name;
-              $user_array ['user_name'] = $user_name;
-              $user_array ['email'] = $email;
-              $user_array ['about_me'] = $about_me;
-              
-              array_push ($output_user, $user_array); 
+        while ($user_ok == false && $attempts < 100) {
+          $temp_user = $this->checkUserExistsByUsername($user_name); // check username in db
+          $temp_user_id = $temp_user['data']; // get id from array
+
+          $attempts++; # increment attempts to find a proper username
+
+          if ($temp_user_id > 0) {
+            # user exists
+            $user_ok = false;
+            #alter user name
+            $suffix = $this->generate_pass(3);
+            $user_name = $base_user_name . "_" . $suffix;
+          } else {
+            $user_ok = true;
+            # add user to db
+            $data = $this->addUser($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level);
+            $insert_id = $data['insert_id'];
+            # add to set room
+            if (isset($room_id) && $room_id > 0) {
+              $this->addUserToRoom($insert_id, $room_id);
             }
-          } 
-   
+
+            $user_array['real_name'] = $real_name;
+            $user_array['display_name'] = $display_name;
+            $user_array['user_name'] = $user_name;
+            $user_array['email'] = $email;
+            $user_array['about_me'] = $about_me;
+
+            array_push($output_user, $user_array);
+          }
+        }
+
       } // end foreach
     } else {
       # error occurs on CSV parsing
@@ -1362,7 +1363,7 @@ class User
 
       try {
         $action = $this->db->execute(); // do the query
-         
+
 
       } catch (Exception $e) {
 
@@ -1578,7 +1579,7 @@ class User
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+        $extra_where .= " AND " . $search_field . " LIKE :search_text";
       }
     }
 
@@ -1590,9 +1591,9 @@ class User
       $this->db->bind(':limit', $limit); // bind limit
     }
     // $this->db->bind(':status', $status); // bind status
-    
+
     if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     if ($room_id > 0) {
@@ -1600,9 +1601,9 @@ class User
     }
 
     if ($both_names != "") {
-       $this->db->bind(':both_names', '%'.$both_names.'%');
-    } 
-    
+      $this->db->bind(':both_names', '%' . $both_names . '%');
+    }
+
     $err = false;
     try {
       $users = $this->db->resultSet();
@@ -1719,7 +1720,7 @@ class User
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ". $this->db->au_users_basedata . "." .$search_field." LIKE :search_text";   
+        $extra_where .= " AND " . $this->db->au_users_basedata . "." . $search_field . " LIKE :search_text";
       }
     }
 
@@ -1744,7 +1745,7 @@ class User
     //$this->db->bind(':status', $status); // bind status
 
     if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     $err = false;
@@ -1775,7 +1776,7 @@ class User
       if ($limit_active) {
         // only newly calculate datasets if limits are active
         if ($search_field_valid) {
-          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query), "", $search_field, $search_text );
+          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query), "", $search_field, $search_text);
         } else {
           $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query));
         }
@@ -1791,14 +1792,16 @@ class User
   }// end function
 
 
-  function checkForCharacterCondition($string) {
+  function checkForCharacterCondition($string)
+  {
     return (bool) preg_match('/(?=.*([A-Z]))(?=.*([a-z]))(?=.*([0-9]))(?=.*([~`\!@#\$%\^&\*\(\)_\{\}\[\]]))/', $string);
   }
 
-  function generate_pass($length = 8) {
+  function generate_pass($length = 8)
+  {
     // pw generator 
 
-    $j=1;
+    $j = 1;
     $allowedCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`!@#$%^&*()_{}[]';
     $pass = '';
     $max = mb_strlen($allowedCharacters, '8bit') - 1;
@@ -1806,9 +1809,9 @@ class User
       $pass .= $allowedCharacters[random_int(0, $max)];
     }
 
-    if ($this->checkForCharacterCondition($pass)){
+    if ($this->checkForCharacterCondition($pass)) {
       return $pass;
-    }else{
+    } else {
       $j++;
       return $this->generate_pass();
     }
@@ -1978,14 +1981,14 @@ class User
 
     #set flag so user has to change pw
     $this->db->bind(':pw_changed', 0);
-    
+
     $temp_pw = "";
 
     if (!$send_email) {
       # if email link option is not set, set a temp pw - 8 chars
-      $temp_pw =  $this->generate_pass (8);
-    } 
-    
+      $temp_pw = $this->generate_pass(8);
+    }
+
     $this->db->bind(':temp_pw', $temp_pw);
 
     $data = []; # init return array
@@ -1993,13 +1996,13 @@ class User
     $err = false; // set error variable to false
 
     $insertid = 0;
-    
+
     try {
       $action = $this->db->execute(); // do the query
       $insertid = intval($this->db->lastInsertId());
 
       # add user to default room 0 (aula)
-      $this->addUserToRoom ($insertid, 0);
+      $this->addUserToRoom($insertid, 0);
 
     } catch (Exception $e) {
 
@@ -2007,10 +2010,10 @@ class User
     }
 
     # set output array
-    $data ['insert_id'] = $insertid;
-    $data ['temp_pw'] = $temp_pw;
+    $data['insert_id'] = $insertid;
+    $data['temp_pw'] = $temp_pw;
 
-      
+
     if (!$err) {
       if ($send_email) {
         // Send email to new user
