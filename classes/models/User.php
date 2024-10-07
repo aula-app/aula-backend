@@ -1296,15 +1296,8 @@ class User
               $user_name = $base_user_name . "_" . $suffix;
             } else {
               $user_ok = true;
-              if (strlen (trim ($email)) < 1) {
-                # email is not set, create temp password mode instead
-                $send_email = false;
-              } else {
-                # email is set, send link mode                 
-                $send_email = true;
-              }
               # add user to db
-              $data = $this->addUser ($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level, $send_email);
+              $data = $this->addUser ($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level);
               $insert_id = $data ['insert_id'];
               # add to set room
               if (isset ($room_id) && $room_id > 0) {
