@@ -1466,6 +1466,7 @@ class User
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
+
     } catch (Exception $e) {
       print_r($e);
     }
