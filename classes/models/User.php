@@ -1461,7 +1461,7 @@ class User
     // create temp blind index
     $bi = md5(strtolower($username));
 
-    $stmt = $this->db->query('SELECT id, username, pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username AND status = 1');
+    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username AND status = 1');
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
@@ -1481,7 +1481,8 @@ class User
     // new
     $dbpw = $users[0]['pw'];
     // check PASSWORD
-    if (password_verify($pw, $dbpw)) {
+
+    if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $users[0]; // returned data
