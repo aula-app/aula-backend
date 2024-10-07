@@ -1292,7 +1292,7 @@ class User
               # user exists
               $user_ok = false;
               #alter user name
-              $suffix =  generate_pass (3);
+              $suffix =  $this->generate_pass (3);
               $user_name = $base_user_name . "_" . $suffix;
             } else {
               $user_ok = true;
@@ -1790,29 +1790,29 @@ class User
   }// end function
 
 
-function checkForCharacterCondition($string) {
-  return (bool) preg_match('/(?=.*([A-Z]))(?=.*([a-z]))(?=.*([0-9]))(?=.*([~`\!@#\$%\^&\*\(\)_\{\}\[\]]))/', $string);
-}
-
-function generate_pass($length = 8) {
-  // pw generator 
-
-  $j=1;
-  $allowedCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`!@#$%^&*()_{}[]';
-  $pass = '';
-  $max = mb_strlen($allowedCharacters, '8bit') - 1;
-  for ($i = 0; $i < $length; ++$i) {
-    $pass .= $allowedCharacters[random_int(0, $max)];
+  function checkForCharacterCondition($string) {
+    return (bool) preg_match('/(?=.*([A-Z]))(?=.*([a-z]))(?=.*([0-9]))(?=.*([~`\!@#\$%\^&\*\(\)_\{\}\[\]]))/', $string);
   }
 
-  if (checkForCharacterCondition($pass)){
-        return $pass;
-    }else{
-        $j++;
-        return generate_pass();
+  function generate_pass($length = 8) {
+    // pw generator 
+
+    $j=1;
+    $allowedCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`!@#$%^&*()_{}[]';
+    $pass = '';
+    $max = mb_strlen($allowedCharacters, '8bit') - 1;
+    for ($i = 0; $i < $length; ++$i) {
+      $pass .= $allowedCharacters[random_int(0, $max)];
     }
 
-}
+    if (checkForCharacterCondition($pass)){
+      return $pass;
+    }else{
+      $j++;
+      return generate_pass();
+    }
+
+  }
 
   public function getUsersByGroup($group_id, $status = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0)
   {
@@ -1982,7 +1982,7 @@ function generate_pass($length = 8) {
 
     if (!$send_email) {
       # if email link option is not set, set a temp pw - 8 chars
-      $temp_pw =  generate_pass (8);
+      $temp_pw =  $this->generate_pass (8);
     } 
     
     $this->db->bind(':temp_pw', $temp_pw);
