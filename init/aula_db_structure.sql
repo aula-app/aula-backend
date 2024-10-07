@@ -1,13 +1,13 @@
 # ************************************************************
 # Sequel Ace SQL dump
-# Version 20071
+# Version 20062
 #
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-09-06 08:04:19 +0000
+# Verarbeitungszeit: 2024-10-03 12:42:30 +0000
 # ************************************************************
 
 
@@ -189,6 +189,7 @@ DROP TABLE IF EXISTS `au_ideas`;
 
 CREATE TABLE `au_ideas` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `title` text DEFAULT NULL,
   `content` text DEFAULT NULL COMMENT 'content of the idea',
   `sum_likes` int(11) DEFAULT NULL COMMENT 'aggregated likes for faster access, less DB Queries',
   `sum_votes` int(11) DEFAULT NULL COMMENT 'aggregated votes for faster access, less DB Queries',
@@ -208,10 +209,10 @@ CREATE TABLE `au_ideas` (
   `approved` int(11) DEFAULT NULL COMMENT 'approved in approval phase',
   `approval_comment` text DEFAULT NULL COMMENT 'comment or reasonig why an idea was diapproved / approved',
   `topic_id` int(11) DEFAULT NULL COMMENT 'id of topic that idea belongs to',
-  `title` text DEFAULT NULL,
   `sum_comments` int(11) DEFAULT 0,
   `custom_field1` text DEFAULT NULL COMMENT 'custom_field1',
   `custom_field2` text DEFAULT NULL COMMENT 'custom_field2',
+  `type` int(11) DEFAULT 0 COMMENT 'type of idea 0=std 1=school induced (i.e.survey)',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -769,6 +770,7 @@ CREATE TABLE `au_topics` (
   `phase_duration_2` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   `phase_duration_3` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
   `phase_duration_4` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
+  `type` int(11) DEFAULT 0 COMMENT 'type of box (0=std, 1= special)',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -810,23 +812,6 @@ CREATE TABLE `au_user_levels` (
 
 
 
-# Tabellen-Dump au_userlevel_methods
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_userlevel_methods`;
-
-CREATE TABLE `au_userlevel_methods` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `method_name` text DEFAULT NULL COMMENT 'Name of the method',
-  `user_level` int(11) DEFAULT NULL COMMENT 'Minimum userlevel needed to use method',
-  `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active',
-  `class` text DEFAULT NULL COMMENT 'class where method is found',
-  `info` text DEFAULT NULL COMMENT 'extra info',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
-
 # Tabellen-Dump au_users_basedata
 # ------------------------------------------------------------
 
@@ -861,6 +846,8 @@ CREATE TABLE `au_users_basedata` (
   `o3` int(11) DEFAULT NULL,
   `consents_given` int(11) DEFAULT 0 COMMENT 'consents given',
   `consents_needed` int(11) DEFAULT 0 COMMENT 'needed consents',
+  `temp_pw` varchar(256) DEFAULT NULL COMMENT 'temp pw for user',
+  `pw_changed` int(11) DEFAULT 0 COMMENT 'user has changed his initial pw',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
