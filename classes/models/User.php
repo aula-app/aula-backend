@@ -1916,7 +1916,7 @@ function generate_pass($length = 8) {
   }// end function
 
 
-  public function addUser($realname, $displayname, $username, $email, $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10)
+  public function addUser($realname, $displayname, $username, $email = "", $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10)
   {
     $send_email = false;
 
