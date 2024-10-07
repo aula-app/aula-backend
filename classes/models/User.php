@@ -1284,7 +1284,7 @@ class User
 
 
         while ($user_ok == false && $attempts < 100) {
-          $temp_user = $this->checkUserExistsByUsername($user_name); // check username in db
+          $temp_user = $this->checkUserExistsByUsername($user_name, $email); // check username / email in db
           $temp_user_id = $temp_user['data']; // get id from array
 
           $attempts++; # increment attempts to find a proper username
@@ -1650,14 +1650,29 @@ class User
     }
   }// end function
 
-  public function checkUserExistsByUsername($username)
+  public function checkUserExistsByUsername($username, $email = "")
   {
-    // checks if a group with this name is already in database
+    // checks if a user with this username or email adress is already in database
     // generate blind index
+
     $bi = md5(strtolower(trim($username)));
 
-    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_users_basedata . ' WHERE bi = :bi');
+    # init
+    $check_email = false;
+    $extra_where = "";
+
+    if (strlen (trim ($email)) > 2) {
+      $extra_where = " OR email = :email"
+      $check_email = true;
+    }
+
+    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_users_basedata . ' WHERE bi = :bi'.$extra_where);
+    
+    if ($check_email) {
+      $this->db->bind(':email', $email); // bind email
+    }
     $this->db->bind(':bi', $bi); // bind blind index
+    
     $users = $this->db->resultSet();
     if (count($users) < 1) {
       $returnvalue['success'] = true; // set return value
@@ -1939,7 +1954,7 @@ class User
     $userlevel = intval($userlevel);
 
     // check if user name is still available
-    $temp_user = $this->checkUserExistsByUsername($username); // check username in db
+    $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
     $temp_user_id = $temp_user['data']; // get id from array
 
     if ($temp_user_id > 0) {
