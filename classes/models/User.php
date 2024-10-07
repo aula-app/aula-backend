@@ -1473,7 +1473,7 @@ class User
     if (count($users) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = 9999; // returned data
+      $returnvalue['data'] = 0; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
@@ -1483,7 +1483,7 @@ class User
     $dbpw = $users[0]['pw'];
     // check PASSWORD
 
-    if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
+    if (($users[0]['temp_pw'] != '' && $users[0]['temp_pw'] == $pw) || password_verify($pw, $dbpw)) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $users[0]; // returned data
