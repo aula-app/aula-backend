@@ -1481,7 +1481,7 @@ class User
     // new
     $dbpw = $users[0]['pw'];
     // check PASSWORD
-
+    $temp_pw = $users[0]['temp_pw'];
     if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code

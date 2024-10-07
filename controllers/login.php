@@ -23,6 +23,7 @@ $data = json_decode($json);
 
 
 $loginResult = $user->checkLogin($data->username, $data->password);
+
 if ($loginResult["success"] && $loginResult["error_code"] == 0) {
   $current_settings = $settings->getInstanceSettings();
   if ($current_settings["data"]["online_mode"] != 1 && $loginResult["data"]["userlevel"] < 50) {
@@ -31,11 +32,12 @@ if ($loginResult["success"] && $loginResult["error_code"] == 0) {
     return;
   }
 
-  if (!is_null($loginResult["data"]["temp_pw"])) {
+  if (!empty($loginResult["data"]["temp_pw"]) && $loginResult["data"]["temp_pw"] != '') {
     $loginResult["data"]["temp_pw"] = true;
   } else {
     $loginResult["data"]["temp_pw"] = false;
   }
+
   $jwt_token = $jwt->gen_jwt($loginResult["data"]);
   echo json_encode(['JWT' => $jwt_token, "success" => true]);
 } else {
