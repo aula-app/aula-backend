@@ -1920,7 +1920,11 @@ class User
         'Content-type' => $content
       );
 
-      $mail = $smtp->send($email, $headers, sprintf($email_creation_body, $realname, $secret, $secret));
+      $email_creation_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
+      $email_creation_body = str_replace("<NAME>", $realname, $email_creation_body);
+      $email_creation_body = str_replace("<USERNAME>", $username, $email_creation_body);
+
+      $mail = $smtp->send($email, $headers, $email_creation_body);
 
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
       $returnvalue['success'] = true; // set return value
