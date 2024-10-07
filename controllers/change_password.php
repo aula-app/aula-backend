@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($check_password) {
       $stmt = $db->query('UPDATE '. $db->au_users_basedata . ' SET temp_pw = "" WHERE id = :user_id');
       $db->bind(':user_id', $user_id); // blind index
-      $users = $db->resultSet();
+      $db->resultSet();
     }
   }
 
