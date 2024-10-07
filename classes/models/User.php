@@ -1805,11 +1805,11 @@ class User
       $pass .= $allowedCharacters[random_int(0, $max)];
     }
 
-    if (checkForCharacterCondition($pass)){
+    if ($this->checkForCharacterCondition($pass)){
       return $pass;
     }else{
       $j++;
-      return generate_pass();
+      return $this->generate_pass();
     }
 
   }
