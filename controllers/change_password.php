@@ -49,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       echo json_encode(["success" => true]);
     } else {
       header('Content-Type: application/json; charset=utf-8');
-      $jwt_token = $jwt->gen_jwt($users[0]);
       $users[0]["temp_pw"] = false;
+      $jwt_token = $jwt->gen_jwt($users[0]);
       echo json_encode(['JWT' => $jwt_token, "success" => true]);
     }
   } else {
