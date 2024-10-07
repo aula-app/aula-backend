@@ -25,7 +25,8 @@ class JWT
     $payload = [
       "exp" => 0,
       "user_id" => $user["id"],
-      "user_level" => $user["userlevel"]
+      "user_level" => $user["userlevel"],
+      "temp_pw" => $user["temp_pw"]
     ];
     $payload = base64_url_encode(json_encode($payload));
     $signature = base64_url_encode(hash_hmac('sha512', "$header.$payload", $this->key, true));

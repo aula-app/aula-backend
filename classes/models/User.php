@@ -56,19 +56,22 @@ class User
         return "userlevel";
       case 10:
         return "about_me";
+      case 11:
+        return "temp_pw";
       default:
         return "last_update";
     }
   }// end function
 
-  public function validSearchField($search_field) {
+  public function validSearchField($search_field)
+  {
     return in_array($search_field, [
-        "displayname",
-        "realname",
-        "username",
-        "email",
-        "userlevel",
-        "about_me"
+      "displayname",
+      "realname",
+      "username",
+      "email",
+      "userlevel",
+      "about_me"
     ]);
   }
 
@@ -952,7 +955,7 @@ class User
 
     if ($ret_value['success']) {
       // only if removal was successful add to room 2
-      $ret_value = addUserToRoom($room_id2, $user_id);
+      $ret_value = $this->addUserToRoom($room_id2, $user_id);
 
       if ($ret_value['success']) {
         $returnvalue['success'] = true; // set return value
@@ -1240,6 +1243,100 @@ class User
 
   }// end function
 
+  public function addCSV($csv, $user_level = 20, $separator = ";")
+  {
+    # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
+    # CSV must be in the following format:
+    # realname;displayname;username;email;about_me; room_id
+    # email, about_me, displayname are not mandatory (can be empty in CSV), realname and username are mandatory
+    # if no email is provided then a temp password is generated for the user
+    # no first line with field names!
+    # linebreak must be \n
+
+    # init output array
+    $output_user = [];
+    $line_counter = 0;
+    $real_name = "";
+    $display_name = "";
+    $email = "";
+    $about_me = "";
+    $room_id = 0;
+
+    if (strlen($csv) > 1 && str_contains($csv, ';')) {
+      # basic check of CSV
+      $csv_lines = explode("\n", $csv);
+
+      foreach ($csv_lines as $line) {
+        $data = str_getcsv($line, $separator);
+        $line_counter++;
+
+        $real_name = $data[0];
+        $display_name = $data[1];
+        $user_name = $data[2];
+        $email = $data[3];
+        $about_me = $data[4];
+        $room_id = $data[5];
+
+        // check if user name is still available
+        $user_ok = false;
+        $attempts = 0;
+        $base_user_name = $user_name;
+
+
+        while ($user_ok == false && $attempts < 100) {
+          $temp_user = $this->checkUserExistsByUsername($user_name); // check username in db
+          $temp_user_id = $temp_user['data']; // get id from array
+
+          $attempts++; # increment attempts to find a proper username
+
+          if ($temp_user_id > 0) {
+            # user exists
+            $user_ok = false;
+            #alter user name
+            $suffix = $this->generate_pass(3);
+            $user_name = $base_user_name . "_" . $suffix;
+          } else {
+            $user_ok = true;
+            # add user to db
+            $data = $this->addUser($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level);
+            $insert_id = $data['insert_id'];
+            # add to set room
+            if (isset($room_id) && $room_id > 0) {
+              $this->addUserToRoom($insert_id, $room_id);
+            }
+
+            $user_array['real_name'] = $real_name;
+            $user_array['display_name'] = $display_name;
+            $user_array['user_name'] = $user_name;
+            $user_array['email'] = $email;
+            $user_array['about_me'] = $about_me;
+
+            array_push($output_user, $user_array);
+          }
+        }
+
+      } // end foreach
+    } else {
+      # error occurs on CSV parsing
+      $err = true;
+
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code (no data in csv or malformed)
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+    # return the array after import
+    $returnvalue['success'] = true; // set return value
+    $returnvalue['error_code'] = 0; // error code 0 = everything ok
+    $returnvalue['data'] = $output_user; // returned data
+    $returnvalue['count'] = $line_counter; // returned count of datasets
+
+    return $returnvalue;
+  } # end function
+
   public function addUserToGroup($user_id, $group_id, $updater_id, $status = 1)
   {
     /* adds a user to a group, accepts user_id (by hash or id) and group id (by hash or id)
@@ -1266,6 +1363,7 @@ class User
 
       try {
         $action = $this->db->execute(); // do the query
+
 
       } catch (Exception $e) {
 
@@ -1364,10 +1462,11 @@ class User
     // create temp blind index
     $bi = md5(strtolower($username));
 
-    $stmt = $this->db->query('SELECT id, username, pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username AND status = 1');
+    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username AND status = 1');
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
+
     } catch (Exception $e) {
       print_r($e);
     }
@@ -1375,7 +1474,7 @@ class User
     if (count($users) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = 9999; // returned data
+      $returnvalue['data'] = 0; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
@@ -1384,7 +1483,8 @@ class User
     // new
     $dbpw = $users[0]['pw'];
     // check PASSWORD
-    if (password_verify($pw, $dbpw)) {
+    $temp_pw = $users[0]['temp_pw'];
+    if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $users[0]; // returned data
@@ -1480,7 +1580,7 @@ class User
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ".$search_field." LIKE :search_text";   
+        $extra_where .= " AND " . $search_field . " LIKE :search_text";
       }
     }
 
@@ -1492,9 +1592,9 @@ class User
       $this->db->bind(':limit', $limit); // bind limit
     }
     // $this->db->bind(':status', $status); // bind status
-    
+
     if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     if ($room_id > 0) {
@@ -1502,9 +1602,9 @@ class User
     }
 
     if ($both_names != "") {
-       $this->db->bind(':both_names', '%'.$both_names.'%');
-    } 
-    
+      $this->db->bind(':both_names', '%' . $both_names . '%');
+    }
+
     $err = false;
     try {
       $users = $this->db->resultSet();
@@ -1621,7 +1721,7 @@ class User
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ". $this->db->au_users_basedata . "." .$search_field." LIKE :search_text";   
+        $extra_where .= " AND " . $this->db->au_users_basedata . "." . $search_field . " LIKE :search_text";
       }
     }
 
@@ -1646,7 +1746,7 @@ class User
     //$this->db->bind(':status', $status); // bind status
 
     if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     $err = false;
@@ -1677,7 +1777,7 @@ class User
       if ($limit_active) {
         // only newly calculate datasets if limits are active
         if ($search_field_valid) {
-          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query), "", $search_field, $search_text );
+          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query), "", $search_field, $search_text);
         } else {
           $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query));
         }
@@ -1691,6 +1791,33 @@ class User
       return $returnvalue;
     }
   }// end function
+
+
+  function checkForCharacterCondition($string)
+  {
+    return (bool) preg_match('/(?=.*([A-Z]))(?=.*([a-z]))(?=.*([0-9]))(?=.*([~`\!@#\$%\^&\*\(\)_\{\}\[\]]))/', $string);
+  }
+
+  function generate_pass($length = 8)
+  {
+    // pw generator 
+
+    $j = 1;
+    $allowedCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`!@#$%^&*()_{}[]';
+    $pass = '';
+    $max = mb_strlen($allowedCharacters, '8bit') - 1;
+    for ($i = 0; $i < $length; ++$i) {
+      $pass .= $allowedCharacters[random_int(0, $max)];
+    }
+
+    if ($this->checkForCharacterCondition($pass)) {
+      return $pass;
+    } else {
+      $j++;
+      return $this->generate_pass();
+    }
+
+  }
 
   public function getUsersByGroup($group_id, $status = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0)
   {
@@ -1787,8 +1914,14 @@ class User
   }// end function
 
 
-  public function addUser($realname, $displayname, $username, $email, $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10)
+  public function addUser($realname, $displayname, $username, $email = "", $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10)
   {
+    $send_email = false;
+
+    if ($email != '') {
+      $send_email = true;
+    }
+
     /* adds a user and returns insert id (userid) if successful, accepts the above parameters
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
      userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin 60 = tech admin
@@ -1823,7 +1956,7 @@ class User
     // generate blind index
     $bi = md5(strtolower(trim($username)));
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata . ' (o1, o2, o3, about_me, presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:o1, :o2, :o3, :about_me, 1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata . ' (temp_pw, pw_changed, o1, o2, o3, about_me, presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:temp_pw, :pw_changed, :o1, :o2, :o3, :about_me, 1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
     // bind all VALUES
     $this->db->bind(':username', $this->crypt->encrypt($username));
     $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -1847,89 +1980,111 @@ class User
     $this->db->bind(':o2', $o2);
     $this->db->bind(':o3', $o3);
 
+    #set flag so user has to change pw
+    $this->db->bind(':pw_changed', 0);
+
+    $temp_pw = "";
+
+    if (!$send_email) {
+      # if email link option is not set, set a temp pw - 8 chars
+      $temp_pw = $this->generate_pass(8);
+    }
+
+    $this->db->bind(':temp_pw', $temp_pw);
+
+    $data = []; # init return array
+
     $err = false; // set error variable to false
 
     $insertid = 0;
-    
+
     try {
       $action = $this->db->execute(); // do the query
       $insertid = intval($this->db->lastInsertId());
+
+      # add user to default room 0 (aula)
+      $this->addUserToRoom($insertid, 0);
 
     } catch (Exception $e) {
 
       $err = true;
     }
 
-    
-      
-    if (!$err) {
-      // Send email to new user
-      $not_created = true;
-      $secret = bin2hex(random_bytes(32));
+    # set output array
+    $data['insert_id'] = $insertid;
+    $data['temp_pw'] = $temp_pw;
 
-      while ($not_created) {
-        $stmt = $this->db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
+
+    if (!$err) {
+      if ($send_email) {
+        // Send email to new user
+        $not_created = true;
+        $secret = bin2hex(random_bytes(32));
+
+        while ($not_created) {
+          $stmt = $this->db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
+          $this->db->bind(':secret', $secret);
+
+          if (count($this->db->resultSet()) == 0) {
+            $not_created = false;
+          } else {
+            $secret = bin2hex(random_bytes(32));
+          }
+        }
+
+        $stmt = $this->db->query('SELECT id, realname FROM au_users_basedata WHERE email = :email');
+        $this->db->bind(':email', $email);
+        $user_id = $this->db->resultSet()[0]["id"];
+        $realname = $this->db->resultSet()[0]["realname"];
+
+
+        $stmt = $this->db->query('INSERT INTO au_change_password (user_id, secret) values (:user_id, :secret)');
+        $this->db->bind(':user_id', $user_id);
         $this->db->bind(':secret', $secret);
 
-        if (count($this->db->resultSet()) == 0) {
-          $not_created = false;
-        } else {
-          $secret = bin2hex(random_bytes(32));
-        }
+        $this->db->resultSet();
+
+        global $email_host;
+        global $email_port;
+        global $email_username;
+        global $email_password;
+        global $email_from;
+        global $email_address;
+        global $email_creation_subject;
+        global $email_creation_body;
+
+        $params = array(
+          'host' => $email_host,
+          'port' => $email_port,
+          'auth' => true,
+          'username' => $email_username,
+          'password' => $email_password
+        );
+
+        $smtp = Mail::factory('smtp', $params);
+        $content = "text/html; charset=utf-8";
+        $mime = "1.0";
+
+        $headers = array(
+          'From' => $email_from,
+          'To' => $email,
+          'Subject' => $email_creation_subject,
+          'Reply-To' => $email_address,
+          'MIME-Version' => $mime,
+          'Content-type' => $content
+        );
+
+        $email_creation_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
+        $email_creation_body = str_replace("<NAME>", $realname, $email_creation_body);
+        $email_creation_body = str_replace("<USERNAME>", $username, $email_creation_body);
+
+        $mail = $smtp->send($email, $headers, $email_creation_body);
       }
-
-      $stmt = $this->db->query('SELECT id, realname FROM au_users_basedata WHERE email = :email');
-      $this->db->bind(':email', $email);
-      $user_id = $this->db->resultSet()[0]["id"];
-      $realname = $this->db->resultSet()[0]["realname"];
-
-
-      $stmt = $this->db->query('INSERT INTO au_change_password (user_id, secret) values (:user_id, :secret)');
-      $this->db->bind(':user_id', $user_id);
-      $this->db->bind(':secret', $secret);
-
-      $this->db->resultSet();
-
-      global $email_host;
-      global $email_port;
-      global $email_username;
-      global $email_password;
-      global $email_from;
-      global $email_address;
-      global $email_creation_subject;
-      global $email_creation_body;
-
-      $params = array(
-        'host' => $email_host,
-        'port' => $email_port,
-        'auth' => true,
-        'username' => $email_username,
-        'password' => $email_password
-      );
-
-      $smtp = Mail::factory('smtp', $params);
-      $content = "text/html; charset=utf-8";
-      $mime = "1.0";
-
-      $headers = array(
-        'From' => $email_from,
-        'To' => $email,
-        'Subject' => $email_creation_subject,
-        'Reply-To' => $email_address,
-        'MIME-Version' => $mime,
-        'Content-type' => $content
-      );
-
-      $email_creation_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
-      $email_creation_body = str_replace("<NAME>", $realname, $email_creation_body);
-      $email_creation_body = str_replace("<USERNAME>", $username, $email_creation_body);
-
-      $mail = $smtp->send($email, $headers, $email_creation_body);
 
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $insertid; // returned data
+      $returnvalue['data'] = $data; // returned data
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
