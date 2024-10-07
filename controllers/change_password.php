@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($check_password) {
       $stmt = $db->query('UPDATE '. $db->au_users_basedata . ' SET temp_pw = "" WHERE id = :user_id');
       $db->bind(':user_id', $user_id); // blind index
-      $db->resultSet();
+      $remove_temp_pw = $db->resultSet();
     }
   }
 
@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       header('Content-Type: application/json; charset=utf-8');
       $jwt_token = $jwt->gen_jwt($users[0]);
+      $users[0]["temp_pw"] = false;
       echo json_encode(['JWT' => $jwt_token, "success" => true]);
     }
   } else {
