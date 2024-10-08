@@ -307,12 +307,13 @@ class Topic
       $limit_active = false;
     }
 
-    // check if a status was set (status > -1 default value)
     if ($status > -1) {
+      // check if a status was set (status > -1 default value)
       $extra_where .= " AND " . $this->db->au_topics . ".status = " . $status;
     }
 
     if ($type > -1) {
+      // check if a type was set (status > -1 default value)
       $extra_where .= " AND " . $this->db->au_topics . ".type = " . $type;
     }
 
@@ -389,9 +390,9 @@ class Topic
         // only newly calculate datasets if limits are active
         $total_datasets;
         if ($search_field_valid) {
-          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, $extra_where, $search_field, $search_text);
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, 'id > 0' . $extra_where, $search_field, $search_text);
         } else {
-          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, $extra_where);
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, 'id > 0' . $extra_where);
         }
       }
       $returnvalue['success'] = true; // set return value to false

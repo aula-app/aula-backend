@@ -37,7 +37,7 @@ class Converters
     return md5($key);
   }
 
-  public function hasPermissions($user_id, $userlevel, $method, $arguments) 
+  public function hasPermissions($user_id, $userlevel, $method, $arguments)
   {
     if ($userlevel >= 50) {
       return ["allowed" => true];
@@ -314,7 +314,7 @@ class Converters
      to use method with the name $method_name 
     returns data = true (ok) or false (not ok) 
     */
-    
+
     // get minimum needed level to access method 
     $stmt = $this->db->query('SELECT user_level FROM ' . $this->db->au_userlevel_methods . ' WHERE method_name = :method_name LIMIT 1');
     $this->db->bind(':method_name', $method_name); // bind user_level
@@ -1217,16 +1217,16 @@ class Converters
       }
 
       if (!str_contains($table, 'JOIN')) {
-        $extra_where .= $append_in_query.' '.$table.'.'.$search_field." LIKE :search_text";
+        $extra_where .= $append_in_query . ' ' . $table . '.' . $search_field . " LIKE :search_text";
       } else {
-        $extra_where .= $append_in_query.' '.$search_field." LIKE :search_text";
+        $extra_where .= $append_in_query . ' ' . $search_field . " LIKE :search_text";
       }
     }
 
     $stmt = $this->db->query('SELECT COUNT(*) as total FROM ' . $table . $extra_where);
 
     if ($search_text != "") {
-      $this->db->bind(":search_text", '%'.$search_text.'%');
+      $this->db->bind(":search_text", '%' . $search_text . '%');
     }
     $res = $this->db->resultSet();
     $total_rows = $res[0]['total'];
@@ -1245,11 +1245,11 @@ class Converters
 
     $append_in_query = "";
     if ($search_field != "") {
-      $append_in_query = " AND ".$search_field." LIKE :search_text";
+      $append_in_query = " AND " . $search_field . " LIKE :search_text";
     }
 
     try {
-      $stmt = $this->db->query($query.$append_in_query);
+      $stmt = $this->db->query($query . $append_in_query);
 
       $res = $this->db->resultSet();
       $total_rows = count($res);
