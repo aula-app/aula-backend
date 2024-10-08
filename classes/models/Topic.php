@@ -312,7 +312,7 @@ class Topic
       $extra_where .= " AND " . $this->db->au_topics . ".status = " . $status;
     }
 
-    if ($status > -1) {
+    if ($type > -1) {
       $extra_where .= " AND " . $this->db->au_topics . ".type = " . $type;
     }
 
