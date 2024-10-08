@@ -1662,7 +1662,7 @@ class User
     $extra_where = "";
 
     if (strlen (trim ($email)) > 2) {
-      $extra_where = " OR email = :email"
+      $extra_where = " OR email = :email";
       $check_email = true;
     }
 
