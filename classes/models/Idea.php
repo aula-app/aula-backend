@@ -558,7 +558,7 @@ class Idea
 
   }
 
-  public function addIdeaToTopic($idea_id, $topic_id, $updater_id)
+  public function addIdeaToTopic($topic_id, $idea_id, $updater_id)
   {
     // adds an idea (idea_id) to a specified topic (topic_id)
 
