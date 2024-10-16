@@ -1,13 +1,13 @@
 # ************************************************************
 # Sequel Ace SQL dump
-# Version 20062
+# Version 20073
 #
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-10-03 12:41:28 +0000
+# Verarbeitungszeit: 2024-10-16 15:54:39 +0000
 # ************************************************************
 
 
@@ -812,7 +812,7 @@ LOCK TABLES `au_rooms` WRITE;
 
 INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`)
 VALUES
-	(106,'The Innovation Hub','DI:6:0','DI:6:0',1,1,10,'2024-06-24 21:48:04','2024-07-25 16:43:46',165,'02a9374ae856c01ebb647c3b7570312d','',''),
+	(106,'The Innovation Hub','','',1,1,10,'2024-06-24 21:48:04','2024-10-16 15:54:17',165,'02a9374ae856c01ebb647c3b7570312d','',''),
 	(107,'AULA',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 /*!40000 ALTER TABLE `au_rooms` ENABLE KEYS */;
