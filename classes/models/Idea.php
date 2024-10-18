@@ -670,6 +670,9 @@ class Idea
 
       // delete existing relations for this idea
       $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_categories_ideas . ' WHERE idea_id = :idea_id');
+
+      // bind all VALUES
+      $this->db->bind(':idea_id', $idea_id);
       
       try {
         $action = $this->db->execute(); // do the delete query
@@ -679,16 +682,8 @@ class Idea
         $err = true;
       }
 
-      if (!$err) {
-        $this->syslog->addSystemEvent(0, "Added idea " . $idea_id . " to category " . $category_id, 0, "", 1);
-        $returnvalue['success'] = true; // set return value
-        $returnvalue['error_code'] = 0; // error code
-        $returnvalue['data'] = 1; // returned data
-        $returnvalue['count'] = 1; // returned count of datasets
-
-        return $returnvalue;
-
-      } else {
+      if ($err) {
+        
         $this->syslog->addSystemEvent(0, "Error while adding idea " . $idea_id . " to category " . $category_id, 0, "", 1);
 
         $returnvalue['success'] = false; // set return value
@@ -705,7 +700,6 @@ class Idea
       $this->db->bind(':idea_id', $idea_id);
       $this->db->bind(':category_id', $category_id);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
 
       $err = false; // set error variable to false
 
