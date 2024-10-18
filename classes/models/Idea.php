@@ -654,7 +654,7 @@ class Idea
   public function addIdeaToCategory($idea_id, $category_id, $updater_id = 0)
   {
     // adds an idea (idea_id) to a specified topic (topic_id)
-
+    error_log ("ADDING IDEA ".$idea_id." TO CAT ".$category_id." BY UPDATER ".$updater_id);
     //
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
     $category_id = $this->converters->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
