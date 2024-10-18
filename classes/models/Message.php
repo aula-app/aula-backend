@@ -329,11 +329,11 @@ class Message
       return $returnvalue; // return an array (associative) with all the data
     }
   }// end function
-  public function getMessagesByUser($user_id, $publish_date = 0, $search_field = "", $search_text = "")
+  public function getMessagesByUser($user_id, $publish_date = 0, $search_field = "", $search_text = "", $msg_type = -1)
   {
     // returns all messages for this specific user
     $user_id = $this->converters->checkUserId($user_id);
-    return $this->getMessages(-1, 0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0, $search_field, $search_text);
+    return $this->getMessages($msg_type, 0, 0, 3, 1, 1, "", $publish_date, 0, 0, $user_id, 0, $search_field, $search_text);
   }
 
   public function getMessagesToReview($user_id = 0, $publish_date = 0)
