@@ -662,11 +662,43 @@ class Idea
     $idea_exist = $this->converters->checkIdeaExist($idea_id);
     $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
+    $err = false; // init error var
 
     if ($idea_exist == 1) {
       // everything ok, idea exists
       // add relation to database
 
+      // delete existing relations for this idea
+      $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_categories_ideas . ' WHERE idea_id = :idea_id');
+      
+      try {
+        $action = $this->db->execute(); // do the delete query
+
+      } catch (Exception $e) {
+
+        $err = true;
+      }
+
+      if (!$err) {
+        $this->syslog->addSystemEvent(0, "Added idea " . $idea_id . " to category " . $category_id, 0, "", 1);
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue['data'] = 1; // returned data
+        $returnvalue['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+      } else {
+        $this->syslog->addSystemEvent(0, "Error while adding idea " . $idea_id . " to category " . $category_id, 0, "", 1);
+
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue['data'] = false; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+      
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_categories_ideas . ' (idea_id, category_id, created, last_update, updater_id) VALUES (:idea_id, :category_id, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
 
       // bind all VALUES
