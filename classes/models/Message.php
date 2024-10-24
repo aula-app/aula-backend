@@ -652,7 +652,7 @@ class Message
     }
   }// end function
 
-  public function getPersonalMessagesByUser($user_id, $mode = 0, $extra_where = "")
+  public function getPersonalMessagesByUser($user_id, $mode = 0, $status = 1, $search_field = "", $search_text = "")
   {
     /* returns message list (associative array) of messages that are for this user (specified by $user_id)
     user_id = specifies a certain user
@@ -668,6 +668,18 @@ class Message
     $this->db->bind(':user_id', $user_id); // bind user id
 
     $last_login = '1972-01-30 00:00:00';
+
+    $extra_where = "";
+
+    $search_field_valid = false;
+
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $extra_where .= " AND " . $search_field . " LIKE :search_text";
+      }
+    }
+
 
     try {
       $user_data = $this->db->resultSet();
@@ -695,9 +707,15 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND msg_type < 4' . $extra_where . ' ORDER BY publish_date DESC');
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND msg_type < 4 AND status = :status '.$extra_where.' ORDER BY publish_date DESC');
     $this->db->bind(':user_id', $user_id); // bind user id
+    $this->db->bind(':status', $status); // bind status
     $this->db->bind(':target_date', $target_date); // bind target date
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%' . $search_text . '%');
+    }
+
 
     $err = false;
     try {

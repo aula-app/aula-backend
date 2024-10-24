@@ -23,6 +23,7 @@ class Idea
     //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
     $this->group = new Group($db, $crypt, $syslog); // init group class
+    $this->user = new User($db, $crypt, $syslog);
     $this->converters = new Converters($db); // load converters
     /*
     $memcache = new Memcached();
@@ -1285,7 +1286,7 @@ class Idea
   } // end function
 
 
-  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $info = "", $search_field = "", $search_text = "", $type = -1)
+  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $info = "", $search_field = "", $search_text = "", $type = -1, $user_id)
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1294,6 +1295,7 @@ class Idea
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
     $info is an optional info parameter passed in where clause
+    $user_id = id of user that is requesting the ideas
     */
 
     // sanitize
@@ -1302,6 +1304,15 @@ class Idea
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
+
+    // auto convert user id 
+    $user_id = $this->converters->checkUserId($user_id);
+
+    // check user level first
+    $level_data = $this->user->getUserLevel ($user_id);
+    $level = intval ($level_data ['data']);
+
+    error_log ("DETECTED LEVEL ".$level." FOR USER: ".$user_id);
 
     $room_id = $this->converters->checkRoomId($room_id);
 
@@ -1338,10 +1349,15 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".type = " . $type;
     }
 
-    if ($room_id > 0) {
+    if ($room_id > 0 || $level < 50) {
       // if a room id is set then add to where clause
-      $room_id = $this->converters->checkRoomId($room_id); // auto convert id
-      $extra_where .= " AND ". $this->db->au_ideas ."room_id = " . $room_id; // get specific topics to a room
+      // check user level first!
+      if ($level < 50) {
+        // user is not super admin, restrict to rooms that the user is a member of = change clause
+        $room_id = "SELECT room_id FROM " .$this->db->au_rel_rooms_users." WHERE user_id = ".$user_id;
+      }
+      
+      $extra_where .= " AND ". $this->db->au_ideas ."room_id IN (" . $room_id. ")"; // get specific topics to a room
     }
 
     if (strlen($info) > 0) {

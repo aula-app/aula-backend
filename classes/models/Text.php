@@ -276,6 +276,14 @@ class Text
       $extra_where .= " location = " . $location; // get specific texts for a certain page (page id)
     }
 
+    // check if a status was set (status > -1 default value)
+    if ($status > -1) {
+      if ($extra_where == "") {
+        $extra_where = " WHERE ";
+      }
+      $extra_where .= " AND status = " . $status;
+    }
+
     $search_field_valid = false;
     $search_query = "";
     if ($search_field != "") {
