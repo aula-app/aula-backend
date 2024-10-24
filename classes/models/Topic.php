@@ -20,8 +20,10 @@ class Topic
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
     $this->db = $db;
     $this->crypt = $crypt;
+    
     //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
+    $this->user = new User($db, $crypt, $syslog);
     $this->converters = new Converters($db); // load converters
   }// end function
 
@@ -284,19 +286,30 @@ class Topic
 
 
 
-  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $room_id = 0, $phase_id = -1, $status = 1, $search_field = "", $search_text = "", $type = -1)
+  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $room_id = 0, $phase_id = -1, $status = 1, $search_field = "", $search_text = "", $type = -1, $user_id)
   {
     /* returns topiclist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-    extra_where = extra parameters for where clause, synthax " AND XY=4"
+    $user_id = id of user that is requesting the topics
     */
 
     // init vars
     $orderby_field = "";
     $asc_field = "";
+
+    // auto convert user id 
+    $user_id = $this->converters->checkUserId($user_id);
+
+    // check user level first
+    $level_data = $this->user->getUserLevel ($user_id);
+    $level = intval ($level_data ['data']);
+
+    error_log ("DETECTED LEVEL (TOPIC) ".$level." FOR USER: ".$user_id);
+
+    
 
     $limit_string = " LIMIT :offset , :limit ";
     $limit_active = true;
@@ -319,7 +332,13 @@ class Topic
 
     if ($room_id > 0) {
       // if a room id is set then add to where clause
-      $extra_where .= " AND " . $this->db->au_topics . ".room_id = " . $room_id; // get specific topics to a room
+      // check user level first!
+      if ($level < 50) {
+        // user is not super admin, restrict to rooms that the user is a member of = change clause
+        $room_id = "SELECT room_id FROM " .$this->db->au_rel_rooms_users." WHERE user_id = ".$user_id;
+      }
+      
+      $extra_where .= " AND " . $this->db->au_topics . ".room_id IN (" . $room_id.")"; // get specific topics to a room
     }
 
     if ($phase_id > -1) {
