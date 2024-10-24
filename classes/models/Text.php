@@ -281,9 +281,9 @@ class Text
       if ($extra_where == "") {
         $extra_where = " WHERE ";
       } else {
-        $search_query = " AND ";
+        $extra_where = " AND ";
      }
-      $extra_where .= "  status = " . $status;
+      $extra_where .= " status = " . $status;
     }
 
     $search_field_valid = false;
