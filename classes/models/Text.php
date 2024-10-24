@@ -280,8 +280,10 @@ class Text
     if ($status > -1) {
       if ($extra_where == "") {
         $extra_where = " WHERE ";
-      }
-      $extra_where .= " AND status = " . $status;
+      } else {
+        $search_query = " AND ";
+     }
+      $extra_where .= "  status = " . $status;
     }
 
     $search_field_valid = false;
