@@ -707,7 +707,7 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR target_group = 0 OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND msg_type < 4 AND status = :status '.$extra_where.' ORDER BY publish_date DESC');
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR (target_group = 0 AND target_id = 0 AND room_id = 0) OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND msg_type < 4 AND status = :status '.$extra_where.' ORDER BY publish_date DESC');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':status', $status); // bind status
     $this->db->bind(':target_date', $target_date); // bind target date
