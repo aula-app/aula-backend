@@ -655,7 +655,7 @@ class Idea
   public function addIdeaToCategory($idea_id, $category_id, $updater_id = 0)
   {
     // adds an idea (idea_id) to a specified topic (topic_id)
-    error_log ("ADDING IDEA ".$idea_id." TO CAT ".$category_id." BY UPDATER ".$updater_id);
+    error_log("ADDING IDEA " . $idea_id . " TO CAT " . $category_id . " BY UPDATER " . $updater_id);
     //
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
     $category_id = $this->converters->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -674,7 +674,7 @@ class Idea
 
       // bind all VALUES
       $this->db->bind(':idea_id', $idea_id);
-      
+
       try {
         $action = $this->db->execute(); // do the delete query
 
@@ -684,7 +684,7 @@ class Idea
       }
 
       if ($err) {
-        
+
         $this->syslog->addSystemEvent(0, "Error while adding idea " . $idea_id . " to category " . $category_id, 0, "", 1);
 
         $returnvalue['success'] = false; // set return value
@@ -694,7 +694,7 @@ class Idea
 
         return $returnvalue;
       }
-      
+
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_categories_ideas . ' (idea_id, category_id, created, last_update, updater_id) VALUES (:idea_id, :category_id, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE last_update = NOW(), updater_id = :updater_id');
 
       // bind all VALUES
@@ -1286,7 +1286,7 @@ class Idea
   } // end function
 
 
-  public function getIdeas($room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $info = "", $search_field = "", $search_text = "", $type = -1, $user_id)
+  public function getIdeas($user_id, $room_id = 0, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $wild_idea = false, $info = "", $search_field = "", $search_text = "", $type = -1)
   {
     /* returns idealist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -1309,10 +1309,10 @@ class Idea
     $user_id = $this->converters->checkUserId($user_id);
 
     // check user level first
-    $level_data = $this->user->getUserLevel ($user_id);
-    $level = intval ($level_data ['data']);
+    $level_data = $this->user->getUserLevel($user_id);
+    $level = intval($level_data['data']);
 
-    error_log ("DETECTED LEVEL ".$level." FOR USER: ".$user_id);
+    error_log("DETECTED LEVEL " . $level . " FOR USER: " . $user_id);
 
     $room_id = $this->converters->checkRoomId($room_id);
 
@@ -1336,7 +1336,7 @@ class Idea
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND ". $this->db->au_ideas .'.'. $search_field . " LIKE :search_text";
+        $extra_where .= " AND " . $this->db->au_ideas . '.' . $search_field . " LIKE :search_text";
       }
     }
 
@@ -1354,10 +1354,10 @@ class Idea
       // check user level first!
       if ($level < 50) {
         // user is not super admin, restrict to rooms that the user is a member of = change clause
-        $room_id = "SELECT room_id FROM " .$this->db->au_rel_rooms_users." WHERE user_id = ".$user_id;
+        $room_id = "SELECT room_id FROM " . $this->db->au_rel_rooms_users . " WHERE user_id = " . $user_id;
       }
-      
-      $extra_where .= " AND ". $this->db->au_ideas ."room_id IN (" . $room_id. ")"; // get specific topics to a room
+
+      $extra_where .= " AND " . $this->db->au_ideas . "room_id IN (" . $room_id . ")"; // get specific topics to a room
     }
 
     if (strlen($info) > 0) {
@@ -1961,7 +1961,7 @@ class Idea
     $content = trim($content);
     $title = trim($title);
     $info = trim($info);
-    $type = intval ($type);
+    $type = intval($type);
 
     $stmt = $this->db->query('INSERT INTO ' . $this->db->au_ideas . ' (type, custom_field1, custom_field2, is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:type, :custom_field1, :custom_field2, 0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
     // bind all VALUES
@@ -2261,7 +2261,7 @@ class Idea
   } // end function
 
 
-  public function addSurvey ($name, $description_public, $phase_duration_3, $idea_headline, $idea_content, $room_id = 0, $updater_id = 0)
+  public function addSurvey($name, $description_public, $phase_duration_3, $idea_headline, $idea_content, $room_id = 0, $updater_id = 0)
   {
     /* adds a new survey (auto creates topic/box and idea) and returns insert id (box id) if successful, accepts the above parameters
      name = name of the topic, description_internal = shown only to admins for internal use
@@ -2318,23 +2318,23 @@ class Idea
         #add idea 
         $idea_data = []; #init
         #addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $type = 0)
-        $idea_data = $this->addIdea ($idea_content, $idea_headline, $updater_id, 1, $room_id, 10, $updater_id, 1, "survey", "", "", 1);
+        $idea_data = $this->addIdea($idea_content, $idea_headline, $updater_id, 1, $room_id, 10, $updater_id, 1, "survey", "", "", 1);
         $idea_id = $idea_data['data'];
         if ($idea_id) {
-          $idea_id = intval ($idea_id);
+          $idea_id = intval($idea_id);
           # add idea to topic / box
-          $this->addIdeaToTopic ($insertid, $idea_id, $updater_id);
+          $this->addIdeaToTopic($insertid, $idea_id, $updater_id);
         }
 
       } else {
         $err = true;
       }
-      
+
     } catch (Exception $e) {
 
       $err = true;
     }
-    
+
     if (!$err) {
       $this->syslog->addSystemEvent(0, "Added new survey (#" . $insertid . ") " . $name, 0, "", 1);
       $returnvalue['success'] = true; // set return value to false
@@ -2358,7 +2358,7 @@ class Idea
 
   }// end function
 
-  public function editSurvey ($name, $description_public, $phase_duration_3, $idea_id, $idea_headline, $idea_content, $room_id = 0, $updater_id = 0, $status = 1)
+  public function editSurvey($name, $description_public, $phase_duration_3, $idea_id, $idea_headline, $idea_content, $room_id = 0, $updater_id = 0, $status = 1)
   {
     /* edits a survey (topic/box and idea) and returns insert id (topic id) if successful, accepts the above parameters
      name = name of the topic, description_internal = shown only to admins for internal use
@@ -2400,9 +2400,9 @@ class Idea
 
     try {
       $action = $this->db->execute(); // do the query
-      
+
       # edit the idea part
-      
+
       $this->editIdea($idea_id, $idea_content, $status, $idea_headline);
 
     } catch (Exception $e) {

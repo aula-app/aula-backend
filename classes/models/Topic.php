@@ -20,7 +20,7 @@ class Topic
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
     $this->db = $db;
     $this->crypt = $crypt;
-    
+
     //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
     $this->user = new User($db, $crypt, $syslog);
@@ -286,7 +286,7 @@ class Topic
 
 
 
-  public function getTopics($offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $room_id = 0, $phase_id = -1, $status = 1, $search_field = "", $search_text = "", $type = -1, $user_id)
+  public function getTopics($user_id, $offset, $limit, $orderby = 0, $asc = 0, $extra_where = "", $room_id = 0, $phase_id = -1, $status = 1, $search_field = "", $search_text = "", $type = -1)
   {
     /* returns topiclist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -304,12 +304,12 @@ class Topic
     $user_id = $this->converters->checkUserId($user_id);
 
     // check user level first
-    $level_data = $this->user->getUserLevel ($user_id);
-    $level = intval ($level_data ['data']);
+    $level_data = $this->user->getUserLevel($user_id);
+    $level = intval($level_data['data']);
 
-    error_log ("DETECTED LEVEL (TOPIC) ".$level." FOR USER: ".$user_id);
+    error_log("DETECTED LEVEL (TOPIC) " . $level . " FOR USER: " . $user_id);
 
-    
+
 
     $limit_string = " LIMIT :offset , :limit ";
     $limit_active = true;
@@ -335,10 +335,10 @@ class Topic
       // check user level first!
       if ($level < 50) {
         // user is not super admin, restrict to rooms that the user is a member of = change clause
-        $room_id = "SELECT room_id FROM " .$this->db->au_rel_rooms_users." WHERE user_id = ".$user_id;
+        $room_id = "SELECT room_id FROM " . $this->db->au_rel_rooms_users . " WHERE user_id = " . $user_id;
       }
-      
-      $extra_where .= " AND " . $this->db->au_topics . ".room_id IN (" . $room_id.")"; // get specific topics to a room
+
+      $extra_where .= " AND " . $this->db->au_topics . ".room_id IN (" . $room_id . ")"; // get specific topics to a room
     }
 
     if ($phase_id > -1) {
