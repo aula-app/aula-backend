@@ -299,6 +299,7 @@ class Topic
     // init vars
     $orderby_field = "";
     $asc_field = "";
+    $extra_where = "";
 
     // auto convert user id 
     $user_id = $this->converters->checkUserId($user_id);

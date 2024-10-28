@@ -1525,7 +1525,7 @@ class User
   }// end function
 
 
-  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $both_names = "", $search_field = "", $search_text = "", $extra_where = "", $status = -1)
+  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $both_names = "", $search_field = "", $search_text = "", $extra_where = "", $status = -1, $userlevel = -1)
   {
     /* returns userlist (associative array) with start and limit provided
     extra_where = SQL Clause that can be added to where in the query like AND status = 1
@@ -1536,6 +1536,7 @@ class User
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
+    $userlevel = intval($userlevel);
 
     // init vars
     $orderby_field = "";
@@ -1557,6 +1558,11 @@ class User
     if ($status > -1) {
       // specific status selected / -1 = get all status values
       $extra_where .= " AND status = " . $status;
+    }
+
+    if ($userlevel > -1) {
+      // specific level selected / -1 = get all userlevels
+      $extra_where .= " AND userlevel = " . $userlevel;
     }
 
     if ($room_id > 0) {
@@ -1694,7 +1700,7 @@ class User
     }
   }
 
-  public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $search_field = "", $search_text = "")
+  public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $search_field = "", $search_text = "", $userlevel = -1)
   {
     /* returns users (associative array)
     $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
@@ -1704,6 +1710,7 @@ class User
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
+    $userlevel = intval($userlevel);
 
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -1728,8 +1735,13 @@ class User
 
 
     if ($status > -1) {
-      // specific status selected / -1 = get all status valuess
+      // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
+    }
+
+    if ($userlevel > -1) {
+      // specific level selected / -1 = get all levels
+      $extra_where .= " AND " . $this->db->au_users_basedata . ".userlevel = " . $userlevel;
     }
 
     $search_field_valid = false;
