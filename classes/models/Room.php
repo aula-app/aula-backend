@@ -888,11 +888,11 @@ class Room
     $restricted = intval($restricted);
     $updater_id = intval($updater_id);
     
-    $phase_duration_0 = intval ($phase_duration_0)
-    $phase_duration_1 = intval ($phase_duration_1)
-    $phase_duration_2 = intval ($phase_duration_2)
-    $phase_duration_3 = intval ($phase_duration_3)
-    $phase_duration_4 = intval ($phase_duration_4)
+    $phase_duration_0 = intval ($phase_duration_0);
+    $phase_duration_1 = intval ($phase_duration_1);
+    $phase_duration_2 = intval ($phase_duration_2);
+    $phase_duration_3 = intval ($phase_duration_3);
+    $phase_duration_4 = intval ($phase_duration_4);
     
     $status = intval($status);
     $order_importance = intval($order_importance);
