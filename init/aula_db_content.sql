@@ -1,13 +1,13 @@
 # ************************************************************
 # Sequel Ace SQL dump
-# Version 20062
+# Version 20073
 #
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-10-03 12:41:28 +0000
+# Verarbeitungszeit: 2024-10-29 13:44:59 +0000
 # ************************************************************
 
 
@@ -62,7 +62,7 @@ LOCK TABLES `au_categories` WRITE;
 INSERT INTO `au_categories` (`id`, `name`, `description_public`, `description_internal`, `status`, `created`, `last_update`, `updater_id`, `hash_id`)
 VALUES
 	(3,'General','','bulb',1,'2024-07-29 15:54:41','2024-07-29 15:54:41',165,'12112890a34f90b5b51a20e61cf10887'),
-	(4,'sdsadsa','','atom',1,'2024-09-11 10:52:41','2024-09-11 16:53:56',165,'470680d0532d41b0b9c19abf343dd252');
+	(4,'Testcat','','atom',1,'2024-09-11 10:52:41','2024-10-29 13:39:05',165,'470680d0532d41b0b9c19abf343dd252');
 
 /*!40000 ALTER TABLE `au_categories` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -174,7 +174,7 @@ LOCK TABLES `au_consent` WRITE;
 
 INSERT INTO `au_consent` (`user_id`, `text_id`, `consent`, `date_consent`, `date_revoke`, `created`, `last_update`, `updater_id`, `status`)
 VALUES
-	(165,9,1,'2024-06-23 12:45:18',NULL,'2024-06-23 12:45:18','2024-06-23 12:45:18',0,1),
+	(165,9,1,'2024-06-23 12:45:18',NULL,'2024-06-23 12:45:18','2024-10-28 18:18:01',0,1),
 	(165,11,1,'2024-06-23 12:47:20',NULL,'2024-06-23 12:47:20','2024-06-23 12:47:20',0,1),
 	(266,9,1,'2024-09-12 17:00:13',NULL,'2024-09-12 17:00:13','2024-09-12 17:00:13',0,1),
 	(266,11,1,'2024-09-12 17:00:12',NULL,'2024-09-12 17:00:12','2024-09-12 17:00:12',0,1);
@@ -291,11 +291,11 @@ VALUES
 	(265,'School Garden for Food Donation','Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,2,NULL,NULL,0),
 	(266,'Adopt-a-Neighbor Program','Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-07-29 15:55:02','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,0,'',NULL,3,NULL,NULL,0),
 	(267,'Solar-Powered Charging Stations','Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,2,NULL,NULL,0),
-	(268,'Campus-wide Recycling Initiative','Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-07-29 15:54:55','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,'',NULL,4,NULL,NULL,0),
+	(268,'Campus-wide Recycling Initiative','Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-10-28 15:39:22','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,'',NULL,4,NULL,NULL,0),
 	(270,'Student Tech Lab','The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,0,NULL,NULL,0),
 	(271,'Community Mural Project','This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,-1,1,165,1,1,0,'2024-06-26 17:34:33','2024-06-26 17:35:30','9491c7450a1a946cfee61a575e51df90',10,'',0,106,0,0,NULL,NULL,0,NULL,NULL,0),
 	(272,'Enhancing Outdoor Learning Spaces','Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-07-29 14:58:50','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
-	(273,'Testabstimmung: Kino oder Theater?','Bitte stimmt ab, ob wir in das Theater gehen oder nicht',0,0,0,165,1,1,0,'2024-10-03 11:07:44','2024-10-03 11:07:44','807278ddcaa13c48e93a5a80eed8f22d',10,'',165,106,0,0,NULL,NULL,0,'','',0);
+	(273,'Testabstimmung: Kino oder Theater?','Bitte stimmt ab, ob wir in das Theater gehen oder nicht',0,0,1,165,1,1,0,'2024-10-03 11:07:44','2024-10-28 15:42:27','807278ddcaa13c48e93a5a80eed8f22d',10,'',165,106,0,0,NULL,NULL,0,'','',0);
 
 /*!40000 ALTER TABLE `au_ideas` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -395,9 +395,8 @@ VALUES
 	(38,165,'Test message','this is a test','2024-09-09 18:59:34',0,165,1,0,'2024-09-09 15:23:16','2024-09-09 15:59:34',165,'ceeb67b807833c4a30d95bcd430e109f',0,1,3,0,0),
 	(39,165,'Test','message to the mountains','2024-09-09 19:00:28',0,266,1,0,'2024-09-09 16:00:28','2024-09-09 16:00:28',165,'bde708293ddc3e242c21b0cc12ce73d8',0,1,3,0,0),
 	(40,165,'test','test','2024-09-09 19:20:52',0,0,1,0,'2024-09-09 16:20:52','2024-09-09 16:20:52',165,'464cd17bdeaf03115a2121b90e88c830',0,1,3,0,0),
-	(41,0,'Bug report','{\"data\":{\"location\":\"/settings/reports\",\"user\":165,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0\"},\"content\":\"test\"}','2024-09-11 02:23:35',0,0,3,0,'2024-09-10 23:23:35','2024-09-13 08:18:28',165,'2ffe77f72a1ac3ea692a5bcfd498d68c',0,1,4,0,0),
-	(44,0,'Bug report','{\"data\":{\"location\":\"/settings/messages\",\"user\":165,\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0\"},\"content\":\"This is a bug report\"}','2024-09-13 11:17:53',0,0,1,0,'2024-09-13 08:17:53','2024-09-13 08:17:53',165,'3205d1d792393d14169411d86ee2452d',0,1,4,0,0),
-	(45,165,'This is a message for Admin only','Only Admin should be able to read this','2024-09-13 11:19:36',0,165,1,0,'2024-09-13 08:19:36','2024-09-13 08:19:36',165,'5eeb5bd3995e6a96df2d95f92bb17aa1',0,1,3,0,0);
+	(45,165,'This is a message for Admin only','Only Admin should be able to read this','2024-09-13 11:19:36',0,165,1,0,'2024-09-13 08:19:36','2024-09-13 08:19:36',165,'5eeb5bd3995e6a96df2d95f92bb17aa1',0,1,3,0,0),
+	(48,165,'Account data export request for Admin User','{\"type\":\"requestData\",\"data\":{\"id\":165,\"username\":\"Admin\",\"email\":\"aula@aula.de\"},\"content\":\"A data export procedure was requested for user Admin User, alias Admin\"}','2024-10-29 11:21:23',0,0,1,0,'2024-10-29 11:21:23','2024-10-29 11:21:23',165,'ed0dd79739fb702b34cbaa0d1b50f5cd',0,1,5,0,0);
 
 /*!40000 ALTER TABLE `au_messages` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -659,6 +658,7 @@ VALUES
 	(474,271,'2024-06-26 17:34:49','2024-06-26 17:34:49',165),
 	(475,265,'2024-06-24 22:06:13','2024-06-24 22:06:13',165),
 	(475,266,'2024-06-24 22:06:13','2024-06-24 22:06:13',165),
+	(478,273,'2024-10-28 15:42:21','2024-10-28 15:42:21',165),
 	(489,278,'2024-07-18 15:44:33','2024-07-18 15:44:33',165);
 
 /*!40000 ALTER TABLE `au_rel_topics_ideas` ENABLE KEYS */;
@@ -804,16 +804,21 @@ CREATE TABLE `au_rooms` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hashed id of the room',
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set, user needs access code to access room',
   `internal_info` text DEFAULT NULL COMMENT 'internal info and notes on this room',
+  `phase_duration_0` int(11) DEFAULT 0 COMMENT 'phase duration 0',
+  `phase_duration_1` int(11) DEFAULT 0 COMMENT 'phase_duration_1',
+  `phase_duration_2` int(11) DEFAULT 0 COMMENT 'phase_duration_2',
+  `phase_duration_3` int(11) DEFAULT 0 COMMENT 'phase_duration_3',
+  `phase_duration_4` int(11) DEFAULT 0 COMMENT 'phase_duration_4',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 LOCK TABLES `au_rooms` WRITE;
 /*!40000 ALTER TABLE `au_rooms` DISABLE KEYS */;
 
-INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`)
+INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`, `phase_duration_0`, `phase_duration_1`, `phase_duration_2`, `phase_duration_3`, `phase_duration_4`)
 VALUES
-	(106,'The Innovation Hub','DI:6:0','DI:6:0',1,1,10,'2024-06-24 21:48:04','2024-07-25 16:43:46',165,'02a9374ae856c01ebb647c3b7570312d','',''),
-	(107,'AULA',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+	(106,'The Innovation Hub','DI:6:0','DI:6:0',1,1,10,'2024-06-24 21:48:04','2024-07-25 16:43:46',165,'02a9374ae856c01ebb647c3b7570312d','','',NULL,NULL,NULL,NULL,NULL),
+	(107,'AULA',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 /*!40000 ALTER TABLE `au_rooms` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -873,7 +878,7 @@ LOCK TABLES `au_system_current_state` WRITE;
 
 INSERT INTO `au_system_current_state` (`id`, `online_mode`, `revert_to_on_active`, `revert_to_on_date`, `created`, `last_update`, `updater_id`)
 VALUES
-	(1,1,0,'2024-09-09 08:00:00',NULL,'2024-10-02 09:02:59',266);
+	(1,1,0,'2024-09-09 08:00:00',NULL,'2024-10-29 10:23:11',266);
 
 /*!40000 ALTER TABLE `au_system_current_state` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -917,7 +922,7 @@ LOCK TABLES `au_system_global_config` WRITE;
 
 INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`, `enable_oauth`, `custom_field1_name`, `custom_field2_name`)
 VALUES
-	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465','2024-10-02 09:33:33',266,NULL,1,0,'Kosten','');
+	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465','2024-10-29 10:23:11',266,NULL,1,0,'Kosten','');
 
 /*!40000 ALTER TABLE `au_system_global_config` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -3288,7 +3293,113 @@ VALUES
 	(11506,0,'Successful login user aula',0,'','2024-10-03 11:05:06','2024-10-03 11:05:06',0),
 	(11507,0,'Successful login user aula',0,'','2024-10-03 11:05:50','2024-10-03 11:05:50',0),
 	(11508,0,'Added new idea (#273) Bitte stimmt ab, ob wir in das Theater gehen oder nicht',0,'','2024-10-03 11:07:44','2024-10-03 11:07:44',0),
-	(11509,0,'Added idea 273 to category 0',0,'','2024-10-03 11:07:44','2024-10-03 11:07:44',0);
+	(11509,0,'Added idea 273 to category 0',0,'','2024-10-03 11:07:44','2024-10-03 11:07:44',0),
+	(11510,0,'Successful login user aula',0,'','2024-10-28 14:49:40','2024-10-28 14:49:40',0),
+	(11511,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-10-28 14:49:48','2024-10-28 14:49:48',0),
+	(11512,0,'Successful login user aula',0,'','2024-10-28 14:51:00','2024-10-28 14:51:00',0),
+	(11513,0,'Successful login user aula',0,'','2024-10-28 14:52:40','2024-10-28 14:52:40',0),
+	(11514,0,'Successful login user aula',0,'','2024-10-28 14:59:31','2024-10-28 14:59:31',0),
+	(11515,0,'Successful login user aula',0,'','2024-10-28 15:26:50','2024-10-28 15:26:50',0),
+	(11516,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-10-28 15:37:30','2024-10-28 15:37:30',0),
+	(11517,0,'Successful login user aula',0,'','2024-10-28 15:37:39','2024-10-28 15:37:39',0),
+	(11518,0,'Added new topic (#476) There is a bug test',0,'','2024-10-28 15:38:32','2024-10-28 15:38:32',0),
+	(11519,0,'Added idea 273 to topic 476',0,'','2024-10-28 15:38:32','2024-10-28 15:38:32',0),
+	(11520,0,'Added new comment (#0) user: 165',0,'','2024-10-28 15:38:42','2024-10-28 15:38:42',0),
+	(11521,0,'Added new comment (#0) user: 165',0,'','2024-10-28 15:38:45','2024-10-28 15:38:45',0),
+	(11522,0,'Added new comment (#0) user: 165',0,'','2024-10-28 15:38:46','2024-10-28 15:38:46',0),
+	(11523,0,'Added new comment (#0) user: 165',0,'','2024-10-28 15:38:46','2024-10-28 15:38:46',0),
+	(11524,0,'Delegation status retrieved: user_id: 165, topic_id: 476',0,'','2024-10-28 15:38:52','2024-10-28 15:38:52',0),
+	(11525,0,'Comment deleted, id=38 by 165',0,'','2024-10-28 15:39:09','2024-10-28 15:39:09',0),
+	(11526,0,'Edited topic (#476) There is a bug test',0,'','2024-10-28 15:39:11','2024-10-28 15:39:11',0),
+	(11527,0,'Comment deleted, id=39 by 165',0,'','2024-10-28 15:39:13','2024-10-28 15:39:13',0),
+	(11528,0,'Comment deleted, id=37 by 165',0,'','2024-10-28 15:39:17','2024-10-28 15:39:17',0),
+	(11529,0,'Comment deleted, id=36 by 165',0,'','2024-10-28 15:39:22','2024-10-28 15:39:22',0),
+	(11530,0,'Delegation status retrieved: user_id: 165, topic_id: 476',0,'','2024-10-28 15:40:12','2024-10-28 15:40:12',0),
+	(11531,0,'Idea  273 number of votes given set to 1',0,'','2024-10-28 15:40:20','2024-10-28 15:40:20',0),
+	(11532,0,'Idea (#273) added Vote - value: 1 by 165',0,'','2024-10-28 15:40:20','2024-10-28 15:40:20',0),
+	(11533,0,'Idea  273 votes set to 0',0,'','2024-10-28 15:40:21','2024-10-28 15:40:21',0),
+	(11534,0,'Idea  273 number of votes given set to 1',0,'','2024-10-28 15:40:21','2024-10-28 15:40:21',0),
+	(11535,0,'Idea (#273) added Vote - value: 0 by 165',0,'','2024-10-28 15:40:21','2024-10-28 15:40:21',0),
+	(11536,0,'Idea  273 votes set to 0',0,'','2024-10-28 15:40:22','2024-10-28 15:40:22',0),
+	(11537,0,'Idea  273 number of votes given set to 1',0,'','2024-10-28 15:40:22','2024-10-28 15:40:22',0),
+	(11538,0,'Idea (#273) added Vote - value: -1 by 165',0,'','2024-10-28 15:40:22','2024-10-28 15:40:22',0),
+	(11539,0,'Topic deleted, id=476 by 165',0,'','2024-10-28 15:40:32','2024-10-28 15:40:32',0),
+	(11540,0,'Added new topic (#477) There is a bug test',0,'','2024-10-28 15:40:55','2024-10-28 15:40:55',0),
+	(11541,0,'Added idea 273 to topic 477',0,'','2024-10-28 15:40:55','2024-10-28 15:40:55',0),
+	(11542,0,'Succesfully moved idea 273 to topic 477',0,'','2024-10-28 15:40:55','2024-10-28 15:40:55',0),
+	(11543,0,'Delegation status retrieved: user_id: 165, topic_id: 477',0,'','2024-10-28 15:40:57','2024-10-28 15:40:57',0),
+	(11544,0,'Idea  273 votes set to 0',0,'','2024-10-28 15:41:03','2024-10-28 15:41:03',0),
+	(11545,0,'Idea  273 number of votes given set to 1',0,'','2024-10-28 15:41:03','2024-10-28 15:41:03',0),
+	(11546,0,'Idea (#273) added Vote - value: 1 by 165',0,'','2024-10-28 15:41:03','2024-10-28 15:41:03',0),
+	(11547,0,'Successful login user aula',0,'','2024-10-28 15:41:38','2024-10-28 15:41:38',0),
+	(11548,0,'Topic deleted, id=477 by 165',0,'','2024-10-28 15:41:47','2024-10-28 15:41:47',0),
+	(11549,0,'Added new topic (#478) There is a bug test',0,'','2024-10-28 15:42:21','2024-10-28 15:42:21',0),
+	(11550,0,'Added idea 273 to topic 478',0,'','2024-10-28 15:42:21','2024-10-28 15:42:21',0),
+	(11551,0,'Succesfully moved idea 273 to topic 478',0,'','2024-10-28 15:42:21','2024-10-28 15:42:21',0),
+	(11552,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-10-28 15:42:24','2024-10-28 15:42:24',0),
+	(11553,0,'Idea  273 votes set to 0',0,'','2024-10-28 15:42:27','2024-10-28 15:42:27',0),
+	(11554,0,'Idea  273 number of votes given set to 1',0,'','2024-10-28 15:42:27','2024-10-28 15:42:27',0),
+	(11555,0,'Idea (#273) added Vote - value: 0 by 165',0,'','2024-10-28 15:42:27','2024-10-28 15:42:27',0),
+	(11556,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-10-28 15:43:10','2024-10-28 15:43:10',0),
+	(11557,0,'Topic deleted, id=478 by 165',0,'','2024-10-28 15:43:55','2024-10-28 15:43:55',0),
+	(11558,0,'Delegation status retrieved: user_id: 165, topic_id: 478',0,'','2024-10-28 15:57:17','2024-10-28 15:57:17',0),
+	(11559,1,'DB Error login user admin',0,'','2024-10-28 18:09:24','2024-10-28 18:09:24',0),
+	(11560,0,'Successful login user aula',0,'','2024-10-28 18:09:31','2024-10-28 18:09:31',0),
+	(11561,0,'Added consent for user 165 for text 9',0,'','2024-10-28 18:18:01','2024-10-28 18:18:01',0),
+	(11562,0,'Text status changed 9 by 165',0,'','2024-10-28 18:18:01','2024-10-28 18:18:01',0),
+	(11563,0,'Custom field names set to Kosten and ',0,'','2024-10-28 18:21:51','2024-10-28 18:21:51',0),
+	(11564,0,'Added new message (#46) Bug report',0,'','2024-10-29 00:56:03','2024-10-29 00:56:03',0),
+	(11565,1,'DB Error login user Johannes Hüsken',0,'','2024-10-29 08:51:10','2024-10-29 08:51:10',0),
+	(11566,1,'DB Error login user Johannes Hüsken',0,'','2024-10-29 08:51:12','2024-10-29 08:51:12',0),
+	(11567,1,'DB Error login user Johannes Hüsken',0,'','2024-10-29 08:51:13','2024-10-29 08:51:13',0),
+	(11568,1,'DB Error login user Johannes Hüsken',0,'','2024-10-29 08:51:14','2024-10-29 08:51:14',0),
+	(11569,1,'DB Error login user Johannes Hüsken',0,'','2024-10-29 08:51:15','2024-10-29 08:51:15',0),
+	(11570,1,'DB Error login user Johannes Hüsken',0,'','2024-10-29 08:51:22','2024-10-29 08:51:22',0),
+	(11571,1,'DB Error login user Johhüs',0,'','2024-10-29 08:51:48','2024-10-29 08:51:48',0),
+	(11572,1,'DB Error login user Johhüs',0,'','2024-10-29 08:51:49','2024-10-29 08:51:49',0),
+	(11573,0,'Successful login user aula',0,'','2024-10-29 09:04:14','2024-10-29 09:04:14',0),
+	(11574,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:53','2024-10-29 09:06:53',0),
+	(11575,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:55','2024-10-29 09:06:55',0),
+	(11576,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:55','2024-10-29 09:06:55',0),
+	(11577,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:56','2024-10-29 09:06:56',0),
+	(11578,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:56','2024-10-29 09:06:56',0),
+	(11579,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:56','2024-10-29 09:06:56',0),
+	(11580,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:57','2024-10-29 09:06:57',0),
+	(11581,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:57','2024-10-29 09:06:57',0),
+	(11582,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:58','2024-10-29 09:06:58',0),
+	(11583,1,'DB Error login user Siliki',0,'','2024-10-29 09:06:58','2024-10-29 09:06:58',0),
+	(11584,1,'DB Error login user Siliki',0,'','2024-10-29 09:07:00','2024-10-29 09:07:00',0),
+	(11585,1,'DB Error login user Siliki',0,'','2024-10-29 09:07:40','2024-10-29 09:07:40',0),
+	(11586,1,'DB Error login user silas.iking@pgc.bistum365.de',0,'','2024-10-29 09:08:04','2024-10-29 09:08:04',0),
+	(11587,1,'DB Error login user silas.iking@pgc.bistum365.de',0,'','2024-10-29 09:08:05','2024-10-29 09:08:05',0),
+	(11588,1,'DB Error login user Siliki',0,'','2024-10-29 09:11:28','2024-10-29 09:11:28',0),
+	(11589,1,'DB Error login user Siliki',0,'','2024-10-29 09:11:30','2024-10-29 09:11:30',0),
+	(11590,1,'DB Error login user Siliki',0,'','2024-10-29 09:11:32','2024-10-29 09:11:32',0),
+	(11591,1,'DB Error login user Siliki',0,'','2024-10-29 09:11:33','2024-10-29 09:11:33',0),
+	(11592,1,'DB Error login user Siliki',0,'','2024-10-29 09:11:33','2024-10-29 09:11:33',0),
+	(11593,1,'DB Error login user Siliki',0,'','2024-10-29 09:11:41','2024-10-29 09:11:41',0),
+	(11594,1,'DB Error login user Siliki',0,'','2024-10-29 09:12:13','2024-10-29 09:12:13',0),
+	(11595,1,'DB Error login user Siliki',0,'','2024-10-29 09:12:14','2024-10-29 09:12:14',0),
+	(11596,1,'DB Error login user Siliki',0,'','2024-10-29 09:12:15','2024-10-29 09:12:15',0),
+	(11597,1,'DB Error login user Siliki',0,'','2024-10-29 09:12:19','2024-10-29 09:12:19',0),
+	(11598,1,'DB Error login user Siliki',0,'','2024-10-29 09:12:19','2024-10-29 09:12:19',0),
+	(11599,1,'DB Error login user Siliki',0,'','2024-10-29 09:12:23','2024-10-29 09:12:23',0),
+	(11600,0,'Online mode set to 1',0,'','2024-10-29 10:23:11','2024-10-29 10:23:11',0),
+	(11601,0,'Online mode set to 1',0,'','2024-10-29 10:23:11','2024-10-29 10:23:11',0),
+	(11602,0,'Allow registration set to 0',0,'','2024-10-29 10:23:11','2024-10-29 10:23:11',0),
+	(11603,0,'status for OAUTH set to 0',0,'','2024-10-29 10:23:11','2024-10-29 10:23:11',0),
+	(11604,0,'Successful login user aula',0,'','2024-10-29 10:42:03','2024-10-29 10:42:03',0),
+	(11605,1,'DB Error login user anna',0,'','2024-10-29 10:43:02','2024-10-29 10:43:02',0),
+	(11606,1,'DB Error login user luca',0,'','2024-10-29 10:43:12','2024-10-29 10:43:12',0),
+	(11607,1,'DB Error login user dilara',0,'','2024-10-29 10:43:20','2024-10-29 10:43:20',0),
+	(11608,0,'Successful login user aula',0,'','2024-10-29 10:43:37','2024-10-29 10:43:37',0),
+	(11609,0,'Successful login user aula',0,'','2024-10-29 11:05:25','2024-10-29 11:05:25',0),
+	(11610,0,'Successful login user aula',0,'','2024-10-29 11:13:00','2024-10-29 11:13:00',0),
+	(11611,0,'Added new message (#47) Content report',0,'','2024-10-29 11:19:01','2024-10-29 11:19:01',0),
+	(11612,0,'Added new message (#48) Account data export request for Admin User',0,'','2024-10-29 11:21:23','2024-10-29 11:21:23',0),
+	(11613,0,'Successful login user aula',0,'','2024-10-29 11:21:34','2024-10-29 11:21:34',0),
+	(11614,0,'Successful login user aula',0,'','2024-10-29 12:32:24','2024-10-29 12:32:24',0),
+	(11615,0,'Added new message (#49) /messages',0,'','2024-10-29 12:32:45','2024-10-29 12:32:45',0);
 
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -3323,7 +3434,7 @@ LOCK TABLES `au_texts` WRITE;
 INSERT INTO `au_texts` (`id`, `creator_id`, `headline`, `body`, `user_needs_to_consent`, `service_id_consent`, `consent_text`, `language_id`, `location`, `created`, `last_update`, `updater_id`, `hash_id`, `status`)
 VALUES
 	(8,0,'Sample Text','test message',0,0,'Agree',0,NULL,'2024-06-22 22:30:30','2024-06-22 22:30:30',165,'3ce902fa6d5fc806c02017188a2e0daa',1),
-	(9,0,'Test Mandatory message','test this message',2,0,'Agree',0,NULL,'2024-06-23 12:27:27','2024-06-23 12:27:27',165,'0a4f7789ffe37e398393af1fa120f4d0',1),
+	(9,0,'Test Mandatory message','test this message',2,0,'Agree',0,NULL,'2024-06-23 12:27:27','2024-10-28 18:18:01',165,'0a4f7789ffe37e398393af1fa120f4d0',3),
 	(10,0,'Optional consent message','This message is not mandatory',1,0,'Agree',0,NULL,'2024-06-23 12:30:58','2024-06-23 12:30:58',165,'faca362395a9bf1f4add5370aa6ee67d',1),
 	(11,0,'Another consent','Mandatory consent',2,0,'Agree',0,NULL,'2024-06-23 12:47:07','2024-06-23 12:47:07',165,'da35ed97b7014ba1a8f456c47e0f54ba',1);
 
@@ -3351,11 +3462,11 @@ CREATE TABLE `au_topics` (
   `phase_id` int(11) DEFAULT 1 COMMENT 'Number of phase the topic is in (0=wild idea 1=work 2=approval 3=voting 4=implemenation',
   `wild_ideas_enabled` int(11) DEFAULT 1 COMMENT '1=enabled 0=disabled',
   `publishing_date` datetime DEFAULT NULL COMMENT 'Date, when the topic is active (Phases start working)',
-  `phase_duration_0` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
-  `phase_duration_1` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
-  `phase_duration_2` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
-  `phase_duration_3` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
-  `phase_duration_4` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
+  `phase_duration_0` int(11) DEFAULT 0 COMMENT 'Duration of phase 0',
+  `phase_duration_1` int(11) DEFAULT 0 COMMENT 'Duration of phase 1',
+  `phase_duration_2` int(11) DEFAULT 0 COMMENT 'Duration of phase 2',
+  `phase_duration_3` int(11) DEFAULT 0 COMMENT 'Duration of phase 3',
+  `phase_duration_4` int(11) DEFAULT 0 COMMENT 'Duration of phase 4',
   `type` int(11) DEFAULT 0 COMMENT 'type of box (0=std, 1= special)',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
@@ -3468,7 +3579,7 @@ LOCK TABLES `au_users_basedata` WRITE;
 
 INSERT INTO `au_users_basedata` (`id`, `realname`, `displayname`, `username`, `email`, `pw`, `position`, `hash_id`, `about_me`, `registration_status`, `status`, `created`, `last_update`, `updater_id`, `creator_id`, `bi`, `userlevel`, `infinite_votes`, `last_login`, `presence`, `absent_until`, `auto_delegation`, `trustee_id`, `o1`, `o2`, `o3`, `consents_given`, `consents_needed`, `temp_pw`, `pw_changed`)
 VALUES
-	(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','0',NULL,1,'2023-06-17 14:58:43','2024-10-03 11:05:50',0,0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-10-03 11:05:50',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0),
+	(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','',NULL,1,'2023-06-17 14:58:43','2024-10-29 13:44:28',0,0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-10-29 12:32:24',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0),
 	(264,'Albrecht Durer','durer','adurer','adurer@aula.de','$2y$10$1NNLacyzYP3zI5Ipy1FgOOxbyP9Ezhuch3OkT5uSWIdRBaafJYpS2',NULL,'940ec2b51215d712b2228989e9d04863','description?',NULL,1,'2024-07-03 16:31:19','2024-07-17 16:37:09',165,0,'d47b6ae7477f77ac3c5ff48d0ca8cded',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,-3,NULL,0),
 	(265,'Alfred Doblin','doblin','adoblin','adoblin@aula.de','$2y$10$/4NX2p3PEK4YkXVrUHCfiOJL7Jve2kJzP21qMeTsJX5uQ/SjgLIV6',NULL,'599cf1b62ab5ac0b1b3facbd5f08c215','description?',NULL,1,'2024-07-03 16:32:37','2024-07-17 16:37:09',165,0,'4347d0beb442602471ae29cd56a73d9e',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,-3,NULL,0),
 	(266,'Friedrich Nietzsche','zaratustra','fnietzsche','fnietzsche@aula.de','$2y$10$YTH2z9ucipRCHxvqAE.Q3Oaj1/KF0r0u2Roflx.DNZVyNUXvOjzLe',NULL,'a50a9bb4f3f792eb7ea94f05629f0cc1','description?',NULL,1,'2024-07-03 16:33:24','2024-10-02 09:02:59',165,0,'e6d4d10df940311f3642f0bd7e19b22e',60,NULL,'2024-10-02 09:02:59',1,NULL,0,NULL,102,102,122,0,-3,NULL,0),
@@ -3527,7 +3638,8 @@ VALUES
 	(111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,''),
 	(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,''),
 	(144,165,263,1,1,'2024-07-17 09:30:30','2024-07-17 09:30:30','1e77f623fec0bca95a01fa60e32ea967',1,0,''),
-	(148,165,264,0,1,'2024-07-23 16:30:29','2024-07-23 16:30:29','20e34c8db6e1e2b9034e052c63694587',1,0,'');
+	(148,165,264,0,1,'2024-07-23 16:30:29','2024-07-23 16:30:29','20e34c8db6e1e2b9034e052c63694587',1,0,''),
+	(153,165,273,0,1,'2024-10-28 15:42:27','2024-10-28 15:42:27','6f3174998e00a662aa1211bde3e04633',1,0,'');
 
 /*!40000 ALTER TABLE `au_votes` ENABLE KEYS */;
 UNLOCK TABLES;
