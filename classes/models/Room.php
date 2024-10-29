@@ -203,6 +203,62 @@ class Room
     }
   }// end function
 
+  public function setRoomPhaseDurations($room_id, $phase_duration_0,  $phase_duration_1,  $phase_duration_2,  $phase_duration_3,  $phase_duration_4, $updater_id = 0)
+  {
+    /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+     $duration 0-4 : durations (int) for phases (default)
+     
+     updater_id is the id of the user that commits the update (i.E. admin )
+    */
+    $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    
+    $phase_duration_0 = intval ($phase_duration_0);
+    $phase_duration_1 = intval ($phase_duration_1);
+    $phase_duration_2 = intval ($phase_duration_2);
+    $phase_duration_3 = intval ($phase_duration_3);
+    $phase_duration_4 = intval ($phase_duration_4);
+
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_rooms . ' SET phase_duration_0 = :phase_duration_0, phase_duration_1 = :phase_duration_1, phase_duration_2 = :phase_duration_2,  phase_duration_3 = :phase_duration_3,  phase_duration_4 = :phase_duration_4, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+    // bind all VALUES
+    $this->db->bind(':phase_duration_0', $phase_duration_0);
+    $this->db->bind(':phase_duration_1', $phase_duration_1);
+    $this->db->bind(':phase_duration_2', $phase_duration_2);
+    $this->db->bind(':phase_duration_3', $phase_duration_3);
+    $this->db->bind(':phase_duration_4', $phase_duration_4);
+
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+    $this->db->bind(':room_id', $room_id); // room that is updated
+
+    $err = false; // set error variable to false
+
+    try {
+      $action = $this->db->execute(); // do the query
+
+    } catch (Exception $e) {
+
+      $err = true;
+    }
+    if (!$err) {
+      $this->syslog->addSystemEvent(0, "Room phase durations " . $property . " changed for id " . $room_id . " to " . $prop_value . " by " . $updater_id, 0, "", 1);
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = 1; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      //$this->syslog->addSystemEvent(1, "Error changing room property ".$property." for id ".$room_id." to ".$prop_value." by ".$updater_id, 0, "", 1);
+      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+  }// end function
+
   public function setRoomIdeasDisabled($room_id, $updater_id = 0)
   {
 
