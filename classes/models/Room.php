@@ -801,7 +801,7 @@ class Room
   }
 
 
-  public function editRoom($room_id, $room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $order_importance = 10, $updater_id = 0)
+  public function editRoom($room_id, $room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $order_importance = 10, $updater_id = 0, $phase_duration_0 = 0, $phase_duration_1 = 0, $phase_duration_2 = 0, $phase_duration_3 = 0,  $phase_duration_4 = 0)
   {
     /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
 
@@ -813,18 +813,32 @@ class Room
     $internal_info = trim($internal_info);
     $access_code = trim($access_code);
     $status = intval($status);
+    
+    $phase_duration_0 = intval ($phase_duration_0);
+    $phase_duration_1 = intval ($phase_duration_1);
+    $phase_duration_2 = intval ($phase_duration_2);
+    $phase_duration_3 = intval ($phase_duration_3);
+    $phase_duration_4 = intval ($phase_duration_4);
+    
     $order_importance = intval($order_importance);
 
     $updater_id = $this->converters->checkUserId($updater_id); // autoconvert
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_rooms . ' SET room_name = :room_name, description_public = :description_public , description_internal= :description_internal, internal_info= :internal_info, status= :status, access_code= :access_code, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_rooms . ' SET phase_duration_0 = :phase_duration_0,  phase_duration_1 = :phase_duration_1,  phase_duration_2 = :phase_duration_2,  phase_duration_3 = :phase_duration_3, phase_duration_4 = :phase_duration_4, room_name = :room_name, description_public = :description_public , description_internal= :description_internal, internal_info= :internal_info, status= :status, access_code= :access_code, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
     // bind all VALUES
     $this->db->bind(':room_name', $room_name); // name of the room
     $this->db->bind(':description_public', $description_public); // shown in frontend
     $this->db->bind(':description_internal', $description_internal); // only shown in backend admin
     $this->db->bind(':internal_info', $internal_info); // extra internal info, only visible in backend
     $this->db->bind(':status', $status); // status of the room (0=inactive, 1=active, 4=archived)
+    
+    $this->db->bind(':phase_duration_0', $phase_duration_0); // phase_duration of the room 
+    $this->db->bind(':phase_duration_1', $phase_duration_1); // phase_duration of the room 
+    $this->db->bind(':phase_duration_2', $phase_duration_2); // phase_duration of the room 
+    $this->db->bind(':phase_duration_3', $phase_duration_3); // phase_duration of the room 
+    $this->db->bind(':phase_duration_4', $phase_duration_4); // phase_duration of the room 
+    
     $this->db->bind(':access_code', $access_code); // optional access code for room access
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
     $this->db->bind(':order_importance', $order_importance); // order for display in frontend
@@ -862,7 +876,7 @@ class Room
     }
   }// end function
 
-  public function addRoom($room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $restricted = 1, $order_importance = 10, $updater_id = 0)
+  public function addRoom($room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $restricted = 1, $order_importance = 10, $updater_id = 0, $phase_duration_0 = 0, $phase_duration_1 = 0, $phase_duration_2 = 0, $phase_duration_3 = 0, $phase_duration_4 = 0)
   {
     /* adds a new room and returns insert id (room id) if successful, accepts the above parameters
      description_public = actual description of the room, status = status of inserted room (0 = inactive, 1=active)
@@ -873,6 +887,13 @@ class Room
     //sanitize in vars
     $restricted = intval($restricted);
     $updater_id = intval($updater_id);
+    
+    $phase_duration_0 = intval ($phase_duration_0)
+    $phase_duration_1 = intval ($phase_duration_1)
+    $phase_duration_2 = intval ($phase_duration_2)
+    $phase_duration_3 = intval ($phase_duration_3)
+    $phase_duration_4 = intval ($phase_duration_4)
+    
     $status = intval($status);
     $order_importance = intval($order_importance);
     $room_name = trim($room_name);
@@ -890,7 +911,7 @@ class Room
       return $returnvalue;
     }
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rooms . ' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :order_importance)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rooms . ' (phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4, room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance) VALUES (:phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4, :room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :order_importance)');
     // bind all VALUES
 
     $this->db->bind(':room_name', trim($room_name));
@@ -900,6 +921,14 @@ class Room
     $this->db->bind(':access_code', $hash_access_code);
     $this->db->bind(':status', $status);
     $this->db->bind(':restricted', $restricted);
+
+
+    $this->db->bind(':phase_duration_0', $phase_duration_0);
+    $this->db->bind(':phase_duration_1', $phase_duration_1);
+    $this->db->bind(':phase_duration_2', $phase_duration_2);
+    $this->db->bind(':phase_duration_3', $phase_duration_3);
+    $this->db->bind(':phase_duration_4', $phase_duration_4);
+    
     // generate unique hash for this user
     $testrand = rand(100, 10000000);
     $appendix = microtime(true) . $testrand;
