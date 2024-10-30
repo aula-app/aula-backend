@@ -1243,13 +1243,14 @@ class User
 
   }// end function
 
-  public function addCSV($csv, $user_level = 20, $separator = ";")
+  public function addCSV($csv, $user_level = 20, $separator = ";", $room_id = 0)
   {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
     # realname;displayname;username;email;about_me; room_id
     # email, about_me, displayname are not mandatory (can be empty in CSV), realname and username are mandatory
     # if no email is provided then a temp password is generated for the user
+    # room_id is passed separately with the parameter $room_id
     # no first line with field names!
     # linebreak must be \n
 
@@ -1260,7 +1261,7 @@ class User
     $display_name = "";
     $email = "";
     $about_me = "";
-    $room_id = 0;
+    
 
     if (strlen($csv) > 1 && str_contains($csv, ';')) {
       # basic check of CSV
@@ -1275,7 +1276,7 @@ class User
         $user_name = $data[2];
         $email = $data[3];
         $about_me = $data[4];
-        $room_id = $data[5];
+        
 
         // check if user name is still available
         $user_ok = false;
@@ -1304,7 +1305,10 @@ class User
             if (isset($room_id) && $room_id > 0) {
               $this->addUserToRoom($insert_id, $room_id);
             }
-
+            
+            # also add to default 0 room (aula)
+            $this->addUserToRoom($insert_id, 0);
+            
             $user_array['real_name'] = $real_name;
             $user_array['display_name'] = $display_name;
             $user_array['user_name'] = $user_name;
