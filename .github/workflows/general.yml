@@ -19,6 +19,8 @@ jobs:
           cp -vr * /var/www/api
           cp -vr * /var/www-aula-test/api
           cp -vr * /var/www-aula-bw/api
+          /home/actions-runner/update_backend_folders.sh
+          echo "Instances backend updated"
           /home/actions-runner/recreate_db.sh
           echo "Database recreated"
         shell: bash

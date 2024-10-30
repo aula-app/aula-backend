@@ -43,7 +43,7 @@ if ($loginResult["success"] && $loginResult["error_code"] == 0) {
   $jwt_token = $jwt->gen_jwt($loginResult["data"]);
   echo json_encode(['JWT' => $jwt_token, "success" => true]);
 } else {
-  echo json_encode(["success" => "false"]);
+  echo json_encode(["success" => false]);
 }
 
 ?>
