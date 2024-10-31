@@ -1351,14 +1351,16 @@ class Idea
       $extra_where .= " AND " . $this->db->au_ideas . ".type = " . $type;
     }
 
-    if ($room_id > 0 || $user_id > 0) {
+    if ($user_id > 0) {
       // if a room id is set then add to where clause
       // check user level first!
-      if ($user_id > 0 && $level < 50) {
+      if ($level < 50) {
         // user is not super admin, restrict to rooms that the user is a member of = change clause
         $room_id = "SELECT room_id FROM " . $this->db->au_rel_rooms_users . " WHERE user_id = " . $user_id;
       }
+    }
 
+    if ($room_id > 0) {
       $extra_where .= " AND " . $this->db->au_ideas . "room_id IN (" . $room_id . ")"; // get specific topics to a room
     }
 
