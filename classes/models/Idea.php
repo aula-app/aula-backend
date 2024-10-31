@@ -1361,7 +1361,7 @@ class Idea
     }
 
     if ($room_id > 0) {
-      $extra_where .= " AND " . $this->db->au_ideas . "room_id IN (" . $room_id . ")"; // get specific topics to a room
+      $extra_where .= " AND " . $this->db->au_ideas . ".room_id IN (" . $room_id . ")"; // get specific topics to a room
     }
 
     if (strlen($info) > 0) {
