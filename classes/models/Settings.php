@@ -35,7 +35,7 @@ class Settings
 
   public function hasPermissions($user_id, $userlevel, $method, $arguments)
   {
-    if ($method == "getInstanceSettings") {
+    if ($method == "getInstanceSettings" or $method == "getCustomfields") {
        return ["allowed" => true];
     }
     if ($userlevel >= 50) {
