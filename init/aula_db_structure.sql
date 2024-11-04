@@ -1,13 +1,13 @@
 # ************************************************************
 # Sequel Ace SQL dump
-# Version 20062
+# Version 20073
 #
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-10-03 12:42:30 +0000
+# Verarbeitungszeit: 2024-10-29 13:44:39 +0000
 # ************************************************************
 
 
@@ -610,6 +610,11 @@ CREATE TABLE `au_rooms` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hashed id of the room',
   `access_code` varchar(1024) DEFAULT NULL COMMENT 'if set, user needs access code to access room',
   `internal_info` text DEFAULT NULL COMMENT 'internal info and notes on this room',
+  `phase_duration_0` int(11) DEFAULT 0 COMMENT 'phase duration 0',
+  `phase_duration_1` int(11) DEFAULT 0 COMMENT 'phase_duration_1',
+  `phase_duration_2` int(11) DEFAULT 0 COMMENT 'phase_duration_2',
+  `phase_duration_3` int(11) DEFAULT 0 COMMENT 'phase_duration_3',
+  `phase_duration_4` int(11) DEFAULT 0 COMMENT 'phase_duration_4',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -765,11 +770,11 @@ CREATE TABLE `au_topics` (
   `phase_id` int(11) DEFAULT 1 COMMENT 'Number of phase the topic is in (0=wild idea 1=work 2=approval 3=voting 4=implemenation',
   `wild_ideas_enabled` int(11) DEFAULT 1 COMMENT '1=enabled 0=disabled',
   `publishing_date` datetime DEFAULT NULL COMMENT 'Date, when the topic is active (Phases start working)',
-  `phase_duration_0` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
-  `phase_duration_1` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
-  `phase_duration_2` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
-  `phase_duration_3` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
-  `phase_duration_4` int(11) DEFAULT NULL COMMENT 'Duration of phase 1',
+  `phase_duration_0` int(11) DEFAULT 0 COMMENT 'Duration of phase 0',
+  `phase_duration_1` int(11) DEFAULT 0 COMMENT 'Duration of phase 1',
+  `phase_duration_2` int(11) DEFAULT 0 COMMENT 'Duration of phase 2',
+  `phase_duration_3` int(11) DEFAULT 0 COMMENT 'Duration of phase 3',
+  `phase_duration_4` int(11) DEFAULT 0 COMMENT 'Duration of phase 4',
   `type` int(11) DEFAULT 0 COMMENT 'type of box (0=std, 1= special)',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
