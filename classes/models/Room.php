@@ -849,6 +849,12 @@ class Room
     $appendix = microtime(true) . $testrand;
     $hash_id = md5($room_name . $appendix); // create hash id for this user
     $this->db->bind(':hash_id', $hash_id);
+    $this->db->bind(':phase_duration_0', $phase_duration_0);
+    $this->db->bind(':phase_duration_1', $phase_duration_1);
+    $this->db->bind(':phase_duration_2', $phase_duration_2);
+    $this->db->bind(':phase_duration_3', $phase_duration_3);
+    $this->db->bind(':phase_duration_4', $phase_duration_4);
+    
     $this->db->bind(':order_importance', $order_importance); // order parameter
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
