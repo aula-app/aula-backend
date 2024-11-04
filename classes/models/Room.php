@@ -834,7 +834,7 @@ class Room
       return $returnvalue;
     }
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rooms . ' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :order_importance, :phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rooms . ' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance, phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :order_importance, :phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4)');
     // bind all VALUES
 
     $this->db->bind(':room_name', trim($room_name));
