@@ -806,7 +806,7 @@ class Room
     }
   }// end function
 
-  public function addRoom($room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $restricted = 1, $order_importance = 10, $updater_id = 0)
+  public function addRoom($room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $restricted = 1, $order_importance = 10, $updater_id = 0, $phase_duration_0 = 0, $phase_duration_1 = 0, $phase_duration_2 = 0, $phase_duration_3 = 0, $phase_duration_4 = 0)
   {
     /* adds a new room and returns insert id (room id) if successful, accepts the above parameters
      description_public = actual description of the room, status = status of inserted room (0 = inactive, 1=active)
@@ -834,7 +834,7 @@ class Room
       return $returnvalue;
     }
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rooms . ' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :order_importance)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rooms . ' (room_name, description_public, description_internal, internal_info, status, hash_id, access_code, created, last_update, updater_id, restrict_to_roomusers_only, order_importance, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4) VALUES (:room_name, :description_public, :description_internal, :internal_info, :status, :hash_id, :access_code, NOW(), NOW(), :updater_id, :restricted, :order_importance, :phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4)');
     // bind all VALUES
 
     $this->db->bind(':room_name', trim($room_name));
