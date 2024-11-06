@@ -52,7 +52,7 @@ if ($auth0->getExchangeParameters()) {
         $displayname = $realname;
         $username = $session->user["nickname"];
         $email = $user_email;
-        $user_id = $user->addUser($realname, $displayname, $username, $email, nomail: true);
+        $user_id = $user->addUser($realname, $displayname, $username, $email, nomail: true)["data"]["insert_id"];
       }
       
       if ($current_settings["data"]["online_mode"] != 1 && $loginResult["data"]["userlevel"] < 50) {
