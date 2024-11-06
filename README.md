@@ -81,7 +81,7 @@
 
    d. Install and configure PHP and Memcached.
 
-   e. Disable PHP errors reporting, in particular the Warnings.
+   e. Disable PHP errors reporting, in particular the Warnings setting `display_errors = Off` on your php.ini file.
 
    f. Login to your aula system with  user: admin, password: change-this-password
 
