@@ -1941,11 +1941,11 @@ class User
   }// end function
 
 
-  public function addUser($realname, $displayname, $username, $email = "", $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10)
+  public function addUser($realname, $displayname, $username, $email = "", $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10, $nomail = false)
   {
     $send_email = false;
 
-    if ($email != '') {
+    if ($email != '' && !$nomail) {
       $send_email = true;
     }
 
@@ -2034,6 +2034,7 @@ class User
 
     } catch (Exception $e) {
 
+      print_r($e);
       $err = true;
     }
 

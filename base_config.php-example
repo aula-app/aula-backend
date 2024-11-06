@@ -11,6 +11,29 @@ $baseConfigDir = "/var/www/html/api/";
 $cryptFile="/var/www/html/api/superkey.ini";
 $jwtKeyFile="/var/www/html/api/jwt_key.ini";
 
-$filesDir="/var/www/html/files" 
+$filesDir="/var/www/html/files";
+
+$oauth_redirect="";
+
+# Your Auth0 application's Client ID
+$AUTH0_CLIENT_ID = "AUTH0-CLIENT-ID";
+
+# The URL of your Auth0 tenant domain
+$AUTH0_DOMAIN = "AUTH0-DOMAIN";
+
+# Your Auth0 application's Client Secret
+$AUTH0_CLIENT_SECRET = "AUTH0-CLIENT-SECRET";
+
+# A long, secret value used to encrypt the session cookie.
+# This can be generated using `openssl rand -hex 32` from your shell.
+$AUTH0_COOKIE_SECRET = "AUTH0-COOKIE-SECRET";
+
+# A url your application is accessible from. Update this as appropriate.
+$AUTH0_BASE_URL = "https://devel.aula.de";
+
+$AUTH0_REDIRECT_URI = "https://devel.aula.de/api/controllers/auth0.php";
+
+$AUTH0_FRONTEND_REDIRECT = "https://devel.aula.de/oauth-login/";
+
 
 ?>
