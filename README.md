@@ -1,5 +1,7 @@
 # Aula API
 
+## How to install
+
 1. Copy aula-api content to a path that will be acessible thourgh your Apache2 server.
 
 2. Create a database for aula:
