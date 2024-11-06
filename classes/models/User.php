@@ -1525,7 +1525,7 @@ class User
   }// end function
 
 
-  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $both_names = "", $search_field = "", $search_text = "", $extra_where = "", $status = -1, $userlevel = -1)
+  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $both_names = "", $search_field = "", $search_text = "", $extra_where = "", $status = -1, $userlevel = -1, $room_id = -1)
   {
     /* returns userlist (associative array) with start and limit provided
     extra_where = SQL Clause that can be added to where in the query like AND status = 1
@@ -1667,18 +1667,18 @@ class User
     $check_email = false;
     $extra_where = "";
 
-    if (strlen (trim ($email)) > 2) {
+    if (strlen(trim($email)) > 2) {
       $extra_where = " OR email = :email";
       $check_email = true;
     }
 
-    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_users_basedata . ' WHERE bi = :bi'.$extra_where);
-    
+    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_users_basedata . ' WHERE bi = :bi' . $extra_where);
+
     if ($check_email) {
       $this->db->bind(':email', $email); // bind email
     }
     $this->db->bind(':bi', $bi); // bind blind index
-    
+
     $users = $this->db->resultSet();
     if (count($users) < 1) {
       $returnvalue['success'] = true; // set return value
@@ -2604,7 +2604,7 @@ class User
     $stmt = $this->db->query('SELECT room_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE user_id = :user_id');
     $this->db->bind(':user_id', $user_id); // bind userid
     $rooms = $this->db->resultSet();
-    
+
     if (count($users) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // db error code
