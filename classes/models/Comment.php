@@ -424,9 +424,12 @@ class Comment
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
     $err = false; // set error variable to false
+    $insertid = 0; // init
 
     try {
       $action = $this->db->execute(); // do the query
+      $insertid = intval($this->db->lastInsertId());
+
 
     } catch (Exception $e) {
 
@@ -436,8 +439,6 @@ class Comment
       $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET sum_comments = sum_comments + 1 WHERE id = :idea_id');
       $this->db->bind(':idea_id', $idea_id);
       $action = $this->db->execute(); // do the query
-
-      $insertid = intval($this->db->lastInsertId());
 
       $this->syslog->addSystemEvent(0, "Added new comment (#" . $insertid . ") user: " . $user_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
