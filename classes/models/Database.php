@@ -22,11 +22,6 @@
         $this->pass = $config['pass'];
         $this->dbname = $config['dbname'];
 
-        $this->public_host = $config['host'];
-        $this->public_user = $config['user'];
-        $this->public_pass = $config['pass'];
-        $this->public_dbname = $config['dbname'];
-
         //table names
         $this->au_ideas = $config['au_ideas'];
         $this->au_groups = $config['au_groups'];
