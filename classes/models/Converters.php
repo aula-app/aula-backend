@@ -222,7 +222,9 @@ class Converters
     $dir = $baseUploadDir . "aula_dump_" . $r . ".sql";
 
     try {
-      exec("mysqldump --user=".$this->db->user." --password=".$this->db->pass." --host=".$this->db->host." ".$this->db->dbname." --result-file={$dir} 2>&1", $dump_output);
+      $u = $this->db->getUser;
+      error_log ("user: ".$u);
+      exec("mysqldump --user=".$this->db->public_user." --password=".$this->db->public_pass." --host=".$this->db->public_host." ".$this->db->public_dbname." --result-file={$dir} 2>&1", $dump_output);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code (user not existent)
       $returnvalue['data'] = $dump_output; // returned data
