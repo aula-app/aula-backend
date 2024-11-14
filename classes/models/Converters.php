@@ -221,7 +221,8 @@ class Converters
 
     $dir = $baseUploadDir . "aula_dump_" . $r . ".sql";
 
-    exec("mysqldump --user={$this->db->$user} --password={$this->db->$pass} --host={$this->db->$host} {$this->db->$dbname} --result-file={$dir} 2>&1", $dump_output);
+    exec("mysqldump --user={$this->db->user} --password={$this->db->pass} --host={$this->db->host} {$this->db->dbname} --result-file={$dir} 2>&1", $dump_output);
+
     if (strlen($dump_output) > 1) {
       # dump contains info
       $returnvalue['success'] = true; // set return value

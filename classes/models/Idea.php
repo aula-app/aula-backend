@@ -1880,7 +1880,7 @@ class Idea
   //public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
 
 
-  public function editIdea($idea_id, $content, $status = 1, $title = "", $votes_available_per_user = 1, $info = "", $order_importance = 10, $room_id = 0, $updater_id = 0, $approved = 0, $approval_comment = "", $custom_field1 = "", $custom_field2 = "")
+  public function editIdea($idea_id, $content, $status = 1, $title = "", $votes_available_per_user = 1, $info = "", $order_importance = 10, $room_id = -1, $updater_id = 0, $approved = 0, $approval_comment = "", $custom_field1 = "", $custom_field2 = "")
   {
     /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
 
@@ -1899,8 +1899,13 @@ class Idea
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
+    $extra_query = "";
+    
+    if ($room_id > -1) {
+      $extra_query = "room_id = :room_id,";
+    }
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, room_id = :room_id, votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, '.$extra_query.' votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
     $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
     $this->db->bind(':title', $title); // title only shown in backend
@@ -1910,7 +1915,11 @@ class Idea
 
     $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin
     $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
-    $this->db->bind(':room_id', $room_id); // room id
+    
+    if ($room_id > -1) {
+      $this->db->bind(':room_id', $room_id); // room id
+    }
+    
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
     $this->db->bind(':order_importance', $order_importance); // order for display in frontend
     $this->db->bind(':approved', $approved); // order for display in frontend
