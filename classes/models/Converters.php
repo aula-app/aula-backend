@@ -221,26 +221,22 @@ class Converters
 
     $dir = $baseUploadDir . "aula_dump_" . $r . ".sql";
 
-    exec("mysqldump --user={$this->db->getUser} --password={$this->db->getPass} --host={$this->db->getHost} {$this->db->getDbName} --result-file={$dir} 2>&1", $dump_output);
-
-    if (strlen($dump_output) > 1) {
-      # dump contains info
+    try {
+      exec("mysqldump --user={$this->db->getUser} --password={$this->db->getPass} --host={$this->db->getHost} {$this->db->getDbName} --result-file={$dir} 2>&1", $dump_output);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code (user not existent)
       $returnvalue['data'] = $dump_output; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
-      return $returnvalue;
-    } else {
-
+    } catch (Exception $e) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code (dump empty)
       $returnvalue['data'] = false; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-
     }
+    
+    return $returnvalue;
+
   } // end function
 
   public function checkAuthorization($user_id, $method_name)
