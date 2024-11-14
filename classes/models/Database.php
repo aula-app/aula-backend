@@ -135,5 +135,22 @@
     public function debugDumpParams() {
         return $this->stmt->debugDumpParams();
     }
+
+    public function getHost() {
+        return $this->host;
+    }
+
+    public function gettUser() {
+        return $this->user;
+    }
+
+    public function getPass() {
+        return $this->pass;
+    }
+    
+    public function getDbname() {
+        return $this->dbname;
+    }
+    
 }
 ?>
