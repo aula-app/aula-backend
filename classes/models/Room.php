@@ -12,6 +12,7 @@ if ($allowed_include == 1) {
 class Room
 {
   private $db;
+  # class room deals with all matters around the room entity (like add room, delete room etc.)
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -58,7 +59,7 @@ class Room
 
   public function getRoomBaseData($room_id)
   {
-    /* returns user base data for a specified db id */
+    /* returns room base data for a specified db id */
     $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
     $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.* FROM ' . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id) WHERE ' . $this->db->au_rooms . '.id = :id');
@@ -261,7 +262,7 @@ class Room
 
   public function setRoomIdeasDisabled($room_id, $updater_id = 0)
   {
-
+    # helper: sets the property ideas_enabled to false (no ideas allowed)
     $room_id = $this->converters->checkRoomId($room_id); // autoconvert id
 
     $ret_value = $this->setTopicProperty($room_id, "ideas_enabled", 0, $updater_id);
@@ -289,7 +290,7 @@ class Room
 
   public function setRoomIdeasEnabled($room_id, $updater_id = 0)
   {
-
+     # helper: sets the property ideas_enabled to true (ideas allowed)
     $room_id = $this->converters->checkRoomId($room_id); // autoconvert id
 
     $ret_value = $this->setTopicProperty($room_id, "ideas_enabled", 1, $updater_id);
@@ -318,7 +319,7 @@ class Room
 
   public function checkAccesscode($room_id, $access_code)
   { // access_code = clear text
-    /* checks access code and returns database room id (credentials correct) or 0 (credentials not correct)
+    /* checks access code for a certain restricted access room and returns database room id (credentials correct) or 0 (credentials not correct)
      */
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
@@ -643,7 +644,7 @@ class Room
 
   public function deleteRoomDelegations($room_id)
   {
-    // dleetes all delegations in a specified room
+    // deletes all delegations in a specified room
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
     // get all topics from this room
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_delegation . ' WHERE room_id = :room_id');
@@ -665,7 +666,7 @@ class Room
 
   public function deleteRoomUserDelegations($room_id, $user_id)
   {
-    // dleetes all delegations in a specified room
+    // deletes all delegations in a specified room for a specific user
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
     $user_id = $this->converters->checkUserId($user_id); // checks room id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -691,7 +692,7 @@ class Room
   public function emptyRoom($room_id, $idea_delete_option = 0)
   {
     /* deletes all users from a room
-    $idea_delete_option = 0 = ideas are archived, 1= ideas are deleted
+    $idea_delete_option => 0 = ideas are archived, 1 = ideas are deleted
     */
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
@@ -759,8 +760,7 @@ class Room
         return $returnvalue;
       }
     }
-    //remove delegations from this room
-
+    
     // remove all delegations in this room
     $this->deleteRoomDelegations($room_id);
 
@@ -879,7 +879,7 @@ class Room
   public function addRoom($room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $restricted = 1, $order_importance = 10, $updater_id = 0, $phase_duration_0 = 0, $phase_duration_1 = 0, $phase_duration_2 = 0, $phase_duration_3 = 0, $phase_duration_4 = 0)
   {
     /* adds a new room and returns insert id (room id) if successful, accepts the above parameters
-     description_public = actual description of the room, status = status of inserted room (0 = inactive, 1=active)
+     
     */
 
     $access_code = trim($access_code);
@@ -1060,7 +1060,7 @@ class Room
   public function setRoomDescriptionInternal($room_id, $about, $updater_id = 0)
   {
     /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     about (text) -> description of a room
+     about (text) -> description of a room (only internally)
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts user id to db room id if necessary (when room hash id was passed)
@@ -1201,7 +1201,8 @@ class Room
   public function deleteRoom($room_id, $mode = 0, $msg = "", $updater_id = 0)
   {
     /* deletes room and returns the number of rows (int) accepts room id or room hash id //
-    $mode defines what is to be done. 0=room is deleted only (including relations) 1=room is deleted and users of this room are notified
+    $mode defines what is to be done. 
+    0 = room is deleted only (including relations) 1 = room is deleted and users of this room are notified
 
     */
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)

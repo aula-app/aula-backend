@@ -13,11 +13,12 @@ if ($allowed_include == 1) {
 class Settings
 {
   private $db;
+  # deals with everything around system settings
 
 
   public function __construct($db, $crypt, $syslog)
   {
-    // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
+    // db = database class, crypt = crypt class, $syslog = system logger class
     $this->db = $db;
     $this->crypt = $crypt;
     //$this->syslog = new Systemlog ($db);
@@ -35,9 +36,13 @@ class Settings
 
   public function hasPermissions($user_id, $userlevel, $method, $arguments)
   {
+    # helper method to retireve if a certain user has rights on sepcified methods 
+    # returns true if ok, false if not 
+
     if ($method == "getInstanceSettings" or $method == "getCustomfields") {
        return ["allowed" => true];
     }
+
     if ($userlevel >= 50) {
       return ["allowed" => true];
     } else {
@@ -47,7 +52,7 @@ class Settings
 
   public function getInstanceSettings()
   {
-    /* returns base data for the instance */
+    /* returns base status data for the instance */
 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_system_current_state . ' LIMIT 1');
 
@@ -72,7 +77,7 @@ class Settings
 
   public function getGlobalConfig()
   {
-    /* returns base data for the instance */
+    /* returns base configuration data for the instance */
 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_system_global_config . ' LIMIT 1');
 
@@ -98,7 +103,7 @@ class Settings
 
   public function getCustomfields()
   {
-    /* returns names for idea custom fields for the instance */
+    /* helper method that returns custom fields 1 & 2 */
 
     $stmt = $this->db->query('SELECT custom_field1_name, custom_field2_name FROM ' . $this->db->au_system_global_config . ' LIMIT 1');
 
@@ -182,7 +187,7 @@ class Settings
 
   public function setInstanceInfo($name, $description = "", $updater_id = 0)
   {
-    // sets name  and description for the instance
+    // sets name and description for the instance
 
     // sanitize
     $name = trim($name);
@@ -353,7 +358,7 @@ class Settings
 
   public function setOauthStatus($status = 0, $updater_id = 0)
   {
-    // sets default role (int) 10 = guest, 20 = student etc. for the instance
+    // enables (1) / disables (0) OAuth for the instance
 
     // sanitize
     $status = intval($status);
@@ -410,7 +415,7 @@ class Settings
 
   public function setWorkdays($first_day = 1, $last_day = 5, $updater_id = 0)
   {
-    // sets dworking days (int) for the instance
+    // sets working days (int) for the instance
     // 1 = monday 2 = tuesday 3 = wednesday 4= thursday 5 = friday 6 = saturday 7 = sunday
 
     // sanitize
@@ -465,9 +470,11 @@ class Settings
     }
 
   } // end function
+
+
   public function setDefaultEmail($email, $updater_id = 0)
   {
-    // sets default role (int) 10 = guest, 20 = student etc. for the instance
+    // sets default e-mail address for the instance
 
     // sanitize
     $email = trim($email);
@@ -579,7 +586,7 @@ class Settings
 
   public function setDailyEndTime($time, $updater_id = 0)
   {
-    // sets daily start time (FORMAT SQL DATE) for the instance
+    // sets daily end time (FORMAT SQL DATE) for the instance
 
     // sanitize
     $time = trim($time);
@@ -634,7 +641,7 @@ class Settings
 
   public function setCustomFields($custom_field1_name, $custom_field2_name = "", $updater_id = 0)
   {
-    // sets names for the custom fields
+    // sets names for the custom fields (1 & 2)
 
     // sanitize
     $custom_field1_name = trim($custom_field1_name);

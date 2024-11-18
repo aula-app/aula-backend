@@ -32,6 +32,7 @@ class Media
 
   public function getMediaOrderId($orderby)
   {
+     # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -68,7 +69,7 @@ class Media
 
   public function getMediaStatus($media_id)
   {
-    /* returns the consent status for this text for a specific user
+    /* returns the status for this medium 
      */
     $media_id = $this->converters->checkMediaId($media_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -170,7 +171,7 @@ class Media
 
   public function searchInMedia($searchstring, $status = 1)
   {
-    // searches for a term / string in texts and returns all texts
+    // searches for a term / string in texts and returns all media
     $extra_where = " AND (name LIKE '%" . searchstring . "%' OR description LIKE '%" . searchstring . "%' OR filename LIKE '%" . searchstring . "%') ";
     $ret_value = getMedia(0, 0, 3, 0, $status, $extra_where);
 
@@ -508,7 +509,7 @@ class Media
 
   public function deleteMedia($media_id, $updater_id = 0)
   {
-    /* deletes texts, accepts media id (hash (varchar) or db id (int))
+    /* deletes media, accepts media id (hash (varchar) or db id (int))
 
     */
     $media_id = $this->converters->checkMediaId($media_id); // checks id and converts id to db  id if necessary (when hash id was passed)

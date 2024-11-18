@@ -14,13 +14,13 @@ class Service
 {
 
   private $db;
+  # deals with third party services
 
   public function __construct($db, $crypt, $syslog)
   {
     // db = database class, crypt = crypt class
     $this->db = $db;
     $this->crypt = $crypt;
-    //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
     $this->converters = new Converters($db);
   }// end function
@@ -32,6 +32,7 @@ class Service
 
   public function getServiceOrderId($orderby)
   {
+     # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -140,7 +141,7 @@ class Service
 
   public function getServiceBaseData($service_id)
   {
-    /* returns media base data for a specified db id */
+    /* returns service base data for a specified db id */
     $service_id = $this->converters->checkServiceId($service_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_services . ' WHERE id = :id');
@@ -465,12 +466,12 @@ class Service
   }// end function
 
 
-  public function deleteMedia($service_id, $updater_id = 0)
+  public function deleteService($service_id, $updater_id = 0)
   {
-    /* deletes services, accepts id (hash (varchar) or db id (int))
+    /* deletes specified service, accepts id (hash (varchar) or db id (int))
 
     */
-    $service_id = $this->converters->checkMediaId($service_id); // checks id and converts id to db  id if necessary (when hash id was passed)
+    $service_id = $this->converters->checkServiceId($service_id); // checks id and converts id to db  id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_services . ' WHERE id = :id');
     $this->db->bind(':id', $service_id);

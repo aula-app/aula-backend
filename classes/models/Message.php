@@ -12,6 +12,7 @@ if ($allowed_include == 1) {
 
 class Message
 {
+  # deals with messaging within the aula system
 
   private $db;
 
@@ -28,11 +29,13 @@ class Message
 
   protected function buildCacheHash($key)
   {
+     # helper method => returns md5 hash
     return md5($key);
   }
 
   public function getMessageOrderId($orderby)
   {
+     # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -63,6 +66,7 @@ class Message
 
   public function validSearchField($search_field)
   {
+     # helper method => defines allowed / valid database column names / fields
     return in_array($search_field, [
       "headline",
       "msg_type",
@@ -91,7 +95,7 @@ class Message
 
   public function getMessagesByRoom($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $room_id)
   {
-    /* returns message list (associative array) with start and limit provided
+    /* returns message list (associative array) with start and limit provided for a certain room
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
@@ -1049,7 +1053,7 @@ class Message
   private function sendMessage($user_id, $msg)
   {
     /* send a message to the dashboard of the user
-    yet to be written
+    yet to be written => currently use addMessage with a specific target_id
     */
 
     $success = 0;

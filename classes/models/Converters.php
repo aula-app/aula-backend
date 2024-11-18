@@ -12,12 +12,14 @@ if ($allowed_include == 1) {
 
 class Converters
 {
+  # The converters class is a collection of useful methods for the system. An example is the conversion of entity hash ids (like user id) to int ids.
+  # please see the description in the methods 
 
   private $db;
 
   public function __construct($db)
   {
-    // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
+    // db = database class
     global $baseUploadDir;
 
     $this->db = $db;
@@ -39,6 +41,10 @@ class Converters
 
   public function hasPermissions($user_id, $userlevel, $method, $arguments)
   {
+    # checks if the user $user_id has certain rights and levels
+    # $method, $ arguments are for future use to allow granular differentiation of users rigths
+    # returns true if user is allowed, false if user is not allowed 
+
     if ($userlevel >= 50) {
       return ["allowed" => true];
     } else {
@@ -48,6 +54,7 @@ class Converters
 
   public function getToday()
   {
+    # returns today's date
     $day = strtotime("today", $dt1);
     $return_date = date("Y-m-d H:i:s", $day);
     return $return_date;
@@ -55,25 +62,30 @@ class Converters
   }
   public function getYesterday()
   {
+    # returns yesterday's date
     $dt1 = strtotime(date("Y-m-d H:i:s"));
     $day = strtotime("yesterday", $dt1);
     $return_date = date("Y-m-d H:i:s", $day);
     return $return_date;
   }
+
   public function getNow()
   {
+    # returns time / date for now
     $return_date = date("Y-m-d H:i:s");
     return $return_date;
   }
 
   public function getTimeOnlyNow()
   {
+    # returns current time
     $return_date = date("H:i:s");
     return $return_date;
   }
 
   public function getThisMonth()
   {
+    #returns current month
     $dt1 = strtotime(date("Y-m-d H:i:s"));
     $month = strtotime("first day of this month", $dt1);
     $return_date = date("Y-m-d H:i:s", $month);
@@ -82,6 +94,7 @@ class Converters
 
   public function getLastMonth()
   {
+    # returns last month as date
     $dt1 = strtotime(date("Y-m-d H:i:s"));
     $month = strtotime("first day of last month", $dt1);
     $return_date = date("Y-m-d H:i:s", $month);
@@ -89,6 +102,7 @@ class Converters
   }
   public function getlastWeek()
   {
+    # returns last week as date
     $dt1 = strtotime(date("Y-m-d"));
     $day = strtotime("-1 week", $dt1);
     $return_date = date("Y-m-d H:i:s", $day);
@@ -97,6 +111,7 @@ class Converters
 
   public function getThisYear()
   {
+    # returns this year as date
     $dt1 = strtotime("01.01." . date("Y") . "0:0:0");
     $return_date = date('Y-m-d H:i:s', $dt1);
     return $return_date;
@@ -104,6 +119,7 @@ class Converters
 
   public function getLastYear()
   {
+    # returns last year as date
     $dt1 = strtotime("01.01." . (date("Y") - 1) . "0:0:0");
     $return_date = date('Y-m-d H:i:s', $dt1);
     return $return_date;
@@ -202,7 +218,7 @@ class Converters
 
   public function getTextConsentValue($text_id)
   {
-    /* returns hash_id of an idea for a integer text id
+    /* returns need consents for a certain text for a integer text id
      */
     $stmt = $this->db->query('SELECT user_needs_to_consent FROM ' . $this->db->au_texts . ' WHERE id = :text_id');
     $this->db->bind(':text_id', $text_id); // bind text_id
@@ -214,7 +230,7 @@ class Converters
 
   public function createDBDump()
   {
-    // creates a db dump a sends it back to frontend to create file
+    // creates a db dump and sends it back to frontend to create file
     global $baseUploadDir;
 
     $r = $this->getNow() . "_" . mt_rand();
@@ -349,7 +365,7 @@ class Converters
 
   public function getLastDataChange()
   {
-    /* returns hash_id of an idea for a integer text id
+    /* returns date of last change in system data
      */
     $stmt = $this->db->query('SELECT last_data_change FROM ' . $this->db->au_system_global_config . '  LIMIT 1');
     try {
@@ -665,7 +681,7 @@ class Converters
       $err = true;
     }
     if (!$err) {
-      $this->syslog->addSystemEvent(0, "Global phase editet, phase #" . $phase_id . " values changed by " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Global phase edited, phase #" . $phase_id . " values changed by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // error code - db error
       $returnvalue['data'] = 1; // returned data
@@ -688,7 +704,7 @@ class Converters
 
   public function getServiceIdByHashId($hash_id)
   {
-    /* Returns Database ID of user when hash_id is provided
+    /* Returns Database ID of service when hash_id is provided
      */
     $check_hash = $this->buildCacheHash("getServiceIdByHashId" . $hash_id);
     // check if hash is in cache

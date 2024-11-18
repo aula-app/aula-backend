@@ -15,6 +15,8 @@ class Comment
 
   private $db;
 
+  # class comments deals with everything concering comments of users
+
   public function __construct($db, $crypt, $syslog)
   {
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
@@ -27,11 +29,13 @@ class Comment
 
   protected function buildCacheHash($key)
   {
+    # internal helper, returns md5 hash
     return md5($key);
   }
 
   public function getCommentOrderId($orderby)
   {
+    # helper that converts int id to db field id
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -68,12 +72,12 @@ class Comment
 
   public function getCommentsByIdeaId($idea_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1)
   {
-    /* returns comments list (associative array) with start and limit provided
+    /* returns COMMENTS list (associative array) with start and limit provided for a certain IDEA
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-    $room_id is the id of the room
+    
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -205,7 +209,7 @@ class Comment
 
   public function getCommentBaseData($comment_id)
   {
-    /* returns comment base data for a specified db id */
+    /* returns comment base data for a specified comment id */
     $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_comments . ' WHERE id = :id');
@@ -492,7 +496,7 @@ class Comment
 
   protected function addLikeUser($user_id, $comment_id)
   {
-    // add a like into like table for a certain user and idea
+    // helper function to CommentAddLike () => add a like into like table for a certain user and idea
 
     $stmt = $this->db->query('INSERT INTO ' . $this->db->au_likes . ' (object_type, status, user_id, object_id, last_update, created, hash_id) VALUES (2, 1, :user_id, :comment_id, NOW(), NOW(), :hash_id)');
     // bind all VALUES
@@ -533,7 +537,7 @@ class Comment
   public function CommentAddLike($comment_id, $user_id)
   {
     /* edits a comment and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     Adds a like to an idea, increments sum_likes of a specific comment to a specific value (likes)
+     Adds a like to a comment, increments sum_likes of a specific comment to a specific value (likes)
 
     */
     $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -586,7 +590,7 @@ class Comment
 
   public function removeLikeUser($user_id, $comment_id)
   {
-    // add a vote into vote table for a certain user and idea
+    // helper to function CommentReoveLike () => remove a like from a user for a comment
 
     // get vote value for this user on this idea
 
@@ -627,7 +631,7 @@ class Comment
   public function CommentRemoveLike($comment_id, $user_id)
   {
     /* edits a comment and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     Adds a like to a comment, increments sum_likes of a specific comment to a specific value (likes)
+     Removes like to a comment, decrements sum_likes of a specific comment to a specific value (likes)
 
     */
     $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)

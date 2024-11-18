@@ -11,11 +11,12 @@ if ($allowed_include == 1) {
 
 class Group
 {
+  # deals with groups
   private $db;
 
   public function __construct($db, $crypt, $syslog)
   {
-    // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
+    // db = database class, crypt = crypt class, $syslog = system logger class
     $this->db = $db;
     $this->crypt = $crypt;
     $this->syslog = $syslog;
@@ -27,6 +28,8 @@ class Group
 
   public function getGroupOrderId($orderby)
   {
+    # helper method => converts an int id to a db field name (for ordering)
+
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -147,7 +150,7 @@ class Group
 
   public function getGroupVoteBias($group_id)
   {
-    /* returns voting bias for this group for an integer group id
+    /* returns voting bias for this group for an integer group id (future use)
      */
     $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
@@ -163,7 +166,7 @@ class Group
 
   public function getGroupVoteBiasForUser($user_id)
   {
-    /* returns voting bias for this group for an integer group id
+    /* returns voting bias for this group for a specific user id
      */
     $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
@@ -178,8 +181,9 @@ class Group
   }// end function
 
   public function checkAccesscode($group_id, $access_code)
-  { // access_code = clear text
-    /* checks access code and returns database group id (credentials correct) or 0 (credentials not correct)
+  { /* (future use) 
+     access_code = clear text
+     checks access code and returns database group id (credentials correct) or 0 (credentials not correct)
      */
     $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
@@ -231,7 +235,7 @@ class Group
 
   public function getUsersInGroup($group_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0)
   {
-    /* returns users (associative array)
+    /* returns users (associative array) in the group
     $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     */
     $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
@@ -466,7 +470,7 @@ class Group
 
   public function editGroup($group_id, $group_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $vote_bias = 1, $order_importance = 10, $updater_id = 0)
   {
-    /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+    /* edits a group and returns number of rows if successful, accepts the above parameters
 
     */
     // sanitize
@@ -649,6 +653,7 @@ class Group
     /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      vote_bias = vote bias of  group (number of extra votes a user automatically gets when he is member of this group)
      updater_id is the id of the group that commits the update (i.E. admin )
+     (future use)
     */
     $group_id = $this->converters->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
 
@@ -688,11 +693,12 @@ class Group
 
 
 
-  public function setGroupVotesPerUser($group_id, $votes, $updater_id = 0)
+  public function setGroupVotesPerUser ($group_id, $votes, $updater_id = 0)
   {
     /* edits a group and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      status = status of inserted group (0 = inactive, 1=active)
      updater_id is the id of the group that commits the update (i.E. admin )
+     (future use)
     */
     $group_id = $this->converters->checkGroupId($group_id); // checks group  id and converts group id to db group id if necessary (when group hash id was passed)
 
@@ -848,7 +854,7 @@ class Group
 
       return $returnvalue;
     } else {
-      //$this->syslog->addSystemEvent(1, "Error changing name of group ".$group_id." by ".$updater_id, 0, "", 1);
+      
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
       $returnvalue['data'] = false; // returned data
@@ -860,8 +866,8 @@ class Group
 
   public function setGroupAccesscode($group_id, $access_code, $updater_id = 0)
   {
-    /* edits a group and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
-     pw = pw in clear text
+    /* edits a group and returns number of rows if successful, accepts the above parameters (clear text)
+     Sets the access group for the specified group
     */
     $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 

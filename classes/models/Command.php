@@ -14,6 +14,7 @@ class Command
 {
 
   private $db;
+  # deals with everythin concering system commands
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -27,11 +28,13 @@ class Command
 
   protected function buildCacheHash($key)
   {
+     # helper method => returns a md5 hash
     return md5($key);
   }
 
   public function getCommandOrderId($orderby)
   {
+     # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -381,7 +384,7 @@ class Command
   public function setCommandDate($cmd_id, $date, $updater_id = 0)
   {
     /* edits a command, accepts the above parameters, all parameters are mandatory
-     date = date whewn command is executed (0=inactive, 1=active)
+     date = date when command is executed (0=inactive, 1=active)
      updater_id is the id of the user that does the update (i.E. admin )
     */
     $cmd_id = intval($cmd_id); // checks id and converts id to db id if necessary (when hash id was passed)
