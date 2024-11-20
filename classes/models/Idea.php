@@ -13,11 +13,15 @@ if ($allowed_include == 1) {
 class Idea
 {
 
-  private $db;
+  # Idea provides a collection of methods dealing with all functions around ideas. Thes include actions like add idea, delete idea etc.
+  # For details please check the decsirptions within the methods 
+
+  private $db; # database connection and methods
+
 
   public function __construct($db, $crypt, $syslog)
   {
-    // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
+    // db = database class, crypt = crypt class, $syslog = helper for system protocols
     $this->db = $db;
     $this->crypt = $crypt;
     //$this->syslog = new Systemlog ($db);
@@ -34,6 +38,8 @@ class Idea
 
   public function getIdeaOrderId($orderby)
   {
+    # helper method that translates int id into db column name (field)
+
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -74,6 +80,9 @@ class Idea
 
   public function validSearchField($search_field)
   {
+    # helper function that defines which column / field names are allowed / valid
+    # returns true if valid
+
     return in_array($search_field, [
       "title",
       "content",
@@ -85,6 +94,7 @@ class Idea
 
   public function getCategoryOrderId($orderby)
   {
+    # helper function that converts int id into db column / field 
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -105,7 +115,7 @@ class Idea
 
   public function getIdeaBaseData($idea_id)
   {
-    /* returns idea base data for a specified db id */
+    /* returns idea base data for a specified db id - the id can be either int id (will become deprecated or hash id */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
     $stmt = $this->db->query('SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.custom_field1, ' . $this->db->au_ideas . '.custom_field2, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
 
@@ -508,8 +518,7 @@ class Idea
   public function suspendIdea($idea_id, $updater_id)
   {
     /* sets the status of an idea to 3 = suspended
-    accepts db id and hash id of idea
-    user_id is the id of the user that reported the idea
+    accepts int id and hash id of idea
     updater_id is the id of the user that did the update
     */
     return $this->setIdeaStatus($idea_id, 3, $updater_id = 0);
@@ -520,7 +529,6 @@ class Idea
   {
     /* sets the status of an idea to 4 = archived
     accepts db id and hash id of idea
-    user_id is the id of the user that reported the idea
     updater_id is the id of the user that did the update
     */
     return $this->setIdeaStatus($idea_id, 4, $updater_id = 0);
@@ -531,7 +539,6 @@ class Idea
   {
     /* sets the status of an idea to 1 = active
     accepts db id and hash id of idea
-    user_id is the id of the user that reported the idea
     updater_id is the id of the user that did the update
     */
     return $this->setIdeaStatus($idea_id, 1, $updater_id = 0);
@@ -542,7 +549,6 @@ class Idea
   {
     /* sets the status of an idea to 0 = inactive
     accepts db id and hash id of idea
-    user_id is the id of the user that reported the idea
     updater_id is the id of the user that did the update
     */
     return $this->setIdeaStatus($idea_id, 0, $updater_id = 0);
@@ -552,7 +558,6 @@ class Idea
   {
     /* sets the status of an idea to 5 = in review
     accepts db id and hash id of idea
-    user_id is the id of the user that reported the idea
     updater_id is the id of the user that did the update
     */
     return $this->setIdeaStatus($idea_id, 5, $updater_id = 0);
@@ -654,9 +659,10 @@ class Idea
 
   public function addIdeaToCategory($idea_id, $category_id, $updater_id = 0)
   {
-    // adds an idea (idea_id) to a specified topic (topic_id)
+    // adds an idea (idea_id) to a specified category (category_id)
+
     error_log("ADDING IDEA " . $idea_id . " TO CAT " . $category_id . " BY UPDATER " . $updater_id);
-    //
+    
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
     $category_id = $this->converters->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -783,7 +789,7 @@ class Idea
 
   public function removeIdeaFromCategory($category_id, $idea_id)
   {
-    /* removes an idea from a topic
+    /* removes an idea from a category
      */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
     $category_id = $this->converters->checkCategoryId($category_id); // checks  id and converts  id to db  id if necessary (when  hash id was passed)
@@ -819,7 +825,7 @@ class Idea
 
   public function removeAllIdeasFromTopic($topic_id)
   {
-    /* removes all associations of ideas from a topic
+    /* removes all associations of all ideas from a defined topic
      */
     $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
@@ -851,7 +857,7 @@ class Idea
 
   public function removeAllIdeasFromCategory($category_id)
   {
-    /* removes all associations of ideas from a topic
+    /* removes all associations of all ideas from a category
      */
     $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
@@ -888,7 +894,7 @@ class Idea
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-    $room_id is the id of the room
+    
     */
     //sanitize
     $offset = intval($offset);
@@ -1003,6 +1009,8 @@ class Idea
 
   public function getCategoryBaseData($category_id, $status = -1, $type = -1, $room_id = -1, $idea_id = -1, $limit = -1, $orderby = 0, $asc = 0, $offset = 0)
   {
+    # returns all data for a certain defined category ($category_id) as array
+
     $categories = $this->getCategories($status, $type, $room_id, $idea_id, $limit, $orderby, $asc, $offset, ' AND ' . $this->db->au_categories . '.id= ' . $category_id);
 
     if ($categories['success'] == true) {
@@ -1019,7 +1027,7 @@ class Idea
 
   public function getIdeaCategory($idea_id)
   {
-    /* returns idea base data for a specified db id */
+    /* returns idea category for a specified idea id */
     $categories = $this->getCategories(-1, -1, -1, $idea_id, -1, 0, 0, 0, "");
 
     if ($categories['success'] == true) {
@@ -1139,7 +1147,7 @@ class Idea
 
   public function getIdeasByCategory($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $category_id, $info = "")
   {
-    /* returns category list (associative array) with start and limit provided
+    /* returns idea list (associative array) with start and limit provided for a specific category
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
@@ -1449,12 +1457,12 @@ class Idea
 
   public function getWildIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 4, $asc = 0, $status = -1, $extra_where = "")
   {
-    /* returns idealist (associative array) with start and limit provided
+    /* returns wild idealist (associative array) with start and limit provided for a certain user
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to creation_date (4)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1) -1 = get all datasets with status values 0-4
-    $room_id is the id of the room
+   
     */
     // sanitize
     $offset = intval($offset);
@@ -1548,7 +1556,7 @@ class Idea
 
   public function getIdeasByRoom($room_id, $offset = 0, $limit = 0, $orderby = 4, $asc = 0, $status = -1, $extra_where = "", $info = "")
   {
-    /* returns idealist (associative array) with start and limit provided
+    /* returns idealist (associative array) with start and limit provided for a specific room
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to creation_date (4)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
@@ -1654,12 +1662,12 @@ class Idea
 
   public function getIdeasByGroup($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $group_id, $room_id = -1, $info = "")
   {
-    /* returns idealist (associative array) with start and limit provided
+    /* returns idealist (associative array) with start and limit provided for a specific group
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-    $$group_id is the id of the group
+    $group_id is the id of the group
     */
     // sanitize
     $offset = intval($offset);
@@ -1767,12 +1775,12 @@ class Idea
 
   public function getIdeasByUser($user_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $room_id = -1, $info = "")
   {
-    /* returns idealist (associative array) with start and limit provided
+    /* returns idealist (associative array) with start and limit provided for a specific user
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-    $$user_id is the id of the user
+    $user_id is the id of the user whos idea should be retrieved
     */
     $offset = intval($offset);
     $limit = intval($limit);
@@ -1876,9 +1884,6 @@ class Idea
 
     }
   }// end function
-
-  //public function addIdea ($content, $user_id, $status, $order_importance=10, $updater_id=0, $votes_available_per_user=1, $info="", $room_id=0) {
-
 
   public function editIdea($idea_id, $content, $status = 1, $title = "", $votes_available_per_user = 1, $info = "", $order_importance = 10, $room_id = -1, $updater_id = 0, $approved = 0, $approval_comment = "", $custom_field1 = "", $custom_field2 = "")
   {
@@ -2093,11 +2098,8 @@ class Idea
 
   public function editCategory($category_id, $name, $description_public = "", $description_internal = "", $status = 1, $order_importance = 10, $room_id = 0, $updater_id = 0)
   {
-    /* adds a new category and returns insert id (idea id) if successful, accepts the above parameters
-     content = actual content of the idea,
-     status = status of inserted category (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
-     info is internal info or can be used for open aula to enter the name of the person that had the idea
-    */
+    /* edits a category and returns insert id (idea id) if successful, accepts the above parameters
+     */
 
     //sanitize vars
     $category_id = $this->converters->checkCategoryId($category_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -2278,10 +2280,8 @@ class Idea
   {
     /* adds a new survey (auto creates topic/box and idea) and returns insert id (box id) if successful, accepts the above parameters
      name = name of the topic, description_internal = shown only to admins for internal use
-     desciption_public = shown in frontend, order_importance = order bias for sorting in the frontend
-     status = status of inserted topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
-     $wild_ideas_enabled =  users can post ideas =  0=disabled,1=enabled (default)
-
+     description_public = shown in frontend, order_importance = order bias for sorting in the frontend
+     
     */
 
     $description_internal = "survey"; # human readable hint
@@ -2377,8 +2377,7 @@ class Idea
      name = name of the topic, description_internal = shown only to admins for internal use
      description_public = shown in frontend, order_importance = order bias for sorting in the frontend
      status = status of inserted topic (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
-     $wild_ideas_enabled =  users can post ideas =  0=disabled,1=enabled (default)
-
+     
     */
     //sanitize the vars
     $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -2448,7 +2447,7 @@ class Idea
 
   public function setCategoryStatus($category_id, $status, $updater_id = 0)
   {
-    /* edits a category and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+    /* edits a category status and returns number of rows if successful, accepts the above parameters
      status = status of category (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
      updater_id is the id of the user that commits the update (i.E. admin )
     */
@@ -2491,8 +2490,7 @@ class Idea
 
   public function setIdeaRoom($idea_id, $room_id, $updater_id = 0)
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     status = status of idea (0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review)
+    /* edits an idea (changes room id) and returns number of rows if successful, accepts the above parameters
      updater_id is the id of the idea that commits the update (i.E. admin )
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -2535,9 +2533,9 @@ class Idea
 
   public function setIdeaProperty($idea_id, $property, $prop_value, $updater_id = 0)
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+    /* edits an idea and returns number of rows if successful, accepts the above parameters
      $property = field name in db
-     $propvalue = value for property
+     $prop_value = value for property
      updater_id is the id of the idea that commits the update (i.E. admin )
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -2579,7 +2577,7 @@ class Idea
 
   public function approveIdea($idea_id, $updater_id = 0)
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+    /* edits an idea and returns number of rows if successful, accepts the above parameters
      approves an idea (usually by school administration)
      updater_id is the id of the idea that commits the update (i.E. admin )
     */
@@ -2621,8 +2619,8 @@ class Idea
 
   public function disapproveIdea($idea_id, $updater_id = 0)
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     approves an idea (usually by school administration)
+    /* edits an idea and returns number of rows if successful, accepts the above parameters
+     disapproves an idea (usually by school administration)
      updater_id is the id of the idea that commits the update (i.E. admin )
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
@@ -2663,7 +2661,7 @@ class Idea
 
   public function setToWinning($idea_id, $updater_id = 0)
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+    /* edits an idea and returns number of rows if successful, accepts the above parameters
      flags an idea as winner in voting phase
      updater_id is the id of the idea that commits the update (i.E. admin )
     */
@@ -2706,7 +2704,7 @@ class Idea
   public function setToLosing($idea_id, $updater_id = 0)
   {
     /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     flags an idea as winner in voting phase
+     flags an idea as losing in voting phase
      updater_id is the id of the idea that commits the update (i.E. admin )
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
@@ -3148,7 +3146,7 @@ class Idea
   private function checkAvailableVotesUser($user_id, $idea_id)
   {
     // returns how many votes are still available for a certain idea
-// get available votes for idea_id
+    // get available votes for idea_id
     // check if user has delegated votes
 
     $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_votes . ' WHERE user_id = :user_id AND idea_id = :idea_id');
@@ -3271,6 +3269,7 @@ class Idea
 
   public function setVoteUser($user_id, $idea_id, $vote_value, $number_of_delegations = 0)
   {
+    # setes the number of votes for a defined user
     //sanitize
 
     $vote_weight = abs($vote_value);
@@ -3318,7 +3317,7 @@ class Idea
 
   protected function revokeVoteUser($user_id, $idea_id)
   {
-    // add a vote into vote table for a certain user and idea
+    // remove a vote for a defined id by a defined user
 
     // get vote value for this user on this idea
 
@@ -3357,9 +3356,9 @@ class Idea
 
   public function removeLikeUser($user_id, $idea_id)
   {
-    // add a vote into vote table for a certain user and idea
+    // remove a like for a defined id by a defined user
 
-    // get vote value for this user on this idea
+    // get like value for this user on this idea
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_likes . ' WHERE user_id = :user_id AND object_id = :idea_id AND object_type=1');
     // bind all VALUES
@@ -3397,7 +3396,7 @@ class Idea
 
   public function getUserInfiniteVotesStatus($user_id)
   {
-    /* returns hash_id of a user for a integer user id
+    /* returns if a user is set to have infinite votes
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -3456,7 +3455,7 @@ class Idea
 
   protected function revokeDelegationToInactive($original_user, $target_user, $topic_id)
   {
-    // remove delegation from db table
+    // remove delegation from db table ($original_user gets the votes back)
     $stmt = $this->db->query('UPDATE ' . $this->db->au_delegation . ' SET status = 0 WHERE user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
     // bind all VALUES
     $this->db->bind(':user_id', $original_user); // gives the voting right
@@ -3495,7 +3494,7 @@ class Idea
 
   public function voteForIdea($idea_id, $vote_value, $user_id, $comment = "")
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+    /* votes for an idea
      idea_id is obvious...accepts db id or hash id
      vote_value is -1, 0 , +1 (depending on positive or negative)
      user_id is the id of the user voting for the idea
@@ -3701,7 +3700,7 @@ class Idea
 
   public function RevokeVoteFromIdea($idea_id, $user_id, $updater_id = 0)
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+    /* revokes a vote that a defined user has given for a defined idea 
      idea_id is obvious...accepts db id or hash id
      user_id is the id of the user voting for the idea
      updater_id is the id of the user that commits the update (i.E. admin )
@@ -3781,8 +3780,8 @@ class Idea
 
   public function setIdeaInfo($idea_id, $content, $updater_id = 0)
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     content = content of the idea
+    /* Changes the info field for an idea
+     content = info field of the idea
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
@@ -3825,8 +3824,8 @@ class Idea
 
   public function setCustomField($idea_id, $field_id, $content, $updater_id = 0)
   {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     content = content of the idea
+    /* changes the value of a certain db field for an idea ($field_id = field id int)
+     content = content of the field
      $field_id = 1 or 2 (depending on which field is adressed)
      updater_id is the id of the user that commits the update (i.E. admin )
     */
@@ -3886,8 +3885,7 @@ class Idea
   {
     /* Returns vote value for a specified user and idea
      */
-    //echo ("<br>Call get Vote value: ".$user_id);
-
+    
     $stmt = $this->db->query('SELECT vote_value FROM ' . $this->db->au_votes . ' WHERE user_id = :user_id AND idea_id = :idea_id');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':idea_id', $idea_id); // bind idea id
@@ -3954,7 +3952,7 @@ class Idea
 
   public function deleteIdea($idea_id, $updater_id = 0)
   {
-    /* deletes idea and returns the number of rows (int) accepts idea id or idea hash id //
+    /* deletes idea and returns the number of rows (int) accepts idea id or idea hash id - only deletes idea from idea table
 
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
@@ -4104,7 +4102,7 @@ class Idea
 
   public function getDashboardByUser($user_id, $status = 1, $room_id = -1, $limit = 0, $offset = 0)
   {
-    /* returns
+    /* returns all sorts of data for a specific user (like ideas, votes and activity) since last login
      (associative array)
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $user_id is the id of the user
@@ -4171,14 +4169,6 @@ class Idea
     }
     $total_datasets = count($ideas);
 
-    // if ($total_datasets < 1) {
-    //   $returnvalue['success'] = true; // set return value
-    //   $returnvalue['error_code'] = 2; // error code
-    //   $returnvalue['data'] = false; // returned data
-    //   $returnvalue['count'] = 0; // returned count of datasets
-
-    //   return $returnvalue;
-    // } else {
     // get count
     $count_by_phase[0] = 0; # wild ideas
     $count_by_phase[10] = 0; # wild ideas

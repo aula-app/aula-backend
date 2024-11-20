@@ -13,15 +13,13 @@ if ($allowed_include == 1) {
 class Topic
 {
   private $db;
-
+  # deals with everything around the topic entity
 
   public function __construct($db, $crypt, $syslog)
   {
-    // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
+    // db = database class, crypt = crypt class, $syslog = system logger class
     $this->db = $db;
     $this->crypt = $crypt;
-
-    //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
     $this->user = new User($db, $crypt, $syslog);
     $this->converters = new Converters($db); // load converters
@@ -34,6 +32,7 @@ class Topic
 
   public function getTopicOrderId($orderby)
   {
+     # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -70,6 +69,7 @@ class Topic
 
   public function validSearchField($search_field)
   {
+     # helper method => defines valied db field name (for filtering)
     return in_array($search_field, [
       "name",
       "description_public",
@@ -79,7 +79,7 @@ class Topic
 
   public function getTopicsByRoom($room_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1)
   {
-    /* returns topiclist (associative array) with start and limit provided
+    /* returns topiclist (associative array) with start and limit provided for a certain room
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
@@ -100,6 +100,7 @@ class Topic
     // returns topics by phase
     // phase_id is the id of the phase 0 = wild ideas 10 = discussion 20 = approval 30 = voting 40 = implementation
     // room_id = 0 means all rooms or specify a certain room
+    
     //sanitize
     $phase_id = intval($phase_id);
     $room_id = $this->converters->checkRoomId($room_id);
@@ -552,7 +553,7 @@ class Topic
 
 
     } else {
-      //$this->syslog->addSystemEvent(1, "Error editing topic ".$name, 0, "", 1);
+      
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 1; // error code - db error
       $returnvalue['data'] = false; // returned data
@@ -612,7 +613,6 @@ class Topic
 
       return $returnvalue;
     } else {
-      //$this->syslog->addSystemEvent(1, "Error changing status of topic ".$topic_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 1; // error code - db error
       $returnvalue['data'] = false; // returned data
@@ -1034,6 +1034,7 @@ class Topic
      propvalue = value
      updater_id is the id of the user that commits the update (i.E. admin )
     */
+
     $topic_id = $this->converters->checkTopicId($topic_id); // autoconvert id
     $updater_id = $this->converters->checkUserId($updater_id); // autoconvert id
 
@@ -1108,7 +1109,7 @@ class Topic
 
   public function setTopicPhase($topic_id, $phase_id, $updater_id = 0)
   {
-
+    # puts a certain topic into a phase
     $idea_id = $this->converters->checkIdeaId($idea_id); // autoconvert id
     $topic_id = $this->converters->checkTopicId($topic_id); // autoconvert id
     $updater_id = $this->converters->checkUserId($updater_id); // autoconvert id

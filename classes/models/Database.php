@@ -1,5 +1,5 @@
 <?php
-
+    # db provides helper functions and db connection for the system
     class Database {
 
     private $host;
@@ -76,11 +76,13 @@
     }
 
     public function query($query) {
+        # prepares a statement 
         $this->stmt = $this->dbh->prepare($query);
         return $this->stmt;
     }
 
     public function bind($param, $value, $type = null) {
+        # provides binding functionality
         if (is_null($type)) {
             switch (true) {
                 case is_int($value):
@@ -100,10 +102,12 @@
     }
 
     public function execute() {
+        # executes a query
         return $this->stmt->execute();
     }
 
     public function resultSet() {
+        # returns a result set 
         $this->execute();
         return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
     }

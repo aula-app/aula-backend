@@ -12,6 +12,7 @@ if ($allowed_include==1){
 
 class Systemlog {
     private $db;
+    # helper class for system logging
 
     public function __construct($db) {
         // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)

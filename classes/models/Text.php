@@ -15,6 +15,8 @@ class Text
 
   private $db;
 
+  # deals with everything concering texts (consent texts etc.)
+
   public function __construct($db, $crypt, $syslog)
   {
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
@@ -32,6 +34,7 @@ class Text
 
   public function getTextOrderId($orderby)
   {
+     # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -57,6 +60,7 @@ class Text
   }// end function
 
   public function validSearchField($search_field) {
+     # helper method => defines allowed / valid db field names (for filtering)
     return in_array($search_field, [
         "headline",
         "consent_text",
@@ -96,6 +100,7 @@ class Text
   {
     /* returns status of a text for a integer id
      */
+
     $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('SELECT status FROM ' . $this->db->au_texts . ' WHERE id = :id');
@@ -125,6 +130,7 @@ class Text
   {
     /* returns the consent status for this text for a specific user
      */
+
     $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -535,7 +541,7 @@ class Text
 
   public function editText($text_id, $headline, $body, $consent_text, $user_needs_to_consent, $status, $location = 0, $updater_id = 0, $language_id = 0)
   {
-    /* edits a  text and returns insert id (text id) if successful, accepts the above parameters
+    /* edits a text and returns insert id (text id) if successful, accepts the above parameters
     headline, body is the content
     consent_text = text that is displayed next to the checkbox for the user consent
     location is the page this consent is displayed on

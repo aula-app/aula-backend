@@ -15,6 +15,8 @@ if ($allowed_include == 1) {
 
 class User
 {
+  # User class provides a collection of methods dealing with everything around the user entity like adding or deleting etc.
+
   private $db;
 
   public function __construct($db, $crypt, $syslog)
@@ -35,6 +37,7 @@ class User
 
   public function getUserOrderId($orderby)
   {
+    # helper method that provides the db field name based on an int id (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -65,6 +68,7 @@ class User
 
   public function validSearchField($search_field)
   {
+    # helper that defines valid / allowed search fields (db) returns true if ok
     return in_array($search_field, [
       "displayname",
       "realname",
@@ -179,7 +183,7 @@ class User
 
   public function revokeVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
-    /* Returns Database ID of user when hash_id is provided
+    /* helper method that revokes the voting right from a user ($user_id_target) after delegating user ($user_id) decided to revoke his delegation 
      */
     //sanitize variables
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -240,14 +244,8 @@ class User
 
     }
   }// end function
-  /*
-  $returnvalue['success'] = true; // set return value
-  $returnvalue['error_code'] = 0; // no error code
-  $returnvalue ['data'] = $messages; // returned data
-  $returnvalue ['count'] = $count_datasets; // returned count of datasets
-  */
-
-
+  
+  
   public function delegateVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
     /* delegates voting rights from one user to another within a topic, accepts user_id (by hash or id) and topic id (by hash or id)
@@ -321,7 +319,7 @@ class User
 
   public function changeGivenConsent($user_id, $inc_value = 1)
   {
-    // increments or decrements (depending on inc_value = 1 / -1) the cache field in table user_basedata
+    // helper: increments or decrements (depending on inc_value = 1 / -1) the given_consents field in table user_basedata
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -443,6 +441,7 @@ class User
 
   public function getDelegationStatus($user_id, $topic_id)
   {
+    # helper - returns the status of delegation for a defined user and topic 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_delegation . ' WHERE user_id_original = :user_id AND topic_id = :topic_id');
     // bind all VALUES
     $this->db->bind(':topic_id', $topic_id);
@@ -575,7 +574,7 @@ class User
 
   public function getGivenDelegations($user_id, $topic_id)
   {
-    /* returns received delegations for a specific user (user_id) for the topic
+    /* returns given delegations for a specific user (user_id) for the topic
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -602,7 +601,7 @@ class User
 
   public function getGivenConsents($user_id)
   {
-    /* returns all given consents to texts / terms
+    /* returns all given consents to texts / terms for a specific user
     returns ids of the texts, headline and body of the text
     */
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -630,6 +629,7 @@ class User
   public function getNecessaryConsents()
   {
     // gets consents that are necessary to use the system
+
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE status = 1 AND user_needs_to_consent = 2');
 
     $texts = $this->db->resultSet();
@@ -656,7 +656,8 @@ class User
 
   public function getMissingConsents($user_id)
   {
-    // returns all the missing consents that this user has not yet consented to
+    // returns all the missing consents that this user has not yet consented / reacted to
+
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
     // first get all the mandatory consents for this user already given (consent =1)
 
@@ -728,8 +729,7 @@ class User
         $ids[$i] = $key['id'];
         $i++;
       }
-      //echo ("<br>IDs: ".implode(",", $ids));
-
+      
       $stmt = $this->db->query('SELECT text_id FROM ' . $this->db->au_consent . ' WHERE user_id = :user_id AND text_id IN (' . implode(",", $ids) . ') AND consent = 1');
       //echo ('<br>SELECT text_id FROM '.$this->db->au_consent.' WHERE user_id = :user_id AND text_id IN ('.implode(",", $ids).') AND consent = 1');
       $this->db->bind(':user_id', $user_id); // bind userid
@@ -946,7 +946,7 @@ class User
 
   public function moveUserBetweenRooms($user_id, $room_id1, $room_id2, $updater_id)
   {
-    // moves a user from room 1 to room 2
+    // moves a user (user_id) from room 1 to room 2
     $user_id = $this->converters->checkUserId($user_id); // auto convert
     $room_id1 = $this->converters->checkRoomId($room_id1); // auto convert
     $room_id2 = $this->converters->checkRoomId($room_id2); // auto convert
@@ -1075,31 +1075,37 @@ class User
 
   public function followUser($user_id, $user_id_target)
   {
+    # future social functions
     return $this->relateUser($user_id, $user_id_target, 1, 0, 1);
   }
 
   public function friendUser($user_id, $user_id_target)
   {
+     # future social functions
     return $this->relateUser($user_id, $user_id_target, 1, 0, 2);
   }
 
   public function blockUser($user_id, $user_id_target)
   {
+     # future social functions
     return $this->relateUser($user_id, $user_id_target, 1, 0, 0);
   }
 
   public function unfriendUser($user_id, $user_id_target)
   {
+     # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
   public function unblockUser($user_id, $user_id_target)
   {
+     # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
   public function unfollowUser($user_id, $user_id_target)
   {
+     # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
@@ -1174,7 +1180,7 @@ class User
 
   public function removeUserRelation($user_id, $user_id_target)
   {
-    /* deletes a user relation form the db
+    /* deletes a user relation from the db
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -1212,7 +1218,7 @@ class User
   public function removeUserFromGroup($group_id, $user_id)
   {
     /* deletes a user from a group
-     */
+    */
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :userid AND group_id = :groupid');
     $this->db->bind(':groupid', $group_id); // bind group id
@@ -1243,7 +1249,7 @@ class User
 
   }// end function
 
-  public function addCSV($csv, $user_level = 20, $separator = ";")
+  public function addCSV ($csv, $user_level = 20, $separator = ";")
   {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
@@ -1403,7 +1409,7 @@ class User
 
   public function checkLogin($username, $pw)
   {
-
+    # helper method - takes username and pw, returns true if credentials are of, false if not
     $check_credentials = $this->checkCredentials($username, $pw);
 
     if ($check_credentials['success'] && $check_credentials['data'] && $check_credentials['count'] == 1 && $check_credentials['error_code'] == 0) {
@@ -1453,8 +1459,9 @@ class User
   } // end function
 
   public function checkCredentials($username, $pw)
-  { // pw = clear text
-    /* checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
+  {  
+    /* helper for method checkLogin () 
+    checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
     username is clear text
     pw is clear text
     */
@@ -1502,25 +1509,6 @@ class User
       return $returnvalue;
 
     }
-
-    /*foreach ($users as $user) {
-        $decrypted_username = $this->crypt->decrypt ($user['username']);
-        // check if match
-        if (strcmp($decrypted_username,$username)==0)
-        {
-          $dbpw = $user['pw'];
-          // check PASSWORD
-          if (password_verify($pw, $dbpw))
-          {
-            return $user['id'];
-          }else {
-
-            return 0;
-          }
-        } // end if (strcmp....)
-
-    } // end foreach */
-
 
   }// end function
 
@@ -1658,7 +1646,7 @@ class User
 
   public function checkUserExistsByUsername($username, $email = "")
   {
-    // checks if a user with this username or email adress is already in database
+    // helper function: checks if a user with this username or email adress is already in database
     // generate blind index
 
     $bi = md5(strtolower(trim($username)));
@@ -1702,8 +1690,7 @@ class User
 
   public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $search_field = "", $search_text = "", $userlevel = -1)
   {
-    /* returns users (associative array)
-    $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+    /* returns users (associative array)for a specific room + extra parameters (for further filtering)
     */
     $offset = intval($offset);
     $limit = intval($limit);
@@ -1822,6 +1809,7 @@ class User
 
   function checkForCharacterCondition($string)
   {
+    # helper returns true if all chars in string are allowed
     return (bool) preg_match('/(?=.*([A-Z]))(?=.*([a-z]))(?=.*([0-9]))(?=.*([~`\!@#\$%\^&\*\(\)_\{\}\[\]]))/', $string);
   }
 
@@ -1848,9 +1836,10 @@ class User
 
   public function getUsersByGroup($group_id, $status = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0)
   {
-    /* returns users (associative array)
+    /* returns users (associative array) for a specific group id
     $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     */
+
     $offset = intval($offset);
     $limit = intval($limit);
     $orderby = intval($orderby);
@@ -2089,6 +2078,8 @@ class User
           'password' => $email_password
         );
 
+        # deal with sending email to user for welcome mail
+
         $smtp = Mail::factory('smtp', $params);
         $content = "text/html; charset=utf-8";
         $mime = "1.0";
@@ -2135,7 +2126,7 @@ class User
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
     */
-    // query('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
+    
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $status = intval($status);
 
@@ -2226,7 +2217,6 @@ class User
   public function setUserStatus($user_id, $status, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     status = status of inserted user (0 = inactive, 1=active)
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -2275,7 +2265,7 @@ class User
 
   public function revokeConsent($user_id, $text_id)
   {
-    // revoke a previousely given consent to a cretain text (text_id)
+    // revoke a previousely given consent to a certain text (text_id)
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $this->converters->checkTextId($text_id);
     $stmt = $this->db->query('UPDATE ' . $this->db->au_consent . ' SET consent= 2, last_update= NOW(), updater_id= :updater_id, date_revoke = NOW() WHERE user_id= :userid AND text_id= : text_id');
@@ -2373,6 +2363,7 @@ class User
 
   public function grantInfiniteVotesToUser($user_id)
   {
+    # helper method to give a defined user unlimited votes (not active)
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     return $this->setUserInfiniteVote($user_id, 1);
@@ -2380,6 +2371,7 @@ class User
 
   public function revokeInfiniteVotesFromUser($user_id)
   {
+    # helper method to revoke unlimited votes from a user (not active)
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     return $this->setUserInfiniteVote($user_id, 0);
@@ -2413,7 +2405,7 @@ class User
 
   public function getUserGDPRData($user_id)
   {
-    //retrieves all data associated to a certain user and returns it
+    //retrieves all data associated to a certain user according to GDPR and returns it
 
     /* returns user base data for a specified db id */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -2819,7 +2811,7 @@ class User
   public function setUserPosition($user_id, $userposition, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
-     about (text) -> description of a user
+     about (text) -> description of a user position
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $about = $this->crypt->encrypt(trim($userposition)); // sanitize and encrypt position text
@@ -2997,7 +2989,7 @@ class User
   public function setUserUsername($user_id, $username, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
-     displayname = shown name of the user in the system
+     username = username of the user in the system
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -3038,7 +3030,7 @@ class User
     }
   }// end function
 
-  public function setUserPW($user_id, $pw, $updater_id = 0)
+  public function setUserPW ($user_id, $pw, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
      pw = pw in clear text
@@ -3136,7 +3128,7 @@ class User
   {
     /* deletes user and returns the number of rows (int) accepts user id or user hash id
     user id = id of the user, either hash id or db id
-    delete_mode = 0 = delete user only 1= also delete all associated data with this user (ideas, comment, messages, media), votes are preserved
+    delete_mode => 0 = delete user only 1 = also delete all associated data with this user (ideas, comment, messages, media), votes are preserved
      */
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
