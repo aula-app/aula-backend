@@ -32,7 +32,7 @@ class Topic
 
   public function getTopicOrderId($orderby)
   {
-     # helper method => converts an int id to a db field name (for ordering)
+    # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -69,7 +69,7 @@ class Topic
 
   public function validSearchField($search_field)
   {
-     # helper method => defines valied db field name (for filtering)
+    # helper method => defines valied db field name (for filtering)
     return in_array($search_field, [
       "name",
       "description_public",
@@ -100,7 +100,7 @@ class Topic
     // returns topics by phase
     // phase_id is the id of the phase 0 = wild ideas 10 = discussion 20 = approval 30 = voting 40 = implementation
     // room_id = 0 means all rooms or specify a certain room
-    
+
     //sanitize
     $phase_id = intval($phase_id);
     $room_id = $this->converters->checkRoomId($room_id);
@@ -332,7 +332,7 @@ class Topic
       $extra_where .= " AND " . $this->db->au_topics . ".type = " . $type;
     }
 
-    if ($room_id > 0) {
+    if ($room_id < 0) {
       // if a room id is set then add to where clause
       // check user level first!
       if ($user_id > 0 && $level < 50) {
@@ -340,6 +340,8 @@ class Topic
         $room_id = "SELECT room_id FROM " . $this->db->au_rel_rooms_users . " WHERE user_id = " . $user_id;
         $extra_where .= " AND " . $this->db->au_topics . ".room_id IN (" . $room_id . ")"; // get specific topics to a room
       }
+    } else {
+      $extra_where .= " AND " . $this->db->au_topics . ".room_id = " . $room_id; // get specific topics to a room
     }
 
     if ($phase_id > -1) {
@@ -553,7 +555,7 @@ class Topic
 
 
     } else {
-      
+
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 1; // error code - db error
       $returnvalue['data'] = false; // returned data
