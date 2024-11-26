@@ -332,7 +332,7 @@ class Topic
       $extra_where .= " AND " . $this->db->au_topics . ".type = " . $type;
     }
 
-    if ($room_id == 0) {
+    if ($room_id < 0) {
       // if a room id is set then add to where clause
       // check user level first!
       if ($user_id > 0 && $level < 50) {
