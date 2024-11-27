@@ -1,5 +1,7 @@
 # aula's backend Architecture
 
+## Model mains controller
+
 The main architecture behind aula's controllers is that most of the system requests pass through the controllers/models.php.
 
 Methods from classes/models/[MODEL-NAME].php can be accessed with a POST request to:
@@ -27,3 +29,31 @@ method arguments and then for each method of the model, it checks for the `metho
 receives `$user_level`, `$user_id` and the arguments and return a boolean value, true if the user has permissions
 to do that specific request or false otherwise. If a method from a model doesn't have a `methodPermission` written,
 the default behaviour is not allowing the request to be processed.
+
+## OAuth (auth0)
+
+The auth0 authentication workflow is managed by `controllers/login_auth0.php` and `controllers/auth0.php`. The first one initiates the OAuth login workflow, sending the user to Auth0 and exchange the security codes. The `controllers/auth0.php` is the callback configured on Auth0, and it is where the user trying to login is verified. If the user doesn't exist in the aula database, a new user is created, otherwise based on the successful response from Auth0, a JWT token is generated, returned to the user and then the user is signed in.
+
+## Password management
+
+1. controllers/change_password.php
+
+It uses the JWT token user id information to change a user password triggered using the user profile interface.
+
+2. controllers/forgot_password.php
+
+Triggers an email with an unique link to the user that can be used to reset a password.
+
+3. controllers/set_password.php
+
+Used for the first password setup for an user. When an user is created on the aula admin's interface, the users receives an unique URL with a secret and a link to set_password.php
+
+## Check if user has consent necessary agreements to use the system
+
+controllers/get_necessary_consents.php is called by the interface before every request, to check if there are new terms that must be read and confirmed or refused by the user.
+
+The method controllers/give_consent.php records in the database the user response for each agreements requirements.
+
+## Upload files
+
+controllers/upload.php is responsible for manging the media upload as user avatars to the filesystem of aula's server.
