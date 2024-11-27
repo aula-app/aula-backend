@@ -30,8 +30,8 @@ The access control to the methods is based on the user level, user id and the va
 All models must contain a private attribute $openMethods with a list of methods that are open for all users,
 a method `hasPermissions` that receives automatically from the model.php controller the `$user_id`, `$user_level` and
 method arguments and then for each method of the model, it checks for the `methodPermission`. These methods
-receives `$user_level`, `$user_id` and the arguments and return a boolean value, true if the user has permissions
-to do that specific request or false otherwise. If a method from a model doesn't have a `methodPermission` written,
+receives `$user_level`, `$user_id`and the arguments and return a boolean value, true if the user has permissions
+to do that specific request or false otherwise. If a method from a model doesn't have a`methodPermission` written,
 the default behaviour is not allowing the request to be processed.
 
 ## OAuth (auth0)
