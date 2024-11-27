@@ -4,7 +4,7 @@
 
 You can find the database structure and documentation [here](https://github.com/aula-app/playground/blob/main/init/Database_Description.md).
 
-## Model mains controller
+## Model main aula's controller
 
 The main architecture behind aula's controllers is that most of the system requests pass through the controllers/models.php.
 
