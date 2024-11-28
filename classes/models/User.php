@@ -944,6 +944,89 @@ class User
 
   } // end function
 
+  public function getStandardRoom () {
+    // returns the id for the standard room (AULA room)
+    $room_id = 0; // default to 0 
+    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_rooms . ' WHERE type = 1 LIMIT 1');
+    $room = $this->db->resultSet();
+
+    $room_id = $room[0]['id']; // get room id from db
+    
+    return $room_id;
+
+  }
+
+  public function addUserToStandardRoom ($user_id, $status = 1, $updater_id = 0)
+  {
+    /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
+    returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    
+    // check if user and room exist
+    $user_exist = $this->converters->checkUserExist($user_id);
+
+    // get the id for the standard room
+    $room_id = getStandardRoom ();
+    // check if the room actually exists
+    $room_exist = $this->converters->checkRoomExist($room_id);
+
+    if ($user_exist == 1 && $room_exist == 1) {
+      // everything ok, user and room exists
+      // add relation to database
+
+      $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
+
+      // bind all VALUES
+      $this->db->bind(':room_id', $room_id);
+      $this->db->bind(':user_id', $user_id);
+      $this->db->bind(':status', $status);
+      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+
+      $err = false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+        $err = true;
+      }
+
+      if (!$err) {
+        $insertid = intval($this->db->lastInsertId());
+        $this->syslog->addSystemEvent(0, "Added user " . $user_id . " to standard room " . $room_id, 0, "", 1);
+
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; // error code
+        $returnvalue['data'] = $insertid; // returned data
+        $returnvalue['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+      } else {
+        $this->syslog->addSystemEvent(0, "Error while adding user " . $user_id . " to standard room " . $room_id, 0, "", 1);
+
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue['data'] = false; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+
+    } else {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+  } // end function
+
+
   public function moveUserBetweenRooms($user_id, $room_id1, $room_id2, $updater_id)
   {
     // moves a user (user_id) from room 1 to room 2
@@ -2016,8 +2099,8 @@ class User
       $action = $this->db->execute(); // do the query
       $insertid = intval($this->db->lastInsertId());
 
-      # add user to default room 0 (aula)
-      $this->addUserToRoom($insertid, 999999);
+      # add user to default standard room  (aula)
+      $this->addUserToStandardRoom ($insertid);
 
     } catch (Exception $e) {
 

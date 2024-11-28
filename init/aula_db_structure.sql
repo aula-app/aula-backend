@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-10-29 13:44:39 +0000
+# Verarbeitungszeit: 2024-11-28 12:53:24 +0000
 # ************************************************************
 
 
@@ -615,6 +615,7 @@ CREATE TABLE `au_rooms` (
   `phase_duration_2` int(11) DEFAULT 0 COMMENT 'phase_duration_2',
   `phase_duration_3` int(11) DEFAULT 0 COMMENT 'phase_duration_3',
   `phase_duration_4` int(11) DEFAULT 0 COMMENT 'phase_duration_4',
+  `type` int(11) DEFAULT 0 COMMENT '0 = standard room 1 = MAIN ROOM (aula)',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 

@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-10-29 13:44:59 +0000
+# Verarbeitungszeit: 2024-11-28 12:53:05 +0000
 # ************************************************************
 
 
@@ -809,16 +809,17 @@ CREATE TABLE `au_rooms` (
   `phase_duration_2` int(11) DEFAULT 0 COMMENT 'phase_duration_2',
   `phase_duration_3` int(11) DEFAULT 0 COMMENT 'phase_duration_3',
   `phase_duration_4` int(11) DEFAULT 0 COMMENT 'phase_duration_4',
+  `type` int(11) DEFAULT 0 COMMENT '0 = standard room 1 = MAIN ROOM (aula)',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 LOCK TABLES `au_rooms` WRITE;
 /*!40000 ALTER TABLE `au_rooms` DISABLE KEYS */;
 
-INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`, `phase_duration_0`, `phase_duration_1`, `phase_duration_2`, `phase_duration_3`, `phase_duration_4`)
+INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`, `phase_duration_0`, `phase_duration_1`, `phase_duration_2`, `phase_duration_3`, `phase_duration_4`, `type`)
 VALUES
-	(106,'The Innovation Hub','DI:6:0','DI:6:0',1,1,10,'2024-06-24 21:48:04','2024-07-25 16:43:46',165,'02a9374ae856c01ebb647c3b7570312d','','',NULL,NULL,NULL,NULL,NULL),
-	(107,'AULA',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+	(106,'The Innovation Hub','DI:6:0','DI:6:0',1,1,10,'2024-06-24 21:48:04','2024-11-28 12:52:48',165,'02a9374ae856c01ebb647c3b7570312d','','',NULL,NULL,NULL,NULL,NULL,0),
+	(107,'AULA',NULL,NULL,1,NULL,NULL,NULL,'2024-11-28 12:52:48',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1);
 
 /*!40000 ALTER TABLE `au_rooms` ENABLE KEYS */;
 UNLOCK TABLES;
