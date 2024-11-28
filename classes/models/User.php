@@ -1249,7 +1249,7 @@ class User
 
   }// end function
 
-  public function addCSV ($csv, $user_level = 20, $separator = ";")
+  public function addCSV ($csv, $user_level = 20, $separator = ";", $room_id)
   {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
@@ -1266,8 +1266,7 @@ class User
     $display_name = "";
     $email = "";
     $about_me = "";
-    $room_id = 0;
-
+    
     if (strlen($csv) > 1 && str_contains($csv, ';')) {
       # basic check of CSV
       $csv_lines = explode("\n", $csv);
@@ -1281,8 +1280,7 @@ class User
         $user_name = $data[2];
         $email = $data[3];
         $about_me = $data[4];
-        $room_id = $data[5];
-
+        
         // check if user name is still available
         $user_ok = false;
         $attempts = 0;
