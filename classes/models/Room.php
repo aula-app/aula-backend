@@ -1220,7 +1220,7 @@ class Room
 
     } 
 
-    $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rooms . ' WHERE id = :id');
+    $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rooms . ' WHERE id = :id AND NOT type = 1');
     $this->db->bind(':id', $room_id);
     $err = false;
     try {
