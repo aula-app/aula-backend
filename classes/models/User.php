@@ -1249,7 +1249,7 @@ class User
 
   }// end function
 
-  public function addCSV ($csv, $user_level = 20, $separator = ";", $room_id)
+  public function addCSV ($csv, $room_id, $user_level = 20, $separator = ";")
   {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
@@ -2017,7 +2017,7 @@ class User
       $insertid = intval($this->db->lastInsertId());
 
       # add user to default room 0 (aula)
-      $this->addUserToRoom($insertid, 0);
+      $this->addUserToRoom($insertid, 999999);
 
     } catch (Exception $e) {
 
