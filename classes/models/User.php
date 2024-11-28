@@ -244,8 +244,8 @@ class User
 
     }
   }// end function
-  
-  
+
+
   public function delegateVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
     /* delegates voting rights from one user to another within a topic, accepts user_id (by hash or id) and topic id (by hash or id)
@@ -729,7 +729,7 @@ class User
         $ids[$i] = $key['id'];
         $i++;
       }
-      
+
       $stmt = $this->db->query('SELECT text_id FROM ' . $this->db->au_consent . ' WHERE user_id = :user_id AND text_id IN (' . implode(",", $ids) . ') AND consent = 1');
       //echo ('<br>SELECT text_id FROM '.$this->db->au_consent.' WHERE user_id = :user_id AND text_id IN ('.implode(",", $ids).') AND consent = 1');
       $this->db->bind(':user_id', $user_id); // bind userid
@@ -1081,31 +1081,31 @@ class User
 
   public function friendUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->relateUser($user_id, $user_id_target, 1, 0, 2);
   }
 
   public function blockUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->relateUser($user_id, $user_id_target, 1, 0, 0);
   }
 
   public function unfriendUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
   public function unblockUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
   public function unfollowUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
@@ -1218,7 +1218,7 @@ class User
   public function removeUserFromGroup($group_id, $user_id)
   {
     /* deletes a user from a group
-    */
+     */
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :userid AND group_id = :groupid');
     $this->db->bind(':groupid', $group_id); // bind group id
@@ -1249,7 +1249,7 @@ class User
 
   }// end function
 
-  public function addCSV ($csv, $room_id, $user_level = 20, $separator = ";")
+  public function addCSV($csv, $room_id, $user_level = 20, $separator = ";")
   {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
@@ -1266,7 +1266,7 @@ class User
     $display_name = "";
     $email = "";
     $about_me = "";
-    
+
     if (strlen($csv) > 1 && str_contains($csv, ';')) {
       # basic check of CSV
       $csv_lines = explode("\n", $csv);
@@ -1280,7 +1280,7 @@ class User
         $user_name = $data[2];
         $email = $data[3];
         $about_me = $data[4];
-        
+
         // check if user name is still available
         $user_ok = false;
         $attempts = 0;
@@ -1456,7 +1456,8 @@ class User
     }// end if
   } // end function
 
-  public function getReactivationDate ($user_id) {
+  public function getReactivationDate($user_id)
+  {
     # returns the reactivation date for a suspended user - checks the commands table if there is a reactivation command (cmd_id = 40). In this case
     # the method returns the date when the user is reactivated (status back to 1). If there is no reactivation command the method returns false
     $reactivation_date = false; # init
@@ -1466,7 +1467,7 @@ class User
     try {
       $this->db->bind(':target_id', $username); // set user id
       $res = $this->db->resultSet();
-      $reactivation_date = $res [0]['date_start'];
+      $reactivation_date = $res[0]['date_start'];
 
 
     } catch (Exception $e) {
@@ -1477,10 +1478,10 @@ class User
 
 
   }
-    
+
 
   public function checkCredentials($username, $pw)
-  {  
+  {
     /* helper for method checkLogin () 
     checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
     username is clear text
@@ -1491,7 +1492,7 @@ class User
     $bi = md5(strtolower($username));
     $user_status = 0;
     $user_id = 0;
-    
+
     $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id, status FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
     try {
       $this->db->bind(':username', $username); // blind index
@@ -1507,11 +1508,10 @@ class User
 
     if ($user_status == 2) {
       # get the reactivation date (if there is one) when the user is suspended (status = 2)
-      $reactivation_date = getReactivationDate ($user_id);
+      $reactivation_date = getReactivationDate($user_id);
     }
 
-    if (count($users) < 1 || $user_status > 1 || $user_status < 1) 
-    {
+    if (count($users) < 1 || $user_status > 1 || $user_status < 1) {
       # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
@@ -1726,7 +1726,7 @@ class User
   public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $search_field = "", $search_text = "", $userlevel = -1)
   {
     /* returns users (associative array)for a specific room + extra parameters (for further filtering)
-    */
+     */
     $offset = intval($offset);
     $limit = intval($limit);
     $orderby = intval($orderby);
@@ -2161,7 +2161,7 @@ class User
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
     */
-    
+
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $status = intval($status);
 
@@ -3065,7 +3065,7 @@ class User
     }
   }// end function
 
-  public function setUserPW ($user_id, $pw, $updater_id = 0)
+  public function setUserPW($user_id, $pw, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
      pw = pw in clear text
