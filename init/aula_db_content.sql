@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-11-28 12:53:05 +0000
+# Verarbeitungszeit: 2024-12-02 09:08:36 +0000
 # ************************************************************
 
 
@@ -238,7 +238,8 @@ LOCK TABLES `au_groups` WRITE;
 
 INSERT INTO `au_groups` (`id`, `group_name`, `description_public`, `description_internal`, `status`, `internal_info`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `order_importance`, `vote_bias`)
 VALUES
-	(3,'Test','','',1,'','2024-09-10 10:34:34','2024-09-11 16:55:33',165,'dafad754e59d3347064806c9b46d4247','',10,1);
+	(3,'Test','','',1,'','2024-09-10 10:34:34','2024-09-11 16:55:33',165,'dafad754e59d3347064806c9b46d4247','',10,1),
+	(4,'Lehrer:innen','','',1,'','2024-11-28 15:14:50','2024-11-28 15:14:50',266,'218d2bc893eba5ed70480abfb957b4be','$2y$10$EKyCq5e4exu8er5oVg/JVOMkTIFI2/ZIDUbTC3IZ2d.Zy2N/J4ZMa',10,1);
 
 /*!40000 ALTER TABLE `au_groups` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -288,8 +289,8 @@ VALUES
 	(262,'Virtual Learning Lab','Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-07-29 15:03:41','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
 	(263,'Student Art Gallery','Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-07-17 09:30:30','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,0,NULL,NULL,0),
 	(264,'Performing Arts Festival','Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,1,165,1,1,0,'2024-06-24 22:04:28','2024-07-23 16:30:29','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,0,NULL,NULL,0),
-	(265,'School Garden for Food Donation','Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,2,NULL,NULL,0),
-	(266,'Adopt-a-Neighbor Program','Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-07-29 15:55:02','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,0,'',NULL,3,NULL,NULL,0),
+	(265,'School Garden for Food Donation','Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-11-28 21:29:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,2,'','',0),
+	(266,'Adopt-a-Neighbor Program','Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-11-28 21:28:43','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,1,'',NULL,3,'','',0),
 	(267,'Solar-Powered Charging Stations','Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,2,NULL,NULL,0),
 	(268,'Campus-wide Recycling Initiative','Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-10-28 15:39:22','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,'',NULL,4,NULL,NULL,0),
 	(270,'Student Tech Lab','The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,0,NULL,NULL,0),
@@ -446,7 +447,7 @@ INSERT INTO `au_rel_categories_ideas` (`category_id`, `idea_id`, `created`, `las
 VALUES
 	(0,273,'2024-10-03 11:07:44','2024-10-03 11:07:44',165),
 	(3,260,'2024-07-29 15:55:07','2024-07-29 15:55:07',165),
-	(3,266,'2024-07-29 15:55:02','2024-07-29 15:55:02',165),
+	(3,266,'2024-11-28 21:28:43','2024-11-28 21:28:43',165),
 	(3,268,'2024-07-29 15:54:55','2024-07-29 15:54:55',165);
 
 /*!40000 ALTER TABLE `au_rel_categories_ideas` ENABLE KEYS */;
@@ -879,7 +880,7 @@ LOCK TABLES `au_system_current_state` WRITE;
 
 INSERT INTO `au_system_current_state` (`id`, `online_mode`, `revert_to_on_active`, `revert_to_on_date`, `created`, `last_update`, `updater_id`)
 VALUES
-	(1,1,0,'2024-09-09 08:00:00',NULL,'2024-10-29 10:23:11',266);
+	(1,1,0,'2024-09-09 08:00:00',NULL,'2024-11-29 12:13:15',266);
 
 /*!40000 ALTER TABLE `au_system_current_state` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -915,15 +916,17 @@ CREATE TABLE `au_system_global_config` (
   `enable_oauth` int(11) DEFAULT 0 COMMENT '0 = disable,1 = enable',
   `custom_field1_name` text DEFAULT NULL COMMENT 'Name custom field 1',
   `custom_field2_name` text DEFAULT NULL COMMENT 'Name custom field 2',
+  `quorum1` int(11) DEFAULT NULL COMMENT 'Value for quorum 1 wild ideas',
+  `quorum2` int(11) DEFAULT NULL COMMENT 'Value for quorum2  voting',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 LOCK TABLES `au_system_global_config` WRITE;
 /*!40000 ALTER TABLE `au_system_global_config` DISABLE KEYS */;
 
-INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`, `enable_oauth`, `custom_field1_name`, `custom_field2_name`)
+INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`, `enable_oauth`, `custom_field1_name`, `custom_field2_name`, `quorum1`, `quorum2`)
 VALUES
-	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465','2024-10-29 10:23:11',266,NULL,1,0,'Kosten','');
+	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',1,10,X'696E666F4061756C612E6465','2024-11-29 12:13:15',266,NULL,1,0,'Kosten','',NULL,NULL);
 
 /*!40000 ALTER TABLE `au_system_global_config` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -3400,7 +3403,79 @@ VALUES
 	(11612,0,'Added new message (#48) Account data export request for Admin User',0,'','2024-10-29 11:21:23','2024-10-29 11:21:23',0),
 	(11613,0,'Successful login user aula',0,'','2024-10-29 11:21:34','2024-10-29 11:21:34',0),
 	(11614,0,'Successful login user aula',0,'','2024-10-29 12:32:24','2024-10-29 12:32:24',0),
-	(11615,0,'Added new message (#49) /messages',0,'','2024-10-29 12:32:45','2024-10-29 12:32:45',0);
+	(11615,0,'Added new message (#49) /messages',0,'','2024-10-29 12:32:45','2024-10-29 12:32:45',0),
+	(11616,1,'DB Error login user Chrgru',0,'','2024-11-28 13:01:30','2024-11-28 13:01:30',0),
+	(11617,1,'DB Error login user chrgru',0,'','2024-11-28 13:01:40','2024-11-28 13:01:40',0),
+	(11618,1,'DB Error login user chrgru',0,'','2024-11-28 13:01:41','2024-11-28 13:01:41',0),
+	(11619,1,'DB Error login user chrgru',0,'','2024-11-28 13:01:43','2024-11-28 13:01:43',0),
+	(11620,1,'DB Error login user chrgru',0,'','2024-11-28 13:02:03','2024-11-28 13:02:03',0),
+	(11621,1,'DB Error login user chrgru',0,'','2024-11-28 13:02:05','2024-11-28 13:02:05',0),
+	(11622,1,'DB Error login user chrgru',0,'','2024-11-28 13:02:12','2024-11-28 13:02:12',0),
+	(11623,1,'DB Error login user isarod',0,'','2024-11-28 13:51:04','2024-11-28 13:51:04',0),
+	(11624,0,'Successful login user fnietzsche',0,'','2024-11-28 15:14:26','2024-11-28 15:14:26',0),
+	(11625,0,'Allow registration set to 1',0,'','2024-11-28 15:14:27','2024-11-28 15:14:27',0),
+	(11626,0,'status for OAUTH set to 0',0,'','2024-11-28 15:14:27','2024-11-28 15:14:27',0),
+	(11627,0,'Online mode set to 1',0,'','2024-11-28 15:14:27','2024-11-28 15:14:27',0),
+	(11628,0,'Online mode set to 1',0,'','2024-11-28 15:14:27','2024-11-28 15:14:27',0),
+	(11629,0,'Added new group (#4) Lehrer:innen',0,'','2024-11-28 15:14:50','2024-11-28 15:14:50',0),
+	(11630,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-11-28 20:22:30','2024-11-28 20:22:30',0),
+	(11631,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 20:22:38','2024-11-28 20:22:38',0),
+	(11632,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-11-28 20:27:42','2024-11-28 20:27:42',0),
+	(11633,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-11-28 20:27:47','2024-11-28 20:27:47',0),
+	(11634,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:26:42','2024-11-28 21:26:42',0),
+	(11635,0,'Edited topic (#474) Creative Canvas',0,'','2024-11-28 21:26:53','2024-11-28 21:26:53',0),
+	(11636,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:26:56','2024-11-28 21:26:56',0),
+	(11637,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:27:17','2024-11-28 21:27:17',0),
+	(11638,0,'Edited topic (#474) Creative Canvas',0,'','2024-11-28 21:27:44','2024-11-28 21:27:44',0),
+	(11639,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:27:49','2024-11-28 21:27:49',0),
+	(11640,0,'Edited idea 265 by 165',0,'','2024-11-28 21:28:10','2024-11-28 21:28:10',0),
+	(11641,0,'Idea set to losing 265 by 165',0,'','2024-11-28 21:28:10','2024-11-28 21:28:10',0),
+	(11642,0,'Idea set to winning 265 by 165',0,'','2024-11-28 21:28:11','2024-11-28 21:28:11',0),
+	(11643,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:28:14','2024-11-28 21:28:14',0),
+	(11644,0,'Edited idea 266 by 165',0,'','2024-11-28 21:28:24','2024-11-28 21:28:24',0),
+	(11645,0,'Added idea 266 to category 3',0,'','2024-11-28 21:28:24','2024-11-28 21:28:24',0),
+	(11646,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:28:27','2024-11-28 21:28:27',0),
+	(11647,0,'Edited idea 266 by 165',0,'','2024-11-28 21:28:43','2024-11-28 21:28:43',0),
+	(11648,0,'Added idea 266 to category 3',0,'','2024-11-28 21:28:43','2024-11-28 21:28:43',0),
+	(11649,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:28:47','2024-11-28 21:28:47',0),
+	(11650,0,'Edited idea 265 by 165',0,'','2024-11-28 21:29:04','2024-11-28 21:29:04',0),
+	(11651,0,'Idea set to winning 265 by 165',0,'','2024-11-28 21:29:04','2024-11-28 21:29:04',0),
+	(11652,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:29:13','2024-11-28 21:29:13',0),
+	(11653,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:29:33','2024-11-28 21:29:33',0),
+	(11654,0,'Delegation status retrieved: user_id: 165, topic_id: 475',0,'','2024-11-28 21:29:43','2024-11-28 21:29:43',0),
+	(11655,1,'DB Error login user chazim',0,'','2024-11-29 08:12:54','2024-11-29 08:12:54',0),
+	(11656,1,'DB Error login user chazim',0,'','2024-11-29 08:12:56','2024-11-29 08:12:56',0),
+	(11657,1,'DB Error login user chazim',0,'','2024-11-29 08:12:57','2024-11-29 08:12:57',0),
+	(11658,1,'DB Error login user chazim',0,'','2024-11-29 08:13:00','2024-11-29 08:13:00',0),
+	(11659,1,'DB Error login user chazim',0,'','2024-11-29 08:13:01','2024-11-29 08:13:01',0),
+	(11660,1,'DB Error login user chazim',0,'','2024-11-29 08:13:01','2024-11-29 08:13:01',0),
+	(11661,1,'DB Error login user chazim',0,'','2024-11-29 08:13:01','2024-11-29 08:13:01',0),
+	(11662,1,'DB Error login user chazim',0,'','2024-11-29 08:13:02','2024-11-29 08:13:02',0),
+	(11663,0,'Allow registration set to 1',0,'','2024-11-29 12:13:15','2024-11-29 12:13:15',0),
+	(11664,0,'Online mode set to 1',0,'','2024-11-29 12:13:15','2024-11-29 12:13:15',0),
+	(11665,0,'Online mode set to 1',0,'','2024-11-29 12:13:15','2024-11-29 12:13:15',0),
+	(11666,0,'status for OAUTH set to 0',0,'','2024-11-29 12:13:15','2024-11-29 12:13:15',0);
+
+INSERT INTO `au_systemlog` (`id`, `type`, `message`, `usergroup`, `url`, `created`, `last_update`, `updater_id`)
+VALUES
+	(11667,1,'DB Error login user t.kieffer',0,'','2024-11-30 15:14:57','2024-11-30 15:14:57',0),
+	(11668,1,'DB Error login user özgdem',0,'','2024-11-30 17:17:05','2024-11-30 17:17:05',0),
+	(11669,1,'DB Error login user özgdem',0,'','2024-11-30 17:17:13','2024-11-30 17:17:13',0),
+	(11670,1,'DB Error login user özgdem',0,'','2024-11-30 17:17:14','2024-11-30 17:17:14',0),
+	(11671,1,'DB Error login user özgdem',0,'','2024-11-30 17:17:40','2024-11-30 17:17:40',0),
+	(11672,1,'DB Error login user özgdem',0,'','2024-11-30 17:17:43','2024-11-30 17:17:43',0),
+	(11673,1,'DB Error login user özgdem',0,'','2024-11-30 17:17:47','2024-11-30 17:17:47',0),
+	(11674,1,'DB Error login user özgdem',0,'','2024-11-30 17:17:53','2024-11-30 17:17:53',0),
+	(11675,1,'DB Error login user özgdem',0,'','2024-11-30 17:17:54','2024-11-30 17:17:54',0),
+	(11676,1,'DB Error login user lor.lo',0,'','2024-12-02 07:01:18','2024-12-02 07:01:18',0),
+	(11677,1,'DB Error login user lor.loh',0,'','2024-12-02 07:01:22','2024-12-02 07:01:22',0),
+	(11678,1,'DB Error login user lo.lo',0,'','2024-12-02 07:01:30','2024-12-02 07:01:30',0),
+	(11679,1,'DB Error login user lo.lo',0,'','2024-12-02 07:01:32','2024-12-02 07:01:32',0),
+	(11680,1,'DB Error login user mohahm',0,'','2024-12-02 08:28:02','2024-12-02 08:28:02',0),
+	(11681,1,'DB Error login user mohahm',0,'','2024-12-02 08:28:03','2024-12-02 08:28:03',0),
+	(11682,1,'DB Error login user mohahm',0,'','2024-12-02 08:28:04','2024-12-02 08:28:04',0),
+	(11683,1,'DB Error login user mohahm',0,'','2024-12-02 08:28:04','2024-12-02 08:28:04',0),
+	(11684,1,'DB Error login user mohahm',0,'','2024-12-02 08:30:28','2024-12-02 08:30:28',0);
 
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -3479,7 +3554,7 @@ INSERT INTO `au_topics` (`id`, `name`, `description_public`, `description_intern
 VALUES
 	(472,'Green Innovations Vault','Ideas aimed at reducing our environmental footprint, promoting recycling initiatives, sustainable energy projects, and conservation efforts.','Internal description?',1,10,'2024-06-24 21:51:34','2024-06-24 21:51:34','7ba1cc8d79a7cb7457427a5254f69d41',165,106,10,1,NULL,14,14,14,14,14,0),
 	(473,'Tech Frontier','New apps, digital learning tools, robotics projects, smart solutions for the school, and advancements in virtual reality or augmented reality.','',1,10,'2024-06-24 21:52:11','2024-09-07 17:27:25','ea45d51cb116ce44f5e69e992393146f',165,106,20,1,NULL,14,14,14,14,14,0),
-	(474,'Creative Canvas','Imaginative ideas spanning visual arts, music performances, theater productions, literary works and other art expression.','',1,10,'2024-06-24 21:53:20','2024-09-07 17:24:00','d2c9fb9871033f36407ab0bcf0e676a3',165,106,30,1,NULL,14,14,14,14,14,0),
+	(474,'Creative Canvas','Imaginative ideas spanning visual arts, music performances, theater productions, literary works and other art expression.','',1,10,'2024-06-24 21:53:20','2024-11-28 21:27:43','d2c9fb9871033f36407ab0bcf0e676a3',165,106,40,1,NULL,0,14,14,14,14,0),
 	(475,'Service Heart','Proposals for volunteer programs, fundraising events, social justice initiatives, outreach campaigns, and projects aimed at improving the well-being of others.','Internal description?',1,10,'2024-06-24 21:54:04','2024-06-24 21:54:04','aacc93c0cdabb2bf4106f9f1ce3bf2b5',165,106,40,1,NULL,14,14,14,14,14,0);
 
 /*!40000 ALTER TABLE `au_topics` ENABLE KEYS */;
@@ -3578,78 +3653,3 @@ CREATE TABLE `au_users_basedata` (
 LOCK TABLES `au_users_basedata` WRITE;
 /*!40000 ALTER TABLE `au_users_basedata` DISABLE KEYS */;
 
-INSERT INTO `au_users_basedata` (`id`, `realname`, `displayname`, `username`, `email`, `pw`, `position`, `hash_id`, `about_me`, `registration_status`, `status`, `created`, `last_update`, `updater_id`, `creator_id`, `bi`, `userlevel`, `infinite_votes`, `last_login`, `presence`, `absent_until`, `auto_delegation`, `trustee_id`, `o1`, `o2`, `o3`, `consents_given`, `consents_needed`, `temp_pw`, `pw_changed`)
-VALUES
-	(165,'Admin User','Admin','aula','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','',NULL,1,'2023-06-17 14:58:43','2024-10-29 13:44:28',0,0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2024-10-29 12:32:24',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0),
-	(264,'Albrecht Durer','durer','adurer','adurer@aula.de','$2y$10$1NNLacyzYP3zI5Ipy1FgOOxbyP9Ezhuch3OkT5uSWIdRBaafJYpS2',NULL,'940ec2b51215d712b2228989e9d04863','description?',NULL,1,'2024-07-03 16:31:19','2024-07-17 16:37:09',165,0,'d47b6ae7477f77ac3c5ff48d0ca8cded',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,-3,NULL,0),
-	(265,'Alfred Doblin','doblin','adoblin','adoblin@aula.de','$2y$10$/4NX2p3PEK4YkXVrUHCfiOJL7Jve2kJzP21qMeTsJX5uQ/SjgLIV6',NULL,'599cf1b62ab5ac0b1b3facbd5f08c215','description?',NULL,1,'2024-07-03 16:32:37','2024-07-17 16:37:09',165,0,'4347d0beb442602471ae29cd56a73d9e',10,NULL,NULL,1,NULL,0,NULL,97,97,100,0,-3,NULL,0),
-	(266,'Friedrich Nietzsche','zaratustra','fnietzsche','fnietzsche@aula.de','$2y$10$YTH2z9ucipRCHxvqAE.Q3Oaj1/KF0r0u2Roflx.DNZVyNUXvOjzLe',NULL,'a50a9bb4f3f792eb7ea94f05629f0cc1','description?',NULL,1,'2024-07-03 16:33:24','2024-10-02 09:02:59',165,0,'e6d4d10df940311f3642f0bd7e19b22e',60,NULL,'2024-10-02 09:02:59',1,NULL,0,NULL,102,102,122,0,-3,NULL,0),
-	(267,'Marlene Dietrich','merlene','mdietrich','mdietrich@aula.de','$2y$10$vi3.uIrXyLj4vOQi87GWuegNQ13CLucA.SMYziQvCqvUaJypJu74u',NULL,'c4c1cdcdebf21ea35097c3137dc9c405','description?',NULL,1,'2024-07-03 16:34:58','2024-07-17 16:37:09',165,0,'5c6b5df6b09cfc0ee7dabaa8014aae6c',10,NULL,NULL,1,NULL,0,NULL,109,109,109,0,-3,NULL,0),
-	(268,'Hannah Arendt','hannah','harendt','harendt@aula.de','$2y$10$nThWaeYj9QdPzDVk5Hcsme3mrOKVsH9/y2acEWe3YyLkuaTzSqYvG',NULL,'67bb4e8a810b2d123b3172e75c69c57d','description?',NULL,1,'2024-07-03 16:35:38','2024-07-17 16:37:09',165,0,'cfa5a4515d77172fee99e37d30216efe',10,NULL,NULL,1,NULL,0,NULL,104,104,104,0,-3,NULL,0),
-	(269,'Zazie Beetz','Vanessa','zbeetz','zbeetz@aula.de','$2y$10$IOb9eH2qv7OkSj1yP7ySretynqD/nLY9WTPPVmcp9riuUF9swCmUG',NULL,'33908f14d6f6693ba059ffcfdc618e4d','description?',NULL,1,'2024-07-03 16:36:51','2024-07-17 16:37:09',165,0,'ee377903e5d1311d7f5f30bee4bfed33',10,NULL,NULL,1,NULL,0,NULL,122,122,118,0,-3,NULL,0),
-	(270,'Nastassja Kinski','nk','nkinski','nkinski@aula.de','$2y$10$hID/c4EKc7ntojB770cbFuqvQ24IqHz6v0rtC7f3WNc6D0BQyUIGK',NULL,'77993b028df7e814c3a20d17be57511c','description?',NULL,1,'2024-07-03 16:37:53','2024-07-17 16:37:09',165,0,'279c9e41c5082bdf3f3b4bcf699edbb1',10,NULL,NULL,1,NULL,0,NULL,110,110,110,0,-3,NULL,0);
-
-/*!40000 ALTER TABLE `au_users_basedata` ENABLE KEYS */;
-UNLOCK TABLES;
-
-
-# Tabellen-Dump au_users_settings
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_users_settings`;
-
-CREATE TABLE `au_users_settings` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) DEFAULT NULL COMMENT 'id of the user',
-  `external_service_login` int(11) DEFAULT NULL COMMENT 'SSO / OAuth2 login 0=no 1=yes',
-  `created` datetime DEFAULT NULL,
-  `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
-  `external_service_id` int(11) DEFAULT NULL COMMENT 'id of the used service for authentication',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
-
-
-# Tabellen-Dump au_votes
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `au_votes`;
-
-CREATE TABLE `au_votes` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) DEFAULT NULL COMMENT 'id of voting user',
-  `idea_id` int(11) DEFAULT NULL COMMENT 'id of idea',
-  `vote_value` int(11) DEFAULT NULL COMMENT 'value of the vote (-1, 0, +1)',
-  `status` int(11) DEFAULT NULL COMMENT '0=inactive, 1=active, 2= temporarily suspended',
-  `created` datetime DEFAULT NULL COMMENT 'time of first creation',
-  `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update on this dataset',
-  `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the vote',
-  `vote_weight` int(11) DEFAULT NULL COMMENT 'absolute value for given votes,  neutral = 1 or =vote_value',
-  `number_of_delegations` int(11) DEFAULT NULL COMMENT 'number of delegated votes included',
-  `comment` varchar(2048) DEFAULT NULL COMMENT 'Comment that the user added to a vote he did',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
-LOCK TABLES `au_votes` WRITE;
-/*!40000 ALTER TABLE `au_votes` DISABLE KEYS */;
-
-INSERT INTO `au_votes` (`id`, `user_id`, `idea_id`, `vote_value`, `status`, `created`, `last_update`, `hash_id`, `vote_weight`, `number_of_delegations`, `comment`)
-VALUES
-	(111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,''),
-	(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,''),
-	(144,165,263,1,1,'2024-07-17 09:30:30','2024-07-17 09:30:30','1e77f623fec0bca95a01fa60e32ea967',1,0,''),
-	(148,165,264,0,1,'2024-07-23 16:30:29','2024-07-23 16:30:29','20e34c8db6e1e2b9034e052c63694587',1,0,''),
-	(153,165,273,0,1,'2024-10-28 15:42:27','2024-10-28 15:42:27','6f3174998e00a662aa1211bde3e04633',1,0,'');
-
-/*!40000 ALTER TABLE `au_votes` ENABLE KEYS */;
-UNLOCK TABLES;
-
-
-
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

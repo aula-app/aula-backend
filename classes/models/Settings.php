@@ -127,6 +127,32 @@ class Settings
     }
   }// end function
 
+  public function getQuorums()
+  {
+    /* helper method that returns quorums 1 & 2 */
+
+    $stmt = $this->db->query('SELECT quorum1, quorum2 FROM ' . $this->db->au_system_global_config . ' LIMIT 1');
+
+    $settings = $this->db->resultSet();
+
+    if (count($settings) < 1) {
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 2; // error code - db error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue['data'] = $settings[0]; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+  }// end function
+
 
   public function setInstanceOnlineMode($status, $updater_id = 0)
   {
@@ -680,6 +706,64 @@ class Settings
 
       } else {
         //$this->syslog->addSystemEvent(1, "Error editing topic ".$name, 0, "", 1);
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code - db error
+        $returnvalue['data'] = false; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    } else {
+      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['error_code'] = 3; // error code - status out of range error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+  } // end function
+
+  public function setQuorum2 ($quorum1 = 80, $quorum2 = 80, $updater_id = 0)
+  {
+    // sets the quorums for phases wild ideas (quorum1) and voting phase (quorum2)
+
+    // sanitize
+    $quorum1 = intval($quorum1);
+    $quorum2 = intval($quorum2);
+    
+    if (is_int ($quorum1) && is_int ($quorum2)) {
+      $updater_id = $this->converters->checkUserId($updater_id);
+
+      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET quorum1 = :quorum1, quorum2 = :quorum2, last_update = NOW(), updater_id = :updater_id ');
+
+      // bind all VALUES
+      $this->db->bind(':quorum1', $quorum1);
+      $this->db->bind(':quorum2', $quorum2);
+
+      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+      $err = false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+        $err = true;
+      }
+
+      if (!$err) {
+        $this->syslog->addSystemEvent(0, "Quorums set to " . $quorum1 . " and " . $quorum2, 0, "", 1);
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue['data'] = 1; // returned data
+        $returnvalue['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+
+      } else {
         $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 1; // error code - db error
         $returnvalue['data'] = false; // returned data

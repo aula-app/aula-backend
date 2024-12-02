@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-11-28 12:53:24 +0000
+# Verarbeitungszeit: 2024-12-02 09:08:17 +0000
 # ************************************************************
 
 
@@ -702,6 +702,8 @@ CREATE TABLE `au_system_global_config` (
   `enable_oauth` int(11) DEFAULT 0 COMMENT '0 = disable,1 = enable',
   `custom_field1_name` text DEFAULT NULL COMMENT 'Name custom field 1',
   `custom_field2_name` text DEFAULT NULL COMMENT 'Name custom field 2',
+  `quorum1` int(11) DEFAULT NULL COMMENT 'Value for quorum 1 wild ideas',
+  `quorum2` int(11) DEFAULT NULL COMMENT 'Value for quorum2  voting',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -904,5 +906,3 @@ CREATE TABLE `au_votes` (
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
