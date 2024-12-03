@@ -7,7 +7,7 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-11-28 12:53:24 +0000
+# Verarbeitungszeit: 2024-12-03 12:35:25 +0000
 # ************************************************************
 
 
@@ -26,7 +26,7 @@ SET NAMES utf8mb4;
 DROP TABLE IF EXISTS `au_activitylog`;
 
 CREATE TABLE `au_activitylog` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'autoinc id',
   `type` smallint(6) DEFAULT NULL COMMENT 'Which type of activity (i.e. 1=login, 2=logout, 3=vote, 4= new idea etc.)',
   `info` varchar(1024) DEFAULT NULL COMMENT 'comment or activity as clear text',
   `group` int(11) DEFAULT NULL COMMENT 'group type of user that triggered the activity',
@@ -44,7 +44,7 @@ CREATE TABLE `au_activitylog` (
 DROP TABLE IF EXISTS `au_categories`;
 
 CREATE TABLE `au_categories` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'autoinc id',
   `name` varchar(1024) DEFAULT NULL COMMENT 'name of category',
   `description_public` text DEFAULT NULL COMMENT 'public descirption, seen in frontend',
   `description_internal` text DEFAULT NULL COMMENT 'only seen by admins',
@@ -64,9 +64,9 @@ CREATE TABLE `au_categories` (
 DROP TABLE IF EXISTS `au_change_password`;
 
 CREATE TABLE `au_change_password` (
-  `user_id` int(11) DEFAULT NULL,
-  `secret` text DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `user_id` int(11) DEFAULT NULL COMMENT 'id of the user',
+  `secret` text DEFAULT NULL COMMENT 'secret',
+  `created_at` datetime DEFAULT current_timestamp() COMMENT 'create date as timestamp'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 
@@ -323,7 +323,7 @@ CREATE TABLE `au_rel_categories_ideas` (
   `idea_id` int(11) NOT NULL COMMENT 'id of idea',
   `created` datetime DEFAULT NULL COMMENT 'creation time of relation',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of dataset',
-  `updater_id` int(11) DEFAULT NULL,
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`category_id`,`idea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -340,7 +340,7 @@ CREATE TABLE `au_rel_categories_media` (
   `type` int(11) DEFAULT NULL COMMENT 'position where media is used within category (i.e. profile pic)',
   `created` datetime DEFAULT NULL COMMENT 'create time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `updater_id` int(11) DEFAULT NULL,
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`category_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -372,9 +372,9 @@ CREATE TABLE `au_rel_groups_media` (
   `media_id` int(11) NOT NULL COMMENT 'id of media',
   `type` int(11) DEFAULT NULL COMMENT 'position of media within group (i.e. 0= profile pic)',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active',
-  `created` datetime DEFAULT NULL,
-  `last_update` datetime DEFAULT NULL,
-  `updater_id` int(11) DEFAULT NULL,
+  `created` datetime DEFAULT NULL COMMENT 'create date',
+  `last_update` datetime DEFAULT NULL COMMENT 'last update',
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`group_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -408,7 +408,7 @@ CREATE TABLE `au_rel_ideas_comments` (
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active 2=suspended 3=archive',
   `created` datetime DEFAULT NULL COMMENT 'time of creation',
   `last_update` datetime DEFAULT NULL COMMENT 'last update of dataset',
-  `updater_id` int(11) DEFAULT NULL,
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`idea_id`,`comment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -420,11 +420,11 @@ CREATE TABLE `au_rel_ideas_comments` (
 DROP TABLE IF EXISTS `au_rel_ideas_media`;
 
 CREATE TABLE `au_rel_ideas_media` (
-  `idea_id` int(11) NOT NULL,
-  `media_id` int(11) NOT NULL,
-  `created` datetime DEFAULT NULL,
-  `last_update` datetime DEFAULT NULL,
-  `updater_id` int(11) DEFAULT NULL,
+  `idea_id` int(11) NOT NULL COMMENT 'id of the idea',
+  `media_id` int(11) NOT NULL COMMENT 'id of the linked media',
+  `created` datetime DEFAULT NULL COMMENT 'create date',
+  `last_update` datetime DEFAULT NULL COMMENT 'last update date',
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`idea_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -440,9 +440,9 @@ CREATE TABLE `au_rel_rooms_media` (
   `media_id` int(11) NOT NULL COMMENT 'id of the medium in media table',
   `type` int(11) DEFAULT NULL COMMENT 'position within the room (i.E. 0=profile pic)',
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active',
-  `created` datetime DEFAULT NULL,
-  `last_update` datetime DEFAULT NULL,
-  `updater_id` int(11) DEFAULT NULL,
+  `created` datetime DEFAULT NULL COMMENT 'create date',
+  `last_update` datetime DEFAULT NULL COMMENT 'last update date',
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`room_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -474,8 +474,8 @@ CREATE TABLE `au_rel_topics_ideas` (
   `topic_id` int(11) NOT NULL COMMENT 'id of the topic',
   `idea_id` int(11) NOT NULL COMMENT 'id of the idea',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `created` datetime DEFAULT NULL,
-  `updater_id` int(11) DEFAULT NULL,
+  `created` datetime DEFAULT NULL COMMENT 'create date',
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`topic_id`,`idea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -492,7 +492,7 @@ CREATE TABLE `au_rel_topics_media` (
   `type` int(11) DEFAULT NULL COMMENT 'position within the topic (0=profile pic)',
   `created` datetime DEFAULT NULL COMMENT 'creation date',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `updater_id` int(11) DEFAULT NULL,
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`topic_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -527,7 +527,7 @@ CREATE TABLE `au_rel_users_media` (
   `type` int(11) DEFAULT NULL COMMENT 'position within the user (i.e. 0=profile pic, 1= uploads etc.)',
   `created` datetime DEFAULT NULL COMMENT 'create time',
   `last update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
-  `updater_id` int(11) DEFAULT NULL,
+  `updater_id` int(11) DEFAULT NULL COMMENT 'id of the user that changed the dataset',
   PRIMARY KEY (`user_id`,`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -615,7 +615,6 @@ CREATE TABLE `au_rooms` (
   `phase_duration_2` int(11) DEFAULT 0 COMMENT 'phase_duration_2',
   `phase_duration_3` int(11) DEFAULT 0 COMMENT 'phase_duration_3',
   `phase_duration_4` int(11) DEFAULT 0 COMMENT 'phase_duration_4',
-  `type` int(11) DEFAULT 0 COMMENT '0 = standard room 1 = MAIN ROOM (aula)',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
@@ -847,9 +846,9 @@ CREATE TABLE `au_users_basedata` (
   `absent_until` datetime DEFAULT NULL COMMENT 'date until the user is absent',
   `auto_delegation` int(11) DEFAULT 0 COMMENT '1=on, 0=off - if user is absent, votes are  ',
   `trustee_id` int(11) DEFAULT NULL COMMENT 'id othe the trusted user the votes are delegated to when user is absent (only when auto delegation is on)',
-  `o1` int(11) DEFAULT NULL,
-  `o2` int(11) DEFAULT NULL,
-  `o3` int(11) DEFAULT NULL,
+  `o1` int(11) DEFAULT NULL COMMENT 'order criterium username as md5 hash',
+  `o2` int(11) DEFAULT NULL COMMENT 'order criterium realname as md5 hash',
+  `o3` int(11) DEFAULT NULL COMMENT 'order criterium display name as md5 hash',
   `consents_given` int(11) DEFAULT 0 COMMENT 'consents given',
   `consents_needed` int(11) DEFAULT 0 COMMENT 'needed consents',
   `temp_pw` varchar(256) DEFAULT NULL COMMENT 'temp pw for user',
@@ -868,7 +867,7 @@ CREATE TABLE `au_users_settings` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL COMMENT 'id of the user',
   `external_service_login` int(11) DEFAULT NULL COMMENT 'SSO / OAuth2 login 0=no 1=yes',
-  `created` datetime DEFAULT NULL,
+  `created` datetime DEFAULT NULL COMMENT 'created date',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `external_service_id` int(11) DEFAULT NULL COMMENT 'id of the used service for authentication',
