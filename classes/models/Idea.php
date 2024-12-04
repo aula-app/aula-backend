@@ -1642,7 +1642,9 @@ class Idea
       $this->db->bind(':offset', $offset); // bind limit
       $this->db->bind(':limit', $limit); // bind limit
     }
-    //$this->db->bind(':status', $status); // bind status
+    if ($status > -1) {
+      $this->db->bind(':status', $status); // bind status
+    }
     $this->db->bind(':room_id', $room_id); // bind room id
 
     $err = false;
