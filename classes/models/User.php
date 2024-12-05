@@ -1458,6 +1458,29 @@ class User
     }// end if
   } // end function
 
+  public function getReactivationDate ($user_id) {
+    # returns the reactivation date for a suspended user - checks the commands table if there is a reactivation command (cmd_id = 40). In this case
+    # the method returns the date when the user is reactivated (status back to 1). If there is no reactivation command the method returns false
+    $reactivation_date = false; # init
+
+    $count_datasets = 0; // number of datasets retrieved
+    $stmt = $this->db->query('SELECT date_start FROM ' . $this->db->au_commands . ' WHERE target_id = :target_id AND active= 1 AND cmd_id = 40 AND parameters = 1 ORDER BY date_start DESCLIMIT 1');
+    try {
+      $this->db->bind(':target_id', $username); // set user id
+      $res = $this->db->resultSet();
+      $reactivation_date = $res [0]['date_start'];
+
+
+    } catch (Exception $e) {
+      print_r($e);
+    }
+
+    return $reactivation_date;
+
+
+  }
+    
+
   public function checkCredentials($username, $pw)
   {  
     /* helper for method checkLogin () 
@@ -1466,22 +1489,35 @@ class User
     pw is clear text
     */
 
-    // create temp blind index
+    // create temp blind index (future use for o1 parameter)
     $bi = md5(strtolower($username));
-
-    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username AND status = 1');
+    $user_status = 0;
+    $user_id = 0;
+    
+    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id, status FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
+      $user_status = $users[0]['status'];
+      $user_id = $users[0]['id'];
 
     } catch (Exception $e) {
       print_r($e);
     }
 
-    if (count($users) < 1) {
+    $reactivation_date = false; // init
+
+    if ($user_status == 2) {
+      # get the reactivation date (if there is one) when the user is suspended (status = 2)
+      $reactivation_date = getReactivationDate ($user_id);
+    }
+
+    if (count($users) < 1 || $user_status > 1 || $user_status < 1) 
+    {
+      # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = 0; // returned data
+      $returnvalue['data'] = $reactivation_date; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
@@ -1491,6 +1527,7 @@ class User
     $dbpw = $users[0]['pw'];
     // check PASSWORD
     $temp_pw = $users[0]['temp_pw'];
+
     if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
