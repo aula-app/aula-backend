@@ -69,7 +69,7 @@ class Room
     # now get the number of users in this room (to later calculate the quorum)
     $rooms [0]['number_of_users'] = 0; # init
     $number_of_total_users = getNumberOfUsers($room_id);
-    
+
     if (is_int ($number_of_total_users)) {
       $rooms [0]['number_of_users'] = $number_of_total_users;
     } 
@@ -101,12 +101,8 @@ class Room
     $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
     $this->db->bind(':room_id', $room_id); // bind room id
     $rooms = $this->db->resultSet();
-    $returnvalue['success'] = true; // set return value to false
-    $returnvalue['error_code'] = 0; // error code - db error
-    $returnvalue['data'] = count($rooms); // returned data
-    $returnvalue['count'] = count($rooms); // returned count of datasets
-
-    return $returnvalue;
+    
+    return count($rooms);
 
   }// end function
 
