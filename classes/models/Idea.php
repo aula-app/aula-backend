@@ -151,7 +151,7 @@ class Idea
       # by the number of total users in this room (potential likers / voters)
 
       $room_id = $ideas[0]['room_id'];
-      $ideas [0]['number_of_users'] = getNumberOfUsers($room_id);
+      $ideas [0]['number_of_users'] = $this->getNumberOfUsers($room_id);
       
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code

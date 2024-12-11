@@ -68,7 +68,7 @@ class Room
 
     # now get the number of users in this room (to later calculate the quorum)
     $rooms [0]['number_of_users'] = 0; # init
-    $number_of_total_users = getNumberOfUsers($room_id);
+    $number_of_total_users = $this->getNumberOfUsers($room_id);
 
     if (is_int ($number_of_total_users)) {
       $rooms [0]['number_of_users'] = $number_of_total_users;
