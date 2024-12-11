@@ -28,6 +28,7 @@ class Idea
     $this->syslog = $syslog;
     $this->group = new Group($db, $crypt, $syslog); // init group class
     $this->user = new User($db, $crypt, $syslog);
+    $this->room = new Room ($db, $crypt, $syslog);
     $this->converters = new Converters($db); // load converters
     /*
     $memcache = new Memcached();
@@ -113,14 +114,31 @@ class Idea
     }
   }// end function
 
+
+  protected function getNumberOfUsers($room_id)
+  {
+    /* returns number of users in this room (room_id ) */
+    $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+
+    $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
+    $this->db->bind(':room_id', $room_id); // bind room id
+    $rooms = $this->db->resultSet();
+    
+    return count($rooms);
+
+  }// end function
+
   public function getIdeaBaseData($idea_id)
   {
     /* returns idea base data for a specified db id - the id can be either int id (will become deprecated or hash id */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-    $stmt = $this->db->query('SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.custom_field1, ' . $this->db->au_ideas . '.custom_field2, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.custom_field1, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.custom_field2, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
 
     $this->db->bind(':id', $idea_id); // bind idea id
+    
     $ideas = $this->db->resultSet();
+
+    
     if (count($ideas) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
@@ -129,6 +147,12 @@ class Idea
 
       return $returnvalue;
     } else {
+      # now get the quorum / number of users in room -> now frontend can calculate the quorum by dividing the number of votes / likes 
+      # by the number of total users in this room (potential likers / voters)
+
+      $room_id = $ideas[0]['room_id'];
+      $ideas [0]['number_of_users'] = $this->getNumberOfUsers($room_id);
+      
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $ideas[0]; // returned data
