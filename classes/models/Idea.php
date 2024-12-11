@@ -28,7 +28,7 @@ class Idea
     $this->syslog = $syslog;
     $this->group = new Group($db, $crypt, $syslog); // init group class
     $this->user = new User($db, $crypt, $syslog);
-    $this->room = new Room ($db, $crypt, $syslog);
+    $this->room = new Room($db, $crypt, $syslog);
     $this->converters = new Converters($db); // load converters
     /*
     $memcache = new Memcached();
@@ -123,7 +123,7 @@ class Idea
     $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
     $this->db->bind(':room_id', $room_id); // bind room id
     $rooms = $this->db->resultSet();
-    
+
     return count($rooms);
 
   }// end function
@@ -132,13 +132,13 @@ class Idea
   {
     /* returns idea base data for a specified db id - the id can be either int id (will become deprecated or hash id */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
-    $stmt = $this->db->query('SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.custom_field1, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.custom_field2, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.id AS user_id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.custom_field1, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.custom_field2, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.status FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_ideas . '.id = :id');
 
     $this->db->bind(':id', $idea_id); // bind idea id
-    
+
     $ideas = $this->db->resultSet();
 
-    
+
     if (count($ideas) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
@@ -151,8 +151,8 @@ class Idea
       # by the number of total users in this room (potential likers / voters)
 
       $room_id = $ideas[0]['room_id'];
-      $ideas [0]['number_of_users'] = $this->getNumberOfUsers($room_id);
-      
+      $ideas[0]['number_of_users'] = $this->getNumberOfUsers($room_id);
+
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $ideas[0]; // returned data
@@ -686,7 +686,7 @@ class Idea
     // adds an idea (idea_id) to a specified category (category_id)
 
     error_log("ADDING IDEA " . $idea_id . " TO CAT " . $category_id . " BY UPDATER " . $updater_id);
-    
+
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
     $category_id = $this->converters->checkCategoryId($category_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -1931,12 +1931,12 @@ class Idea
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $extra_query = "";
-    
+
     if ($room_id > -1) {
       $extra_query = "room_id = :room_id,";
     }
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, '.$extra_query.' votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, ' . $extra_query . ' votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
     $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
     $this->db->bind(':title', $title); // title only shown in backend
@@ -1946,11 +1946,11 @@ class Idea
 
     $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin
     $this->db->bind(':status', $status); // status of the idea (0=inactive, 1=active, 2=suspended, 4=archived)
-    
+
     if ($room_id > -1) {
       $this->db->bind(':room_id', $room_id); // room id
     }
-    
+
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
     $this->db->bind(':order_importance', $order_importance); // order for display in frontend
     $this->db->bind(':approved', $approved); // order for display in frontend
@@ -3911,7 +3911,7 @@ class Idea
   {
     /* Returns vote value for a specified user and idea
      */
-    
+
     $stmt = $this->db->query('SELECT vote_value FROM ' . $this->db->au_votes . ' WHERE user_id = :user_id AND idea_id = :idea_id');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':idea_id', $idea_id); // bind idea id
