@@ -114,6 +114,20 @@ class Idea
     }
   }// end function
 
+
+  protected function getNumberOfUsers($room_id)
+  {
+    /* returns number of users in this room (room_id ) */
+    $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
+
+    $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
+    $this->db->bind(':room_id', $room_id); // bind room id
+    $rooms = $this->db->resultSet();
+    
+    return count($rooms);
+
+  }// end function
+
   public function getIdeaBaseData($idea_id)
   {
     /* returns idea base data for a specified db id - the id can be either int id (will become deprecated or hash id */
@@ -137,7 +151,7 @@ class Idea
       # by the number of total users in this room (potential likers / voters)
 
       $room_id = $ideas[0]['room_id'];
-      $ideas [0]['number_of_users'] = $this->room->getNumberOfUsers($room_id);
+      $ideas [0]['number_of_users'] = getNumberOfUsers($room_id);
       
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
