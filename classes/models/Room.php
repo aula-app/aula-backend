@@ -98,7 +98,7 @@ class Room
     /* returns number of users in this room (room_id ) */
     $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-    $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
+    $stmt = $this->db->query('SELECT DISTINCT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
     $this->db->bind(':room_id', $room_id); // bind room id
     $rooms = $this->db->resultSet();
     
