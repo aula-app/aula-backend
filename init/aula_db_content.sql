@@ -1,13 +1,13 @@
 # ************************************************************
 # Sequel Ace SQL dump
-# Version 20073
+# Version 20062
 #
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-10-29 13:44:59 +0000
+# Verarbeitungszeit: 2024-12-12 16:45:24 +0000
 # ************************************************************
 
 
@@ -286,15 +286,15 @@ VALUES
 	(260,'Vertical Garden Walls','Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-07-29 15:55:07','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
 	(261,'Augmented Reality Campus Tours','Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-07-29 15:03:18','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
 	(262,'Virtual Learning Lab','Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-07-29 15:03:41','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
-	(263,'Student Art Gallery','Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,1,1,165,1,1,0,'2024-06-24 22:04:12','2024-07-17 09:30:30','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,0,NULL,NULL,0),
-	(264,'Performing Arts Festival','Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,1,165,1,1,0,'2024-06-24 22:04:28','2024-07-23 16:30:29','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,0,NULL,NULL,0),
+	(263,'Student Art Gallery','Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,0,1,165,1,1,0,'2024-06-24 22:04:12','2024-12-11 18:41:18','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,0,NULL,NULL,0),
+	(264,'Performing Arts Festival','Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,1,165,1,1,0,'2024-06-24 22:04:28','2024-12-11 18:41:34','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,0,NULL,NULL,0),
 	(265,'School Garden for Food Donation','Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,2,NULL,NULL,0),
 	(266,'Adopt-a-Neighbor Program','Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-07-29 15:55:02','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,0,'',NULL,3,NULL,NULL,0),
 	(267,'Solar-Powered Charging Stations','Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,2,NULL,NULL,0),
-	(268,'Campus-wide Recycling Initiative','Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-10-28 15:39:22','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,'',NULL,4,NULL,NULL,0),
+	(268,'Campus-wide Recycling Initiative','Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-12-12 16:07:39','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,'',NULL,4,NULL,NULL,0),
 	(270,'Student Tech Lab','The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,0,NULL,NULL,0),
 	(271,'Community Mural Project','This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,-1,1,165,1,1,0,'2024-06-26 17:34:33','2024-06-26 17:35:30','9491c7450a1a946cfee61a575e51df90',10,'',0,106,0,0,NULL,NULL,0,NULL,NULL,0),
-	(272,'Enhancing Outdoor Learning Spaces','Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',0,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-07-29 14:58:50','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
+	(272,'Enhancing Outdoor Learning Spaces','Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',1,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-12-12 16:08:23','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
 	(273,'Testabstimmung: Kino oder Theater?','Bitte stimmt ab, ob wir in das Theater gehen oder nicht',0,0,1,165,1,1,0,'2024-10-03 11:07:44','2024-10-28 15:42:27','807278ddcaa13c48e93a5a80eed8f22d',10,'',165,106,0,0,NULL,NULL,0,'','',0);
 
 /*!40000 ALTER TABLE `au_ideas` ENABLE KEYS */;
@@ -330,7 +330,8 @@ VALUES
 	(96,165,25,1,'2024-06-24 22:29:49','2024-06-24 22:29:49','2e1615c3f144ccf6cf5bd445e1ab9cda',2),
 	(97,165,27,1,'2024-06-24 22:39:20','2024-06-24 22:39:20','3ba7a3a8a63601fca718f586b7fc0469',2),
 	(98,165,260,1,'2024-06-26 18:19:02','2024-06-26 18:19:02','92d8d8dac39e43dd4acd6e11741521e4',1),
-	(99,165,268,1,'2024-07-23 14:24:35','2024-07-23 14:24:35','50df919921c8b6673371c310a86e99ee',1);
+	(100,165,268,1,'2024-12-12 16:07:39','2024-12-12 16:07:39','19734c071acdb28465a71d5212530f83',1),
+	(101,165,272,1,'2024-12-12 16:08:23','2024-12-12 16:08:23','9a14b8bd40d725ed06e397d0f4548581',1);
 
 /*!40000 ALTER TABLE `au_likes` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -914,15 +915,17 @@ CREATE TABLE `au_system_global_config` (
   `enable_oauth` int(11) DEFAULT 0 COMMENT '0 = disable,1 = enable',
   `custom_field1_name` text DEFAULT NULL COMMENT 'Name custom field 1',
   `custom_field2_name` text DEFAULT NULL COMMENT 'Name custom field 2',
+  `quorum_wild_ideas` int(11) DEFAULT 80 COMMENT 'percentage (i.e. 80) for wild idea quorum',
+  `quorum_votes` int(11) DEFAULT 80 COMMENT 'percentage (i.e. 80) for votes',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 LOCK TABLES `au_system_global_config` WRITE;
 /*!40000 ALTER TABLE `au_system_global_config` DISABLE KEYS */;
 
-INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`, `enable_oauth`, `custom_field1_name`, `custom_field2_name`)
+INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`, `enable_oauth`, `custom_field1_name`, `custom_field2_name`, `quorum_wild_ideas`, `quorum_votes`)
 VALUES
-	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465','2024-10-29 10:23:11',266,NULL,1,0,'Kosten','');
+	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465','2024-10-29 10:23:11',266,NULL,1,0,'Kosten','',0,0);
 
 /*!40000 ALTER TABLE `au_system_global_config` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -3399,7 +3402,105 @@ VALUES
 	(11612,0,'Added new message (#48) Account data export request for Admin User',0,'','2024-10-29 11:21:23','2024-10-29 11:21:23',0),
 	(11613,0,'Successful login user aula',0,'','2024-10-29 11:21:34','2024-10-29 11:21:34',0),
 	(11614,0,'Successful login user aula',0,'','2024-10-29 12:32:24','2024-10-29 12:32:24',0),
-	(11615,0,'Added new message (#49) /messages',0,'','2024-10-29 12:32:45','2024-10-29 12:32:45',0);
+	(11615,0,'Added new message (#49) /messages',0,'','2024-10-29 12:32:45','2024-10-29 12:32:45',0),
+	(11616,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-12-11 14:11:55','2024-12-11 14:11:55',0),
+	(11617,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-12-11 18:41:02','2024-12-11 18:41:02',0),
+	(11618,0,'Idea  263 votes set to 0',0,'','2024-12-11 18:41:10','2024-12-11 18:41:10',0),
+	(11619,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-12-11 18:41:10','2024-12-11 18:41:10',0),
+	(11620,0,'Idea  263 number of votes given set to 1',0,'','2024-12-11 18:41:10','2024-12-11 18:41:10',0),
+	(11621,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-12-11 18:41:10','2024-12-11 18:41:10',0),
+	(11622,0,'Idea  263 votes set to 0',0,'','2024-12-11 18:41:15','2024-12-11 18:41:15',0),
+	(11623,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-12-11 18:41:15','2024-12-11 18:41:15',0),
+	(11624,0,'Idea  263 number of votes given set to 1',0,'','2024-12-11 18:41:15','2024-12-11 18:41:15',0),
+	(11625,0,'Idea (#263) added Vote - value: -1 by 165',0,'','2024-12-11 18:41:15','2024-12-11 18:41:15',0),
+	(11626,0,'Idea  263 votes set to 0',0,'','2024-12-11 18:41:17','2024-12-11 18:41:17',0),
+	(11627,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-12-11 18:41:17','2024-12-11 18:41:17',0),
+	(11628,0,'Idea  263 number of votes given set to 1',0,'','2024-12-11 18:41:17','2024-12-11 18:41:17',0),
+	(11629,0,'Idea (#263) added Vote - value: 1 by 165',0,'','2024-12-11 18:41:17','2024-12-11 18:41:17',0),
+	(11630,0,'Idea  263 votes set to 0',0,'','2024-12-11 18:41:18','2024-12-11 18:41:18',0),
+	(11631,0,'Idea (#263) setting Vote - value: 0 by 264',0,'','2024-12-11 18:41:18','2024-12-11 18:41:18',0),
+	(11632,0,'Idea  263 number of votes given set to 1',0,'','2024-12-11 18:41:18','2024-12-11 18:41:18',0),
+	(11633,0,'Idea (#263) added Vote - value: 0 by 165',0,'','2024-12-11 18:41:18','2024-12-11 18:41:18',0),
+	(11634,0,'Idea  264 votes set to 0',0,'','2024-12-11 18:41:32','2024-12-11 18:41:32',0),
+	(11635,0,'Idea (#264) setting Vote - value: 0 by 264',0,'','2024-12-11 18:41:32','2024-12-11 18:41:32',0),
+	(11636,0,'Idea  264 number of votes given set to 1',0,'','2024-12-11 18:41:32','2024-12-11 18:41:32',0),
+	(11637,0,'Idea (#264) added Vote - value: -1 by 165',0,'','2024-12-11 18:41:32','2024-12-11 18:41:32',0),
+	(11638,0,'Idea  264 votes set to 0',0,'','2024-12-11 18:41:34','2024-12-11 18:41:34',0),
+	(11639,0,'Idea (#264) setting Vote - value: 0 by 264',0,'','2024-12-11 18:41:34','2024-12-11 18:41:34',0),
+	(11640,0,'Idea  264 number of votes given set to 1',0,'','2024-12-11 18:41:34','2024-12-11 18:41:34',0),
+	(11641,0,'Idea (#264) added Vote - value: 0 by 165',0,'','2024-12-11 18:41:34','2024-12-11 18:41:34',0),
+	(11642,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-12-11 18:41:45','2024-12-11 18:41:45',0),
+	(11643,1,'DB Error login user c.scherer',0,'','2024-12-11 20:00:40','2024-12-11 20:00:40',0),
+	(11644,1,'DB Error login user c.scherer@schueler.gymnasium-achern.de',0,'','2024-12-11 20:01:56','2024-12-11 20:01:56',0),
+	(11645,1,'DB Error login user c . scherer',0,'','2024-12-11 20:02:05','2024-12-11 20:02:05',0),
+	(11646,1,'DB Error login user c . scherer',0,'','2024-12-11 20:02:15','2024-12-11 20:02:15',0),
+	(11647,1,'DB Error login user c . scherer',0,'','2024-12-11 20:02:16','2024-12-11 20:02:16',0),
+	(11648,1,'DB Error login user c . scherer',0,'','2024-12-11 20:02:16','2024-12-11 20:02:16',0),
+	(11649,1,'DB Error login user c . scherer',0,'','2024-12-11 20:02:17','2024-12-11 20:02:17',0),
+	(11650,1,'DB Error login user c.scherer',0,'','2024-12-11 20:02:57','2024-12-11 20:02:57',0),
+	(11651,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:07','2024-12-11 20:03:07',0),
+	(11652,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:08','2024-12-11 20:03:08',0),
+	(11653,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:09','2024-12-11 20:03:09',0),
+	(11654,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:09','2024-12-11 20:03:09',0),
+	(11655,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:09','2024-12-11 20:03:09',0),
+	(11656,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:09','2024-12-11 20:03:09',0),
+	(11657,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:10','2024-12-11 20:03:10',0),
+	(11658,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:10','2024-12-11 20:03:10',0),
+	(11659,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:10','2024-12-11 20:03:10',0),
+	(11660,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:10','2024-12-11 20:03:10',0),
+	(11661,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:10','2024-12-11 20:03:10',0),
+	(11662,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:10','2024-12-11 20:03:10',0),
+	(11663,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:11','2024-12-11 20:03:11',0),
+	(11664,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:11','2024-12-11 20:03:11',0),
+	(11665,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:11','2024-12-11 20:03:11',0);
+
+INSERT INTO `au_systemlog` (`id`, `type`, `message`, `usergroup`, `url`, `created`, `last_update`, `updater_id`)
+VALUES
+	(11666,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:11','2024-12-11 20:03:11',0),
+	(11667,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:11','2024-12-11 20:03:11',0),
+	(11668,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:12','2024-12-11 20:03:12',0),
+	(11669,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:12','2024-12-11 20:03:12',0),
+	(11670,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:12','2024-12-11 20:03:12',0),
+	(11671,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:12','2024-12-11 20:03:12',0),
+	(11672,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:13','2024-12-11 20:03:13',0),
+	(11673,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:13','2024-12-11 20:03:13',0),
+	(11674,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:13','2024-12-11 20:03:13',0),
+	(11675,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:13','2024-12-11 20:03:13',0),
+	(11676,1,'DB Error login user c.scherer',0,'','2024-12-11 20:03:13','2024-12-11 20:03:13',0),
+	(11677,1,'DB Error login user gerkr',0,'','2024-12-11 20:31:46','2024-12-11 20:31:46',0),
+	(11678,1,'DB Error login user gerkr',0,'','2024-12-11 20:31:49','2024-12-11 20:31:49',0),
+	(11679,1,'DB Error login user gerkr',0,'','2024-12-11 20:32:21','2024-12-11 20:32:21',0),
+	(11680,0,'Delegation status retrieved: user_id: 165, topic_id: 474',0,'','2024-12-11 20:32:47','2024-12-11 20:32:47',0),
+	(11681,1,'DB Error login user gerkr',0,'','2024-12-11 20:33:12','2024-12-11 20:33:12',0),
+	(11682,1,'DB Error login user gerkr',0,'','2024-12-11 20:33:59','2024-12-11 20:33:59',0),
+	(11683,1,'DB Error login user micbru',0,'','2024-12-12 06:50:50','2024-12-12 06:50:50',0),
+	(11684,1,'DB Error login user micbru',0,'','2024-12-12 06:51:13','2024-12-12 06:51:13',0),
+	(11685,1,'DB Error login user lodgia',0,'','2024-12-12 07:22:53','2024-12-12 07:22:53',0),
+	(11686,1,'DB Error login user lodgia',0,'','2024-12-12 07:22:54','2024-12-12 07:22:54',0),
+	(11687,1,'DB Error login user lodatogia',0,'','2024-12-12 07:23:01','2024-12-12 07:23:01',0),
+	(11688,1,'DB Error login user lodgia',0,'','2024-12-12 07:23:06','2024-12-12 07:23:06',0),
+	(11689,1,'DB Error login user 1odgia',0,'','2024-12-12 07:23:12','2024-12-12 07:23:12',0),
+	(11690,1,'DB Error login user Lodgia',0,'','2024-12-12 07:23:16','2024-12-12 07:23:16',0),
+	(11691,1,'DB Error login user Gialod',0,'','2024-12-12 07:23:29','2024-12-12 07:23:29',0),
+	(11692,1,'DB Error login user gialod',0,'','2024-12-12 07:23:34','2024-12-12 07:23:34',0),
+	(11693,1,'DB Error login user Lodgia',0,'','2024-12-12 07:23:46','2024-12-12 07:23:46',0),
+	(11694,1,'DB Error login user 1odgia',0,'','2024-12-12 07:24:51','2024-12-12 07:24:51',0),
+	(11695,1,'DB Error login user Lodgia',0,'','2024-12-12 07:24:57','2024-12-12 07:24:57',0),
+	(11696,1,'DB Error login user Lodgia',0,'','2024-12-12 07:24:59','2024-12-12 07:24:59',0),
+	(11697,1,'DB Error login user lodgia',0,'','2024-12-12 07:25:03','2024-12-12 07:25:03',0),
+	(11698,1,'DB Error login user lodgia',0,'','2024-12-12 07:25:05','2024-12-12 07:25:05',0),
+	(11699,1,'DB Error login user lodgia',0,'','2024-12-12 07:25:26','2024-12-12 07:25:26',0),
+	(11700,1,'DB Error login user 1odgia',0,'','2024-12-12 07:25:32','2024-12-12 07:25:32',0),
+	(11701,1,'DB Error login user Lodgia',0,'','2024-12-12 07:25:40','2024-12-12 07:25:40',0),
+	(11702,1,'DB Error login user Lodgia',0,'','2024-12-12 07:25:41','2024-12-12 07:25:41',0),
+	(11703,1,'DB Error login user Lodgia',0,'','2024-12-12 07:25:42','2024-12-12 07:25:42',0),
+	(11704,1,'DB Error login user Lodgia',0,'','2024-12-12 07:25:42','2024-12-12 07:25:42',0),
+	(11705,1,'DB Error login user Lodgia',0,'','2024-12-12 07:25:42','2024-12-12 07:25:42',0),
+	(11706,0,'Delegation status retrieved: user_id: 165, topic_id: 473',0,'','2024-12-12 16:07:26','2024-12-12 16:07:26',0),
+	(11707,0,'Delegation status retrieved: user_id: 165, topic_id: 472',0,'','2024-12-12 16:07:34','2024-12-12 16:07:34',0),
+	(11708,0,'Idea  268 decrementing likes',0,'','2024-12-12 16:07:38','2024-12-12 16:07:38',0),
+	(11709,0,'Idea  268 incremented likes',0,'','2024-12-12 16:07:39','2024-12-12 16:07:39',0),
+	(11710,0,'Idea  272 incremented likes',0,'','2024-12-12 16:08:23','2024-12-12 16:08:23',0);
 
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -3637,9 +3738,9 @@ INSERT INTO `au_votes` (`id`, `user_id`, `idea_id`, `vote_value`, `status`, `cre
 VALUES
 	(111,165,255,-1,1,'2024-06-24 16:24:23','2024-06-24 16:24:23','2586d37b78ada0b8760e3a67a073db98',1,0,''),
 	(117,165,271,-1,1,'2024-06-26 17:35:30','2024-06-26 17:35:30','022e6951fd06186524cabb2b9eacd88b',1,0,''),
-	(144,165,263,1,1,'2024-07-17 09:30:30','2024-07-17 09:30:30','1e77f623fec0bca95a01fa60e32ea967',1,0,''),
-	(148,165,264,0,1,'2024-07-23 16:30:29','2024-07-23 16:30:29','20e34c8db6e1e2b9034e052c63694587',1,0,''),
-	(153,165,273,0,1,'2024-10-28 15:42:27','2024-10-28 15:42:27','6f3174998e00a662aa1211bde3e04633',1,0,'');
+	(153,165,273,0,1,'2024-10-28 15:42:27','2024-10-28 15:42:27','6f3174998e00a662aa1211bde3e04633',1,0,''),
+	(157,165,263,0,1,'2024-12-11 18:41:18','2024-12-11 18:41:18','ed9dca6c6a900d8b2b07982a251bb921',1,0,''),
+	(159,165,264,0,1,'2024-12-11 18:41:34','2024-12-11 18:41:34','03b0453a2c2a6a2a001b1f20c064b2ff',1,0,'');
 
 /*!40000 ALTER TABLE `au_votes` ENABLE KEYS */;
 UNLOCK TABLES;
