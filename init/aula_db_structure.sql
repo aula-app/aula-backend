@@ -1,13 +1,13 @@
 # ************************************************************
 # Sequel Ace SQL dump
-# Version 20073
+# Version 20062
 #
 # https://sequel-ace.com/
 # https://github.com/Sequel-Ace/Sequel-Ace
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-10-29 13:44:39 +0000
+# Verarbeitungszeit: 2024-12-12 16:45:04 +0000
 # ************************************************************
 
 
@@ -701,6 +701,8 @@ CREATE TABLE `au_system_global_config` (
   `enable_oauth` int(11) DEFAULT 0 COMMENT '0 = disable,1 = enable',
   `custom_field1_name` text DEFAULT NULL COMMENT 'Name custom field 1',
   `custom_field2_name` text DEFAULT NULL COMMENT 'Name custom field 2',
+  `quorum_wild_ideas` int(11) DEFAULT 80 COMMENT 'percentage (i.e. 80) for wild idea quorum',
+  `quorum_votes` int(11) DEFAULT 80 COMMENT 'percentage (i.e. 80) for votes',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
