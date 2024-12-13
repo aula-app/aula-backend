@@ -224,7 +224,7 @@ class Settings
     {
       $updater_id = $this->converters->checkUserId($updater_id);
 
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_current_state . ' SET quorum_wild_ideas = :quorum_wild_ideas,  quorum_votes = :quorum_votes, last_update = NOW(), updater_id = :updater_id ');
+      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET quorum_wild_ideas = :quorum_wild_ideas,  quorum_votes = :quorum_votes, last_update = NOW(), updater_id = :updater_id ');
 
       // bind all VALUES
       $this->db->bind(':quorum_wild_ideas', $quorum_wild_ideas);
