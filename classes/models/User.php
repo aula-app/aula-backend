@@ -1249,7 +1249,7 @@ class User
 
   }// end function
 
-  public function addCSV($csv, $room_id, $user_level = 20, $separator = ";")
+  public function addCSV ($csv, $room_id, $user_level = 20, $separator = ";")
   {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
