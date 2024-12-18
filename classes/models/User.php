@@ -1463,9 +1463,9 @@ class User
     $reactivation_date = false; # init
 
     $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT date_start FROM ' . $this->db->au_commands . ' WHERE target_id = :target_id AND active= 1 AND cmd_id = 40 AND parameters = 1 ORDER BY date_start DESCLIMIT 1');
+    $stmt = $this->db->query('SELECT date_start FROM ' . $this->db->au_commands . ' WHERE target_id = :target_id AND active= 1 AND cmd_id = 40 AND parameters = 1 ORDER BY date_start DESC LIMIT 1');
     try {
-      $this->db->bind(':target_id', $username); // set user id
+      $this->db->bind(':target_id', $user_id); // set user id
       $res = $this->db->resultSet();
       $reactivation_date = $res[0]['date_start'];
 
@@ -1508,7 +1508,7 @@ class User
 
     if ($user_status == 2) {
       # get the reactivation date (if there is one) when the user is suspended (status = 2)
-      $reactivation_date = getReactivationDate($user_id);
+      $reactivation_date = $this->getReactivationDate($user_id);
     }
 
     if (count($users) < 1 || $user_status > 1 || $user_status < 1) {
