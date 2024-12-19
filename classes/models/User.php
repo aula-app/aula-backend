@@ -1411,11 +1411,15 @@ class User
     # helper method - takes username and pw, returns true if credentials are of, false if not
     $check_credentials = $this->checkCredentials($username, $pw);
 
-    if ($check_credentials['success'] && $check_credentials['data'] && $check_credentials['count'] == 1 && $check_credentials['error_code'] == 0) {
+    if ($check_credentials['error_code'] == 2) {
+        return $check_credentials;
+    }
+
+    if ($check_credentials['success'] && $check_credentials['data'] && $check_credentials['count'] == 1 && ($check_credentials['error_code'] == 0 || $check_credentials['error_code'] == 2)) {
       // credentials are ok, set last login in db
       $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET last_login = NOW() WHERE id = :user_id');
       $user = $check_credentials['data'];
-      $this->db->bind(':user_id', $user['id']); // bind user id
+      $this->db->bind(':user_id', $check_credentials['user_id']); // bind user id
       $err = false;
       try {
         $action = $this->db->execute(); // do the query
@@ -1469,7 +1473,6 @@ class User
       $this->db->bind(':target_id', $user_id); // set user id
       $res = $this->db->resultSet();
       $reactivation_date = $res[0]['date_start'];
-
     } catch (Exception $e) {
       print_r($e);
     }
@@ -1515,8 +1518,9 @@ class User
       # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
+      $returnvalue['user_id'] = $user_id;
       $returnvalue['data'] = $reactivation_date; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
+      $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
     } // nothing found or empty database
@@ -1529,6 +1533,7 @@ class User
     if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
+      $returnvalue['user_id'] = $user_id;
       $returnvalue['data'] = $users[0]; // returned data
       $returnvalue['count'] = 1; // returned count of datasets
 
@@ -1538,6 +1543,7 @@ class User
 
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 3; // error code
+      $returnvalue['user_id'] = $user_id;
       $returnvalue['data'] = 8888; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
