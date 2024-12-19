@@ -222,7 +222,7 @@ class Command
     }
   }// end function
 
-  public function addCommand($cmd_id, $command, $parameters, $date_start, $updater_id)
+  public function addCommand($cmd_id, $command, $parameters, $date_start, $target_id = 0, $updater_id)
   {
     /* adds a new command
     cmd_id is the id of the scope (int) + the command (int) =>
@@ -245,17 +245,21 @@ class Command
     // auto set date to midnight for now
     $date_start = date_format(date_create($date_start),"Y-m-d 00:00:00");
 
+    if ($target_id > 0) {
+      $target_id = intval($target_id);
+    }
+
     $updater_id = $this->converters->checkUserId($updater_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_commands . ' (cmd_id, command, date_start, parameters, active, status, created, last_update, updater_id) VALUES (:cmd_id, :command, :date_start, :parameters, 1, 0,NOW(), NOW(), :updater_id)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_commands . ' (cmd_id, command, date_start, parameters, active, status, created, last_update, target_id, updater_id) VALUES (:cmd_id, :command, :date_start, :parameters, 1, 0,NOW(), NOW(), :target_id, :updater_id)');
     // bind all VALUES
 
     $this->db->bind(':cmd_id', $cmd_id);
     $this->db->bind(':command', $command);
     $this->db->bind(':parameters', $parameters);
     $this->db->bind(':date_start', $date_start);
-
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+    $this->db->bind(':target_id', $target_id);
 
     $err = false; // set error variable to false
 

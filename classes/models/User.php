@@ -552,6 +552,7 @@ class User
     $this->db->bind(':id', $user_id); // bind userid
     $this->db->bind(':topic_id', $topic_id); // bind topic id
     $users = $this->db->resultSet();
+
     if (count($users) < 1) {
 
       $returnvalue['success'] = true; // set return value
@@ -1463,12 +1464,11 @@ class User
     $reactivation_date = false; # init
 
     $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT date_start FROM ' . $this->db->au_commands . ' WHERE target_id = :target_id AND active= 1 AND cmd_id = 40 AND parameters = 1 ORDER BY date_start DESC LIMIT 1');
+    $stmt = $this->db->query('SELECT date_start FROM ' . $this->db->au_commands . ' WHERE target_id = :target_id AND active= 1 AND cmd_id = 4 ORDER BY date_start DESC LIMIT 1');
     try {
       $this->db->bind(':target_id', $user_id); // set user id
       $res = $this->db->resultSet();
       $reactivation_date = $res[0]['date_start'];
-
 
     } catch (Exception $e) {
       print_r($e);
