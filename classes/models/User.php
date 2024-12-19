@@ -1250,7 +1250,7 @@ class User
 
   }// end function
 
-  public function addCSV ($csv, $room_id, $user_level = 20, $separator = ";")
+  public function addCSV($csv, $room_id, $user_level = 20, $separator = ";")
   {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
@@ -1412,7 +1412,7 @@ class User
     $check_credentials = $this->checkCredentials($username, $pw);
 
     if ($check_credentials['error_code'] == 2) {
-        return $check_credentials;
+      return $check_credentials;
     }
 
     if ($check_credentials['success'] && $check_credentials['data'] && $check_credentials['count'] == 1 && ($check_credentials['error_code'] == 0 || $check_credentials['error_code'] == 2)) {
@@ -1509,21 +1509,22 @@ class User
 
     $reactivation_date = false; // init
 
-    if ($user_status == 2) {
+    if ($user_status != 1) {
       # get the reactivation date (if there is one) when the user is suspended (status = 2)
       $reactivation_date = $this->getReactivationDate($user_id);
     }
 
-    if (count($users) < 1 || $user_status > 1 || $user_status < 1) {
+    if (count($users) < 1 || $user_status != 1) {
       # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
+      $returnvalue['user_status'] = $user_status; // error code
       $returnvalue['user_id'] = $user_id;
       $returnvalue['data'] = $reactivation_date; // returned data
-      $returnvalue['count'] = 1; // returned count of datasets
+      $returnvalue['count'] = count($users); // returned count of datasets
 
       return $returnvalue;
-    } // nothing found or empty database
+    } // nothing found, empty database or non active user
 
     // new
     $dbpw = $users[0]['pw'];
