@@ -1468,7 +1468,7 @@ class User
     $reactivation_date = false; # init
 
     $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT date_start FROM ' . $this->db->au_commands . ' WHERE target_id = :target_id AND active= 1 AND cmd_id = 4 ORDER BY date_start DESC LIMIT 1');
+    $stmt = $this->db->query('SELECT date_start FROM ' . $this->db->au_commands . ' WHERE target_id = :target_id AND active= 1 AND cmd_id = 10 ORDER BY date_start DESC LIMIT 1');
     try {
       $this->db->bind(':target_id', $user_id); // set user id
       $res = $this->db->resultSet();
