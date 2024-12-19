@@ -222,7 +222,7 @@ class Command
     }
   }// end function
 
-  public function addCommand($cmd_id, $command, $parameters, $date_start, $target_id = 0, $updater_id)
+  public function addCommand($cmd_id, $command, $parameters, $date_start, $updater_id, $target_id = 0)
   {
     /* adds a new command
     cmd_id is the id of the scope (int) + the command (int) =>
