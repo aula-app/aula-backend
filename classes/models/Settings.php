@@ -127,6 +127,32 @@ class Settings
     }
   }// end function
 
+  public function getQuorum()
+  {
+    /* helper method that returns custom fields 1 & 2 */
+
+    $stmt = $this->db->query('SELECT quorum_wild_ideas, quorum_votes FROM ' . $this->db->au_system_global_config . ' LIMIT 1');
+
+    $settings = $this->db->resultSet();
+
+    if (count($settings) < 1) {
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 2; // error code - db error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue['data'] = $settings[0]; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+  }// end function
+
 
   public function setInstanceOnlineMode($status, $updater_id = 0)
   {
@@ -167,6 +193,65 @@ class Settings
 
       } else {
         //$this->syslog->addSystemEvent(1, "Error editing topic ".$name, 0, "", 1);
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = 1; // error code - db error
+        $returnvalue['data'] = false; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    } else {
+      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['error_code'] = 3; // error code - status out of range error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+  } // end function
+
+  public function setQuorum ($quorum_wild_ideas, $quorum_votes, $updater_id = 0)
+  {
+    // sets quorum percentage (i.e. 80 ) for wild ideas and votes 
+
+
+    // sanitize
+    $quorum_wild_ideas = intval($quorum_wild_ideas);
+    $quorum_votes = intval($quorum_votes);
+
+    if ($quorum_wild_ideas > -1 && $quorum_wild_ideas < 101 && $quorum_votes > -1 && $quorum_votes < 101) 
+    {
+      $updater_id = $this->converters->checkUserId($updater_id);
+
+      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET quorum_wild_ideas = :quorum_wild_ideas,  quorum_votes = :quorum_votes, last_update = NOW(), updater_id = :updater_id ');
+
+      // bind all VALUES
+      $this->db->bind(':quorum_wild_ideas', $quorum_wild_ideas);
+      $this->db->bind(':quorum_votes', $quorum_votes);
+      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+
+      $err = false; // set error variable to false
+
+      try {
+        $action = $this->db->execute(); // do the query
+
+      } catch (Exception $e) {
+
+        $err = true;
+      }
+
+      if (!$err) {
+        $this->syslog->addSystemEvent(0, "Quorum set", 0, "", 1);
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue['data'] = 1; // returned data
+        $returnvalue['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+
+
+      } else {
         $returnvalue['success'] = false; // set return value to false
         $returnvalue['error_code'] = 1; // error code - db error
         $returnvalue['data'] = false; // returned data

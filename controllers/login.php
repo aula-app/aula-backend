@@ -23,6 +23,10 @@ $data = json_decode($json);
 
 
 $loginResult = $user->checkLogin($data->username, $data->password);
+if ($loginResult["error_code"] == 2) {
+  echo json_encode($loginResult);
+  return;
+}
 
 if ($loginResult["success"] && $loginResult["error_code"] == 0) {
   $current_settings = $settings->getInstanceSettings();

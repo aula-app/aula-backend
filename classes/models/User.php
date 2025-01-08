@@ -244,8 +244,8 @@ class User
 
     }
   }// end function
-  
-  
+
+
   public function delegateVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
     /* delegates voting rights from one user to another within a topic, accepts user_id (by hash or id) and topic id (by hash or id)
@@ -552,6 +552,7 @@ class User
     $this->db->bind(':id', $user_id); // bind userid
     $this->db->bind(':topic_id', $topic_id); // bind topic id
     $users = $this->db->resultSet();
+
     if (count($users) < 1) {
 
       $returnvalue['success'] = true; // set return value
@@ -729,7 +730,7 @@ class User
         $ids[$i] = $key['id'];
         $i++;
       }
-      
+
       $stmt = $this->db->query('SELECT text_id FROM ' . $this->db->au_consent . ' WHERE user_id = :user_id AND text_id IN (' . implode(",", $ids) . ') AND consent = 1');
       //echo ('<br>SELECT text_id FROM '.$this->db->au_consent.' WHERE user_id = :user_id AND text_id IN ('.implode(",", $ids).') AND consent = 1');
       $this->db->bind(':user_id', $user_id); // bind userid
@@ -1164,31 +1165,31 @@ class User
 
   public function friendUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->relateUser($user_id, $user_id_target, 1, 0, 2);
   }
 
   public function blockUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->relateUser($user_id, $user_id_target, 1, 0, 0);
   }
 
   public function unfriendUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
   public function unblockUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
   public function unfollowUser($user_id, $user_id_target)
   {
-     # future social functions
+    # future social functions
     return $this->removeUserRelation($user_id, $user_id_target);
   }
 
@@ -1301,7 +1302,7 @@ class User
   public function removeUserFromGroup($group_id, $user_id)
   {
     /* deletes a user from a group
-    */
+     */
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :userid AND group_id = :groupid');
     $this->db->bind(':groupid', $group_id); // bind group id
@@ -1332,7 +1333,7 @@ class User
 
   }// end function
 
-  public function addCSV ($csv, $room_id, $user_level = 20, $separator = ";")
+  public function addCSV($csv, $room_id, $user_level = 20, $separator = ";")
   {
     # parses CSV string and creates new users , defaults to user level 20 (student), separator defaults to semicolon
     # CSV must be in the following format:
@@ -1349,7 +1350,7 @@ class User
     $display_name = "";
     $email = "";
     $about_me = "";
-    
+
     if (strlen($csv) > 1 && str_contains($csv, ';')) {
       # basic check of CSV
       $csv_lines = explode("\n", $csv);
@@ -1363,7 +1364,7 @@ class User
         $user_name = $data[2];
         $email = $data[3];
         $about_me = $data[4];
-        
+
         // check if user name is still available
         $user_ok = false;
         $attempts = 0;
@@ -1493,11 +1494,15 @@ class User
     # helper method - takes username and pw, returns true if credentials are of, false if not
     $check_credentials = $this->checkCredentials($username, $pw);
 
-    if ($check_credentials['success'] && $check_credentials['data'] && $check_credentials['count'] == 1 && $check_credentials['error_code'] == 0) {
+    if ($check_credentials['error_code'] == 2) {
+      return $check_credentials;
+    }
+
+    if ($check_credentials['success'] && $check_credentials['data'] && $check_credentials['count'] == 1 && ($check_credentials['error_code'] == 0 || $check_credentials['error_code'] == 2)) {
       // credentials are ok, set last login in db
       $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET last_login = NOW() WHERE id = :user_id');
       $user = $check_credentials['data'];
-      $this->db->bind(':user_id', $user['id']); // bind user id
+      $this->db->bind(':user_id', $check_credentials['user_id']); // bind user id
       $err = false;
       try {
         $action = $this->db->execute(); // do the query
@@ -1539,42 +1544,80 @@ class User
     }// end if
   } // end function
 
+  public function getReactivationDate($user_id)
+  {
+    # returns the reactivation date for a suspended user - checks the commands table if there is a reactivation command (cmd_id = 40). In this case
+    # the method returns the date when the user is reactivated (status back to 1). If there is no reactivation command the method returns false
+    $reactivation_date = false; # init
+
+    $count_datasets = 0; // number of datasets retrieved
+    $stmt = $this->db->query('SELECT date_start FROM ' . $this->db->au_commands . ' WHERE target_id = :target_id AND active= 1 AND cmd_id = 10 ORDER BY date_start DESC LIMIT 1');
+    try {
+      $this->db->bind(':target_id', $user_id); // set user id
+      $res = $this->db->resultSet();
+      $reactivation_date = $res[0]['date_start'];
+    } catch (Exception $e) {
+      print_r($e);
+    }
+
+    return $reactivation_date;
+
+
+  }
+
+
   public function checkCredentials($username, $pw)
-  {  
+  {
     /* helper for method checkLogin () 
     checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
     username is clear text
     pw is clear text
     */
 
-    // create temp blind index
+    // create temp blind index (future use for o1 parameter)
     $bi = md5(strtolower($username));
+    $user_status = 0;
+    $user_id = 0;
 
-    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username AND status = 1');
+    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id, status FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
+      $user_status = $users[0]['status'];
+      $user_id = $users[0]['id'];
 
     } catch (Exception $e) {
       print_r($e);
     }
 
-    if (count($users) < 1) {
+    $reactivation_date = false; // init
+
+    if ($user_status != 1) {
+      # get the reactivation date (if there is one) when the user is suspended (status = 2)
+      $reactivation_date = $this->getReactivationDate($user_id);
+    }
+
+    if (count($users) < 1 || $user_status != 1) {
+      # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = 0; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
+      $returnvalue['user_status'] = $user_status; // error code
+      $returnvalue['user_id'] = $user_id;
+      $returnvalue['data'] = $reactivation_date; // returned data
+      $returnvalue['count'] = count($users); // returned count of datasets
 
       return $returnvalue;
-    } // nothing found or empty database
+    } // nothing found, empty database or non active user
 
     // new
     $dbpw = $users[0]['pw'];
     // check PASSWORD
     $temp_pw = $users[0]['temp_pw'];
+
     if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
+      $returnvalue['user_id'] = $user_id;
       $returnvalue['data'] = $users[0]; // returned data
       $returnvalue['count'] = 1; // returned count of datasets
 
@@ -1584,6 +1627,7 @@ class User
 
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 3; // error code
+      $returnvalue['user_id'] = $user_id;
       $returnvalue['data'] = 8888; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
@@ -1772,7 +1816,7 @@ class User
   public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $search_field = "", $search_text = "", $userlevel = -1)
   {
     /* returns users (associative array)for a specific room + extra parameters (for further filtering)
-    */
+     */
     $offset = intval($offset);
     $limit = intval($limit);
     $orderby = intval($orderby);
@@ -2207,7 +2251,7 @@ class User
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
     */
-    
+
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $status = intval($status);
 
@@ -3111,7 +3155,7 @@ class User
     }
   }// end function
 
-  public function setUserPW ($user_id, $pw, $updater_id = 0)
+  public function setUserPW($user_id, $pw, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters (clear text), all parameters are mandatory
      pw = pw in clear text
