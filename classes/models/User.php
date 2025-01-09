@@ -967,7 +967,7 @@ class User
     $user_exist = $this->converters->checkUserExist($user_id);
 
     // get the id for the standard room
-    $room_id = getStandardRoom ();
+    $room_id = $this->getStandardRoom();
     // check if the room actually exists
     $room_exist = $this->converters->checkRoomExist($room_id);
 
