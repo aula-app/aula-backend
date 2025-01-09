@@ -302,8 +302,14 @@ class Topic
     $asc_field = "";
     $extra_where = "";
 
+    if ($room_id != 0)
+    {
+      //auto convert room id
+      $room_id = $this->converters->checkRoomId($room_id);
+    }
+
     // auto convert user id 
-    if ($user_id > 0) {
+    if ($user_id != -1) {
       $user_id = $this->converters->checkUserId($user_id);
 
       // check user level first

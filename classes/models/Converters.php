@@ -494,7 +494,7 @@ class Converters
       return $service_id;
     } else {
 
-      return $this->getUserIdByHashId($service_id);
+      return $this->getServiceIdByHashId($service_id);
     }
   } // end function
 
@@ -508,7 +508,7 @@ class Converters
       return $command_id;
     } else {
 
-      return $this->getUserIdByHashId($command_id);
+      return $this->getCommandIdByHashId($command_id);
     }
   } // end function
 
