@@ -476,7 +476,7 @@ class Converters
     if a hash was passed, function gets db user id and returns db id
     */
 
-    if (is_int(intval($user_id))) {
+    if (is_int(($user_id))) {
       return $user_id;
     } else {
 
@@ -490,7 +490,7 @@ class Converters
     if a hash was passed, function returns db id
     */
 
-    if (is_int(intval($service_id))) {
+    if (is_int(($service_id))) {
       return $service_id;
     } else {
 
@@ -504,7 +504,7 @@ class Converters
     if a hash was passed, function returns db id
     */
 
-    if (is_int(intval($command_id))) {
+    if (is_int(($command_id))) {
       return $command_id;
     } else {
 
@@ -519,7 +519,7 @@ class Converters
     if a hash was passed, function gets db id and returns db id
     */
 
-    if (is_int(intval($comment_id))) {
+    if (is_int(($comment_id))) {
       return $comment_id;
     } else {
 
@@ -907,7 +907,7 @@ class Converters
     if a hash was passed, function gets db group id and returns db id
     */
 
-    if (is_int(intval($group_id))) {
+    if (is_int(($group_id))) {
       return $group_id;
     } else {
       return $this->getGroupIdByHashId($group_id);
@@ -920,7 +920,7 @@ class Converters
     if a hash was passed, function returns db id
     */
 
-    if (is_int(intval($text_id))) {
+    if (is_int(($text_id))) {
       return $text_id;
     } else {
       return $this->getTextIdByHashId($text_id);
@@ -1007,7 +1007,7 @@ class Converters
     if a hash was passed, function returns db id
     */
 
-    if (is_int(intval($message_id))) {
+    if (is_int(($message_id))) {
       return $message_id;
     } else {
       return $this->getMessageIdByHashId($message_id);
@@ -1020,7 +1020,7 @@ class Converters
     if a hash was passed, function returns db id
     */
 
-    if (is_int(intval($media_id))) {
+    if (is_int(($media_id))) {
       return $media_id;
     } else {
       return $this->getMediaIdByHashId($media_id);
