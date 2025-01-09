@@ -978,12 +978,10 @@ class Converters
     */
 
     if (is_int(($room_id))) {
-      error_log ("IS INT ".$room_id);
       
       return $room_id;
     } else {
-      error_log ("NOT AN INT ".$room_id);
-
+      
       return $this->getRoomIdByHashId($room_id);
     }
   } // end function

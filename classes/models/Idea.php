@@ -1593,9 +1593,8 @@ class Idea
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
-    error_log ("checkRoomId is ".$room_id);
+    
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
-    error_log ("RETURN VALUE checkRoomId is ".$room_id);
     
     // init vars
     $orderby_field = "";
