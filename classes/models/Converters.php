@@ -978,8 +978,11 @@ class Converters
     */
 
     if (is_int(intval($room_id))) {
+      error_log ("IS INT ".$room_id);
+      
       return $room_id;
     } else {
+      error_log ("NOT AN INT ".$room_id);
 
       return $this->getRoomIdByHashId($room_id);
     }
@@ -1033,7 +1036,7 @@ class Converters
     try {
       if ($this->cache->get($check_hash) != null) {
         $data = $this->cache->get($check_hash);
-        // echo ("Using cache for ".$hash_id." data = ".$data);
+        error_log ("Using cache for ".$hash_id." data = ".$data);
         return $data;
       }
     } catch (Exception $e) {
