@@ -964,7 +964,7 @@ class Converters
     if a hash was passed, function gets db idea id and returns db id
     */
 
-    if (is_int(intval($idea_id))) {
+    if (is_int(($idea_id))) {
       return $idea_id;
     } else {
       return $this->getIdeaIdByHashId($idea_id);
@@ -977,7 +977,7 @@ class Converters
     if a hash was passed, function gets db room id and returns db id
     */
 
-    if (is_int(intval($room_id))) {
+    if (is_int(($room_id))) {
       error_log ("IS INT ".$room_id);
       
       return $room_id;
@@ -994,7 +994,7 @@ class Converters
     if a hash was passed, function gets db topic id and returns db id
     */
 
-    if (is_int(intval($topic_id))) {
+    if (is_int(($topic_id))) {
       return $topic_id;
     } else {
       return $this->getTopicIdByHashId($topic_id);
