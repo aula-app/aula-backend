@@ -786,7 +786,7 @@ class Converters
     }
   }// end function
 
-  public function getTextIdByHashId($text_id)
+  public function getTextIdByHashId($hash_id)
   {
     /* Returns Database ID of text when hash_id is provided
      */
