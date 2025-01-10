@@ -208,7 +208,7 @@ class Text
   public function getTextBaseData($text_id)
   {
     /* returns text base data for a specified db id */
-    $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    //$text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE id = :id');
     $this->db->bind(':id', $text_id); // bind text id
@@ -216,7 +216,7 @@ class Text
     if (count($texts) < 1) {
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 2; //  error code
-      $returnvalue['data'] = 1; // returned data
+      $returnvalue['data'] = false; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue; // nothing found, return 0 code
