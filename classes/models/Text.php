@@ -208,7 +208,11 @@ class Text
   public function getTextBaseData($text_id)
   {
     /* returns text base data for a specified db id */
+
+    error_log ('incoming text_id:'.$text_id);
+    
     $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    error_log ('final text_id:'.$text_id);
     
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE id = :id');
     $this->db->bind(':id', $text_id); // bind text id

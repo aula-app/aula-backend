@@ -922,8 +922,10 @@ class Converters
     */
 
     if (is_int(($text_id))) {
+      error_log ('incoming message_id is INT:'.$text_id);
       return $text_id;
     } else {
+      error_log ('incoming message_id is NOT INT:'.$text_id);
       return $this->getTextIdByHashId($text_id);
     }
   } // end function
