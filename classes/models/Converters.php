@@ -859,7 +859,8 @@ class Converters
     } catch (Exception $e) {
       // cache error
     }
-    
+    error_log ('convesion base:'.$hash_id);
+      
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_messages . ' WHERE hash_id = :hash_id');
     $this->db->bind(':hash_id', $hash_id); // bind hash id
     $messages = $this->db->resultSet();
@@ -1006,8 +1007,11 @@ class Converters
     */
 
     if (is_int(($message_id))) {
+      error_log ('incoming message_id is INT:'.$message_id);
       return $message_id;
     } else {
+      error_log ('incoming message_id is NOT INT:'.$message_id);
+      
       return $this->getMessageIdByHashId($message_id);
     }
   } // end function
