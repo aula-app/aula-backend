@@ -264,7 +264,7 @@ class Topic
     /* returns topic base data for a specified db id */
     $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' WHERE id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.hash_id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_rooms . '. hash_id as room_hash_id,  ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE '.$this->db->au_topics.'.id = :id');
     $this->db->bind(':id', $topic_id); // bind topic id
     $topics = $this->db->resultSet();
     if (count($topics) < 1) {
@@ -302,8 +302,14 @@ class Topic
     $asc_field = "";
     $extra_where = "";
 
+    if ($room_id != 0)
+    {
+      //auto convert room id
+      $room_id = $this->converters->checkRoomId($room_id);
+    }
+
     // auto convert user id 
-    if ($user_id > 0) {
+    if ($user_id != -1) {
       $user_id = $this->converters->checkUserId($user_id);
 
       // check user level first
@@ -371,7 +377,7 @@ class Topic
       }
     }
 
-    $stmt = $this->db->query('SELECT count(' . $this->db->au_rel_topics_ideas . '.idea_id) as ideas_num, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.status, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_rel_topics_ideas . '.topic_id = ' . $this->db->au_topics . '.id WHERE ' . $this->db->au_topics . '.id > 0 ' . $extra_where . $search_query . ' GROUP BY ' . $this->db->au_topics . '.id ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT count(' . $this->db->au_rel_topics_ideas . '.idea_id) as ideas_num, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.hash_id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_rooms . '. hash_id as room_hash_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.status, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_rel_topics_ideas . '.topic_id = ' . $this->db->au_topics . '.id  LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id WHERE ' . $this->db->au_topics . '.id > 0 ' . $extra_where . $search_query . ' GROUP BY ' . $this->db->au_topics . '.id ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit

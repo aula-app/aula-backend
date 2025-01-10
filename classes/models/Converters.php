@@ -494,7 +494,7 @@ class Converters
       return $service_id;
     } else {
 
-      return $this->getUserIdByHashId($service_id);
+      return $this->getServiceIdByHashId($service_id);
     }
   } // end function
 
@@ -508,7 +508,7 @@ class Converters
       return $command_id;
     } else {
 
-      return $this->getUserIdByHashId($command_id);
+      return $this->getCommandIdByHashId($command_id);
     }
   } // end function
 
@@ -786,7 +786,7 @@ class Converters
     }
   }// end function
 
-  public function getTextIdByHashId($text_id)
+  public function getTextIdByHashId($hash_id)
   {
     /* Returns Database ID of text when hash_id is provided
      */
@@ -859,7 +859,8 @@ class Converters
     } catch (Exception $e) {
       // cache error
     }
-
+    error_log ('convesion base:'.$hash_id);
+      
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_messages . ' WHERE hash_id = :hash_id');
     $this->db->bind(':hash_id', $hash_id); // bind hash id
     $messages = $this->db->resultSet();
@@ -1008,6 +1009,7 @@ class Converters
     if (is_int(($message_id))) {
       return $message_id;
     } else {
+      
       return $this->getMessageIdByHashId($message_id);
     }
   } // end function

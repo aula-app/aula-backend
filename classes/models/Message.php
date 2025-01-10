@@ -312,15 +312,17 @@ class Message
   public function getMessageBaseData($message_id)
   {
     /* returns message base data for a specified db id */
+    
     $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
+    
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE id = :id');
     $this->db->bind(':id', $message_id); // bind message id
     $messages = $this->db->resultSet();
     if (count($messages) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // no error code
-      $returnvalue['data'] = 1; // returned data
+      $returnvalue['data'] = false; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue; // nothing found, return 0 code
