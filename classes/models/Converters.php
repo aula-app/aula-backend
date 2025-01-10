@@ -848,7 +848,7 @@ class Converters
   {
     /* Returns Database ID of Message when hash_id is provided
      */
-    /*$check_hash = $this->buildCacheHash("getMessageIdByHashId" . $hash_id);
+    $check_hash = $this->buildCacheHash("getMessageIdByHashId" . $hash_id);
     // check if hash is in cache
     try {
       if ($this->cache->get($check_hash) != null) {
@@ -859,7 +859,7 @@ class Converters
     } catch (Exception $e) {
       // cache error
     }
-    */
+    
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_messages . ' WHERE hash_id = :hash_id');
     $this->db->bind(':hash_id', $hash_id); // bind hash id
     $messages = $this->db->resultSet();
