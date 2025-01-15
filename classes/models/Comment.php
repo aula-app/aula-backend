@@ -15,6 +15,8 @@ class Comment
 
   private $db;
 
+  private $openMethods = [];
+
   public function __construct($db, $crypt, $syslog)
   {
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
@@ -24,6 +26,24 @@ class Comment
     $this->syslog = $syslog;
     $this->converters = new Converters($db);
   }// end function
+
+  public function hasPermissions($user_id, $userlevel, $method, $arguments)
+  {
+    // TODO: Check if what is written down is correct. If not we will need to 
+    // write a less permissive method to return instance settings
+    // Everyone is able to check the instance settings
+    if (in_array($method, $this->openMethods)) {
+      return ["allowed" => true];
+    }
+
+    if (method_exists($this, $method."Permission")) {
+      $methodPermission = $method."Permission";
+      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
 
   protected function buildCacheHash($key)
   {

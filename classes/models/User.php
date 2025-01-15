@@ -87,11 +87,8 @@ class User
     if ($userlevel >= 50) {
       return ["allowed" => true];
     } else{
-      $user = new User($this->db, $this->crypt, $this->syslog);
-      $userData = $user->getUserBaseData($arguments["user_id"]);
-
-      if ($userData["success"]) {
-      
+      if ($arguments["user_id"] == $user_id) {
+        return ["allowed" => true];
       } else {
         return ["allowed" => false, "message" => "User not found."];
       }
@@ -270,6 +267,13 @@ class User
   $returnvalue ['count'] = $count_datasets; // returned count of datasets
   */
 
+  public function delegateVoteRightPermission($user_id, $userlevel, $method, $arguments) {
+    if ($arguments["user_id"] == $user_id) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false];
+    }
+  }
 
   public function delegateVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
@@ -388,6 +392,14 @@ class User
 
 
   }// end function
+
+  public function giveConsentPermission($user_id, $userlevel, $method, $arguments) {
+    if ($arguments["user_id"] == $user_id) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false];
+    }
+  }
 
   public function giveConsent($user_id, $text_id, $consent_value = 1, $updater_id = 0)
   {
@@ -778,6 +790,13 @@ class User
     }
   } // end function
 
+  public function giveBackAllDelegationsPermission($user_id, $userlevel, $method, $arguments) {
+    if ($arguments["user_id"] == $user_id) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false];
+    }
+  }
 
   public function giveBackAllDelegations($user_id, $topic_id = 0)
   {
@@ -2207,6 +2226,14 @@ class User
       return $returnvalue;
     }
   }// end function
+  
+  public function getUserGDPRDataPermission($user_id, $userlevel, $method, $arguments) {
+      if ($arguments["user_id"] == $user_id) {
+        return ["allowed" => true];
+      } else {
+        return ["allowed" => false, "message" => "User not found."];
+      }
+  }
 
   public function getUserGDPRData($user_id)
   {

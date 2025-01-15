@@ -1262,6 +1262,14 @@ class Topic
     }
   }
 
+  public function deleteTopicPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can't create topics."];
+    }
+  }
+
   public function deleteTopic($topic_id, $updater_id = 0)
   {
     /* deletes topic, cleans up and returns the number of rows (int) accepts top id or topic hash id //
