@@ -618,7 +618,9 @@ CREATE TABLE `au_rooms` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
-
+INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`, `phase_duration_0`, `phase_duration_1`, `phase_duration_2`, `phase_duration_3`, `phase_duration_4`, `type`)
+VALUES
+	(1,'AULA',NULL,NULL,1,NULL,NULL,NULL,'2024-11-28 12:52:48',0,'f13c449fef56a869366f745cb900742a',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1);
 
 # Tabellen-Dump au_services
 # ------------------------------------------------------------
