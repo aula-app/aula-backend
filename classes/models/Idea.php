@@ -1902,10 +1902,10 @@ class Idea
     $extra_query = "";
 
     if ($room_id > -1) {
-      $extra_query = "room_id = :room_id";
+      $extra_query = "room_id = :room_id,";
     }
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, ' . $extra_query . ', votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET custom_field1 = :custom_field1, custom_field2 = :custom_field2, title = :title, content = :content, info = :info, ' . $extra_query . ' votes_available_per_user= :votes_available_per_user, status= :status, approved= :approved, approval_comment= :approval_comment, order_importance= :order_importance, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
     $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
     $this->db->bind(':title', $title); // title only shown in backend
