@@ -847,38 +847,6 @@ class Idea
   }// end function
 
 
-  public function removeAllIdeasFromTopic($topic_id)
-  {
-    /* removes all associations of all ideas from a defined topic
-     */
-    $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
-
-    $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_topics_ideas . ' WHERE topic_id = :topic_id');
-    $this->db->bind(':topic_id', $topic_id); // bind topic id
-
-    $err = false;
-    try {
-      $topics = $this->db->resultSet();
-
-    } catch (Exception $e) {
-      echo 'Error occured while deleting all ideas from topic: ', $e->getMessage(), "\n"; // display error
-      $err = true;
-      $returnvalue['success'] = false; // set return value
-      $returnvalue['error_code'] = 1; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    }
-    $returnvalue['success'] = true; // set return value
-    $returnvalue['error_code'] = 0; // error code
-    $returnvalue['data'] = 1; // returned data
-    $returnvalue['count'] = 1; // returned count of datasets
-
-    return $returnvalue;
-
-  }// end function
-
   public function removeAllIdeasFromCategory($category_id)
   {
     /* removes all associations of all ideas from a category
