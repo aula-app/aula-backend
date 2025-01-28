@@ -95,7 +95,7 @@ class Topic
 
 
 
-  public function getTopicsByPhase($offset, $limit, $phase_id, $orderby = 0, $asc = 0, $status = 1, $room_id = 0)
+  public function getTopicsByPhase($phase_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $room_id = 0)
   {
     // returns topics by phase
     // phase_id is the id of the phase 0 = wild ideas 10 = discussion 20 = approval 30 = voting 40 = implementation
@@ -264,7 +264,7 @@ class Topic
     /* returns topic base data for a specified db id */
     $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.hash_id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_rooms . '. hash_id as room_hash_id,  ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE '.$this->db->au_topics.'.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.hash_id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_rooms . '. hash_id as room_hash_id,  ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_topics . '.id = :id');
     $this->db->bind(':id', $topic_id); // bind topic id
     $topics = $this->db->resultSet();
     if (count($topics) < 1) {
@@ -302,8 +302,7 @@ class Topic
     $asc_field = "";
     $extra_where = "";
 
-    if ($room_id != 0)
-    {
+    if ($room_id != 0) {
       //auto convert room id
       $room_id = $this->converters->checkRoomId($room_id);
     }
@@ -750,6 +749,7 @@ class Topic
 
     */
     //sanitize the vars
+    $topic_id = $this->converters->checkTopicId($topic_id); // autoconvert id
     $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $status = intval($status);
     $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
@@ -757,6 +757,16 @@ class Topic
     $order_importance = intval($order_importance);
     $description_internal = trim($description_internal);
     $description_public = trim($description_public);
+
+    $extra_query = "";
+
+    if ($phase_id > -1) {
+      $extra_query = $extra_query . ", phase_id = :phase_id";
+    }
+
+    if ($room_id > 0) {
+      $extra_query = $extra_query . ", room_id = :room_id";
+    }
 
     // get phase global durations, if durations are set to -1 then get global config, 0 = phase deactivated
     $global_phase_durations = $this->converters->getGlobalPhaseDurations();
@@ -792,7 +802,7 @@ class Topic
       } // end foreach
     }
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_topics . ' SET phase_duration_0 = :phase_duration_0, phase_duration_1 = :phase_duration_1, phase_duration_2 = :phase_duration_2, phase_duration_3 = :phase_duration_3, phase_duration_4 = :phase_duration_4, phase_id = :phase_id, name = :name, description_internal = :description_internal , description_public = :description_public, status = :status, last_update = NOW(), updater_id = :updater_id, order_importance = :order_importance, room_id = :room_id WHERE id = :topic_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_topics . ' SET phase_duration_0 = :phase_duration_0, phase_duration_1 = :phase_duration_1, phase_duration_2 = :phase_duration_2, phase_duration_3 = :phase_duration_3, phase_duration_4 = :phase_duration_4, name = :name, description_internal = :description_internal , description_public = :description_public, status = :status, last_update = NOW(), updater_id = :updater_id, order_importance = :order_importance' . $extra_query . ' WHERE id = :topic_id');
 
     // bind all VALUES
 
@@ -803,10 +813,16 @@ class Topic
     $this->db->bind(':phase_duration_2', $phase_duration_2);
     $this->db->bind(':phase_duration_3', $phase_duration_3);
     $this->db->bind(':phase_duration_4', $phase_duration_4);
-    $this->db->bind(':phase_id', $phase_id);
+
+    if ($phase_id > -1) {
+      $this->db->bind(':phase_id', $phase_id); // phase id
+    }
+    if ($room_id > 0) {
+      $this->db->bind(':room_id', $room_id); // room id
+    }
+
     $this->db->bind(':description_public', $this->crypt->encrypt($description_public));
     $this->db->bind(':description_internal', $this->crypt->encrypt($description_internal));
-    $this->db->bind(':room_id', $room_id);
     $this->db->bind(':topic_id', $topic_id);
     $this->db->bind(':order_importance', $order_importance); // order parameter
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
