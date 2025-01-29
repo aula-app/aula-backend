@@ -3884,6 +3884,9 @@ class Idea
     /* Returns vote value for a specified user and idea
      */
 
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
+
     $stmt = $this->db->query('SELECT vote_value FROM ' . $this->db->au_votes . ' WHERE user_id = :user_id AND idea_id = :idea_id');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':idea_id', $idea_id); // bind idea id
