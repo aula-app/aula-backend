@@ -947,7 +947,7 @@ class Idea
     $join = 'INNER JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id)';
     $join2 = ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id ';
     $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_rel_topics_ideas . '.topic_id= :topic_id ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $join2. ' ' .$where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $join2 . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit_active) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -1562,9 +1562,9 @@ class Idea
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
-    
+
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
-    
+
     // init vars
     $orderby_field = "";
     $asc_field = "";
@@ -2620,7 +2620,7 @@ class Idea
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = 0, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = -1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
