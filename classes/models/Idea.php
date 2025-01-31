@@ -3225,6 +3225,9 @@ class Idea
   {
     // add a like into like table for a certain user and idea
 
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
     $stmt = $this->db->query('INSERT INTO ' . $this->db->au_likes . ' (object_type, status, user_id, object_id, last_update, created, hash_id) VALUES (1, 1, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
     // bind all VALUES
     $this->db->bind(':idea_id', $idea_id); // idea id
