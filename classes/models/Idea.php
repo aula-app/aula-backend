@@ -3916,6 +3916,9 @@ class Idea
     returns 0 if not, returns 1 if yes
     */
 
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_likes . ' WHERE user_id = :user_id AND object_id = :idea_id AND object_type = 1'); // object type = 1 = idea
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':idea_id', $idea_id); // bind idea id
