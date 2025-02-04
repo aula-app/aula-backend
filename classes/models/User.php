@@ -945,24 +945,25 @@ class User
 
   } // end function
 
-  public function getStandardRoom () {
+  public function getStandardRoom()
+  {
     // returns the id for the standard room (AULA room)
     $room_id = 0; // default to 0 
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_rooms . ' WHERE type = 1 LIMIT 1');
     $room = $this->db->resultSet();
 
     $room_id = $room[0]['id']; // get room id from db
-    
+
     return $room_id;
 
   }
 
-  public function addUserToStandardRoom ($user_id, $status = 1, $updater_id = 0)
+  public function addUserToStandardRoom($user_id, $status = 1, $updater_id = 0)
   {
     /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
     returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-    
+
     // check if user and room exist
     $user_exist = $this->converters->checkUserExist($user_id);
 
@@ -1696,7 +1697,7 @@ class User
     }
 
     $search_field_valid = false;
-    if ($search_field != "") {
+    if ($search_field != "" && $search_text != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
         $extra_where .= " AND " . $search_field . " LIKE :search_text";
@@ -1857,7 +1858,7 @@ class User
     }
 
     $search_field_valid = false;
-    if ($search_field != "") {
+    if ($search_field != "" && $search_text != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
         $extra_where .= " AND " . $this->db->au_users_basedata . "." . $search_field . " LIKE :search_text";
@@ -2144,7 +2145,7 @@ class User
       $insertid = intval($this->db->lastInsertId());
 
       # add user to default standard room  (aula)
-      $this->addUserToStandardRoom ($insertid);
+      $this->addUserToStandardRoom($insertid);
 
     } catch (Exception $e) {
 
