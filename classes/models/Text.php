@@ -532,6 +532,7 @@ class Text
     */
 
     //sanitize the vars
+    $text_id = $this->converters->checkTextId($text_id); // autoconvert id
     $body = trim($body);
     $headline = trim($headline);
 
