@@ -2155,6 +2155,7 @@ class User
 
     # set output array
     $data['insert_id'] = $insertid;
+    $data['hash_id'] = $hash_id;
     $data['temp_pw'] = $temp_pw;
 
 
