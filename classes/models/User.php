@@ -2741,13 +2741,13 @@ class User
   }// end function
 
 
-  public function getUserGrops($user_id)
+  public function getUserGroups($user_id)
   {
     /* returns rooms where user is member of for a certain user id
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id');
+    $stmt = $this->db->query('SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id');
     $this->db->bind(':user_id', $user_id); // bind userid
     $groups = $this->db->resultSet();
 
