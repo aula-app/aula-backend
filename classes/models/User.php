@@ -2723,7 +2723,7 @@ class User
     $this->db->bind(':user_id', $user_id); // bind userid
     $rooms = $this->db->resultSet();
 
-    if (count($users) < 1) {
+    if (count($rooms) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // db error code
       $returnvalue['data'] = false; // returned data
