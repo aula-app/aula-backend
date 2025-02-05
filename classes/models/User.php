@@ -2741,6 +2741,32 @@ class User
   }// end function
 
 
+  public function getUserGropus($user_id)
+  {
+    /* returns rooms where user is member of for a certain user id
+     */
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query('SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id');
+    $this->db->bind(':user_id', $user_id); // bind userid
+    $groups = $this->db->resultSet();
+
+    if (count($groups) < 1) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = $groups; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+    }
+  }// end function
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)
   {
