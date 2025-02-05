@@ -1753,7 +1753,7 @@ class User
 
 
     } else {
-      $total_datasets;
+      $total_datasets = 0;
       if ($search_field_valid) {
         $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, "id > 0", $search_field, $search_text);
       } else {
