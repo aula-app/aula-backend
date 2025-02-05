@@ -2720,7 +2720,7 @@ class User
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT room_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE user_id = :user_id');
+    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_rooms_users . ' LEFT JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_rooms . '.id = ' . $this->db->au_rel_rooms_users . '.room_id) WHERE user_id = :user_id');
     $this->db->bind(':user_id', $user_id); // bind userid
     $rooms = $this->db->resultSet();
 
