@@ -168,7 +168,7 @@ class Group
   {
     /* returns voting bias for this group for a specific user id
      */
-    $group_id = $this->converters->checkGroupId($group_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id); // checks group id and converts group id to db group id if necessary (when group hash id was passed)
 
     $stmt = $this->db->query('SELECT ' . $this->db->au_groups . '.vote_bias FROM ' . $this->db->au_groups . ' INNER JOIN ' . $this->db->au_rel_groups_users . ' ON (' . $this->db->au_groups . '.id = ' . $this->db->au_rel_groups_users . '.group_id) WHERE ' . $this->db->au_rel_groups_users . '.user_id = :id');
     $this->db->bind(':id', $user_id); // bind group id
