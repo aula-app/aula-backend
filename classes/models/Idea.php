@@ -1026,7 +1026,11 @@ class Idea
     if ($categories['success'] == true) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $categories['data'][0]; // returned data
+      if ($categories['data'] && sizeof($categories['data']) > 0) {
+        $returnvalue['data'] = $categories['data'][0]; // returned data
+      } else {
+        $returnvalue['data'] = []; // returned data
+      }
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
