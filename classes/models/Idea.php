@@ -308,7 +308,7 @@ class Idea
      */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_topics_ideas . ' WHERE idea_id = :id');
+    $stmt = $this->db->query('SELECT topic_id FROM ' . $this->db->au_rel_topics_ideas . ' WHERE idea_id = :id');
     $this->db->bind(':id', $idea_id); // bind idea id
     $ideas = $this->db->resultSet();
     if (count($ideas) < 1) {
