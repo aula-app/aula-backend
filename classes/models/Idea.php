@@ -4027,7 +4027,7 @@ class Idea
       $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
     }
 
-    $stmt = $this->db->query($select_defaults . $select_part . $from . $join_topic . $join_user . $join_room . $where);
+    $stmt = $this->db->query($select_defaults . $select_part . $from . $join_topic . $join_user . $where);
     $this->db->bind(':user_id', $user_id); // bind user id
 
     $err = false;
