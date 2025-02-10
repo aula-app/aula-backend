@@ -107,7 +107,7 @@ class Comment
         $asc_field = "DESC";
     }
     $where = ' WHERE ' . $this->db->au_comments . '.status= :status AND idea_id= :idea_id ';
-    $stmt = $this->db->query('SELECT ' . $this->db->au_comments . '.*, ' . $this->db->au_users_basedata . '.username, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_comments . ' JOIN ' . $this->db->au_users_basedata . ' ON ' . $this->db->au_comments . '.user_id = ' . $this->db->au_users_basedata . '.id ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT ' . $this->db->au_comments . '.*, '. $this->db->au_users_basedata . '.hash_id as user_hash_id, ' . $this->db->au_users_basedata . '.username, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_comments . ' JOIN ' . $this->db->au_users_basedata . ' ON ' . $this->db->au_comments . '.user_id = ' . $this->db->au_users_basedata . '.id ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
