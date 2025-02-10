@@ -12,9 +12,6 @@ $syslog = new Systemlog ($db);
 $jwt = new JWT($jwtKeyFile);
 $media = new Media($db, $crypt, $syslog, $filesDir);
 
-$json = file_get_contents('php://input');
-
-// $input = json_decode($json, true);
 $check_jwt = $jwt->check_jwt();
 
 header('Content-Type: application/json; charset=utf-8');
@@ -82,7 +79,7 @@ if ($check_jwt) {
       $inserted_media = $media->addMedia ($file_type, $file_path, 1, 0, $file_name, 1, $user_id);
     }
 
-    echo json_encode(["status" => "File is uploaded successfully."]);
+    echo json_encode(["status" => "File is uploaded successfully.", "file_name" => $file_name]);
 
   } catch (RuntimeException $e) {
     echo $e->getMessage();
