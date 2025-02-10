@@ -945,24 +945,25 @@ class User
 
   } // end function
 
-  public function getStandardRoom () {
+  public function getStandardRoom()
+  {
     // returns the id for the standard room (AULA room)
     $room_id = 0; // default to 0 
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_rooms . ' WHERE type = 1 LIMIT 1');
     $room = $this->db->resultSet();
 
     $room_id = $room[0]['id']; // get room id from db
-    
+
     return $room_id;
 
   }
 
-  public function addUserToStandardRoom ($user_id, $status = 1, $updater_id = 0)
+  public function addUserToStandardRoom($user_id, $status = 1, $updater_id = 0)
   {
     /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
     returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-    
+
     // check if user and room exist
     $user_exist = $this->converters->checkUserExist($user_id);
 
@@ -1579,7 +1580,7 @@ class User
     $user_status = 0;
     $user_id = 0;
 
-    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id, status FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
+    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
@@ -1696,7 +1697,7 @@ class User
     }
 
     $search_field_valid = false;
-    if ($search_field != "") {
+    if ($search_field != "" && $search_text != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
         $extra_where .= " AND " . $search_field . " LIKE :search_text";
@@ -1752,7 +1753,7 @@ class User
 
 
     } else {
-      $total_datasets;
+      $total_datasets = 0;
       if ($search_field_valid) {
         $total_datasets = $this->converters->getTotalDatasets($this->db->au_users_basedata, "id > 0", $search_field, $search_text);
       } else {
@@ -1857,7 +1858,7 @@ class User
     }
 
     $search_field_valid = false;
-    if ($search_field != "") {
+    if ($search_field != "" && $search_text != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
         $extra_where .= " AND " . $this->db->au_users_basedata . "." . $search_field . " LIKE :search_text";
@@ -2144,7 +2145,7 @@ class User
       $insertid = intval($this->db->lastInsertId());
 
       # add user to default standard room  (aula)
-      $this->addUserToStandardRoom ($insertid);
+      $this->addUserToStandardRoom($insertid);
 
     } catch (Exception $e) {
 
@@ -2154,6 +2155,7 @@ class User
 
     # set output array
     $data['insert_id'] = $insertid;
+    $data['hash_id'] = $hash_id;
     $data['temp_pw'] = $temp_pw;
 
 
@@ -2718,11 +2720,11 @@ class User
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT room_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE user_id = :user_id');
+    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_rooms_users . ' LEFT JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_rooms . '.id = ' . $this->db->au_rel_rooms_users . '.room_id) WHERE user_id = :user_id');
     $this->db->bind(':user_id', $user_id); // bind userid
     $rooms = $this->db->resultSet();
 
-    if (count($users) < 1) {
+    if (count($rooms) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // db error code
       $returnvalue['data'] = false; // returned data
@@ -2740,6 +2742,41 @@ class User
   }// end function
 
 
+  public function getUserGroups($user_id)
+  {
+    /* returns rooms where user is member of for a certain user id
+     */
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_groups_users . ' LEFT JOIN ' . $this->db->au_groups . ' ON (' . $this->db->au_groups . '.id = ' . $this->db->au_rel_groups_users . '.group_id) WHERE user_id = :user_id');
+    $this->db->bind(':user_id', $user_id); // bind userid
+    $groups = $this->db->resultSet();
+
+    if (count($groups) < 1) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    } else {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = $groups; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+    }
+  }// end function
+
+  public function setUserRoles($user_id, $roles, $updater_id = 0) 
+  {
+     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = :roles, last_update= NOW(), updater_id= :updater_id WHERE id = :userid');
+     $this->db->bind(':user_id', $user_id);
+     $this->db->bind(':roles', $roles);
+     $this->db->bind(':updater_id', $updater_id);
+  }
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)
   {
