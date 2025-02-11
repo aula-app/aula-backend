@@ -7,7 +7,9 @@
 #
 # Host: devel.aula.de (MySQL 5.5.5-10.6.18-MariaDB-0ubuntu0.22.04.1)
 # Datenbank: aula_db
-# Verarbeitungszeit: 2024-11-28 12:53:24 +0000
+# Verarbeitungszeit: 2024-11-28 12:53:05 +0000
+
+# ************************************************************
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -54,7 +56,6 @@ CREATE TABLE `au_categories` (
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the category',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
 
 
 # Tabellen-Dump au_change_password
@@ -116,6 +117,28 @@ CREATE TABLE `au_comments` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_comments` WRITE;
+/*!40000 ALTER TABLE `au_comments` DISABLE KEYS */;
+
+INSERT INTO `au_comments` (`id`, `content`, `sum_likes`, `user_id`, `status`, `created`, `last_update`, `updater_id`, `hash_id`, `language_id`, `idea_id`, `parent_id`)
+VALUES
+	(1,'While the idea of solar-powered charging stations is admirable, it may not be the most cost-effective solution for our school at this time.',0,165,1,'2024-06-24 22:20:58','2024-06-24 22:20:58',0,'a02c31c880b78d596ba9784e64d13981',0,267,0),
+	(2,'This idea for solar-powered charging stations is a fantastic initiative for our school. Not only will it reduce our carbon footprint by utilizing renewable energy, but it also sets a great example for students on sustainable practices. It\'s a practical solution that aligns with our commitment to environmental stewardship and can potentially save costs in the long run by reducing energy expenses. Plus, it educates students about the benefits of renewable energy sources like solar power.',0,165,1,'2024-06-24 22:21:53','2024-06-24 22:21:53',0,'22e8eab0d638f32c348f4e6a04050483',0,267,0),
+	(3,'A campus-wide recycling initiative is long overdue! It\'s a practical step towards reducing our environmental impact and promoting responsible waste management among students and staff.',1,165,1,'2024-06-24 22:22:59','2024-06-24 22:23:03',0,'735404f40c91a2bd39161e569dbb5723',0,268,0),
+	(4,'While recycling is important, implementing a campus-wide initiative might be challenging. It requires significant resources for infrastructure, maintenance, and education. We should explore other sustainability efforts that are more feasible and impactful within our current budget constraints.',0,165,1,'2024-06-24 22:23:20','2024-06-24 22:23:20',0,'fda296d1a58c0e400639182ada616542',0,268,0),
+	(5,'Implementing a Virtual Learning Lab may divert resources away from traditional educational methods that have proven effective.',0,165,1,'2024-06-24 22:24:51','2024-06-24 22:24:51',0,'287e0423885d65d509a3d74b393bdb07',0,262,0),
+	(6,'Virtual campus tours offer a convenient and inclusive way for prospective students to explore our campus from anywhere!',0,165,1,'2024-06-24 22:26:07','2024-06-24 22:26:07',0,'53e7dafd1c12437f45a46b34c3578186',0,261,0),
+	(7,'This program not only strengthens community bonds but also teaches students valuable life skills like empathy, responsibility, and the importance of giving back.',0,165,1,'2024-06-24 22:28:12','2024-06-24 22:28:12',0,'a63540efa56b609ae6f5555085b3dce0',0,266,0),
+	(8,'Directly involving students in personal care tasks for neighbors could raise privacy concerns and may not always align with the needs or preferences of the elderly individuals involved.',0,165,1,'2024-06-24 22:28:25','2024-06-24 22:28:25',0,'3ff37e558e7cd5c986c9dcf50d27d490',0,266,0),
+	(9,'ome argue that social service programs like Adopt-a-Neighbor should be voluntary rather than mandatory, as forcing participation may dilute the altruistic spirit and impact of genuine volunteerism.',0,165,1,'2024-06-24 22:28:34','2024-06-24 22:28:34',0,'75158963dcd3dd83a357ad53031a20fd',0,266,0),
+	(10,'Managing a school garden requires significant time, resources, and expertise that may detract from core academic priorities and other extracurricular activities.',1,165,1,'2024-06-24 22:29:30','2024-06-24 22:29:49',0,'48648ad4dd02124f1ca7eae54d5c1281',0,265,0),
+	(11,'A school garden program teaches students about sustainability, nutrition, and responsibility, fostering a deeper connection to nature and promoting healthier eating habits.',0,165,1,'2024-06-24 22:29:46','2024-06-24 22:29:46',0,'ae8064cb703824b30ba9274aee8b0de6',0,265,0),
+	(12,'Vertical garden walls could potentially pose maintenance challenges such as irrigation and plant care, requiring ongoing resources and expertise that may outweigh their aesthetic and environmental benefits in a school setting.',1,165,1,'2024-06-24 22:39:05','2024-06-24 22:39:20',0,'0b7cb5092f9ef3d66b0e55c4046e9bf6',0,260,0),
+	(13,'test',0,165,1,'2024-06-30 13:11:42','2024-06-30 13:11:42',165,'c657731b106b5f1508857201cc211643',0,272,0),
+	(14,'Maybe testing comments could be an idea too.',0,165,1,'2024-07-17 17:18:17','2024-07-17 17:19:23',165,'e77b45b6b9fb10b42ba388778783623d',0,278,0);
+
+/*!40000 ALTER TABLE `au_comments` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_consent
@@ -136,6 +159,18 @@ CREATE TABLE `au_consent` (
   PRIMARY KEY (`user_id`,`text_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_consent` WRITE;
+/*!40000 ALTER TABLE `au_consent` DISABLE KEYS */;
+
+INSERT INTO `au_consent` (`user_id`, `text_id`, `consent`, `date_consent`, `date_revoke`, `created`, `last_update`, `updater_id`, `status`)
+VALUES
+	(1,9,1,'2024-06-23 12:45:18',NULL,'2024-06-23 12:45:18','2024-10-28 18:18:01',0,1),
+	(2,11,1,'2024-06-23 12:47:20',NULL,'2024-06-23 12:47:20','2024-06-23 12:47:20',0,1),
+	(3,9,1,'2024-09-12 17:00:13',NULL,'2024-09-12 17:00:13','2024-09-12 17:00:13',0,1),
+	(4,11,1,'2024-09-12 17:00:12',NULL,'2024-09-12 17:00:12','2024-09-12 17:00:12',0,1);
+
+/*!40000 ALTER TABLE `au_consent` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_delegation
@@ -155,6 +190,15 @@ CREATE TABLE `au_delegation` (
   PRIMARY KEY (`user_id_original`,`user_id_target`,`topic_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+LOCK TABLES `au_delegation` WRITE;
+/*!40000 ALTER TABLE `au_delegation` DISABLE KEYS */;
+
+INSERT INTO `au_delegation` (`user_id_original`, `user_id_target`, `room_id`, `topic_id`, `status`, `updater_id`, `created`, `last_update`)
+VALUES
+	(165,264,0,474,1,165,'2024-09-11 11:10:24','2024-09-11 11:10:24');
+
+/*!40000 ALTER TABLE `au_delegation` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_groups
@@ -178,7 +222,6 @@ CREATE TABLE `au_groups` (
   `vote_bias` int(11) DEFAULT NULL COMMENT 'votes weight per user in this group',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
 
 
 # Tabellen-Dump au_ideas
@@ -215,6 +258,26 @@ CREATE TABLE `au_ideas` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_ideas` WRITE;
+/*!40000 ALTER TABLE `au_ideas` DISABLE KEYS */;
+
+INSERT INTO `au_ideas` (`id`, `title`, `content`, `sum_likes`, `sum_votes`, `number_of_votes`, `user_id`, `votes_available_per_user`, `status`, `language_id`, `created`, `last_update`, `hash_id`, `order_importance`, `info`, `updater_id`, `room_id`, `is_winner`, `approved`, `approval_comment`, `topic_id`, `sum_comments`, `custom_field1`, `custom_field2`, `type`)
+VALUES
+	(1,'Augmented Reality Campus Tours','Develop an augmented reality (AR) app that provides interactive campus tours for new students and visitors. Users can explore key campus locations, historical landmarks, and facilities by overlaying digital information and interactive elements through their mobile devices.',1,0,0,165,1,1,0,'2024-06-24 22:02:38','2024-07-29 15:03:18','837ed523d9dbb6138ebfbda01261027b',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
+	(2,'Virtual Learning Lab','Create a dedicated virtual learning lab equipped with high-speed internet, VR headsets, and interactive digital resources. This lab would offer students immersive learning experiences in subjects like science, history, and geography, enabling them to explore concepts in a virtual environment.',0,0,0,165,1,1,0,'2024-06-24 22:02:54','2024-07-29 15:03:41','e983b05c294e9b2fecadc765005bcf3b',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
+	(3,'Student Art Gallery','Establish a student-run art gallery within the school where students can showcase their artworks, including paintings, sculptures, photographs, and digital art. This space would not only promote creativity but also provide a platform for students to express themselves artistically and share their work with the school community.',0,0,1,165,1,1,0,'2024-06-24 22:04:12','2024-12-11 18:41:18','d7f60e32b79357492dc64e286cdf5172',10,'',165,106,0,1,'The Student Art Gallery will be a fantastic platform to showcase and celebrate our students\' artistic talents.',NULL,0,NULL,NULL,0),
+	(4,'Performing Arts Festival','Organize an annual performing arts festival featuring student performances in music, dance, theater, and spoken word. The festival could include workshops, masterclasses with professional artists, and culminate in a showcase event that celebrates the diverse talents and creativity of students.',0,0,1,165,1,1,0,'2024-06-24 22:04:28','2024-12-11 18:41:34','ffae7587ac3b700f1774a2de9d6826b3',10,'',165,106,0,1,'Excited to approve the Performing Arts Festival — can\'t wait to see the creativity it will bring to our community!',NULL,0,NULL,NULL,0),
+	(5,'School Garden for Food Donation','Create a school garden dedicated to growing fresh produce, which is then donated to local food banks or community organizations supporting food-insecure individuals and families. Students would be involved in all aspects of gardening, from planting to harvesting, promoting sustainability and community service simultaneously.',1,0,0,165,1,1,0,'2024-06-24 22:05:21','2024-06-26 17:02:04','c4531c1acb5d3bd3f2f0bd05f972da7d',10,'',165,106,1,1,'I’m thrilled to approve the Create a School Garden program! Growing fresh produce for local food banks and supporting food-insecure families is a fantastic initiative.',NULL,2,NULL,NULL,0),
+	(6,'Adopt-a-Neighbor Program','Launch an adopt-a-neighbor program where students volunteer to assist elderly or disabled community members with tasks such as grocery shopping, yard work, or companionship visits. This program aims to foster intergenerational connections and provide valuable support to those in need within the local community.',0,0,0,165,1,1,0,'2024-06-24 22:05:52','2024-07-29 15:55:02','13f8ff68df55ae94723a95a5cb0b2100',10,'',165,106,0,0,'',NULL,3,NULL,NULL,0),
+	(7,'Solar-Powered Charging Stations','Install solar-powered charging stations throughout the school campus. These stations would allow students to charge their devices using renewable energy, reducing the reliance on traditional electricity sources and promoting sustainable practices.',1,0,0,165,1,1,0,'2024-06-24 22:07:32','2024-06-24 22:21:53','f8fc3f54931117c7e89b44408e3ace2b',10,'',165,106,0,0,NULL,NULL,2,NULL,NULL,0),
+	(8,'Campus-wide Recycling Initiative','Implement a comprehensive recycling program across the school. This initiative would include clear signage, designated recycling bins for paper, plastic, and glass, as well as educational campaigns to encourage students and staff to recycle effectively.',1,0,0,165,1,1,0,'2024-06-24 22:07:47','2024-12-12 16:07:39','a9e8e8420bb1167b56c8a026797f22a8',10,'',165,106,0,0,'',NULL,4,NULL,NULL,0),
+	(9,'Student Tech Lab','The Student Tech Lab is a creative space where students can explore and develop new apps, digital learning tools, and robotics projects, fostering hands-on learning and innovation.',0,0,0,165,1,1,0,'2024-06-26 17:32:49','2024-06-26 17:32:49','857ad644ee906135ede100e3a8c6d606',10,'',0,106,0,0,NULL,NULL,0,NULL,NULL,0),
+	(10,'Community Mural Project','This project will not only beautify the community but also provide a platform for young artists to collaborate and express their creativity.',0,-1,1,165,1,1,0,'2024-06-26 17:34:33','2024-06-26 17:35:30','9491c7450a1a946cfee61a575e51df90',10,'',0,106,0,0,NULL,NULL,0,NULL,NULL,0),
+	(11,'Enhancing Outdoor Learning Spaces','Create dedicated outdoor classrooms to foster hands-on learning and environmental education.',1,0,0,165,1,1,0,'2024-06-26 18:18:58','2024-12-12 16:08:23','2930c3a7b46fd5daf3ecdca5704fcbcf',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0),
+	(12,'Testabstimmung: Kino oder Theater?','Bitte stimmt ab, ob wir in das Theater gehen oder nicht',0,0,1,165,1,1,0,'2024-10-03 11:07:44','2024-10-28 15:42:27','807278ddcaa13c48e93a5a80eed8f22d',10,'',165,106,0,0,NULL,NULL,0,'','',0),
+	(13,'Vertical Garden Walls','Create vertical garden walls in unused spaces around the school. These walls would feature plants that improve air quality indoors, enhance aesthetic appeal, and provide educational opportunities about gardening and sustainable agriculture.',1,0,0,165,1,1,0,'2024-06-24 22:01:53','2024-07-29 15:55:07','4337391284fa79271f76a270de027c6e',10,'',165,106,0,0,'',NULL,1,NULL,NULL,0);
+/*!40000 ALTER TABLE `au_ideas` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_likes
@@ -233,7 +296,6 @@ CREATE TABLE `au_likes` (
   `object_type` int(11) DEFAULT NULL COMMENT 'type of liked object 1=idea, 2=comment',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
 
 
 # Tabellen-Dump au_media
@@ -288,7 +350,6 @@ CREATE TABLE `au_messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 
-
 # Tabellen-Dump au_phases_global_config
 # ------------------------------------------------------------
 
@@ -326,6 +387,18 @@ CREATE TABLE `au_rel_categories_ideas` (
   PRIMARY KEY (`category_id`,`idea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_rel_categories_ideas` WRITE;
+/*!40000 ALTER TABLE `au_rel_categories_ideas` DISABLE KEYS */;
+
+INSERT INTO `au_rel_categories_ideas` (`category_id`, `idea_id`, `created`, `last_update`, `updater_id`)
+VALUES
+	(1,2,'2024-10-03 11:07:44','2024-10-03 11:07:44',1),
+	(3,3,'2024-07-29 15:55:07','2024-07-29 15:55:07',1),
+	(3,4,'2024-07-29 15:55:02','2024-07-29 15:55:02',1),
+	(3,5,'2024-07-29 15:54:55','2024-07-29 15:54:55',1);
+
+/*!40000 ALTER TABLE `au_rel_categories_ideas` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_rel_categories_media
@@ -395,7 +468,6 @@ CREATE TABLE `au_rel_groups_users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
 
-
 # Tabellen-Dump au_rel_ideas_comments
 # ------------------------------------------------------------
 
@@ -462,6 +534,28 @@ CREATE TABLE `au_rel_rooms_users` (
   PRIMARY KEY (`room_id`,`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_rel_rooms_users` WRITE;
+/*!40000 ALTER TABLE `au_rel_rooms_users` DISABLE KEYS */;
+
+INSERT INTO `au_rel_rooms_users` (`room_id`, `user_id`, `status`, `created`, `last_update`, `updater_id`)
+VALUES
+	(1,1,1,'2024-07-21 11:02:07','2024-07-21 11:02:07',1),
+	(1,2,1,'2024-07-21 11:02:08','2024-07-21 11:02:08',1),
+	(1,3,1,'2024-07-21 11:02:07','2024-07-21 11:02:07',1),
+	(1,4,1,'2024-07-21 11:02:14','2024-07-21 11:02:14',1),
+	(1,5,1,'2024-07-21 11:02:11','2024-07-21 11:02:11',1),
+	(1,6,1,'2024-07-21 11:02:11','2024-07-21 11:02:11',1),
+	(1,7,1,'2024-07-21 11:02:13','2024-07-21 11:02:13',1),
+	(1,8,1,'2024-07-21 11:02:12','2024-07-21 11:02:12',1),
+	(2,1,1,'2024-07-21 11:02:07','2024-07-21 11:02:07',1),
+	(2,2,1,'2024-07-21 11:02:08','2024-07-21 11:02:08',1),
+	(2,3,1,'2024-07-21 11:02:07','2024-07-21 11:02:07',1),
+	(2,4,1,'2024-07-21 11:02:14','2024-07-21 11:02:14',1),
+	(2,5,1,'2024-07-21 11:02:11','2024-07-21 11:02:11',1);
+
+
+/*!40000 ALTER TABLE `au_rel_rooms_users` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_rel_topics_ideas
@@ -477,7 +571,6 @@ CREATE TABLE `au_rel_topics_ideas` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`topic_id`,`idea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
 
 
 # Tabellen-Dump au_rel_topics_media
@@ -566,6 +659,16 @@ CREATE TABLE `au_reported` (
   PRIMARY KEY (`user_id`,`object_id`,`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+LOCK TABLES `au_reported` WRITE;
+/*!40000 ALTER TABLE `au_reported` DISABLE KEYS */;
+
+INSERT INTO `au_reported` (`user_id`, `type`, `object_id`, `status`, `created`, `last_update`, `reason`, `internal_info`)
+VALUES
+	(4,0,3,0,'2023-06-03 07:04:27','2023-06-03 07:04:27','this idea is scandalous',NULL),
+	(4,0,5,0,'2023-06-03 07:13:36','2023-06-03 07:13:36','this idea is scandalous',NULL);
+
+/*!40000 ALTER TABLE `au_reported` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_roles
@@ -623,10 +726,12 @@ LOCK TABLES `au_rooms` WRITE;
 
 INSERT INTO `au_rooms` (`id`, `room_name`, `description_public`, `description_internal`, `status`, `restrict_to_roomusers_only`, `order_importance`, `created`, `last_update`, `updater_id`, `hash_id`, `access_code`, `internal_info`, `phase_duration_0`, `phase_duration_1`, `phase_duration_2`, `phase_duration_3`, `phase_duration_4`, `type`)
 VALUES
-	(1,'AULA',NULL,NULL,1,NULL,NULL,'2024-11-28 12:52:48','2024-11-28 12:52:48',NULL,'defaultTable',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1);
+	(1,NULL,NULL,NULL,1,NULL,NULL,NULL,'2024-11-28 12:52:48',NULL,'defaultRoom',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1),
+  (2,'The Innovation Hub','DI:6:0','DI:6:0',1,1,10,'2024-06-24 21:48:04','2024-07-25 16:43:46',165,'02a9374ae856c01ebb647c3b7570312d','','',NULL,NULL,NULL,NULL,NULL);
 
 /*!40000 ALTER TABLE `au_rooms` ENABLE KEYS */;
 UNLOCK TABLES;
+
 
 # Tabellen-Dump au_services
 # ------------------------------------------------------------
@@ -677,12 +782,16 @@ CREATE TABLE `au_system_current_state` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_system_current_state` WRITE;
+/*!40000 ALTER TABLE `au_system_current_state` DISABLE KEYS */;
+
 INSERT INTO `au_system_current_state` (`id`, `online_mode`, `revert_to_on_active`, `revert_to_on_date`, `created`, `last_update`, `updater_id`)
 VALUES
-	(1,1,0,NULL,NULL,NULL,1);
+	(1,1,0,'2024-09-09 08:00:00',NULL,'2024-10-29 10:23:11',266);
 
 /*!40000 ALTER TABLE `au_system_current_state` ENABLE KEYS */;
 UNLOCK TABLES;
+
 
 # Tabellen-Dump au_system_global_config
 # ------------------------------------------------------------
@@ -719,9 +828,15 @@ CREATE TABLE `au_system_global_config` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_system_global_config` WRITE;
+/*!40000 ALTER TABLE `au_system_global_config` DISABLE KEYS */;
+
 INSERT INTO `au_system_global_config` (`id`, `name`, `internal_hash_id`, `external_hash_id`, `description_public`, `base_url`, `media_url`, `preferred_language`, `date_format`, `time_format`, `first_workday_week`, `last_workday_week`, `start_time`, `daily_end_time`, `allow_registration`, `default_role_for_registration`, `default_email_address`, `last_update`, `updater_id`, `archive_after`, `organisation_type`, `enable_oauth`, `custom_field1_name`, `custom_field2_name`, `quorum_wild_ideas`, `quorum_votes`)
 VALUES
-	(1,NULL,NULL,NULL,Null,NULL,NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,'696E666F4061756C612E6465','2024-10-29 10:23:11',0,NULL,1,0,NULL,NULL,0,0);
+	(1,'Test School',NULL,NULL,'This is the public description for the test school','https://devel.aula.de',NULL,1,1,1,1,5,'2024-01-01 08:00:00','2024-01-01 16:00:00',0,10,X'696E666F4061756C612E6465','2024-10-29 10:23:11',266,NULL,1,0,'Kosten','',0,0);
+
+/*!40000 ALTER TABLE `au_system_global_config` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_systemlog
@@ -740,7 +855,6 @@ CREATE TABLE `au_systemlog` (
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
 
 
 # Tabellen-Dump au_texts
@@ -766,6 +880,18 @@ CREATE TABLE `au_texts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_texts` WRITE;
+/*!40000 ALTER TABLE `au_texts` DISABLE KEYS */;
+
+INSERT INTO `au_texts` (`id`, `creator_id`, `headline`, `body`, `user_needs_to_consent`, `service_id_consent`, `consent_text`, `language_id`, `location`, `created`, `last_update`, `updater_id`, `hash_id`, `status`)
+VALUES
+	(8,0,'Sample Text','test message',0,0,'Agree',0,NULL,'2024-06-22 22:30:30','2024-06-22 22:30:30',165,'3ce902fa6d5fc806c02017188a2e0daa',1),
+	(9,0,'Test Mandatory message','test this message',2,0,'Agree',0,NULL,'2024-06-23 12:27:27','2024-10-28 18:18:01',165,'0a4f7789ffe37e398393af1fa120f4d0',3),
+	(10,0,'Optional consent message','This message is not mandatory',1,0,'Agree',0,NULL,'2024-06-23 12:30:58','2024-06-23 12:30:58',165,'faca362395a9bf1f4add5370aa6ee67d',1),
+	(11,0,'Another consent','Mandatory consent',2,0,'Agree',0,NULL,'2024-06-23 12:47:07','2024-06-23 12:47:07',165,'da35ed97b7014ba1a8f456c47e0f54ba',1);
+
+/*!40000 ALTER TABLE `au_texts` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_topics
@@ -797,6 +923,18 @@ CREATE TABLE `au_topics` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+LOCK TABLES `au_topics` WRITE;
+/*!40000 ALTER TABLE `au_topics` DISABLE KEYS */;
+
+INSERT INTO `au_topics` (`id`, `name`, `description_public`, `description_internal`, `status`, `order_importance`, `created`, `last_update`, `hash_id`, `updater_id`, `room_id`, `phase_id`, `wild_ideas_enabled`, `publishing_date`, `phase_duration_0`, `phase_duration_1`, `phase_duration_2`, `phase_duration_3`, `phase_duration_4`, `type`)
+VALUES
+	(1,'Green Innovations Vault','Ideas aimed at reducing our environmental footprint, promoting recycling initiatives, sustainable energy projects, and conservation efforts.','Internal description?',1,10,'2024-06-24 21:51:34','2024-06-24 21:51:34','7ba1cc8d79a7cb7457427a5254f69d41',165,106,10,1,NULL,14,14,14,14,14,0),
+	(2,'Tech Frontier','New apps, digital learning tools, robotics projects, smart solutions for the school, and advancements in virtual reality or augmented reality.','',1,10,'2024-06-24 21:52:11','2024-09-07 17:27:25','ea45d51cb116ce44f5e69e992393146f',165,106,20,1,NULL,14,14,14,14,14,0),
+	(3,'Creative Canvas','Imaginative ideas spanning visual arts, music performances, theater productions, literary works and other art expression.','',1,10,'2024-06-24 21:53:20','2024-09-07 17:24:00','d2c9fb9871033f36407ab0bcf0e676a3',165,106,30,1,NULL,14,14,14,14,14,0),
+	(4,'Service Heart','Proposals for volunteer programs, fundraising events, social justice initiatives, outreach campaigns, and projects aimed at improving the well-being of others.','Internal description?',1,10,'2024-06-24 21:54:04','2024-06-24 21:54:04','aacc93c0cdabb2bf4106f9f1ce3bf2b5',165,106,40,1,NULL,14,14,14,14,14,0);
+
+/*!40000 ALTER TABLE `au_topics` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_triggers
@@ -833,6 +971,20 @@ CREATE TABLE `au_user_levels` (
   PRIMARY KEY (`level`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+LOCK TABLES `au_user_levels` WRITE;
+/*!40000 ALTER TABLE `au_user_levels` DISABLE KEYS */;
+
+INSERT INTO `au_user_levels` (`level`, `name`, `description`, `status`)
+VALUES
+	(10,'Guest','Read only',1),
+	(20,'Basic','Read, Create Ideas',1),
+	(30,'Moderator','Read ',1),
+	(40,'Super Moderator','',1),
+	(50,'Admin',' ',1),
+	(60,'Tech admin','',1);
+
+/*!40000 ALTER TABLE `au_user_levels` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Tabellen-Dump au_users_basedata
@@ -929,8 +1081,6 @@ CREATE TABLE `au_votes` (
   `comment` varchar(2048) DEFAULT NULL COMMENT 'Comment that the user added to a vote he did',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-
-
 
 
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
