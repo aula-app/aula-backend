@@ -26,6 +26,7 @@ class JWT
       "exp" => 0,
       "user_id" => $user["id"],
       "user_level" => $user["userlevel"],
+      "roles" => json_decode($user["roles"]),
       "temp_pw" => $user["temp_pw"]
     ];
     $payload = base64_url_encode(json_encode($payload));
