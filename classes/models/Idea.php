@@ -2061,7 +2061,7 @@ class Idea
     // generate unique hash for this idea
     $testrand = rand(100, 10000000);
     $appendix = microtime(true) . $testrand;
-    $hash_id = md5($$name . $appendix); // create hash id for this idea
+    $hash_id = md5($name . $appendix); // create hash id for this idea
     $this->db->bind(':hash_id', $hash_id);
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
