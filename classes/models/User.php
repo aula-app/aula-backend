@@ -441,6 +441,9 @@ class User
 
   public function getDelegationStatus($user_id, $topic_id)
   {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $topic_id = $this->converters->checkTopicId($topic_id);
+
     # helper - returns the status of delegation for a defined user and topic 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_delegation . ' WHERE user_id_original = :user_id AND topic_id = :topic_id');
     // bind all VALUES
