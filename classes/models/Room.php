@@ -67,12 +67,12 @@ class Room
     $rooms = $this->db->resultSet();
 
     # now get the number of users in this room (to later calculate the quorum)
-    $rooms [0]['number_of_users'] = 0; # init
+    $rooms[0]['number_of_users'] = 0; # init
     $number_of_total_users = $this->getNumberOfUsers($room_id);
 
-    if (is_int ($number_of_total_users)) {
-      $rooms [0]['number_of_users'] = $number_of_total_users;
-    } 
+    if (is_int($number_of_total_users)) {
+      $rooms[0]['number_of_users'] = $number_of_total_users;
+    }
 
     if (count($rooms) < 1) {
       $returnvalue['success'] = true; // set return value to false
@@ -101,7 +101,7 @@ class Room
     $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
     $this->db->bind(':room_id', $room_id); // bind room id
     $rooms = $this->db->resultSet();
-    
+
     return count($rooms);
 
   }// end function
@@ -209,7 +209,7 @@ class Room
     }
   }// end function
 
-  public function setRoomPhaseDurations($room_id, $phase_duration_0,  $phase_duration_1,  $phase_duration_2,  $phase_duration_3,  $phase_duration_4, $updater_id = 0)
+  public function setRoomPhaseDurations($room_id, $phase_duration_0, $phase_duration_1, $phase_duration_2, $phase_duration_3, $phase_duration_4, $updater_id = 0)
   {
     /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      $duration 0-4 : durations (int) for phases (default)
@@ -217,12 +217,12 @@ class Room
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    
-    $phase_duration_0 = intval ($phase_duration_0);
-    $phase_duration_1 = intval ($phase_duration_1);
-    $phase_duration_2 = intval ($phase_duration_2);
-    $phase_duration_3 = intval ($phase_duration_3);
-    $phase_duration_4 = intval ($phase_duration_4);
+
+    $phase_duration_0 = intval($phase_duration_0);
+    $phase_duration_1 = intval($phase_duration_1);
+    $phase_duration_2 = intval($phase_duration_2);
+    $phase_duration_3 = intval($phase_duration_3);
+    $phase_duration_4 = intval($phase_duration_4);
 
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_rooms . ' SET phase_duration_0 = :phase_duration_0, phase_duration_1 = :phase_duration_1, phase_duration_2 = :phase_duration_2,  phase_duration_3 = :phase_duration_3,  phase_duration_4 = :phase_duration_4, last_update= NOW(), updater_id= :updater_id WHERE id= :room_id');
@@ -295,7 +295,7 @@ class Room
 
   public function setRoomIdeasEnabled($room_id, $updater_id = 0)
   {
-     # helper: sets the property ideas_enabled to true (ideas allowed)
+    # helper: sets the property ideas_enabled to true (ideas allowed)
     $room_id = $this->converters->checkRoomId($room_id); // autoconvert id
 
     $ret_value = $this->setTopicProperty($room_id, "ideas_enabled", 1, $updater_id);
@@ -351,7 +351,7 @@ class Room
   }// end function
 
 
-  public function getRooms($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $search_field = "", $search_text = "")
+  public function getRooms($offset, $limit, $orderby = 0, $asc = 0, $status = -1, $search_field = "", $search_text = "", $type = -1)
   {
     /* returns roomlist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -383,6 +383,11 @@ class Room
     if ($status > -1) {
       // specific status selected / -1 = get all status values
       $extra_where .= " AND status = " . $status;
+    }
+
+    if ($type > -1) {
+      // specific status selected / -1 = get all status values
+      $extra_where .= " AND type = " . $type;
     }
 
     $search_field_valid = false;
@@ -602,7 +607,7 @@ class Room
         $asc_field = "DESC";
     }
 
-    $query = 'SELECT ' . $this->db->au_users_basedata . '.realname, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.hash_id, '. $this->db->au_users_basedata . '.id, ' . $this->db->au_users_basedata . '.username, ' . $this->db->au_users_basedata . '.email FROM ' . $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ' . $extra_where;
+    $query = 'SELECT ' . $this->db->au_users_basedata . '.realname, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.hash_id, ' . $this->db->au_users_basedata . '.id, ' . $this->db->au_users_basedata . '.username, ' . $this->db->au_users_basedata . '.email FROM ' . $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ' . $extra_where;
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
@@ -765,7 +770,7 @@ class Room
         return $returnvalue;
       }
     }
-    
+
     // remove all delegations in this room
     $this->deleteRoomDelegations($room_id);
 
@@ -806,7 +811,7 @@ class Room
   }
 
 
-  public function editRoom($room_id, $room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $order_importance = 10, $updater_id = 0, $phase_duration_0 = 0, $phase_duration_1 = 0, $phase_duration_2 = 0, $phase_duration_3 = 0,  $phase_duration_4 = 0)
+  public function editRoom($room_id, $room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $order_importance = 10, $updater_id = 0, $phase_duration_0 = 0, $phase_duration_1 = 0, $phase_duration_2 = 0, $phase_duration_3 = 0, $phase_duration_4 = 0)
   {
     /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
 
@@ -818,13 +823,13 @@ class Room
     $internal_info = trim($internal_info);
     $access_code = trim($access_code);
     $status = intval($status);
-    
-    $phase_duration_0 = intval ($phase_duration_0);
-    $phase_duration_1 = intval ($phase_duration_1);
-    $phase_duration_2 = intval ($phase_duration_2);
-    $phase_duration_3 = intval ($phase_duration_3);
-    $phase_duration_4 = intval ($phase_duration_4);
-    
+
+    $phase_duration_0 = intval($phase_duration_0);
+    $phase_duration_1 = intval($phase_duration_1);
+    $phase_duration_2 = intval($phase_duration_2);
+    $phase_duration_3 = intval($phase_duration_3);
+    $phase_duration_4 = intval($phase_duration_4);
+
     $order_importance = intval($order_importance);
 
     $updater_id = $this->converters->checkUserId($updater_id); // autoconvert
@@ -837,13 +842,13 @@ class Room
     $this->db->bind(':description_internal', $description_internal); // only shown in backend admin
     $this->db->bind(':internal_info', $internal_info); // extra internal info, only visible in backend
     $this->db->bind(':status', $status); // status of the room (0=inactive, 1=active, 4=archived)
-    
+
     $this->db->bind(':phase_duration_0', $phase_duration_0); // phase_duration of the room 
     $this->db->bind(':phase_duration_1', $phase_duration_1); // phase_duration of the room 
     $this->db->bind(':phase_duration_2', $phase_duration_2); // phase_duration of the room 
     $this->db->bind(':phase_duration_3', $phase_duration_3); // phase_duration of the room 
     $this->db->bind(':phase_duration_4', $phase_duration_4); // phase_duration of the room 
-    
+
     $this->db->bind(':access_code', $access_code); // optional access code for room access
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
     $this->db->bind(':order_importance', $order_importance); // order for display in frontend
@@ -892,13 +897,13 @@ class Room
     //sanitize in vars
     $restricted = intval($restricted);
     $updater_id = intval($updater_id);
-    
-    $phase_duration_0 = intval ($phase_duration_0);
-    $phase_duration_1 = intval ($phase_duration_1);
-    $phase_duration_2 = intval ($phase_duration_2);
-    $phase_duration_3 = intval ($phase_duration_3);
-    $phase_duration_4 = intval ($phase_duration_4);
-    
+
+    $phase_duration_0 = intval($phase_duration_0);
+    $phase_duration_1 = intval($phase_duration_1);
+    $phase_duration_2 = intval($phase_duration_2);
+    $phase_duration_3 = intval($phase_duration_3);
+    $phase_duration_4 = intval($phase_duration_4);
+
     $status = intval($status);
     $order_importance = intval($order_importance);
     $room_name = trim($room_name);
@@ -933,7 +938,7 @@ class Room
     $this->db->bind(':phase_duration_2', $phase_duration_2);
     $this->db->bind(':phase_duration_3', $phase_duration_3);
     $this->db->bind(':phase_duration_4', $phase_duration_4);
-    
+
     // generate unique hash for this user
     $testrand = rand(100, 10000000);
     $appendix = microtime(true) . $testrand;
@@ -1212,7 +1217,7 @@ class Room
     */
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
 
-    $room_id = intval ($room_id);
+    $room_id = intval($room_id);
 
     if ($room_id < 1) {
       # safety check to prevent deletion of main room
@@ -1223,7 +1228,7 @@ class Room
 
       return $returnvalue;
 
-    } 
+    }
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rooms . ' WHERE id = :id AND NOT type = 1');
     $this->db->bind(':id', $room_id);
