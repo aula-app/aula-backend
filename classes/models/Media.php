@@ -480,6 +480,7 @@ class Media
 
   public function userAvatar($user_id)
   {
+    $user_id  = $this->converters->checkUserId($user_id);
     $stmt = $this->db->query('SELECT filename FROM ' . $this->db->au_media . ' WHERE updater_id = :user_id AND system_type = 0');
     $this->db->bind(':user_id', $user_id);
 

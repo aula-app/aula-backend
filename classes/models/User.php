@@ -441,6 +441,9 @@ class User
 
   public function getDelegationStatus($user_id, $topic_id)
   {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $topic_id = $this->converters->checkTopicId($topic_id);
+
     # helper - returns the status of delegation for a defined user and topic 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_delegation . ' WHERE user_id_original = :user_id AND topic_id = :topic_id');
     // bind all VALUES
@@ -2772,10 +2775,25 @@ class User
   public function setUserRoles($user_id, $roles, $updater_id = 0) 
   {
      $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = :roles, last_update= NOW(), updater_id= :updater_id WHERE id = :userid');
+     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW(), updater_id= :updater_id WHERE id = :user_id');
      $this->db->bind(':user_id', $user_id);
      $this->db->bind(':roles', $roles);
      $this->db->bind(':updater_id', $updater_id);
+
+     try {
+       $action = $this->db->execute(); // do the query
+       $returnvalue['success'] = true; // set return value
+       $returnvalue['error_code'] = 0; // db error code
+       $returnvalue['data'] = 1; // returned data
+       $returnvalue['count'] = 1; // returned count of datasets
+
+       return $returnvalue;
+     } catch (Exception $e) {
+       $returnvalue['success'] = false; // set return value
+       $returnvalue['error_code'] = 1; // db error code
+       $returnvalue['data'] = 0; // returned data
+       $returnvalue['count'] = 0; // returned count of datasets
+     }
   }
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)

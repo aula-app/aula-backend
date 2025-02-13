@@ -308,7 +308,7 @@ class Idea
      */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea_id id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-    $stmt = $this->db->query('SELECT topic_id FROM ' . $this->db->au_rel_topics_ideas . ' WHERE idea_id = :id');
+    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id) WHERE idea_id = :id');
     $this->db->bind(':id', $idea_id); // bind idea id
     $ideas = $this->db->resultSet();
     if (count($ideas) < 1) {
@@ -321,7 +321,7 @@ class Idea
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $ideas[0]['topic_id']; // returned data
+      $returnvalue['data'] = $ideas; // returned data
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
@@ -947,7 +947,7 @@ class Idea
     $join = 'INNER JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id)';
     $join2 = ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id ';
     $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_rel_topics_ideas . '.topic_id= :topic_id ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $join2. ' ' .$where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $join2 . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit_active) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -1026,7 +1026,11 @@ class Idea
     if ($categories['success'] == true) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $categories['data'][0]; // returned data
+      if ($categories['data'] && sizeof($categories['data']) > 0) {
+        $returnvalue['data'] = $categories['data'][0]; // returned data
+      } else {
+        $returnvalue['data'] = []; // returned data
+      }
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
@@ -1388,9 +1392,11 @@ class Idea
         $asc_field = "DESC";
     }
 
-    $select_part = 'SELECT ' . $this->db->au_topics . '.phase_id AS phase_id,  ' . $this->db->au_topics . '.description_public AS topic_description,  ' . $this->db->au_topics . '.name AS topic_name, ' . $this->db->au_topics . '.id AS topic_id,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.status, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.user_id, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_ideas . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id)';
+    $select_part = 'SELECT ' . $this->db->au_topics . '.phase_id AS phase_id,  ' . $this->db->au_topics . '.description_public AS topic_description,  ' . $this->db->au_topics . '.name AS topic_name, ' . $this->db->au_topics . '.id AS topic_id,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_rooms . '.hash_id as room_hash_id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.status, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.user_id, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_ideas;
+    $join = 'INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id)';
+    $join2 = ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id ';
     $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $join2 . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit_active) {
       // only bind if limit is set
@@ -1562,9 +1568,9 @@ class Idea
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
-    
+
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
-    
+
     // init vars
     $orderby_field = "";
     $asc_field = "";
@@ -1601,7 +1607,7 @@ class Idea
       default:
         $asc_field = "DESC";
     }
-    $select_part = 'SELECT ' . $this->db->au_users_basedata . '.id as user_id, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.sum_votes FROM ' . $this->db->au_ideas;
+    $select_part = 'SELECT '. $this->db->au_users_basedata . '.hash_id as user_hash_id, ' . $this->db->au_users_basedata . '.id as user_id, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.sum_votes FROM ' . $this->db->au_ideas;
     $join = 'INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT OUTER JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id';
     $where = $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_ideas . '.room_id= :room_id AND ' . $this->db->au_rel_topics_ideas . '.idea_id IS NULL AND ' . $this->db->au_ideas . '.status = 1 ' . $extra_where;
     $stmt = $this->db->query($select_part . ' ' . $join . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
@@ -2055,7 +2061,7 @@ class Idea
     // generate unique hash for this idea
     $testrand = rand(100, 10000000);
     $appendix = microtime(true) . $testrand;
-    $hash_id = md5($$name . $appendix); // create hash id for this idea
+    $hash_id = md5($name . $appendix); // create hash id for this idea
     $this->db->bind(':hash_id', $hash_id);
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -2620,7 +2626,7 @@ class Idea
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = 0, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = -1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
@@ -3224,6 +3230,9 @@ class Idea
   protected function addLikeUser($user_id, $idea_id)
   {
     // add a like into like table for a certain user and idea
+
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('INSERT INTO ' . $this->db->au_likes . ' (object_type, status, user_id, object_id, last_update, created, hash_id) VALUES (1, 1, :user_id, :idea_id, NOW(), NOW(), :hash_id)');
     // bind all VALUES
@@ -3881,6 +3890,9 @@ class Idea
     /* Returns vote value for a specified user and idea
      */
 
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    $user_id = $this->converters->checkIdeaId($user_id); // checks user id and converts idea id to db idea id if necessary (when idea hash id was passed)
+
     $stmt = $this->db->query('SELECT vote_value FROM ' . $this->db->au_votes . ' WHERE user_id = :user_id AND idea_id = :idea_id');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':idea_id', $idea_id); // bind idea id
@@ -3912,6 +3924,9 @@ class Idea
     /* Checks if user (user_id) has already liked a specific idea (idea_id)
     returns 0 if not, returns 1 if yes
     */
+
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_likes . ' WHERE user_id = :user_id AND object_id = :idea_id AND object_type = 1'); // object type = 1 = idea
     $this->db->bind(':user_id', $user_id); // bind user id
@@ -3995,9 +4010,10 @@ class Idea
     # init return array
     $data = [];
 
-    $select_defaults = 'SELECT ' . $this->db->au_ideas . '.id AS idea_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_rel_topics_ideas . '.topic_id, ' . $this->db->au_topics . '.phase_id';
+    $select_defaults = 'SELECT ' . $this->db->au_ideas . '.hash_id AS idea_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_topics . '.hash_id AS topic_id, ' . $this->db->au_topics . '.phase_id';
     $join_topic = ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id = ' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
     $join_user = ' LEFT JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id = ' . $this->db->au_users_basedata . '.id)';
+    # $join_room = ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id ';
 
     # first get votes
     $select_part = ', ' . $this->db->au_votes . '.id, ' . $this->db->au_votes . '.vote_value, ' . $this->db->au_votes . '.vote_weight, ' . $this->db->au_votes . '.number_of_delegations';

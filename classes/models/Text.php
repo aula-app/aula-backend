@@ -34,7 +34,7 @@ class Text
 
   public function getTextOrderId($orderby)
   {
-     # helper method => converts an int id to a db field name (for ordering)
+    # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -59,12 +59,13 @@ class Text
     }
   }// end function
 
-  public function validSearchField($search_field) {
-     # helper method => defines allowed / valid db field names (for filtering)
+  public function validSearchField($search_field)
+  {
+    # helper method => defines allowed / valid db field names (for filtering)
     return in_array($search_field, [
-        "headline",
-        "consent_text",
-        "body"
+      "headline",
+      "consent_text",
+      "body"
     ]);
   }
 
@@ -209,9 +210,9 @@ class Text
   {
     /* returns text base data for a specified db id */
 
-    
+
     $text_id = $this->converters->checkTextId($text_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    
+
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE id = :id');
     $this->db->bind(':id', $text_id); // bind text id
     $texts = $this->db->resultSet();
@@ -256,13 +257,13 @@ class Text
     service_id_consent refer to a certain service that this text is for (set to -1 if no service is linked)
     */
 
-    // init return array
-    $returnvalue['success'] = false; // success (true) or failure (false)
-    $returnvalue['errorcode'] = 0; // error code
-    $returnvalue['data'] = false; // the actual data
-    $returnvalue['count_data'] = 0; // number of datasets
+    // sanitize
+    $offset = intval($offset);
+    $limit = intval($limit);
+    $orderby = intval($orderby);
+    $asc = intval($asc);
+    $status = intval($status);
 
-    $date_now = date('Y-m-d H:i:s');
     // init vars
     $orderby_field = "";
     $asc_field = "";
@@ -281,63 +282,39 @@ class Text
       if ($extra_where == "") {
         $extra_where = " WHERE ";
       }
-      $extra_where .= " location = " . $location; // get specific texts for a certain page (page id)
+      $extra_where .= "location = " . $location; // get specific texts for a certain page (page id)
     }
 
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
-      if ($extra_where == "") {
-        $extra_where = " WHERE ";
-      } else {
-        $extra_where = " AND ";
-     }
-      $extra_where .= " status = " . $status;
+      // specific status selected / -1 = get all status values
+      $extra_where .= " AND status = " . $status;
     }
 
     $search_field_valid = false;
-    $search_query = "";
-    if ($search_field != "") {
+    if ($search_field != "" && $search_text != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        if ($extra_where == "") {
-          $search_query = " WHERE ";
-        } else {
-           $search_query = " AND ";
-        }
-
-        $search_query .= $this->db->au_texts.".".$search_field." LIKE :search_text";   
+        $extra_where .= " AND " . $search_field . " LIKE :search_text";
       }
     }
 
     if ($creator_id > 0) {
-      if ($extra_where == "") {
-        $extra_where = " WHERE ";
-      }
-      // if a creator id is set then add to where clause
       $extra_where .= " AND creator_id = " . $creator_id; // get specific texts for a creator / moderator / admin
     }
 
     if ($user_needs_to_consent > -1) {
-      if ($extra_where == "") {
-        $extra_where = " WHERE ";
-      }
       // if a target user id is set then add to where clause
       $extra_where .= " AND user_needs_to_consent = " . $user_needs_to_consent; // get only texts that need (1)/dont need (0) consent
     }
 
     if ($service_id_consent > -1) {
-      if ($extra_where == "") {
-        $extra_where = " WHERE ";
-      }
       // if a target user id is set then add to where clause
       $extra_where .= " AND service_id_consent = " . $service_id_consent; // get only texts that are linked to a certain service
     }
 
 
     if (!(intval($last_update) == 0)) {
-      if ($extra_where == "") {
-        $extra_where = " WHERE ";
-      }
       // if a publish date is set then add to where clause
       $extra_where .= " AND last_update > \'" . $last_update . "\'";
     }
@@ -356,7 +333,7 @@ class Text
     }
 
     $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . $extra_where . $search_query .' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit_active) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -364,7 +341,7 @@ class Text
     }
 
     if ($search_field_valid) {
-      $this->db->bind(':search_text', '%'.$search_text.'%');
+      $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
     $err = false;
@@ -555,6 +532,7 @@ class Text
     */
 
     //sanitize the vars
+    $text_id = $this->converters->checkTextId($text_id); // autoconvert id
     $body = trim($body);
     $headline = trim($headline);
 
