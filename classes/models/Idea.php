@@ -8,8 +8,6 @@ if ($allowed_include == 1) {
   exit;
 }
 
-
-
 class Idea
 {
 
@@ -18,6 +16,8 @@ class Idea
 
   private $db; # database connection and methods
 
+
+  private $openMethods = ["getCategories"];
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -36,6 +36,286 @@ class Idea
     */
     #dele
   }// end function
+
+  public function hasPermissions($user_id, $userlevel, $method, $arguments)
+  {
+    // TODO: Check if what is written down is correct. If not we will need to 
+    // write a less permissive method to return instance settings
+    // Everyone is able to check the instance settings
+    if (in_array($method, $this->openMethods)) {
+      return ["allowed" => true];
+    }
+
+    if (method_exists($this, $method."Permission")) {
+      $methodPermission = $method."Permission";
+      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
+  public function getUpdatesByUserPermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments["user_id"]) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can only get your own updates."];
+    }
+  }
+
+  public function getDashboardByUserPermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments["user_id"]) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can only get your own updates."];
+    }
+  }
+
+  public function addIdeaToTopicPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other users have access to see all ideas
+    if ($userlevel < 50) {
+       return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+    } else {
+       return ["allowed" => true];
+    }
+  }
+
+  public function setToWinningPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other user roles can set idea to winner.
+    if ($userlevel < 50) {
+       return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+    } else {
+       return ["allowed" => true];
+    }
+  }
+
+  public function setToLosingPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other user roles can set idea to lost.
+    if ($userlevel < 50) {
+       return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+    } else {
+       return ["allowed" => true];
+    }
+  }
+
+  public function voteForIdeaPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if we need to check the phase of the topic first.
+    if ($userlevel < 50) {
+      $user = new User($this->db, $this->crypt, $this->syslog);
+      $idea = new Idea($this->db, $this->crypt, $this->syslog);
+
+      $ideaData = $idea->getIdeaBaseData($arguments["idea_id"]);
+
+      if ($ideaData["success"]) {
+        $userInRoom = $user->userInRoom($user_id, $ideaData["data"]["room_id"]);
+        if ($userInRoom) {
+          return ["allowed" => true];
+        } else {
+          return ["allowed" => false, "message" => "You can't vote ideas outside your room."];
+        }
+      } else {
+        return ["allowed" => false, "message" => "Idea not found."];
+      }
+    } else {
+      return ["allowed" => true];
+    }
+  }
+
+  public function getIdeaVoteStatsPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel < 50) {
+      $user = new User($this->db, $this->crypt, $this->syslog);
+      $idea = new Idea($this->db, $this->crypt, $this->syslog);
+
+      $ideaData = $idea->getIdeaBaseData($arguments["idea_id"]);
+
+      if ($ideaData["success"]) {
+        $userInRoom = $user->userInRoom($user_id, $ideaData["data"]["room_id"]);
+        if ($userInRoom) {
+          return ["allowed" => true];
+        } else {
+          return ["allowed" => false, "message" => "You can't access ideas outside your room."];
+        }
+      } else {
+        return ["allowed" => false, "message" => "Idea not found."];
+      }
+    } else {
+      return ["allowed" => true];
+    }
+  }
+
+  public function getIdeasByTopicPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other users have access to see all ideas
+    if ($userlevel < 50) {
+      $topic = new Topic($this->db, $this->crypt, $this->syslog);
+      $topicData = $topic->getTopicBaseData($arguments["topic_id"]);
+      if ($topicData["success"]) {
+        $user = new User($this->db, $this->crypt, $this->syslog);
+        $userInRoom = $user->userInRoom($user_id, $topicData["data"]["room_id"]);
+        if ($userInRoom) {
+          return ["allowed" => true];
+        } else {
+         return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+        }
+      } else {
+        return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+      }
+    } else {
+      return ["allowed" => true];
+    } 
+  }
+
+  public function getIdeasPermission($user_id, $userlevel, $method, $arguments) {
+    // TODO: Check if other users have access to see all ideas
+    if ($userlevel < 50) {
+       return ["allowed" => false, "message" => "You can only see ideas from room that you belong."];
+    } else {
+       return ["allowed" => true];
+    }
+  }
+
+  public function getIdeasByRoomPermission($user_id, $userlevel, $method, $arguments) {
+    $user = new User($this->db, $this->crypt, $this->syslog);
+    $room_id = $arguments["room_id"];
+    $userInRoom = $user->userInRoom($user_id, $room_id);
+    
+    if ($userInRoom) {
+        return ["allowed" => true]; 
+    } else {
+        return ["allowed" => false, "message" => "User is not in this room"]; 
+    } 
+  }
+
+  public function getIdeaCategoryPermission($user_id, $userlevel, $method, $arguments) {
+    return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+  }
+
+  public function getIdeaContentPermission($user_id, $userlevel, $method, $arguments) {
+    return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+  }
+
+  public function getIdeaTopicPermission($user_id, $userlevel, $method, $arguments) {
+    return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+  }
+
+  public function getIdeaBaseDataPermission($user_id, $userlevel, $method, $arguments) {
+    return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+  }
+
+  public function addIdeaToCategoryPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel < 50) {
+      if ($user_id == $arguments["updater_id"]) {
+        $idea = $this->getIdeaBaseData($arguments["idea_id"]);
+          if ($idea["success"]) {
+            $user = new User($this->db, $this->crypt, $this->syslog);
+            $userInRoom = $user->userInRoom($user_id, $idea["data"]["room_id"]);
+       
+            if ($userInRoom) {
+              if ($user_id == $idea['data']['user_id']) {
+                return ["allowed" => true]; 
+              } else {
+                return ["allowed" => false, "message" => "You can't add a category for another user idea."]; 
+              }
+            } else {
+              return ["allowed" => false, "message" => "User is not in this room."]; 
+            } 
+          } else {
+            return ["allowed" => false, "message" => "Idea not found."]; 
+        }
+      } else {
+        return ["allowed" => false, "message" => "User is not in this room."]; 
+      }
+    } else {
+        return ["allowed" => true]; 
+    }
+  }
+
+  public function addCategoryPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel < 50) { 
+       return ["allowed" => false, "message" => "Your role is not allowed to create categories/"]; 
+    } else {
+        return ["allowed" => true];
+    }
+  }
+
+  public function getLikeStatusPermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments['user_id']) {
+      return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "You can't check other users like status"]; 
+    }
+  }
+
+  public function IdeaAddLikePermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments['user_id']) {
+      return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "You can't check other users like status"]; 
+    }
+  }
+
+  public function getVoteValuePermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments['user_id']) {
+      return $this->userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "You can't check other users like status"]; 
+    }
+  }
+
+  public function userInRoomIdeaPermission($user_id, $userlevel, $method, $arguments) {
+    $idea = $this->getIdeaBaseData($arguments["idea_id"]);
+  
+    if ($idea["success"]) {
+      $user = new User($this->db, $this->crypt, $this->syslog);
+      $userInRoom = $user->userInRoom($user_id, $idea["data"]["room_id"]);
+  
+      if ($userInRoom) {
+          return ["allowed" => true]; 
+      } else {
+          return ["allowed" => false, "message" => "User is not in this room."]; 
+      } 
+    } else {
+        return ["allowed" => false, "message" => "Idea not found."]; 
+    }
+  }
+
+  public function editIdeaPermission($user_id, $userlevel, $method, $arguments) {
+     if ($user_id == $arguments["updater_id"]) {
+      $idea = $this->getIdeaBaseData($arguments["idea_id"]);
+
+      if ($idea['success']) {
+        if ($userlevel < 50) {
+          if ($user_id == $idea["data"]["user_id"])  {
+            return ["allowed" => true];
+          } else {
+           return ["allowed" => false, "message" => "Can't edit other users ideas."];
+          }
+        } else {
+          return ["allowed" => true];  
+        }
+      } else {
+         return ["allowed" => false, "message" => "Idea not found."]; 
+      }
+     } else {
+         return ["allowed" => false, "message" => "updater_id for a new Idea must be equal user id doing the request."]; 
+     }
+  }
+
+  public function addIdeaPermission($user_id, $userlevel, $method, $arguments) {
+    if ($user_id == $arguments["user_id"]) {
+      if ($user_id == $arguments["updater_id"]) {
+        $user = new User($this->db, $this->crypt, $this->syslog);
+        $userInRoom = $user->userInRoom($user_id, $arguments["room_id"]);
+        if ($userInRoom) {
+           return ["allowed" => true]; 
+        } else {
+           return ["allowed" => false, "message" => "User is not in this room."]; 
+        }     
+      } else {
+        return ["allowed" => false, "message" => "updater_id for a new Idea must be equal user id doing the request."]; 
+      }
+    } else {
+      return ["allowed" => false, "message" => "Creating Ideas for other users is not allowed."]; 
+    }
+  }
 
   public function getIdeaOrderId($orderby)
   {
@@ -1916,7 +2196,7 @@ class Idea
     $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
     $this->db->bind(':title', $title); // title only shown in backend
     $this->db->bind(':info', $info); // info only shown in backend
-    $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
+    $this->db->bind(':custom_field1', $custom_field1); // custom field 1
     $this->db->bind(':custom_field2', $custom_field2); // custom field 2
 
     $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin

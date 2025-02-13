@@ -79,6 +79,40 @@ class User
     ]);
   }
 
+  public function hasPermissions($user_id, $userlevel, $method, $arguments)
+  {
+    if (method_exists($this, $method."Permission")) {
+      $methodPermission = $method."Permission";
+      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
+  public function getUsersPermission($user_id, $userlevel, $method, $arguments)
+  {
+    // TODO: Check if other roles can see all users
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else{
+      return ["allowed" => false, "message" => "You are not allowed to see all users."];
+    }
+  }
+
+  public function getUserBaseDataPermission($user_id, $userlevel, $method, $arguments)
+  {
+    // TODO: Check if other roles can see all users
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else{
+      if ($arguments["user_id"] == $user_id) {
+        return ["allowed" => true];
+      } else {
+        return ["allowed" => false, "message" => "User not found."];
+      }
+    }
+  }
+
   public function getUserBaseData($user_id)
   {
     /* returns user base data for a specified db id */
@@ -245,6 +279,13 @@ class User
     }
   }// end function
 
+  public function delegateVoteRightPermission($user_id, $userlevel, $method, $arguments) {
+    if ($arguments["user_id"] == $user_id) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false];
+    }
+  }
 
   public function delegateVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
@@ -363,6 +404,14 @@ class User
 
 
   }// end function
+
+  public function giveConsentPermission($user_id, $userlevel, $method, $arguments) {
+    if ($arguments["user_id"] == $user_id) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false];
+    }
+  }
 
   public function giveConsent($user_id, $text_id, $consent_value = 1, $updater_id = 0)
   {
@@ -759,6 +808,13 @@ class User
     }
   } // end function
 
+  public function giveBackAllDelegationsPermission($user_id, $userlevel, $method, $arguments) {
+    if ($arguments["user_id"] == $user_id) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false];
+    }
+  }
 
   public function giveBackAllDelegations($user_id, $topic_id = 0)
   {
@@ -2532,6 +2588,14 @@ class User
       return $returnvalue;
     }
   }// end function
+  
+  public function getUserGDPRDataPermission($user_id, $userlevel, $method, $arguments) {
+      if ($arguments["user_id"] == $user_id) {
+        return ["allowed" => true];
+      } else {
+        return ["allowed" => false, "message" => "User not found."];
+      }
+  }
 
   public function getUserGDPRData($user_id)
   {
@@ -3528,5 +3592,15 @@ class User
 
   }// end function
 
+  public function userInRoom($user_id, $room_id) {
+    $room = new Room($this->db, $this->crypt, $this->syslog);
+    $userRooms = $room->getRoomsByUser($user_id);
+
+    if ($userRooms["success"]) {
+      return in_array($room_id, array_map(function($r) { return $r['id']; }, $userRooms["data"]));
+    } else {
+      return false; 
+    }
+  }
 }
 ?>

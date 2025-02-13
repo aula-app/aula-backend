@@ -15,6 +15,7 @@ class Settings
   private $db;
   # deals with everything around system settings
 
+  private $openMethods = ["getInstanceSettings", "getCustomfields"];
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -36,17 +37,41 @@ class Settings
 
   public function hasPermissions($user_id, $userlevel, $method, $arguments)
   {
-    # helper method to retireve if a certain user has rights on sepcified methods 
-    # returns true if ok, false if not 
-
-    if ($method == "getInstanceSettings" or $method == "getCustomfields") {
-       return ["allowed" => true];
+    // TODO: Check if what is written down is correct. If not we will need to 
+    // write a less permissive method to return instance settings
+    // Everyone is able to check the instance settings
+    if (in_array($method, $this->openMethods)) {
+      return ["allowed" => true];
     }
 
+    // If not an admin, block access
     if ($userlevel >= 50) {
       return ["allowed" => true];
+    }
+
+    if (method_exists($this, $method."Permission")) {
+      $methodPermission = $method."Permission";
+      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
     } else {
       return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
+  public function getRoomsPermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($userlevel >= 40) {
+      return ["allowed" => true];
+    } else{
+      return ["allowed" => false, "message" => "You are not allowed to see all rooms."];
+    }
+  }
+
+  public function getRoomsByUserPermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($user_id == $arguments["user_id"]) {
+      return ["allowed" => true];
+    } else{
+      return ["allowed" => false, "message" => "You are not allowed to see other users rooms."];
     }
   }
 

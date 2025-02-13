@@ -77,6 +77,81 @@ class Topic
     ]);
   }
 
+  public function hasPermissions($user_id, $userlevel, $method, $arguments)
+  {
+    if (method_exists($this, $method."Permission")) {
+      $methodPermission = $method."Permission";
+      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
+    } else {
+      return ["allowed" => false, "message" => "Not Authorized"];
+    }
+  }
+
+  public function getTopicBaseDataPermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    }
+
+    $user = new User($this->db, $this->crypt, $this->syslog);
+    $topic = new Topic($this->db, $this->crypt, $this->syslog);
+    $topicData = $topic->getTopicBaseData($arguments["topic_id"]);
+
+    if ($topicData["success"]) {
+      $userInRoom = $user->userInRoom($user_id, $topicData["data"]["room_id"]);
+      if ($userInRoom) {
+        return ["allowed" => true];
+      } else {
+        return ["allowed" => false, "message" => "You can't access topics that you don't belong."];
+      }
+    } else {
+      return ["allowed" => false, "message" => "Topic not found."];
+    }
+  }
+
+  public function getTopicsByPhasePermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    }
+
+    $user = new User($this->db, $this->crypt, $this->syslog);
+
+    $userInRoom = $user->userInRoom($user_id, $arguments["room_id"]);
+    if ($userInRoom) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can't access topics that you don't belong."];
+    }
+  }
+
+  public function addTopicPermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can't create topics."];
+    }
+  }
+
+  public function editTopicPermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can't edit topics."];
+    }
+  }
+
+  public function getTopicPhasePermission($user_id, $userlevel, $method, $arguments)
+  {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else {
+      return $this->getTopicBaseDataPermission($user_id, $userlevel, $method, $arguments);
+    }
+  }
+
   public function getTopicsByRoom($room_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1)
   {
     /* returns topiclist (associative array) with start and limit provided for a certain room
@@ -1263,7 +1338,6 @@ class Topic
     }
   }
 
-
   public function removeAllIdeasFromTopic($topic_id)
   {
     /* removes all associations of all ideas from a defined topic
@@ -1295,6 +1369,14 @@ class Topic
     return $returnvalue;
 
   }// end function
+
+  public function deleteTopicPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    } else {
+      return ["allowed" => false, "message" => "You can't create topics."];
+    }
+  }
 
   public function deleteTopic($topic_id, $updater_id = 0)
   {
