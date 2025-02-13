@@ -9,7 +9,7 @@ require_once($baseHelperDir . 'JWT.php');
 $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog($db);
-$jwt = new JWT($jwtKeyFile);
+$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
 
 $json = file_get_contents('php://input');
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   return;
 }
 
-if ($check_jwt) {
+if ($check_jwt["success"]) {
   $jwt_payload = $jwt->payload();
   $user_id = $jwt_payload->user_id;
   $userlevel = $jwt_payload->user_level;
@@ -116,8 +116,9 @@ if ($check_jwt) {
   }
 
 } else {
+
   http_response_code(401);
-  echo json_encode(['success' => false]);
+  echo json_encode(['success' => false, 'error' => $check_jwt["error"]]);
 }
 
 ?>

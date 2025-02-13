@@ -2796,6 +2796,17 @@ class User
      }
   }
 
+  public function checkRefresh($user_id)
+  {
+     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+     $stmt = $this->db->query('SELECT refresh_token FROM ' . $this->db->au_users_basedata . '  WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+     $action = $this->db->execute(); // do the query
+     $users = $this->db->resultSet();
+
+     return $users[0]["refresh_token"];
+  }
+
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)
   {
     /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory

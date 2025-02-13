@@ -1,5 +1,9 @@
 <?php
 
+require_once('../base_config.php'); // load base config with paths to classes etc.
+require_once('../error_msg.php');
+require_once($baseHelperDir . 'Crypt.php');
+
 function base64_url_encode($text): string
 {
   return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($text));
@@ -9,10 +13,14 @@ class JWT
 {
   private $key;
 
-  public function __construct($keyFile)
+  public function __construct($keyFile, $db, $crypt, $syslog)
   {
     $this->key = file_get_contents($keyFile);
     $this->key = str_replace(PHP_EOL, '', $this->key);
+    $this->db = $db;
+    $this->crypt = $crypt;
+    $this->syslog = $syslog;
+    $this->user = new User($db, $crypt, $syslog);
   }
 
   public function gen_jwt($user): string
@@ -29,6 +37,7 @@ class JWT
       "roles" => json_decode($user["roles"]),
       "temp_pw" => $user["temp_pw"]
     ];
+
     $payload = base64_url_encode(json_encode($payload));
     $signature = base64_url_encode(hash_hmac('sha512', "$header.$payload", $this->key, true));
     $jwt = "$header.$payload.$signature";
@@ -51,12 +60,27 @@ class JWT
         $payload = base64_decode($tokenParts[1]);
         $signature_provided = $tokenParts[2];
 
+
         $base64_url_header = base64_url_encode($header);
         $base64_url_payload = base64_url_encode($payload);
         $signature = hash_hmac('SHA512', $base64_url_header . "." . $base64_url_payload, $secret, true);
         $base64_url_signature = base64_url_encode($signature);
 
-        return $signature_provided == $base64_url_signature;
+        $valid_signature = $signature_provided == $base64_url_signature;
+        
+        if ($valid_signature) {
+          $p = json_decode($payload);
+          $refresh = $this->user->checkRefresh($p->user_id);
+          
+          if ($refresh) {
+            return [ "success" => false, "error" => "refresh_token" ];
+          } else {
+            return [ "success" => true ];
+          }
+        } else {
+          return [ "success" => false, "error" => "invalid_signature" ];
+        }
+
       } else {
         return false;
       }

@@ -23,10 +23,11 @@ if ($auth0->getExchangeParameters()) {
     if ($session->user["email"]) {
       $user_email = $session->user["email"];
       $crypt = new Crypt($cryptFile);
-      $jwt = new JWT($jwtKeyFile);
       $db = new Database();
       $syslog = new Systemlog($db); // systemlog
       $settings = new Settings($db, $crypt, $syslog);
+
+      $jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
       $user = new User ($db, $crypt, $syslog);
       
       $current_settings = $settings->getInstanceSettings();
