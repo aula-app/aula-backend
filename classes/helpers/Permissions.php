@@ -19,6 +19,20 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     60 => "tech_admin"
   ];
 
+  $all_models = [ 
+    "Text",
+    "Topic",
+    "Idea",
+    "Comment",
+    "Converters",
+    "Settings",
+    "Group",
+    "Media",
+    "Message",
+    "Room",
+    "User"
+  ];
+
   $permissions_table = [
     "Comment" => [
       "getCommentsByIdeaId" => [
@@ -1033,20 +1047,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ]
   ];
   
-  $all_models = [ 
-    "Text",
-    "Topic",
-    "Idea",
-    "Comment",
-    "Converters",
-    "Settings",
-    "Group",
-    "Media",
-    "Message",
-    "Room",
-    "User"
-  ];
-
   if (in_array($model_name, $all_models)) {
 
     if (!in_array($model_name, array_keys($permissions_table))) {
