@@ -2824,8 +2824,21 @@ class User
      $this->db->bind(':user_id', $user_id);
      $this->db->bind(':roles', json_encode($new_roles));
 
-     $this->db->execute();
- 
+      try {
+        $action = $this->db->execute(); // do the query
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue['data'] = 1; // returned data
+        $returnvalue['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      } catch (Exception $e) {
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 1; // db error code
+        $returnvalue['data'] = 0; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+      }
+
   }
 
   public function deleteUserRole($user_id, $room_id)
