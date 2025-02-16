@@ -1043,6 +1043,8 @@ CREATE TABLE `au_users_basedata` (
   `consents_needed` int(11) DEFAULT 0 COMMENT 'needed consents',
   `temp_pw` varchar(256) DEFAULT NULL COMMENT 'temp pw for user',
   `pw_changed` int(11) DEFAULT 0 COMMENT 'user has changed his initial pw',
+  `refresh_token` boolean DEFAULT 0 COMMENT 'refresh token request',
+  `roles` json DEFAULT '[]' COMMENT 'roles of the user',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
