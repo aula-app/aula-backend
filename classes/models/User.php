@@ -1592,8 +1592,69 @@ class User
 
   }
 
+  public function setRefresh($user_id, $refresh_value = true)
+  {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-  public function checkCredentials($username, $pw)
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET refresh_token = :refresh_value WHERE id = :user_id ');
+    try {
+      $this->db->bind(':user_id', $user_id); 
+      $this->db->bind(':refresh_value', $refresh_value);
+
+      $users = $this->db->execute();
+    } catch (Exception $e) {
+      print_r($e);
+    }
+
+  }
+
+  public function getUserPayload($user_id)
+  {
+ 
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query('SELECT id, userlevel, temp_pw, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id ');
+    try {
+      $this->db->bind(':user_id', $user_id); // blind index
+      $users = $this->db->resultSet();
+      $user_status = $users[0]['status'];
+      $user_id = $users[0]['id'];
+
+    } catch (Exception $e) {
+      print_r($e);
+    }
+
+    $reactivation_date = false; // init
+
+    if ($user_status != 1) {
+      # get the reactivation date (if there is one) when the user is suspended (status = 2)
+      $reactivation_date = $this->getReactivationDate($user_id);
+    }
+
+    if (count($users) < 1 || $user_status != 1) {
+      # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['user_status'] = $user_status; // error code
+      $returnvalue['user_id'] = $user_id;
+      $returnvalue['data'] = $reactivation_date; // returned data
+      $returnvalue['count'] = count($users); // returned count of datasets
+
+      return $returnvalue;
+    } // nothing found, empty database or non active user
+
+    $returnvalue['success'] = true; // set return value
+    $returnvalue['error_code'] = 0; // error code
+    $returnvalue['user_id'] = $user_id;
+    $returnvalue['data'] = $users[0]; // returned data
+    $returnvalue['count'] = 1; // returned count of datasets
+
+    return $returnvalue;
+
+  }
+
+
+  public function checkCredentials($username, $pw, $no_pass_check = false)
   {
     /* helper for method checkLogin () 
     checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
@@ -1606,7 +1667,7 @@ class User
     $user_status = 0;
     $user_id = 0;
 
-    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
+    $stmt = $this->db->query('SELECT id, username, pw, refresh_token, temp_pw, userlevel, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
@@ -1642,6 +1703,10 @@ class User
     $temp_pw = $users[0]['temp_pw'];
 
     if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
+      if ($users[0]["refresh_token"]) {
+        $this->setRefresh($users[0]["id"], false);
+      }
+
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['user_id'] = $user_id;
@@ -2899,6 +2964,16 @@ class User
      $users = $this->db->resultSet();
 
      return $users[0]["refresh_token"];
+  }
+
+  public function refresh_token()
+  {
+    $jwt = new JWT($jwtKeyFile, $this->db, $this->crypt, $this->syslog);
+
+    $check_jwt = $jwt->check_jwt(true);
+
+    echo $check_jwt;
+  
   }
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)

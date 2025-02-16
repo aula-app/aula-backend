@@ -44,7 +44,7 @@ class JWT
     return $jwt;
   }
 
-  public function check_jwt()
+  public function check_jwt($ignore_refresh = false)
   {
     $secret = $this->key;
     $headers = apache_request_headers();
@@ -70,6 +70,11 @@ class JWT
         
         if ($valid_signature) {
           $p = json_decode($payload);
+
+          if ($ignore_refresh) {
+            return [ "success" => true ];
+          }
+
           $refresh = $this->user->checkRefresh($p->user_id);
           
           if ($refresh) {

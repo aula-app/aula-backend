@@ -371,6 +371,10 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     ],
 
     "User" => [
+      "refresh_token" => [
+        "roles" => [ "all" ]
+      ],
+
       "getDelegationStatus" => [
         "roles" => ["all"],
         "checks" => ["user_id:user_id"]
@@ -1067,7 +1071,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
   ];
   
   if (in_array($model_name, $all_models)) {
-
     if (!in_array($model_name, array_keys($permissions_table))) {
       return [ "allowed" => false ];
     } 
@@ -1075,7 +1078,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     $all_checks = [];
 
     if (in_array($method, array_keys($permissions_table[$model_name]))) {
-
       # check open roles
       if (in_array("open_roles", array_keys($permissions_table[$model_name][$method]))) {
         if (in_array($roles_map[$userlevel], $permissions_table[$model_name][$method]["open_roles"])) {
@@ -1093,7 +1095,9 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
       # check roles
       if (in_array("roles", array_keys($permissions_table[$model_name][$method]))) {
+
         if (in_array("all", $permissions_table[$model_name][$method]["roles"])) {
+
           array_push($all_checks, true);
         } else {
           if (in_array($roles_map[$userlevel], $permissions_table[$model_name][$method]["roles"])) {
