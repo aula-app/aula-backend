@@ -1147,12 +1147,12 @@ class User
     $this->db->bind(':roomid', $room_id); // bind room id
     $this->db->bind(':userid', $user_id); // bind user id
 
-    $this->deleteUserRole($user_id, $room_id);
-
     $err = false;
     try {
       $rooms = $this->db->resultSet();
       $rowcount = $this->db->rowCount();
+
+      $this->deleteUserRole($user_id, $room_id);
 
     } catch (Exception $e) {
       echo 'Error occured while deleting user ' . $user_id . ' from room: ' . $room_id, $e->getMessage(), "\n"; // display error
