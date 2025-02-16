@@ -1654,7 +1654,7 @@ class User
   }
 
 
-  public function checkCredentials($username, $pw, $no_pass_check = false)
+  public function checkCredentials($username, $pw)
   {
     /* helper for method checkLogin () 
     checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
