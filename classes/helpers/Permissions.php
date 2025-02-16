@@ -376,6 +376,9 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "checks" => ["user_id:user_id"]
       ],
 
+      "setUserRoles" => [
+        "open_roles" => ["admin"]
+      ],
 
       "delegateVoteRight" => [
         "roles" => ["all"],
