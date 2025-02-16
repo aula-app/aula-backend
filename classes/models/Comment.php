@@ -88,6 +88,26 @@ class Comment
     }
   }// end function
 
+  public function getRoom($comment_id)
+  {
+    $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM '  . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_ideas . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id  LEFT JOIN '. $this->db->au_comments . ' ON '. $this->db->au_comments .'.idea_id = '. $this->db->au_ideas . '.id WHERE ' . $this->db->au_comments . '.id = :id');
+    $this->db->bind(':id', $comment_id); // bind topic id
+    $comments = $this->db->resultSet();
+
+    if (count($comments) > 0) {
+      return $comments[0]['hash_id'];
+    } else {
+      return false;
+    }
+  }
+
+  public function getRoomByIdea($idea_id)
+  {
+    $idea = new Idea($this->db, $this->crypt, $this->syslog);
+    return $idea->getRoom($idea_id);
+  }
+
   public function getCommentsByIdeaId($idea_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1)
   {
     /* returns COMMENTS list (associative array) with start and limit provided for a certain IDEA
@@ -822,6 +842,22 @@ class Comment
       return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
     }
   }// end function
+
+  public function isOwner($user_id, $comment_id)
+  {
+    $comment_id = $this->converters->checkIdeaId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_comments . '.user_id FROM '  . $this->db->au_comments . '  WHERE ' . $this->db->au_comments . '.id = :id');
+    $this->db->bind(':id', $comment_id); // bind topic id
+    $comments = $this->db->resultSet();
+
+    if (count($ideas) > 0) {
+      return $comments[0]['user_id'] == $user_id;
+    } else {
+      return false;
+    }
+  }
+
 
   public function editComment($comment_id, $content, $status = 1, $updater_id = 0)
   {

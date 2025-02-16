@@ -173,6 +173,10 @@ class Idea
   }
 
   public function getIdeasByRoomPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel >= 50) {
+        return ["allowed" => true];
+    }
+
     $user = new User($this->db, $this->crypt, $this->syslog);
     $room_id = $arguments["room_id"];
     $userInRoom = $user->userInRoom($user_id, $room_id);
@@ -300,6 +304,9 @@ class Idea
   }
 
   public function addIdeaPermission($user_id, $userlevel, $method, $arguments) {
+    if ($userlevel >= 50) {
+      return ["allowed" => true];
+    }
     if ($user_id == $arguments["user_id"]) {
       if ($user_id == $arguments["updater_id"]) {
         $user = new User($this->db, $this->crypt, $this->syslog);
@@ -2243,6 +2250,50 @@ class Idea
     }
   }// end function
 
+  public function getRoom($idea_id)
+  {
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM '  . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_ideas . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_ideas . '.id = :id');
+    $this->db->bind(':id', $idea_id); // bind topic id
+    $ideas = $this->db->resultSet();
+
+    if (count($ideas) > 0) {
+      return $ideas[0]['hash_id'];
+    } else {
+      return false;
+    }
+  }
+
+  public function isOwner($user_id, $idea_id)
+  {
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_ideas . '.user_id FROM '  . $this->db->au_ideas . '  WHERE ' . $this->db->au_ideas . '.id = :id');
+    $this->db->bind(':id', $idea_id); // bind topic id
+    $ideas = $this->db->resultSet();
+
+    if (count($ideas) > 0) {
+      return $ideas[0]['user_id'] == $user_id;
+    } else {
+      return false;
+    }
+
+  }
+
+  public function getTopicRoom($topic_id)
+  {
+    $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM '  . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_topics . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_topics . '.id = :id');
+    $this->db->bind(':id', $topic_id); // bind topic id
+    $topics = $this->db->resultSet();
+
+    if (count($topics) > 0) {
+      return $topics[0]['hash_id'];
+    } else {
+      return false;
+    }
+  }
+
   public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $type = 0)
   {
     /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters
@@ -3161,6 +3212,7 @@ class Idea
 
     // Check if user liked already
     if ($this->getLikeStatus($user_id, $idea_id)['data'] == 1) {
+
       // user has already liked, return without incrementing vote
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 3; // error code

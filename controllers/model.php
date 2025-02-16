@@ -3,6 +3,7 @@
 require_once('../base_config.php');
 require_once('../error_msg.php');
 require('../functions.php');
+require($baseHelperDir . 'Permissions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
 
@@ -27,6 +28,7 @@ if ($check_jwt["success"]) {
   $jwt_payload = $jwt->payload();
   $user_id = $jwt_payload->user_id;
   $userlevel = $jwt_payload->user_level;
+  $roles = $jwt_payload->roles;
 
   $current_settings = $settings->getInstanceSettings();
   if ($current_settings["data"]["online_mode"] != 1 && $userlevel < 50) {
@@ -60,16 +62,11 @@ if ($check_jwt["success"]) {
     $decrypt_fields = [];
   }
 
-  if (method_exists($model, "hasPermissions")) {
-    $permissions = $model->hasPermissions($user_id, $userlevel, $method, $arguments);
-  } else {
-    // TODO: REMOVE THIS AFTER ALL METHODS HAVE THEIR PROPER PERMISSION CHECKS FUNCTIONS WRITTEN
-    $permissions = ["allowed" => true];
-  }
+  $permissions = checkPermissions($model_name, $model, $method, $arguments, $user_id, $userlevel, $roles, );
 
   if (!$permissions["allowed"]) {
     http_response_code(403);
-    echo json_encode(["success" => false, "message" => $permissions["message"]]);
+    echo json_encode(["success" => false, "message" => "Unauthorized"]);
     return;
   }  
 

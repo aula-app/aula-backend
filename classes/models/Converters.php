@@ -1064,7 +1064,7 @@ class Converters
     if (is_int($category_id)) {
       return $category_id;
     } else {
-      return $this->getTopicIdByHashId($category_id);
+      return $this->getCategoryIdByHashId($category_id);
     }
   } // end function
 

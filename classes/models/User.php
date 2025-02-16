@@ -3594,6 +3594,9 @@ class User
 
   public function userInRoom($user_id, $room_id) {
     $room = new Room($this->db, $this->crypt, $this->syslog);
+    if ($room->isDefaultRoom($room_id)) {
+      return true;
+    }
     $userRooms = $room->getRoomsByUser($user_id);
 
     if ($userRooms["success"]) {
