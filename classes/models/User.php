@@ -2717,13 +2717,21 @@ class User
     }
   }// end function
 
-  public function getUserRooms($user_id)
+  public function getUserRooms($user_id, $type = -1)
   {
     /* returns rooms where user is member of for a certain user id
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_rooms_users . ' LEFT JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_rooms . '.id = ' . $this->db->au_rel_rooms_users . '.room_id) WHERE user_id = :user_id');
+    // additional conditions for the WHERE clause
+    $extra_where = "";
+
+    if ($type > -1) {
+      // specific status selected / -1 = get all status values
+      $extra_where .= " AND type = " . $type;
+    }
+
+    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_rooms_users . ' LEFT JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_rooms . '.id = ' . $this->db->au_rel_rooms_users . '.room_id) WHERE user_id = :user_id' . $extra_where);
     $this->db->bind(':user_id', $user_id); // bind userid
     $rooms = $this->db->resultSet();
 
@@ -2772,28 +2780,28 @@ class User
     }
   }// end function
 
-  public function setUserRoles($user_id, $roles, $updater_id = 0) 
+  public function setUserRoles($user_id, $roles, $updater_id = 0)
   {
-     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW(), updater_id= :updater_id WHERE id = :user_id');
-     $this->db->bind(':user_id', $user_id);
-     $this->db->bind(':roles', $roles);
-     $this->db->bind(':updater_id', $updater_id);
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW(), updater_id= :updater_id WHERE id = :user_id');
+    $this->db->bind(':user_id', $user_id);
+    $this->db->bind(':roles', $roles);
+    $this->db->bind(':updater_id', $updater_id);
 
-     try {
-       $action = $this->db->execute(); // do the query
-       $returnvalue['success'] = true; // set return value
-       $returnvalue['error_code'] = 0; // db error code
-       $returnvalue['data'] = 1; // returned data
-       $returnvalue['count'] = 1; // returned count of datasets
+    try {
+      $action = $this->db->execute(); // do the query
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = 1; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
 
-       return $returnvalue;
-     } catch (Exception $e) {
-       $returnvalue['success'] = false; // set return value
-       $returnvalue['error_code'] = 1; // db error code
-       $returnvalue['data'] = 0; // returned data
-       $returnvalue['count'] = 0; // returned count of datasets
-     }
+      return $returnvalue;
+    } catch (Exception $e) {
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // db error code
+      $returnvalue['data'] = 0; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+    }
   }
 
   public function checkRefresh($user_id)
