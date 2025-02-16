@@ -877,8 +877,25 @@ class User
 
   } // end function
 
+  public function getRoles($user_id)
+  {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+    $this->db->bind(':user_id', $user_id);
+    $roles = $this->db->resultSet()[0]['roles'];
 
+    return $roles;
+  }
 
+  public function getDefaultRole($user_id)
+  {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $stmt = $this->db->query('SELECT userlevel FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+    $this->db->bind(':user_id', $user_id);
+    $userlevel = $this->db->resultSet()[0]['userlevel'];
+
+    return $userlevel;
+  }
 
   public function addUserToRoom($user_id, $room_id, $status = 1, $updater_id = 0)
   {
@@ -894,6 +911,9 @@ class User
       // everything ok, user and room exists
       // add relation to database
 
+      $userlevel = $this->getDefaultRole($user_id);
+      $this->addUserRole($user_id, $userlevel, $room_id);
+
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
       // bind all VALUES
@@ -901,7 +921,6 @@ class User
       $this->db->bind(':user_id', $user_id);
       $this->db->bind(':status', $status);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
 
       $err = false; // set error variable to false
 
@@ -976,6 +995,9 @@ class User
     if ($user_exist == 1 && $room_exist == 1) {
       // everything ok, user and room exists
       // add relation to database
+      
+      $userlevel = $this->getDefaultRole($user_id);
+      $this->addUserRole($user_id, $userlevel, $room_id);
 
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
@@ -1125,6 +1147,8 @@ class User
     $this->db->bind(':roomid', $room_id); // bind room id
     $this->db->bind(':userid', $user_id); // bind user id
 
+    $this->deleteUserRole($user_id, $room_id);
+
     $err = false;
     try {
       $rooms = $this->db->resultSet();
@@ -1148,6 +1172,7 @@ class User
     $this->removeUserDelegations($user_id, 0, 0); // active delegations (original user)
     $this->removeUserDelegations($user_id, 0, 1); // passive delegations (target user)
 
+    $this->deleteUserRole($user_id, $room_id);
 
     $returnvalue['success'] = true; // set return value
     $returnvalue['error_code'] = 0; // error code
@@ -2769,6 +2794,56 @@ class User
       return $returnvalue;
     }
   }// end function
+
+  public function addUserRole($user_id, $role, $room_id)
+  {
+     $user_id = $this->converters->checkUserId($user_id);
+     $room_id = $this->converters->checkRoomId($room_id);
+
+     $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rooms . ' WHERE id = :room_id');
+     $this->db->bind(':room_id', $room_id);
+     $room_hash = $this->db->resultSet()[0]["hash_id"];
+
+     $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+
+     $roles = json_decode($this->db->resultSet()[0]["roles"]);
+     
+     $new_roles = array_filter($roles, fn($r) => $r->room != $room_hash);
+     array_push($new_roles, [ "role" => $role, "room" => $room_hash ]);
+
+     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+     $this->db->bind(':roles', json_encode($new_roles));
+
+     $this->db->execute();
+ 
+  }
+
+  public function deleteUserRole($user_id, $room_id)
+  {
+     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+     $room_id = $this->converters->checkRoomId($room_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+     $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rooms . ' WHERE id = :room_id');
+     $this->db->bind(':room_id', $room_id);
+     $room_hash = $this->db->resultSet()[0]["hash_id"];
+
+
+     $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+
+     $roles = json_decode($this->db->resultSet()[0]["roles"]);
+     $new_roles = array_filter($roles, fn($r) => $r->room != $room_hash);
+
+     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+     $this->db->bind(':roles', json_encode($new_roles));
+
+     $this->db->execute();
+ 
+  }
+
 
   public function setUserRoles($user_id, $roles, $updater_id = 0) 
   {
