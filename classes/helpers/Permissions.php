@@ -721,6 +721,13 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         ],
 
         "getLikeStatus" => [
+           "open_roles" => [
+              "super_moderator",
+              "super_moderator_v",
+              "principal",
+              "principal_v",
+              "admin"
+           ],
            "roles" => [
             "guest",
             "user",
@@ -1057,8 +1064,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
     if (in_array($method, array_keys($permissions_table[$model_name]))) {
 
-      #echo "PASSO 1 ";
-
       # check open roles
       if (in_array("open_roles", array_keys($permissions_table[$model_name][$method]))) {
         if (in_array($roles_map[$userlevel], $permissions_table[$model_name][$method]["open_roles"])) {
@@ -1074,7 +1079,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         }
       } 
 
-      # echo "PASSO 2 ";
       # check roles
       if (in_array("roles", array_keys($permissions_table[$model_name][$method]))) {
         if (in_array("all", $permissions_table[$model_name][$method]["roles"])) {
@@ -1088,8 +1092,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         }
       } 
       
-      #echo "PASSO 3 ";
-
       # check owner content
       if (in_array("checks", array_keys($permissions_table[$model_name][$method]))) {
         $checks = $permissions_table[$model_name][$method]["checks"];
@@ -1147,23 +1149,17 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         }
       }
 
-
       if (count($all_checks) > 0) {
         foreach ($all_checks as $c) {
           if (!$c)
             return ["allowed" => false];
         } 
         return ["allowed" => true];
-      } else {
-        return ["allowed" => false];
-      }
-    } else {
-      return ["allowed" => false];
+      } 
     } 
-  } else {
-    return ["allowed" => false];
   }
-
+  
+  return ["allowed" => false];
 }
 
 ?>
