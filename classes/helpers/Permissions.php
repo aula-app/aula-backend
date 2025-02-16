@@ -170,6 +170,40 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ]
     ],
 
+    "Command" => [
+        "getCommands" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+     
+        "deleteCommand" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+ 
+        "getCommandBaseData" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+ 
+        "getDueCommands" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+ 
+        "addCommand" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+ 
+        "setActiveStatus" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+ 
+        "setCommandStatus" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+ 
+        "setCommandDate" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+    ],
+
     "Settings" => 
       [
         "getGlobalConfig" => [
@@ -182,7 +216,20 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
         "getQuorum" => [
           "roles" => ["all"]
-        ]
+        ],
+
+        "setOauthStatus" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+
+        "setAllowRegistration" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+ 
+        "setInstanceOnlineMode" => [
+          "open_roles" => ["admin", "tech_admin"]
+        ],
+ 
     ],
     "Converters" => [
       "getGlobalPhaseDurations" => [
@@ -430,6 +477,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ],
  
       "getUserBaseData" => [
+        "open_roles" => [
+          "principal",
+          "principal_v",
+          "admin",
+        ],
         "roles" => [
            "guest",
            "user",
