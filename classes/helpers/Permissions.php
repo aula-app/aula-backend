@@ -380,6 +380,10 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "open_roles" => ["admin"]
       ],
 
+      "addUserRole" => [
+        "open_roles" => ["admin"]
+      ],
+
       "delegateVoteRight" => [
         "roles" => ["all"],
         "checks" => ["user_id:user_id"]
