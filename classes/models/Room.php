@@ -970,12 +970,20 @@ class Room
 
       $err = true;
     }
+
     $insertid = intval($this->db->lastInsertId());
+
+    $data = []; # init return array
+
+    # set output array
+    $data['insert_id'] = $insertid;
+    $data['hash_id'] = $hash_id;
+
     if (!$err) {
       $this->syslog->addSystemEvent(0, "Added new room (#" . $insertid . ") " . $room_name, 0, "", 1);
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $insertid; // returned data
+      $returnvalue['data'] = $data; // returned data
       $returnvalue['count'] = 1; // returned count of datasets
 
 
