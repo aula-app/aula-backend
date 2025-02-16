@@ -49,15 +49,6 @@ class Command
     }
   }// end function
 
-  public function hasPermissions($user_id, $userlevel, $method, $arguments)
-  {
-    if ($userlevel >= 60) {
-      return ["allowed" => true];
-    } else {
-      return ["allowed" => false, "message" => "You are not allowed to access Command model."];
-    }
-  }
-
   public function getCommandBaseData($command_id)
   {
     /* returns command base data for a specified db id */

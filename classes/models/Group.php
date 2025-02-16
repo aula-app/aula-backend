@@ -26,17 +26,6 @@ class Group
 
   }// end function
 
-  public function hasPermissions($user_id, $userlevel, $method, $arguments) 
-  {
-    // TODO: Check if other user roles will have access to Group model.
-    // If not an admin, block access
-    if ($userlevel >= 50) {
-      return ["allowed" => true];
-    } else {
-      return ["allowed" => false, "message" => "Not Authorized"];
-    }
-  }
-
   public function getGroupOrderId($orderby)
   {
     # helper method => converts an int id to a db field name (for ordering)

@@ -39,19 +39,6 @@ class Converters
     return md5($key);
   }
 
-  public function hasPermissions($user_id, $userlevel, $method, $arguments)
-  {
-    # checks if the user $user_id has certain rights and levels
-    # $method, $ arguments are for future use to allow granular differentiation of users rigths
-    # returns true if user is allowed, false if user is not allowed 
-
-    if ($userlevel >= 50) {
-      return ["allowed" => true];
-    } else {
-      return ["allowed" => false, "message" => "Not Authorized"];
-    }
-  }
-
   public function getToday()
   {
     # returns today's date

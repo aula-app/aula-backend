@@ -51,22 +51,6 @@ class Media
     }
   }// end function
 
-  public function hasPermissions($user_id, $userlevel, $method, $arguments)
-  {
-    if (method_exists($this, $method."Permission")) {
-      $methodPermission = $method."Permission";
-      return $this->$methodPermission($user_id, $userlevel, $method, $arguments);
-    } else {
-      return ["allowed" => false, "message" => "Not Authorized"];
-    }
-  }
-
-  public function userAvatarPermission($user_id, $userlevel, $method, $arguments)
-  {
-    // TODO: check when an user can see other users avatars.
-    return ["allowed" => true];  
-  }
-
   public function getMediaHashId($media_id)
   {
     /* returns hash_id of a medium for a integer id
