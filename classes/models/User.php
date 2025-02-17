@@ -1391,7 +1391,7 @@ class User
             $user_ok = true;
             # add user to db
             $data = $this->addUser($real_name, $display_name, $user_name, $email, "", 1, $about_me, 99, $user_level);
-            $insert_id = $data['insert_id'];
+            $insert_id = $data['data']['insert_id'];
             # add to set room
             if (isset($room_id) && $room_id > 0) {
               $this->addUserToRoom($insert_id, $room_id);
