@@ -2883,8 +2883,9 @@ class User
      $this->db->bind(':user_id', $user_id);
 
      $roles = json_decode($this->db->resultSet()[0]["roles"]);
+
      
-     $new_roles = array_filter($roles, fn($r) => $r->room != $room_hash);
+     $new_roles = array_values(array_filter($roles, fn($r) => $r->room != $room_hash));
      array_push($new_roles, [ "role" => $role, "room" => $room_hash ]);
 
      $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
