@@ -913,10 +913,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "admin"
          ],
          "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v"
+           "all"
          ],
          "from_room" => ["arg" => "room_id"]
         ],
@@ -1130,7 +1127,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       if (in_array("from_room", array_keys($permissions_table[$model_name][$method]))) {
         if (in_array("arg", array_keys($permissions_table[$model_name][$method]["from_room"]))) {
           $request_room_id = $arguments[$permissions_table[$model_name][$method]["from_room"]["arg"]];
-          $user_roles_in_room = array_filter($roles, fn($r) => $r->room == $request_room_id);
+          $user_roles_in_room = array_values(array_filter($roles, fn($r) => $r->room == $request_room_id));
 
           if (count($user_roles_in_room) > 0) {
             if (in_array("all", $permissions_table[$model_name][$method]["roles"])
@@ -1149,7 +1146,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           } 
           
           $room_hash = $model->$get_room_method($arguments[$permissions_table[$model_name][$method]["from_room"]["get_room"]]);
-          $user_roles_in_room = array_filter($roles, fn($r) => $r->room == $room_hash);
+          $user_roles_in_room = array_values(array_filter($roles, fn($r) => $r->room == $room_hash));
 
           if (count($user_roles_in_room) > 0) {
             if (in_array('all', $permissions_table[$model_name][$method]["roles"])) {

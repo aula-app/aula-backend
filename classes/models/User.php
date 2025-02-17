@@ -913,6 +913,7 @@ class User
 
       $userlevel = $this->getDefaultRole($user_id);
       $this->addUserRole($user_id, $userlevel, $room_id);
+      $this->setRefresh($user_id, true);
 
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
@@ -1153,6 +1154,7 @@ class User
       $rowcount = $this->db->rowCount();
 
       $this->deleteUserRole($user_id, $room_id);
+      $this->setRefresh($user_id, true);
 
     } catch (Exception $e) {
       echo 'Error occured while deleting user ' . $user_id . ' from room: ' . $room_id, $e->getMessage(), "\n"; // display error
@@ -2891,6 +2893,8 @@ class User
 
       try {
         $action = $this->db->execute(); // do the query
+        $this->setRefresh($user_id, true);
+
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; // db error code
         $returnvalue['data'] = 1; // returned data
