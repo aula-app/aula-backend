@@ -320,6 +320,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ],
 
       "getRoomsByUser" => [
+        "open_roles" => ["principal", "principal_v", "admin"],
         "roles" => [ "all" ],
         "checks" => [ "user_id:user_id" ]
       ],
