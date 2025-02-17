@@ -2367,7 +2367,7 @@ class User
 
     try {
       $action = $this->db->execute(); // do the query
-
+      $this->downgradeUserRoles($user_id, $userlevel);
     } catch (Exception $e) {
 
       $err = true;
@@ -2870,6 +2870,34 @@ class User
     }
   }// end function
 
+  public function downgradeUserRoles($user_id, $userlevel)
+  {
+     $user_id = $this->converters->checkUserId($user_id);
+
+     $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+
+     $roles = json_decode($this->db->resultSet()[0]["roles"]);
+
+     $down = function($r) use ($userlevel) {
+      if ($r->role > $userlevel) {
+        return [
+          'role' => $userlevel,
+          'room' => $r->room
+        ];
+      } else {
+        return $r;
+      }
+     };
+
+     $new_roles = array_map($down, $roles);
+
+     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+     $this->db->bind(':roles', json_encode($new_roles));
+     $this->db->execute();
+  }
+
   public function addUserRole($user_id, $role, $room_id)
   {
      $user_id = $this->converters->checkUserId($user_id);
@@ -2884,7 +2912,6 @@ class User
 
      $roles = json_decode($this->db->resultSet()[0]["roles"]);
 
-     
      $new_roles = array_values(array_filter($roles, fn($r) => $r->room != $room_hash));
      array_push($new_roles, [ "role" => $role, "room" => $room_hash ]);
 
