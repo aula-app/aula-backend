@@ -692,7 +692,19 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     ],
 
     "Idea" =>
-      [
+       [
+        "addSurvey" => [
+          "roles" => [
+            "moderator",
+            "moderator_v",
+            "super_moderator",
+            "super_moderator_v",
+            "principal",
+            "principal_v",
+            "admin"
+          ]
+        ],
+
         "getCategories" => [
           "roles" => ["all"]
         ],
