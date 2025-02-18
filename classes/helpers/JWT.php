@@ -32,7 +32,7 @@ class JWT
     $header = base64_url_encode(json_encode($header));
     $payload = [
       "exp" => 0,
-      "user_id" => $user["id"],
+      "user_id" => $user["hash_id"],
       "user_level" => $user["userlevel"],
       "roles" => json_decode($user["roles"]),
       "temp_pw" => $user["temp_pw"]
@@ -67,23 +67,23 @@ class JWT
         $base64_url_signature = base64_url_encode($signature);
 
         $valid_signature = $signature_provided == $base64_url_signature;
-        
+
         if ($valid_signature) {
           $p = json_decode($payload);
 
           if ($ignore_refresh) {
-            return [ "success" => true ];
+            return ["success" => true];
           }
 
           $refresh = $this->user->checkRefresh($p->user_id);
-          
+
           if ($refresh) {
-            return [ "success" => false, "error" => "refresh_token" ];
+            return ["success" => false, "error" => "refresh_token"];
           } else {
-            return [ "success" => true ];
+            return ["success" => true];
           }
         } else {
-          return [ "success" => false, "error" => "invalid_signature" ];
+          return ["success" => false, "error" => "invalid_signature"];
         }
 
       } else {
