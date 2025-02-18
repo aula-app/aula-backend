@@ -1113,15 +1113,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
       # check roles
       if (in_array("roles", array_keys($permissions_table[$model_name][$method]))) {
-
         if (in_array("all", $permissions_table[$model_name][$method]["roles"])) {
-
           array_push($all_checks, true);
         } else {
           if (in_array($roles_map[$userlevel], $permissions_table[$model_name][$method]["roles"])) {
             array_push($all_checks, true);
-          } else {
-            return ["allowed" => false];  
           }
         }
       } 
@@ -1171,7 +1167,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           
           $room_hash = $model->$get_room_method($arguments[$permissions_table[$model_name][$method]["from_room"]["get_room"]]);
           $user_roles_in_room = array_values(array_filter($roles, fn($r) => $r->room == $room_hash));
-
 
           if (count($user_roles_in_room) > 0) {
             if (in_array('all', $permissions_table[$model_name][$method]["roles"])) {
