@@ -1070,15 +1070,18 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         ],
 
         "addIdea" => [
-          "checks" => ["user_id:user_id", "user_id:updater_id"],
+          "open_roles" => [
+            "super_moderator",
+            "super_moderator_v",
+            "principal",
+            "principal_v",
+            "admin"
+          ],
           "roles" => ["user",
                       "moderator",
                       "moderator_v",
-                      "super_moderator",
-                      "super_moderator_v",
-                      "principal",
-                      "principal_v",
-                      "admin"],
+          ],
+          "checks" => ["user_id:user_id", "user_id:updater_id"],
           "from_room" => ["arg" => "room_id"]
         ]
       ]
