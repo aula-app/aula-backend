@@ -32,7 +32,7 @@ class JWT
     $header = base64_url_encode(json_encode($header));
     $payload = [
       "exp" => 0,
-      "user_id" => $user["hash_id"],
+      "user_id" => $user["id"],
       "user_level" => $user["userlevel"],
       "roles" => json_decode($user["roles"]),
       "temp_pw" => $user["temp_pw"]
