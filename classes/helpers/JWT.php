@@ -33,6 +33,7 @@ class JWT
     $payload = [
       "exp" => 0,
       "user_id" => $user["id"],
+      "user_hash" => $user["hash_id"],
       "user_level" => $user["userlevel"],
       "roles" => json_decode($user["roles"]),
       "temp_pw" => $user["temp_pw"]

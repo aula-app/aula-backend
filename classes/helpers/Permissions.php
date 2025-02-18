@@ -805,6 +805,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "admin",
             "owner"
           ],
+          "roles" => [
+            "user",
+            "moderator",
+            "moderator_v"
+          ],
           "owner" => "idea_id"
         ],
 
@@ -870,11 +875,8 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "voteForIdea" => [
           "roles" => [
             "user",
-            "moderator",
             "moderator_v",
-            "super_moderator",
             "super_moderator_v",
-            "principal",
             "principal_v",
             "admin"
           ],
