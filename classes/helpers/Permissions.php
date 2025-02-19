@@ -220,6 +220,10 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
     "Settings" => 
       [
+        "setQuorum" => [
+          "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+        ],
+
         "getGlobalConfig" => [
           "roles" => ["all"]
         ],
