@@ -220,6 +220,18 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
     "Settings" => 
       [
+        "setWorkdays" => [
+           "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+        ],
+
+        "setDailyStartTime" => [
+            "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+        ],
+
+        "setDailyEndTime" => [
+            "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+        ],
+
         "setQuorum" => [
           "roles" => ["principal", "principal_v", "admin", "tech_admin"]
         ],
@@ -247,11 +259,17 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "setInstanceOnlineMode" => [
           "open_roles" => ["admin", "tech_admin"]
         ],
- 
+
+        "setInstanceInfo" => [
+          "roles" => ["admin", "tech_admin"] 
+        ]
     ],
     "Converters" => [
       "getGlobalPhaseDurations" => [
         "roles" => ["all"]
+      ],
+      "createDBDump" => [
+        "roles" => ["tech_admin"]
       ]
     ],
 
