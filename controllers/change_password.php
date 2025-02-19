@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $password = $input['password'];
   $new_password = $input['new_password'];
 
-  $stmt = $db->query('SELECT id, username, pw, temp_pw, userlevel FROM ' . $db->au_users_basedata . ' WHERE id = :user_id');
+  $stmt = $db->query('SELECT id, hash_id, roles, username, pw, temp_pw, userlevel FROM ' . $db->au_users_basedata . ' WHERE id = :user_id');
   try {
     $db->bind(':user_id', $user_id); // blind index
     $users = $db->resultSet();
