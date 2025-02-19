@@ -8,8 +8,6 @@ if ($allowed_include == 1) {
   exit;
 }
 
-
-
 class Idea
 {
 
@@ -17,7 +15,6 @@ class Idea
   # For details please check the decsirptions within the methods 
 
   private $db; # database connection and methods
-
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -1607,8 +1604,9 @@ class Idea
       default:
         $asc_field = "DESC";
     }
-    $select_part = 'SELECT ' . $this->db->au_users_basedata . '.hash_id as user_hash_id, ' . $this->db->au_users_basedata . '.id as user_id, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.sum_votes FROM ' . $this->db->au_ideas;
-    $join = 'INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT OUTER JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id';
+
+    $select_part = 'SELECT '. $this->db->au_rooms . '.hash_id as room_hash_id, ' . $this->db->au_users_basedata . '.hash_id as user_hash_id, ' . $this->db->au_users_basedata . '.id as user_id, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.sum_votes FROM ' . $this->db->au_ideas;
+    $join = 'INNER JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_ideas . '.room_id=' . $this->db->au_rooms . '.id) INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT OUTER JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id';
     $where = $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_ideas . '.room_id= :room_id AND ' . $this->db->au_rel_topics_ideas . '.idea_id IS NULL AND ' . $this->db->au_ideas . '.status = 1 ' . $extra_where;
     $stmt = $this->db->query($select_part . ' ' . $join . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
@@ -1916,7 +1914,7 @@ class Idea
     $this->db->bind(':content', $this->crypt->encrypt($content)); // the actual idea
     $this->db->bind(':title', $title); // title only shown in backend
     $this->db->bind(':info', $info); // info only shown in backend
-    $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
+    $this->db->bind(':custom_field1', $custom_field1); // custom field 1
     $this->db->bind(':custom_field2', $custom_field2); // custom field 2
 
     $this->db->bind(':votes_available_per_user', $votes_available_per_user); // only shown in backend admin
@@ -1962,6 +1960,50 @@ class Idea
 
     }
   }// end function
+
+  public function getRoom($idea_id)
+  {
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM '  . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_ideas . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_ideas . '.id = :id');
+    $this->db->bind(':id', $idea_id); // bind topic id
+    $ideas = $this->db->resultSet();
+
+    if (count($ideas) > 0) {
+      return $ideas[0]['hash_id'];
+    } else {
+      return false;
+    }
+  }
+
+  public function isOwner($user_id, $idea_id)
+  {
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_ideas . '.user_id FROM '  . $this->db->au_ideas . '  WHERE ' . $this->db->au_ideas . '.id = :id');
+    $this->db->bind(':id', $idea_id); // bind topic id
+    $ideas = $this->db->resultSet();
+
+    if (count($ideas) > 0) {
+      return $ideas[0]['user_id'] == $user_id;
+    } else {
+      return false;
+    }
+
+  }
+
+  public function getTopicRoom($topic_id)
+  {
+    $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM '  . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_topics . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_topics . '.id = :id');
+    $this->db->bind(':id', $topic_id); // bind topic id
+    $topics = $this->db->resultSet();
+
+    if (count($topics) > 0) {
+      return $topics[0]['hash_id'];
+    } else {
+      return false;
+    }
+  }
 
   public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $type = 0)
   {
@@ -2889,6 +2931,7 @@ class Idea
 
     // Check if user liked already
     if ($this->getLikeStatus($user_id, $idea_id)['data'] == 1) {
+
       // user has already liked, return without incrementing vote
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 3; // error code

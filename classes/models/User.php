@@ -245,7 +245,6 @@ class User
     }
   }// end function
 
-
   public function delegateVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
     /* delegates voting rights from one user to another within a topic, accepts user_id (by hash or id) and topic id (by hash or id)
@@ -759,7 +758,6 @@ class User
     }
   } // end function
 
-
   public function giveBackAllDelegations($user_id, $topic_id = 0)
   {
     // give back all delegations for a) a certain topic (topic id>0) or all delegations (topic_id=0)
@@ -879,8 +877,25 @@ class User
 
   } // end function
 
+  public function getRoles($user_id)
+  {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+    $this->db->bind(':user_id', $user_id);
+    $roles = $this->db->resultSet()[0]['roles'];
 
+    return $roles;
+  }
 
+  public function getDefaultRole($user_id)
+  {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $stmt = $this->db->query('SELECT userlevel FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+    $this->db->bind(':user_id', $user_id);
+    $userlevel = $this->db->resultSet()[0]['userlevel'];
+
+    return $userlevel;
+  }
 
   public function addUserToRoom($user_id, $room_id, $status = 1, $updater_id = 0)
   {
@@ -896,6 +911,10 @@ class User
       // everything ok, user and room exists
       // add relation to database
 
+      $userlevel = $this->getDefaultRole($user_id);
+      $this->addUserRole($user_id, $userlevel, $room_id);
+      $this->setRefresh($user_id, true);
+
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
       // bind all VALUES
@@ -903,7 +922,6 @@ class User
       $this->db->bind(':user_id', $user_id);
       $this->db->bind(':status', $status);
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
 
       $err = false; // set error variable to false
 
@@ -978,6 +996,9 @@ class User
     if ($user_exist == 1 && $room_exist == 1) {
       // everything ok, user and room exists
       // add relation to database
+      
+      $userlevel = $this->getDefaultRole($user_id);
+      $this->addUserRole($user_id, $userlevel, $room_id);
 
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
@@ -1132,6 +1153,9 @@ class User
       $rooms = $this->db->resultSet();
       $rowcount = $this->db->rowCount();
 
+      $this->deleteUserRole($user_id, $room_id);
+      $this->setRefresh($user_id, true);
+
     } catch (Exception $e) {
       echo 'Error occured while deleting user ' . $user_id . ' from room: ' . $room_id, $e->getMessage(), "\n"; // display error
       $err = true;
@@ -1150,6 +1174,7 @@ class User
     $this->removeUserDelegations($user_id, 0, 0); // active delegations (original user)
     $this->removeUserDelegations($user_id, 0, 1); // passive delegations (target user)
 
+    $this->deleteUserRole($user_id, $room_id);
 
     $returnvalue['success'] = true; // set return value
     $returnvalue['error_code'] = 0; // error code
@@ -1569,6 +1594,67 @@ class User
 
   }
 
+  public function setRefresh($user_id, $refresh_value = true)
+  {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET refresh_token = :refresh_value WHERE id = :user_id ');
+    try {
+      $this->db->bind(':user_id', $user_id); 
+      $this->db->bind(':refresh_value', $refresh_value);
+
+      $users = $this->db->execute();
+    } catch (Exception $e) {
+      print_r($e);
+    }
+
+  }
+
+  public function getUserPayload($user_id)
+  {
+ 
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query('SELECT id, userlevel, temp_pw, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id ');
+    try {
+      $this->db->bind(':user_id', $user_id); // blind index
+      $users = $this->db->resultSet();
+      $user_status = $users[0]['status'];
+      $user_id = $users[0]['id'];
+
+    } catch (Exception $e) {
+      print_r($e);
+    }
+
+    $reactivation_date = false; // init
+
+    if ($user_status != 1) {
+      # get the reactivation date (if there is one) when the user is suspended (status = 2)
+      $reactivation_date = $this->getReactivationDate($user_id);
+    }
+
+    if (count($users) < 1 || $user_status != 1) {
+      # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['user_status'] = $user_status; // error code
+      $returnvalue['user_id'] = $user_id;
+      $returnvalue['data'] = $reactivation_date; // returned data
+      $returnvalue['count'] = count($users); // returned count of datasets
+
+      return $returnvalue;
+    } // nothing found, empty database or non active user
+
+    $returnvalue['success'] = true; // set return value
+    $returnvalue['error_code'] = 0; // error code
+    $returnvalue['user_id'] = $user_id;
+    $returnvalue['data'] = $users[0]; // returned data
+    $returnvalue['count'] = 1; // returned count of datasets
+
+    return $returnvalue;
+
+  }
+
 
   public function checkCredentials($username, $pw)
   {
@@ -1583,7 +1669,7 @@ class User
     $user_status = 0;
     $user_id = 0;
 
-    $stmt = $this->db->query('SELECT id, username, pw, temp_pw, userlevel, hash_id, status FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
+    $stmt = $this->db->query('SELECT id, username, pw, refresh_token, temp_pw, userlevel, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
     try {
       $this->db->bind(':username', $username); // blind index
       $users = $this->db->resultSet();
@@ -1619,6 +1705,10 @@ class User
     $temp_pw = $users[0]['temp_pw'];
 
     if (($temp_pw != '' && $temp_pw == $pw) || password_verify($pw, $dbpw)) {
+      if ($users[0]["refresh_token"]) {
+        $this->setRefresh($users[0]["id"], false);
+      }
+
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['user_id'] = $user_id;
@@ -2277,7 +2367,7 @@ class User
 
     try {
       $action = $this->db->execute(); // do the query
-
+      $this->downgradeUserRoles($user_id, $userlevel);
     } catch (Exception $e) {
 
       $err = true;
@@ -2532,7 +2622,7 @@ class User
       return $returnvalue;
     }
   }// end function
-
+  
   public function getUserGDPRData($user_id)
   {
     //retrieves all data associated to a certain user according to GDPR and returns it
@@ -2780,6 +2870,144 @@ class User
       return $returnvalue;
     }
   }// end function
+
+  public function downgradeUserRoles($user_id, $userlevel)
+  {
+     $user_id = $this->converters->checkUserId($user_id);
+
+     $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+
+     $roles = json_decode($this->db->resultSet()[0]["roles"]);
+
+     $down = function($r) use ($userlevel) {
+      if ($r->role > $userlevel) {
+        return [
+          'role' => $userlevel,
+          'room' => $r->room
+        ];
+      } else {
+        return $r;
+      }
+     };
+
+     $new_roles = array_map($down, $roles);
+
+     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+     $this->db->bind(':roles', json_encode($new_roles));
+     $this->db->execute();
+  }
+
+  public function addUserRole($user_id, $role, $room_id)
+  {
+     $user_id = $this->converters->checkUserId($user_id);
+     $room_id = $this->converters->checkRoomId($room_id);
+
+     $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rooms . ' WHERE id = :room_id');
+     $this->db->bind(':room_id', $room_id);
+     $room_hash = $this->db->resultSet()[0]["hash_id"];
+
+     $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+
+     $roles = json_decode($this->db->resultSet()[0]["roles"]);
+
+     $new_roles = array_values(array_filter($roles, fn($r) => $r->room != $room_hash));
+     array_push($new_roles, [ "role" => $role, "room" => $room_hash ]);
+
+     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+     $this->db->bind(':roles', json_encode($new_roles));
+
+      try {
+        $action = $this->db->execute(); // do the query
+        $this->setRefresh($user_id, true);
+
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 0; // db error code
+        $returnvalue['data'] = 1; // returned data
+        $returnvalue['count'] = 1; // returned count of datasets
+
+        return $returnvalue;
+      } catch (Exception $e) {
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 1; // db error code
+        $returnvalue['data'] = 0; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+      }
+
+  }
+
+  public function deleteUserRole($user_id, $room_id)
+  {
+     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+     $room_id = $this->converters->checkRoomId($room_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+     $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rooms . ' WHERE id = :room_id');
+     $this->db->bind(':room_id', $room_id);
+     $room_hash = $this->db->resultSet()[0]["hash_id"];
+
+
+     $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+
+     $roles = json_decode($this->db->resultSet()[0]["roles"]);
+     $new_roles = array_filter($roles, fn($r) => $r->room != $room_hash);
+
+     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+     $this->db->bind(':roles', json_encode($new_roles));
+
+     $this->db->execute();
+ 
+  }
+
+
+  public function setUserRoles($user_id, $roles, $updater_id = 0) 
+  {
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW(), updater_id= :updater_id WHERE id = :user_id');
+    $this->db->bind(':user_id', $user_id);
+    $this->db->bind(':roles', $roles);
+    $this->db->bind(':updater_id', $updater_id);
+
+    try {
+      $action = $this->db->execute(); // do the query
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = 1; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+    } catch (Exception $e) {
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // db error code
+      $returnvalue['data'] = 0; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+    }
+  }
+
+  public function checkRefresh($user_id)
+  {
+     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+     $stmt = $this->db->query('SELECT refresh_token FROM ' . $this->db->au_users_basedata . '  WHERE id = :user_id');
+     $this->db->bind(':user_id', $user_id);
+     $action = $this->db->execute(); // do the query
+     $users = $this->db->resultSet();
+
+     return $users[0]["refresh_token"];
+  }
+
+  public function refresh_token()
+  {
+    $jwt = new JWT($jwtKeyFile, $this->db, $this->crypt, $this->syslog);
+
+    $check_jwt = $jwt->check_jwt(true);
+
+    echo $check_jwt;
+  
+  }
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)
   {
@@ -3502,5 +3730,18 @@ class User
 
   }// end function
 
+  public function userInRoom($user_id, $room_id) {
+    $room = new Room($this->db, $this->crypt, $this->syslog);
+    if ($room->isDefaultRoom($room_id)) {
+      return true;
+    }
+    $userRooms = $room->getRoomsByUser($user_id);
+
+    if ($userRooms["success"]) {
+      return in_array($room_id, array_map(function($r) { return $r['id']; }, $userRooms["data"]));
+    } else {
+      return false; 
+    }
+  }
 }
 ?>

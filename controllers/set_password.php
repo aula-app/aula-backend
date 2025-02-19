@@ -9,8 +9,7 @@ require_once ($baseHelperDir.'JWT.php');
 $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
-$jwt = new JWT($jwtKeyFile);
-
+$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $secret =  $_GET["secret"];
