@@ -2651,7 +2651,7 @@ class Idea
       $err = true;
     }
     if (!$err) {
-      $this->syslog->addSystemEvent(0, "Idea approved " . $idea_id . " by " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Idea " . $idea_id . " set approval to " . $approved . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = 1; // returned data
@@ -2659,7 +2659,7 @@ class Idea
 
       return $returnvalue;
     } else {
-      $this->syslog->addSystemEvent(1, "Error approving idea " . $idea_id . " by " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(1, "Error changing idea " . $idea_id . " approval status to " . $approved . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
       $returnvalue['data'] = false; // returned data
