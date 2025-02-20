@@ -2808,7 +2808,6 @@ class User
   }// end function
 
   public function getUserRooms($user_id, $type = -1)
-  public function getUserRooms($user_id, $type = -1)
   {
     /* returns rooms where user is member of for a certain user id
      */
