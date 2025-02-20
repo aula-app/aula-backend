@@ -727,6 +727,14 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           ]
         ],
 
+        "setApprovalStatus" => [
+          "roles" => [
+            "principal",
+            "principal_v",
+            "admin"
+          ]
+        ],
+
         "getCategories" => [
           "roles" => ["all"]
         ],

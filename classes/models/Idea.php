@@ -2625,7 +2625,7 @@ class Idea
     }
   }// end function
 
-  public function approveIdea($idea_id, $approved, $approval_comment, $updater_id = 0)
+  public function setApprovalStatus($idea_id, $approved, $approval_comment, $updater_id = 0)
   {
     /* edits an idea and returns number of rows if successful, accepts the above parameters
      approves an idea (usually by school administration)
