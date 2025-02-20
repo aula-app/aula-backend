@@ -1605,7 +1605,7 @@ class Idea
         $asc_field = "DESC";
     }
 
-    $select_part = 'SELECT '. $this->db->au_rooms . '.hash_id as room_hash_id, ' . $this->db->au_users_basedata . '.hash_id as user_hash_id, ' . $this->db->au_users_basedata . '.id as user_id, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.sum_votes FROM ' . $this->db->au_ideas;
+    $select_part = 'SELECT ' . $this->db->au_rooms . '.hash_id as room_hash_id, ' . $this->db->au_users_basedata . '.hash_id as user_hash_id, ' . $this->db->au_users_basedata . '.id as user_id, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.sum_votes FROM ' . $this->db->au_ideas;
     $join = 'INNER JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_ideas . '.room_id=' . $this->db->au_rooms . '.id) INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT OUTER JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id';
     $where = $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_ideas . '.room_id= :room_id AND ' . $this->db->au_rel_topics_ideas . '.idea_id IS NULL AND ' . $this->db->au_ideas . '.status = 1 ' . $extra_where;
     $stmt = $this->db->query($select_part . ' ' . $join . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
@@ -1964,7 +1964,7 @@ class Idea
   public function getRoom($idea_id)
   {
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM '  . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_ideas . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_ideas . '.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM ' . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_ideas . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_ideas . '.id = :id');
     $this->db->bind(':id', $idea_id); // bind topic id
     $ideas = $this->db->resultSet();
 
@@ -1979,7 +1979,7 @@ class Idea
   {
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    $stmt = $this->db->query('SELECT ' . $this->db->au_ideas . '.user_id FROM '  . $this->db->au_ideas . '  WHERE ' . $this->db->au_ideas . '.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_ideas . '.user_id FROM ' . $this->db->au_ideas . '  WHERE ' . $this->db->au_ideas . '.id = :id');
     $this->db->bind(':id', $idea_id); // bind topic id
     $ideas = $this->db->resultSet();
 
@@ -1994,7 +1994,7 @@ class Idea
   public function getTopicRoom($topic_id)
   {
     $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM '  . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_topics . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_topics . '.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM ' . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_topics . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_topics . '.id = :id');
     $this->db->bind(':id', $topic_id); // bind topic id
     $topics = $this->db->resultSet();
 
@@ -2626,19 +2626,21 @@ class Idea
     }
   }// end function
 
-  public function approveIdea($idea_id, $updater_id = 0)
+  public function setApprovalStatus($idea_id, $approved, $approval_comment, $updater_id = 0)
   {
     /* edits an idea and returns number of rows if successful, accepts the above parameters
      approves an idea (usually by school administration)
      updater_id is the id of the idea that commits the update (i.E. admin )
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    $approval_comment = trim($approval_comment);
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = 1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = :approved, approval_comment = :approval_comment, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
-    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
     $this->db->bind(':idea_id', $idea_id); // idea that is updated
+    $this->db->bind(':approved', $approved); // approved status
+    $this->db->bind(':approval_comment', $approval_comment); // approval comment
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
     $err = false; // set error variable to false
 
@@ -2650,7 +2652,7 @@ class Idea
       $err = true;
     }
     if (!$err) {
-      $this->syslog->addSystemEvent(0, "Idea approved " . $idea_id . " by " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Idea " . $idea_id . " set approval to " . $approved . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = 1; // returned data
@@ -2658,49 +2660,7 @@ class Idea
 
       return $returnvalue;
     } else {
-      $this->syslog->addSystemEvent(1, "Error approving idea " . $idea_id . " by " . $updater_id, 0, "", 1);
-      $returnvalue['success'] = false; // set return value
-      $returnvalue['error_code'] = 1; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    }
-  }// end function
-
-  public function disapproveIdea($idea_id, $updater_id = 0)
-  {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters
-     disapproves an idea (usually by school administration)
-     updater_id is the id of the idea that commits the update (i.E. admin )
-    */
-    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
-
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = -1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
-    // bind all VALUES
-    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-    $this->db->bind(':idea_id', $idea_id); // idea that is updated
-
-    $err = false; // set error variable to false
-
-    try {
-      $action = $this->db->execute(); // do the query
-
-    } catch (Exception $e) {
-
-      $err = true;
-    }
-    if (!$err) {
-      $this->syslog->addSystemEvent(0, "Idea approved " . $idea_id . " by " . $updater_id, 0, "", 1);
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = 1; // returned data
-      $returnvalue['count'] = 1; // returned count of datasets
-
-      return $returnvalue;
-    } else {
-      $this->syslog->addSystemEvent(1, "Error approving idea " . $idea_id . " by " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(1, "Error changing idea " . $idea_id . " approval status to " . $approved . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
       $returnvalue['data'] = false; // returned data
