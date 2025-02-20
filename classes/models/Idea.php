@@ -2584,61 +2584,21 @@ class Idea
     }
   }// end function
 
-  public function approveIdea($idea_id, $updater_id = 0)
+  public function approveIdea($idea_id, $approved, $approval_comment, $updater_id = 0)
   {
     /* edits an idea and returns number of rows if successful, accepts the above parameters
      approves an idea (usually by school administration)
      updater_id is the id of the idea that commits the update (i.E. admin )
     */
     $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
+    $approval_comment = trim($approval_comment);
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = 1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = :approved, approval_comment = :approval_comment, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
     // bind all VALUES
-    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
     $this->db->bind(':idea_id', $idea_id); // idea that is updated
-
-    $err = false; // set error variable to false
-
-    try {
-      $action = $this->db->execute(); // do the query
-
-    } catch (Exception $e) {
-
-      $err = true;
-    }
-    if (!$err) {
-      $this->syslog->addSystemEvent(0, "Idea approved " . $idea_id . " by " . $updater_id, 0, "", 1);
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = 1; // returned data
-      $returnvalue['count'] = 1; // returned count of datasets
-
-      return $returnvalue;
-    } else {
-      $this->syslog->addSystemEvent(1, "Error approving idea " . $idea_id . " by " . $updater_id, 0, "", 1);
-      $returnvalue['success'] = false; // set return value
-      $returnvalue['error_code'] = 1; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    }
-  }// end function
-
-  public function disapproveIdea($idea_id, $updater_id = 0)
-  {
-    /* edits an idea and returns number of rows if successful, accepts the above parameters
-     disapproves an idea (usually by school administration)
-     updater_id is the id of the idea that commits the update (i.E. admin )
-    */
-    $idea_id = $this->converters->checkIdeaId($idea_id); // checks idea  id and converts idea id to db idea id if necessary (when idea hash id was passed)
-
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_ideas . ' SET approved = -1, last_update= NOW(), updater_id= :updater_id WHERE id= :idea_id');
-    // bind all VALUES
+    $this->db->bind(':approved', $approved); // approved status
+    $this->db->bind(':approval_comment', $approval_comment); // approval comment
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-    $this->db->bind(':idea_id', $idea_id); // idea that is updated
 
     $err = false; // set error variable to false
 
