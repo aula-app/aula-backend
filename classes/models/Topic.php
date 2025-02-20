@@ -729,6 +729,7 @@ class Topic
 
       $err = true;
     }
+
     $insertid = intval($this->db->lastInsertId());
 
     $data = []; # init return array

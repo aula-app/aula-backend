@@ -986,7 +986,6 @@ class Room
       $returnvalue['data'] = $data; // returned data
       $returnvalue['count'] = 1; // returned count of datasets
 
-
       return $returnvalue; // return insert id to calling script
 
     } else {
