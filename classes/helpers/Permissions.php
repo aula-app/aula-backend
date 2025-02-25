@@ -394,6 +394,16 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     ],
 
     "User" => [
+      "getUsersByRoom" => [
+        "open_roles" => [
+           "super_moderator",
+           "super_moderator_v",
+           "principal",
+           "principal_v",
+           "admin"
+        ],
+      ],
+
       "refresh_token" => [
         "roles" => [ "all" ]
       ],
@@ -648,6 +658,8 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     "Topic" => [
       "getTopicBaseData" => [
         "open_roles" => [
+           "super_moderator",
+           "super_moderator_v",
            "principal",
            "principal_v",
            "admin"
@@ -659,8 +671,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ],
       "getTopics" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
            "principal",
            "principal_v",
            "admin"
@@ -715,6 +725,14 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
     "Idea" =>
        [
+        "setToWinning" => [
+          "roles" => ["principal", "principal_v", "admin"]
+        ],
+
+        "setToLosing" => [
+          "roles" => ["principal", "principal_v", "admin"]
+        ],
+
         "addSurvey" => [
           "roles" => [
             "moderator",
@@ -864,6 +882,8 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
         "addIdeaToTopic" => [
           "open_roles" => [
+            "super_moderator",
+            "super_moderator_v",
             "principal",
             "principal_v",
             "admin"
@@ -871,11 +891,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "roles" => [
             "moderator",
             "moderator_v",
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
           ],
           "from_room" => [
             "get_room" => "idea_id"
