@@ -210,14 +210,13 @@ class User
     $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
     $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-
     $query = <<<END
 
-      SELECT topic_id FROM {$this->db->au_delegation} 
+      SELECT topic_id FROM {$this->T('delegation')} 
         WHERE 
-                user_id_original = :user_id 
-            AND user_id_target = :user_id_target 
-            AND topic_id = :topic_id
+            user_id_original = :user_id AND
+            user_id_target = :user_id_target AND
+            topic_id = :topic_id
 
     END;
     $stmt = $this->db->query($query);
@@ -307,7 +306,23 @@ class User
 
       // add relation to database (delegation)
 
-      $stmt = $this->db->query('INSERT INTO ' . $this->db->au_delegation . ' (topic_id, user_id_original, user_id_target, status, created, last_update, updater_id) VALUES (:topic_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE user_id_original = :user_id, user_id_target = :user_id_target, status = 1, last_update = NOW(), updater_id = :updater_id');
+      $query = <<<END
+
+        INSERT INTO {$this->T('delegation')} 
+          (topic_id, user_id_original, user_id_target, status, created, last_update, updater_id)
+        VALUES 
+          (:topic_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id)
+        ON 
+          DUPLICATE KEY 
+        UPDATE 
+          user_id_original = :user_id,
+          user_id_target = :user_id_target,
+          status = 1,
+          last_update = NOW(),
+          updater_id = :updater_id
+
+      END;
+      $stmt = $this->db->query($query);
 
       // bind all VALUES
       $this->db->bind(':topic_id', $topic_id);
