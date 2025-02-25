@@ -11,13 +11,21 @@ if ($allowed_include == 1) {
   exit;
 }
 
-
-
 class User
 {
   # User class provides a collection of methods dealing with everything around the user entity like adding or deleting etc.
 
   private $db;
+
+  public function T($table, $column = '')
+  {
+    $table_name = "au_$table";
+    if ($column == '') {
+      return $this->db->$table_name;
+    } else {
+      return "{$this->db->$table_name}.{$column}";
+    }
+  }
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -84,7 +92,9 @@ class User
     /* returns user base data for a specified db id */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
+    $query = "SELECT * FROM {$this->T('users_basedata')} WHERE id = :id";
+    $stmt = $this->db->query($query);
+
     $this->db->bind(':id', $user_id); // bind userid
     $users = $this->db->resultSet();
     if (count($users) < 1) {
@@ -146,11 +156,21 @@ class User
     */
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET ' . $property . '= :prop_value, last_update= NOW(), updater_id= :updater_id WHERE id= :user_id');
+    $query = <<<END
+
+      UPDATE {$this->T('users_basedata')} 
+        SET 
+         $property = :prop_value,
+         last_update = NOW(),
+         updater_id = :updater_id
+        WHERE id= :user_id
+
+    END;
+    $stmt = $this->db->query($query);
+
     // bind all VALUES
     $this->db->bind(':prop_value', $prop_value);
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
     $this->db->bind(':user_id', $user_id); // user that is updated
 
     $err = false; // set error variable to false
@@ -191,7 +211,17 @@ class User
     $user_id_target = $this->converters->checkUserId($user_id_target); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
 
-    $stmt = $this->db->query('SELECT topic_id FROM ' . $this->db->au_delegation . ' WHERE user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
+    $query = <<<END
+
+      SELECT topic_id FROM {$this->db->au_delegation} 
+        WHERE 
+                user_id_original = :user_id 
+            AND user_id_target = :user_id_target 
+            AND topic_id = :topic_id
+
+    END;
+    $stmt = $this->db->query($query);
+
     // bind all VALUES
     $this->db->bind(':user_id', $user_id); // gives the voting right
     $this->db->bind(':topic_id', $topic_id); // id of the topic
@@ -207,7 +237,19 @@ class User
       return $returnvalue;
     } else {
       // remove delegation from db table
-      $stmt = $this->db->query('DELETE FROM ' . $this->db->au_delegation . ' WHERE user_id_original = :user_id AND user_id_target = :user_id_target AND topic_id = :topic_id');
+
+      $query = <<<END
+
+        DELETE FROM {$this->T('delegation')} 
+        WHERE 
+            user_id_original = :user_id 
+            AND user_id_target = :user_id_target
+            AND topic_id = :topic_id
+
+      END; 
+
+      $stmt = $this->db->query($query);
+
       // bind all VALUES
       $this->db->bind(':user_id', $user_id); // gives the voting right
       $this->db->bind(':topic_id', $topic_id); // id of the topic
@@ -1749,7 +1791,7 @@ class User
     $orderby_field = "";
     $asc_field = "";
 
-    $limit_string = " LIMIT :offset , :limit ";
+    $limit_string = " LIMIT :offset, :limit ";
     $limit_active = true;
 
     // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
@@ -1764,7 +1806,7 @@ class User
 
     if ($status > -1) {
       // specific status selected / -1 = get all status values
-      $extra_where .= " AND status = " . $status;
+      $extra_where .= " AND status = {$status}";
     }
 
     if ($userlevel > -1) {
@@ -1797,7 +1839,12 @@ class User
       }
     }
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $sql_query = <<<END
+        SELECT * FROM {$this->T('users_basedata')} WHERE id > 0 $extra_where 
+          ORDER BY $orderby_field $asc_field $limit_string
+    END;
+
+    $stmt = $this->db->query($sql_query);
 
     if ($limit) {
       // only bind if limit is set
@@ -1879,7 +1926,11 @@ class User
       $check_email = true;
     }
 
-    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_users_basedata . ' WHERE bi = :bi' . $extra_where);
+    $sql_query = <<<END
+      SELECT id FROM  {$this->T('users_basedata')} WHERE bi = :bi $extra_where
+    END;
+
+    $stmt = $this->db->query($sql_query);
 
     if ($check_email) {
       $this->db->bind(':email', $email); // bind email
@@ -1971,12 +2022,25 @@ class User
         $asc_field = "DESC";
     }
 
-    $query = 'SELECT ' . $this->db->au_users_basedata . '.* FROM ' . $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ' . $extra_where;
-    $total_query = $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ';
+    $query = <<<END
+        SELECT {$this->T('users_basedata')}.* FROM {$this->T('rel_rooms_users')} 
+          INNER JOIN {$this->T('users_basedata')} 
+          ON ({$this->T('rel_rooms_users', 'user_id')} = {$this->T('users_basedata', 'id')}) 
+          WHERE {$this->T('rel_rooms_users', 'room_id')} = :room_id $extra_where;
+    END;
 
-    $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $total_query = <<<END
+      {$this->T('rel_rooms_users')} INNER JOIN {$this->T('users_basedata')} 
+        ON ({$this->T('rel_rooms_users', 'user_id')} = {$this->T('users_basedata', 'id')}) 
+        WHERE {$this->db->au_rel_rooms_users}.room_id = :room_id ;
+    END;
+
+    $sql_query = <<<END
+        $query ORDER BY $orderby_field $asc_field $limit_string
+    END;
+
+    $stmt = $this->db->query($sql_query);
     $this->db->bind(':room_id', $room_id); // bind room id
-    //$this->db->bind(':status', $status); // bind status
 
     if ($search_field_valid) {
       $this->db->bind(':search_text', '%' . $search_text . '%');
@@ -1985,7 +2049,6 @@ class User
     $err = false;
     try {
       $rooms = $this->db->resultSet();
-
     } catch (Exception $e) {
       echo $e;
       $err = true;
@@ -2104,16 +2167,27 @@ class User
         $asc_field = "DESC";
     }
 
-    $query = 'SELECT ' . $this->db->au_users_basedata . '.realname, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.id, ' . $this->db->au_users_basedata . '.username, ' . $this->db->au_users_basedata . '.email FROM ' . $this->db->au_rel_groups_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_groups_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_groups_users . '.group_id= :group_id ' . $extra_where;
+    $query = <<<END
 
-    $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+      SELECT {$this->T('users_basedata', 'realname')},
+             {$this->T('users_basedata', 'displayname')},
+             {$this->T('users_basedata', 'id')},
+             {$this->T('users_basedata', 'username')},
+             {$this->T('users_basedata', 'email')}
+      FROM {$this->T('rel_groups_users')}
+      INNER JOIN {$this->T('users_basedata')} 
+      ON ( {$this->T('rel_groups_users', 'user_id')} = {$this->T('users_basedata', 'id')} ) 
+      WHERE {$this->T('rel_groups_users', 'group_id')} = :group_id $extra_where;
+      ORDER BY $orderby_field $asc_field $limit_string
+
+    END;
+
+    $stmt = $this->db->query($query);
     $this->db->bind(':group_id', $group_id); // bind room id
-    //$this->db->bind(':status', $status); // bind status
 
     $err = false;
     try {
       $rooms = $this->db->resultSet();
-
     } catch (Exception $e) {
       $err = true;
       $returnvalue['success'] = false; // set return value to false
@@ -2191,7 +2265,53 @@ class User
     // generate blind index
     $bi = md5(strtolower(trim($username)));
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata . ' (temp_pw, pw_changed, o1, o2, o3, about_me, presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:temp_pw, :pw_changed, :o1, :o2, :o3, :about_me, 1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
+    $query = <<<END
+      
+      INSERT INTO {$this->db->au_users_basedata} 
+          (temp_pw, 
+           pw_changed,
+           o1,
+           o2,
+           o3,
+           about_me,
+           presence,
+           auto_delegation,
+           realname,
+           displayname,
+           username,
+           email,
+           pw,
+           status,
+           hash_id,
+           created,
+           last_update,
+           updater_id,
+           bi,
+           userlevel) 
+      VALUES 
+          (:temp_pw,
+           :pw_changed,
+           :o1,
+           :o2,
+           :o3,
+           :about_me,
+           1,
+           0,
+           :realname,
+           :displayname,
+           :username,
+           :email,
+           :password,
+           :status,
+           :hash_id,
+           NOW(),
+           NOW(),
+           :updater_id,
+           :bi,
+           :userlevel)
+
+    END;
+    $stmt = $this->db->query($query);
     // bind all VALUES
     $this->db->bind(':username', $this->crypt->encrypt($username));
     $this->db->bind(':realname', $this->crypt->encrypt($realname));
@@ -2814,6 +2934,7 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     // additional conditions for the WHERE clause
+
     $extra_where = "";
 
     if ($type > -1) {
