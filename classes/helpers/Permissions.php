@@ -726,11 +726,19 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     "Idea" =>
        [
         "setToWinning" => [
-          "roles" => ["principal", "principal_v", "admin"]
+          "open_roles" => ["super_moderator", "super_moderator_v", "principal", "principal_v", "admin"],
+          "roles" => ["moderator"],
+          "from_room" => [
+            "get_room" => "idea_id",
+          ],
         ],
 
         "setToLosing" => [
-          "roles" => ["principal", "principal_v", "admin"]
+          "open_roles" => ["super_moderator", "super_moderator_v", "principal", "principal_v", "admin"],
+          "roles" => ["moderator"],
+          "from_room" => [
+            "get_room" => "idea_id",
+          ],
         ],
 
         "addSurvey" => [
