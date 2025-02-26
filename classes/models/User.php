@@ -609,7 +609,7 @@ class User
     */
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_texts . '.status, ' . $this->db->au_texts . '.user_needs_to_consent, ' . $this->db->au_texts . '.service_id_consent, ' . $this->db->au_consent . '.date_consent ,' . $this->db->au_consent . '.consent , ' . $this->db->au_consent . '.date_revoke FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id) WHERE ' . $this->db->au_consent . '.usr_id = :user_id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_texts . '.status, ' . $this->db->au_texts . '.user_needs_to_consent, ' . $this->db->au_texts . '.service_id_consent, ' . $this->db->au_consent . '.date_consent ,' . $this->db->au_consent . '.consent , ' . $this->db->au_consent . '.date_revoke FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id) WHERE ' . $this->db->au_consent . '.user_id = :user_id');
     $this->db->bind(':id', $user_id); // bind userid
     $consents = $this->db->resultSet();
     if (count($consents) < 1) {
