@@ -251,6 +251,23 @@ class Idea
     $this->db->bind(':id', $idea_id); // bind idea id
     $votes = $this->db->resultSet();
 
+    // Get to number of voters in the idea room
+
+    $room_hash_id = $this->getRoom($idea_id);
+    $room_id = $this->converters->checkRoomId($room_hash_id);
+
+    $query = "SELECT count(user_id) as count FROM  {$this->db->au_rel_rooms_users} WHERE room_id = :room_id";
+    $stmt = $this->db->query($query);
+    $this->db->bind(':room_id', $room_id); // bind idea id
+    $voters_in_room_count = $this->db->resultSet()[0]['count'];
+
+    // Count super_moderator and principals with voting rights
+    $query = "select count(id) as count from au_users_basedata where userlevel in (41,45)";
+    $stmt = $this->db->query($query);
+    $super_voters_count = $this->db->resultSet()[0]['count'];
+
+    $voters_count = $voters_in_room_count + $super_voters_count;
+
     if (count($votes) < 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
@@ -287,6 +304,7 @@ class Idea
       $data['votes_negative'] = $votes_negative;
       $data['votes_neutral'] = $votes_neutral;
       $data['votes_positive'] = $votes_positive;
+      $data['voters_count'] = $voters_count;
 
 
       $returnvalue['success'] = true; // set return value
