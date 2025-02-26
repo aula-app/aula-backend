@@ -124,9 +124,16 @@ class User
   {
     /* returns hash_id of a user for a integer user id
      */
-    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
+
+    $query = <<<END
+
+        SELECT hash_id FROM  {$this->T('users_basedata')}  WHERE id = :id
+
+    END;
+    $stmt = $this->db->query($query);
     $this->db->bind(':id', $user_id); // bind userid
     $users = $this->db->resultSet();
+
     if (count($users) < 1) {
 
       $returnvalue['success'] = true; // set return value
@@ -158,8 +165,8 @@ class User
 
     $query = <<<END
 
-      UPDATE {$this->T('users_basedata')} 
-        SET 
+      UPDATE {$this->T('users_basedata')}
+        SET
          $property = :prop_value,
          last_update = NOW(),
          updater_id = :updater_id
@@ -203,7 +210,7 @@ class User
 
   public function revokeVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
-    /* helper method that revokes the voting right from a user ($user_id_target) after delegating user ($user_id) decided to revoke his delegation 
+    /* helper method that revokes the voting right from a user ($user_id_target) after delegating user ($user_id) decided to revoke his delegation
      */
     //sanitize variables
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
@@ -212,8 +219,8 @@ class User
 
     $query = <<<END
 
-      SELECT topic_id FROM {$this->T('delegation')} 
-        WHERE 
+      SELECT topic_id FROM {$this->T('delegation')}
+        WHERE
             user_id_original = :user_id AND
             user_id_target = :user_id_target AND
             topic_id = :topic_id
@@ -239,13 +246,13 @@ class User
 
       $query = <<<END
 
-        DELETE FROM {$this->T('delegation')} 
-        WHERE 
-            user_id_original = :user_id 
+        DELETE FROM {$this->T('delegation')}
+        WHERE
+            user_id_original = :user_id
             AND user_id_target = :user_id_target
             AND topic_id = :topic_id
 
-      END; 
+      END;
 
       $stmt = $this->db->query($query);
 
@@ -308,13 +315,13 @@ class User
 
       $query = <<<END
 
-        INSERT INTO {$this->T('delegation')} 
+        INSERT INTO {$this->T('delegation')}
           (topic_id, user_id_original, user_id_target, status, created, last_update, updater_id)
-        VALUES 
+        VALUES
           (:topic_id, :user_id, :user_id_target, 1, NOW(), NOW(), :updater_id)
-        ON 
-          DUPLICATE KEY 
-        UPDATE 
+        ON
+          DUPLICATE KEY
+        UPDATE
           user_id_original = :user_id,
           user_id_target = :user_id_target,
           status = 1,
@@ -379,7 +386,16 @@ class User
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET consents_given = consents_given + :inc_value, last_update =  NOW() WHERE id = :user_id');
+
+    $query = <<<END
+
+      UPDATE {$this->T('users_basedata')}
+        SET consents_given = consents_given + :inc_value,
+            last_update =  NOW()
+      WHERE id = :user_id
+
+    END;
+    $stmt = $this->db->query($query);
 
     // bind all VALUES
     $this->db->bind(':inc_value', $inc_value); // inc/dec value
@@ -438,8 +454,28 @@ class User
       // everything ok, users and text exists
 
       // add relation to database (consent)
+      $query = <<<END
 
-      $stmt = $this->db->query('INSERT INTO ' . $this->db->au_consent . ' (user_id, text_id, consent, status, created, last_update, date_consent, updater_id) VALUES (:user_id, :text_id, :consent, 1, NOW(), NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE user_id = :user_id, text_id = :text_id, consent = :consent, status = 1, last_update = NOW(), updater_id = :updater_id');
+        INSERT INTO {$this->T('consent')}
+          (user_id, text_id, consent,
+           status, created, last_update,
+           date_consent, updater_id)
+        VALUES
+           (:user_id, :text_id, :consent,
+            1, NOW(), NOW(),
+            NOW(), :updater_id)
+        ON DUPLICATE KEY
+          UPDATE
+          user_id = :user_id,
+          text_id = :text_id,
+          consent = :consent,
+          status = 1,
+          last_update = NOW(),
+          updater_id = :updater_id
+
+      END;
+
+      $stmt = $this->db->query($query);
 
       // bind all VALUES
       $this->db->bind(':text_id', $text_id); // id of the text that the user consents to
@@ -500,8 +536,15 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $topic_id = $this->converters->checkTopicId($topic_id);
 
-    # helper - returns the status of delegation for a defined user and topic 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_delegation . ' WHERE user_id_original = :user_id AND topic_id = :topic_id');
+    # helper - returns the status of delegation for a defined user and topic
+    $query = <<<END
+
+      SELECT * FROM {$this->T('delegation')}
+        WHERE user_id_original = :user_id AND
+              topic_id = :topic_id
+
+    END;
+    $stmt = $this->db->query($query);
     // bind all VALUES
     $this->db->bind(':topic_id', $topic_id);
     $this->db->bind(':user_id', $user_id); // user original id that is updated
@@ -563,7 +606,17 @@ class User
       $target_user = "user_id_target";
     }
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_delegation . ' SET status = :status, last_update = NOW() WHERE ' . $target_user . ' = :user_id' . $topic_clause);
+    $query = <<<END
+
+        UPDATE {$this->T('delegation')}
+          SET
+            status = :status,
+            last_update = NOW()
+        WHERE $target_user = :user_id $topic_clause
+
+    END;
+
+    $stmt = $this->db->query($query);
     // bind all VALUES
     $this->db->bind(':status', $status);
 
@@ -607,7 +660,17 @@ class User
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' LEFT JOIN ' . $this->db->au_delegation . ' ON (' . $this->db->au_users_basedata . '.id = ' . $this->db->au_delegation . '.user_id_original) WHERE ' . $this->db->au_delegation . '.user_id_target = :id AND ' . $this->db->au_delegation . '.topic_id = :topic_id');
+    $query = <<<END
+
+      SELECT * FROM  {$this->T('users_basedata')}
+        LEFT JOIN {$this->T('delegation')}
+        ON ({$this->T('users_basedata', 'id')} = {$this->T('delegation', 'user_id_original')})
+      WHERE
+        {$this->T('delegation', 'user_id_target')} = :id AND
+        {$this->T('delegation', 'topic_id')} = :topic_id
+
+    END;
+    $stmt = $this->db->query($query);
     $this->db->bind(':id', $user_id); // bind userid
     $this->db->bind(':topic_id', $topic_id); // bind topic id
     $users = $this->db->resultSet();
@@ -638,7 +701,17 @@ class User
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' LEFT JOIN ' . $this->db->au_delegation . ' ON (' . $this->db->au_users_basedata . '.id = ' . $this->db->au_delegation . '.user_id_target) WHERE ' . $this->db->au_delegation . '.user_id_original = :id AND ' . $this->db->au_delegation . '.topic_id = :topic_id');
+    $query = <<<END
+
+      SELECT * FROM {$this->T('users_basedata')}
+        LEFT JOIN {$this->T('delegation')}
+        ON ({$this->T('users_basedata', 'id')} = {$this->T('delegation', 'user_id_target')})
+      WHERE
+        {$this->T('delegation', 'user_id_original')} = :id AND
+        {$this->T('delegation', 'topic_id')} = :topic_id
+
+    END;
+    $stmt = $this->db->query($query);
     $this->db->bind(':id', $user_id); // bind userid
     $this->db->bind(':topic_id', $topic_id); // bind topic id
     $users = $this->db->resultSet();
@@ -666,7 +739,25 @@ class User
     */
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_texts . '.status, ' . $this->db->au_texts . '.user_needs_to_consent, ' . $this->db->au_texts . '.service_id_consent, ' . $this->db->au_consent . '.date_consent ,' . $this->db->au_consent . '.consent , ' . $this->db->au_consent . '.date_revoke FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id) WHERE ' . $this->db->au_consent . '.usr_id = :user_id');
+    $query = <<<END
+
+      SELECT {$this->T('texts', 'id')},
+             {$this->T('texts', 'headline')},
+             {$this->T('texts', 'body')},
+             {$this->T('texts', 'consent_text')},
+             {$this->T('texts', 'status')},
+             {$this->T('texts', 'user_needs_to_consent')},
+             {$this->T('texts', 'service_id_consent')},
+             {$this->T('consent', 'date_consent')},
+             {$this->T('consent', 'consent')},
+             {$this->T('consent', 'date_revoke')}
+      FROM {$this->T('texts')}
+      LEFT JOIN {$this->T('consent')}
+      ON ({$this->T('texts', 'id')} = {$this->T('consent', 'text_id')}
+      WHERE {$this->T('consent', 'user_id')} = :user_id
+
+    END;
+    $stmt = $this->db->query($query);
     $this->db->bind(':id', $user_id); // bind userid
     $consents = $this->db->resultSet();
     if (count($consents) < 1) {
@@ -690,7 +781,8 @@ class User
   {
     // gets consents that are necessary to use the system
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE status = 1 AND user_needs_to_consent = 2');
+    $query = "SELECT * FROM {$this->T('texts')} WHERE status = 1 AND user_needs_to_consent = 2";
+    $stmt = $this->db->query($query);
 
     $texts = $this->db->resultSet();
     $needed_consents = count($texts);
@@ -721,7 +813,19 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
     // first get all the mandatory consents for this user already given (consent =1)
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id FROM ' . $this->db->au_texts . ' INNER JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_consent . '.text_id = ' . $this->db->au_texts . '.id) WHERE (' . $this->db->au_consent . '.user_id = :user_id AND ' . $this->db->au_consent . '.consent = 1) AND ' . $this->db->au_texts . '.status = 1 AND ' . $this->db->au_texts . '.user_needs_to_consent  = 2');
+    $query = <<<END
+
+      SELECT {$this->T('texts', 'id')} FROM  {$this->T('texts')}
+        INNER JOIN {$this->T('consent')}
+        ON ({$this->T('consent', 'text_id')} = {$this->T('texts', 'id')})
+        WHERE
+          ({$this->T('consent', 'user_id')} = :user_id AND
+          {$this->T('consent', 'consent')} = 1) AND
+          {$this->T('texts', 'status')} = 1 AND
+          {$this->T('texts', 'user_needs_to_consent')} = 2
+
+    END;
+    $stmt = $this->db->query($query);
     $this->db->bind(':user_id', $user_id); // bind userid
 
     $consents = $this->db->resultSet();
@@ -1026,7 +1130,7 @@ class User
   public function getStandardRoom()
   {
     // returns the id for the standard room (AULA room)
-    $room_id = 0; // default to 0 
+    $room_id = 0; // default to 0
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_rooms . ' WHERE type = 1 LIMIT 1');
     $room = $this->db->resultSet();
 
@@ -1053,7 +1157,7 @@ class User
     if ($user_exist == 1 && $room_exist == 1) {
       // everything ok, user and room exists
       // add relation to database
-      
+
       $userlevel = $this->getDefaultRole($user_id);
       $this->addUserRole($user_id, $userlevel, $room_id);
 
@@ -1657,7 +1761,7 @@ class User
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET refresh_token = :refresh_value WHERE id = :user_id ');
     try {
-      $this->db->bind(':user_id', $user_id); 
+      $this->db->bind(':user_id', $user_id);
       $this->db->bind(':refresh_value', $refresh_value);
 
       $users = $this->db->execute();
@@ -1669,7 +1773,7 @@ class User
 
   public function getUserPayload($user_id)
   {
- 
+
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     $stmt = $this->db->query('SELECT id, userlevel, temp_pw, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id ');
@@ -1715,7 +1819,7 @@ class User
 
   public function checkCredentials($username, $pw)
   {
-    /* helper for method checkLogin () 
+    /* helper for method checkLogin ()
     checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
     username is clear text
     pw is clear text
@@ -1855,7 +1959,7 @@ class User
     }
 
     $sql_query = <<<END
-        SELECT * FROM {$this->T('users_basedata')} WHERE id > 0 $extra_where 
+        SELECT * FROM {$this->T('users_basedata')} WHERE id > 0 $extra_where
           ORDER BY $orderby_field $asc_field $limit_string
     END;
 
@@ -2038,15 +2142,15 @@ class User
     }
 
     $query = <<<END
-        SELECT {$this->T('users_basedata')}.* FROM {$this->T('rel_rooms_users')} 
-          INNER JOIN {$this->T('users_basedata')} 
-          ON ({$this->T('rel_rooms_users', 'user_id')} = {$this->T('users_basedata', 'id')}) 
+        SELECT {$this->T('users_basedata')}.* FROM {$this->T('rel_rooms_users')}
+          INNER JOIN {$this->T('users_basedata')}
+          ON ({$this->T('rel_rooms_users', 'user_id')} = {$this->T('users_basedata', 'id')})
           WHERE {$this->T('rel_rooms_users', 'room_id')} = :room_id $extra_where;
     END;
 
     $total_query = <<<END
-      {$this->T('rel_rooms_users')} INNER JOIN {$this->T('users_basedata')} 
-        ON ({$this->T('rel_rooms_users', 'user_id')} = {$this->T('users_basedata', 'id')}) 
+      {$this->T('rel_rooms_users')} INNER JOIN {$this->T('users_basedata')}
+        ON ({$this->T('rel_rooms_users', 'user_id')} = {$this->T('users_basedata', 'id')})
         WHERE {$this->db->au_rel_rooms_users}.room_id = :room_id ;
     END;
 
@@ -2112,7 +2216,7 @@ class User
 
   function generate_pass($length = 8)
   {
-    // pw generator 
+    // pw generator
 
     $j = 1;
     $allowedCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`!@#$%^&*()_{}[]';
@@ -2190,8 +2294,8 @@ class User
              {$this->T('users_basedata', 'username')},
              {$this->T('users_basedata', 'email')}
       FROM {$this->T('rel_groups_users')}
-      INNER JOIN {$this->T('users_basedata')} 
-      ON ( {$this->T('rel_groups_users', 'user_id')} = {$this->T('users_basedata', 'id')} ) 
+      INNER JOIN {$this->T('users_basedata')}
+      ON ( {$this->T('rel_groups_users', 'user_id')} = {$this->T('users_basedata', 'id')} )
       WHERE {$this->T('rel_groups_users', 'group_id')} = :group_id $extra_where;
       ORDER BY $orderby_field $asc_field $limit_string
 
@@ -2281,9 +2385,9 @@ class User
     $bi = md5(strtolower(trim($username)));
 
     $query = <<<END
-      
-      INSERT INTO {$this->db->au_users_basedata} 
-          (temp_pw, 
+
+      INSERT INTO {$this->db->au_users_basedata}
+          (temp_pw,
            pw_changed,
            o1,
            o2,
@@ -2302,8 +2406,8 @@ class User
            last_update,
            updater_id,
            bi,
-           userlevel) 
-      VALUES 
+           userlevel)
+      VALUES
           (:temp_pw,
            :pw_changed,
            :o1,
@@ -2757,7 +2861,7 @@ class User
       return $returnvalue;
     }
   }// end function
-  
+
   public function getUserGDPRData($user_id)
   {
     //retrieves all data associated to a certain user according to GDPR and returns it
@@ -2821,7 +2925,7 @@ class User
       $gdpr['ideas'] .= $idea['content'] . ", IDEA CREATED: " . $idea['created'] . ", IDEA LAST UPDATE: " . $idea['last_update'] . "*§$";
     }
 
-    // get comments 
+    // get comments
     $stmt = $this->db->query('SELECT content, created, last_update FROM ' . $this->db->au_comments . ' WHERE user_id = :id');
     $this->db->bind(':id', $user_id); // bind userid
 
@@ -3095,11 +3199,11 @@ class User
      $this->db->bind(':roles', json_encode($new_roles));
 
      $this->db->execute();
- 
+
   }
 
 
-  public function setUserRoles($user_id, $roles, $updater_id = 0) 
+  public function setUserRoles($user_id, $roles, $updater_id = 0)
   {
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW(), updater_id= :updater_id WHERE id = :user_id');
@@ -3141,7 +3245,7 @@ class User
     $check_jwt = $jwt->check_jwt(true);
 
     echo $check_jwt;
-  
+
   }
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)
@@ -3875,7 +3979,7 @@ class User
     if ($userRooms["success"]) {
       return in_array($room_id, array_map(function($r) { return $r['id']; }, $userRooms["data"]));
     } else {
-      return false; 
+      return false;
     }
   }
 }
