@@ -615,7 +615,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ],
 
       "addMessage" => [
-        "roles" => ["admin"]
+        "roles" => ["all"]
       ],
 
       "setMessageStatus" => [
