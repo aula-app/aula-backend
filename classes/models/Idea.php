@@ -118,9 +118,14 @@ class Idea
 
     $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
     $this->db->bind(':room_id', $room_id); // bind room id
-    $rooms = $this->db->resultSet();
+    $users = $this->db->resultSet();
 
-    return count($rooms);
+    // Count super_moderator and principals with voting rights
+    $query = "select count(id) as count from au_users_basedata where userlevel in (41,45)";
+    $stmt = $this->db->query($query);
+    $super_voters_count = $this->db->resultSet()[0]['count'];
+
+    return count($users) + $super_voters_count;
 
   }// end function
 
