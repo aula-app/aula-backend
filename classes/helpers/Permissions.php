@@ -686,6 +686,13 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
            "principal",
            "principal_v",
            "admin"
+        ],
+        "roles" => [
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "arg" => "room_id"
         ]
       ],
 
@@ -696,6 +703,13 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
            "principal",
            "principal_v",
            "admin"
+        ],
+        "roles" => [
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "topic_id"
         ]
       ],
 
@@ -706,7 +720,15 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
            "principal",
            "principal_v",
            "admin"
+        ],
+        "roles" => [
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "topic_id"
         ]
+
       ],
 
       "getTopicsByPhase" => [
