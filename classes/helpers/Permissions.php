@@ -337,7 +337,8 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
            "super_moderator_v",
            "principal",
            "principal_v",
-           "admin"
+           "admin",
+           "tech_admin"
         ]
       ],
 
@@ -626,10 +627,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
     "Group" => [
       "getGroups" => [
-        "roles" => [
+        "open_roles" => [
           "principal",
           "principal_v",
-          "admin"
+          "admin",
+          "tech_admin"
         ]
       ],
       "addGroup" => [
