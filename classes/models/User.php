@@ -997,7 +997,7 @@ class User
       // everything ok, user and room exists
       // add relation to database
       
-      $userlevel = $this->getDefaultRole($user_id);
+      $userlevel = 20; // $this->getDefaultRole($user_id);
       $this->addUserRole($user_id, $userlevel, $room_id);
 
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
