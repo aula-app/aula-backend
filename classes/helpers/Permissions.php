@@ -726,11 +726,19 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     "Idea" =>
        [
         "setToWinning" => [
-          "roles" => ["principal", "principal_v", "admin"]
+          "open_roles" => ["super_moderator", "super_moderator_v", "principal", "principal_v", "admin"],
+          "roles" => ["moderator"],
+          "from_room" => [
+            "get_room" => "idea_id",
+          ],
         ],
 
         "setToLosing" => [
-          "roles" => ["principal", "principal_v", "admin"]
+          "open_roles" => ["super_moderator", "super_moderator_v", "principal", "principal_v", "admin"],
+          "roles" => ["moderator"],
+          "from_room" => [
+            "get_room" => "idea_id",
+          ],
         ],
 
         "addSurvey" => [
@@ -825,16 +833,14 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         ],
 
         "getVoteValue" => [
-           "roles" => [
+          "open_roles" => [
+            "super_moderator_v",
+            "principal_v",
+          ],
+          "roles" => [
             "guest",
             "user",
-            "moderator",
             "moderator_v",
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
           ],
           "from_room" => [
             "get_room" => "idea_id"
@@ -918,12 +924,13 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         ],
 
         "voteForIdea" => [
+          "open_roles" => [
+            "super_moderator_v",
+            "principal_v",
+          ],
           "roles" => [
             "user",
             "moderator_v",
-            "super_moderator_v",
-            "principal_v",
-            "admin"
           ],
           "from_room" => [
             "get_room" => "idea_id"
