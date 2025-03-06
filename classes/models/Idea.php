@@ -2410,7 +2410,8 @@ class Idea
         $idea_data = []; #init
         #addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $type = 0)
         $idea_data = $this->addIdea($idea_content, $idea_headline, $updater_id, 1, $room_id, 10, $updater_id, 1, "survey", "", "", 1);
-        $idea_id = $idea_data['data'];
+        $idea_id = $idea_data['data']['insert_id'];
+
         if ($idea_id) {
           $idea_id = intval($idea_id);
           # add idea to topic / box
