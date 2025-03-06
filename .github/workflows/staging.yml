@@ -1,9 +1,9 @@
-name: Update test backend
+name: Update staging backend
 
 on: 
   push:
     branches:
-      - test
+      - staging
 
 jobs:
   build:
@@ -16,9 +16,9 @@ jobs:
         uses: actions/checkout@v2
       - name: Copy files
         run: |
-          cp -vr * /var/www-aula-test/api
+          cp -vr * /var/www-aula-staging/api
           echo "Instances backend updated"
-          /home/actions-runner/recreate_test_db.sh
+          /home/actions-runner/recreate_staging_db.sh
           echo "Database recreated"
         shell: bash
 
