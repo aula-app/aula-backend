@@ -269,7 +269,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "roles" => ["all"]
       ],
       "createDBDump" => [
-        "roles" => ["tech_admin"]
+        "roles" => ["admin", "tech_admin"]
       ]
     ],
 
