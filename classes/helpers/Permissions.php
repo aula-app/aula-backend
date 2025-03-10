@@ -405,6 +405,12 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         ],
       ],
 
+      "addCSV" => [
+        "open_roles" => [
+          "admin"
+        ]
+      ],
+
       "refresh_token" => [
         "roles" => [ "all" ]
       ],
