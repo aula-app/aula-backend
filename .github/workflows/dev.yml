@@ -18,6 +18,6 @@ jobs:
         run: |
           cp -vr * /var/www/api
           echo "Instances backend updated"
-          /home/actions-runner/recreate_db.sh
-          echo "Database recreated"
+          # /home/actions-runner/recreate_db.sh
+          # echo "Database recreated"
         shell: bash
