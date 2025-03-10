@@ -27,6 +27,27 @@ class User
     $this->syslog = $syslog;
     $this->converters = new Converters($db); // load converters
 
+    global $email_host;
+    global $email_port;
+    global $email_username;
+    global $email_password;
+    global $email_from;
+    global $email_address;
+    global $email_creation_subject;
+    global $email_creation_body;
+    global $mailgun_key;
+
+    $params = array(
+      'host' => $email_host,
+      'port' => $email_port,
+      'auth' => true,
+      'username' => $email_username,
+      'password' => $email_password
+    );
+
+    # deal with sending email to user for welcome mail
+
+    $this->smtp = Mail::factory('smtp', $params);
   }// end function
 
   private function decrypt($content)
@@ -2281,6 +2302,9 @@ class User
 
         $this->db->resultSet();
 
+        $content = "text/html; charset=utf-8";
+        $mime = "1.0";
+
         global $email_host;
         global $email_port;
         global $email_username;
@@ -2289,20 +2313,6 @@ class User
         global $email_address;
         global $email_creation_subject;
         global $email_creation_body;
-
-        $params = array(
-          'host' => $email_host,
-          'port' => $email_port,
-          'auth' => true,
-          'username' => $email_username,
-          'password' => $email_password
-        );
-
-        # deal with sending email to user for welcome mail
-
-        $smtp = Mail::factory('smtp', $params);
-        $content = "text/html; charset=utf-8";
-        $mime = "1.0";
 
         $headers = array(
           'From' => $email_from,
@@ -2313,11 +2323,12 @@ class User
           'Content-type' => $content
         );
 
-        $email_creation_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
-        $email_creation_body = str_replace("<NAME>", $realname, $email_creation_body);
-        $email_creation_body = str_replace("<USERNAME>", $username, $email_creation_body);
+        $email_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
+        $email_body = str_replace("<NAME>", $realname, $email_body);
+        $email_body = str_replace("<USERNAME>", $username, $email_body);
 
-        $mail = $smtp->send($email, $headers, $email_creation_body);
+        $mail = $this->smtp->send($email, $headers, $email_body);
+
       }
 
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);

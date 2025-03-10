@@ -622,9 +622,9 @@ class Idea
 
     $existing_topic_id = $this->getIdeaTopic($idea_id)['data'];
 
-    if ($existing_topic_id == true and $existing_topic_id > 0) {
+    if ($existing_topic_id == true and count($existing_topic_id) > 0) {
       // idea already has a topic, initiate moving of idea to destination topiv
-      $res = $this->moveIdeaBetweenTopics($idea_id, $existing_topic_id, $topic_id, $updater_id)['success'];
+      $res = $this->moveIdeaBetweenTopics($idea_id, $existing_topic_id[0]['hash_id'], $topic_id, $updater_id)['success'];
 
       if ($res == true) {
         $this->syslog->addSystemEvent(0, "Succesfully moved idea " . $idea_id . " to topic " . $topic_id, 0, "", 1);
@@ -3573,7 +3573,7 @@ class Idea
       return $returnvalue;
     }
     $status_idea = $idea_basedata['status']; // get idea status
-    $topic_id = $this->getIdeaTopic($idea_id)['data']; // get topic id for idea
+    $topic_id = $this->getIdeaTopic($idea_id)['data'][0]['hash_id']; // get topic id for idea
     $room_id = $idea_basedata['room_id'];
 
     // check if user is member of the group
