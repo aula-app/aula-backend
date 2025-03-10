@@ -19,7 +19,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     60 => "tech_admin"
   ];
 
-  $all_models = [ 
+  $all_models = [
     "Text",
     "Topic",
     "Idea",
@@ -36,144 +36,144 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
   $permissions_table = [
     "Comment" => [
       "getCommentsByIdeaId" => [
-         "open_roles" => [
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
-         ],
-         "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "idea_id",
-           "get_room_method" => "getRoomByIdea"
-         ]     
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
+        ],
+        "roles" => [
+          "guest",
+          "user",
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "idea_id",
+          "get_room_method" => "getRoomByIdea"
+        ]
       ],
 
       "addComment" => [
-         "open_roles" => [
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
-         ],
-         "roles" => [
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "idea_id",
-           "get_room_method" => "getRoomByIdea"
-         ],
-         # TODO: Verify updater_id
-         "checks" => [
-           "user_id:user_id",
-         ]
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
+        ],
+        "roles" => [
+          "user",
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "idea_id",
+          "get_room_method" => "getRoomByIdea"
+        ],
+        # TODO: Verify updater_id
+        "checks" => [
+          "user_id:user_id",
+        ]
       ],
 
       "getLikeStatus" => [
-         "open_roles" => [
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
-         ],
-         "roles" => [
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "comment_id",
-         ],
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
+        ],
+        "roles" => [
+          "user",
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "comment_id",
+        ],
       ],
 
       "CommentAddLike" => [
-         "open_roles" => [
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
-         ],
-         "roles" => [
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "comment_id",
-         ],
-         "checks" => [
-           "user_id:user_id",
-         ]
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
+        ],
+        "roles" => [
+          "user",
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "comment_id",
+        ],
+        "checks" => [
+          "user_id:user_id",
+        ]
       ],
 
       "CommentRemoveLike" => [
-         "open_roles" => [
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
-         ],
-         "roles" => [
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "comment_id",
-         ],
-         "checks" => [
-           "user_id:user_id",
-         ]
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
+        ],
+        "roles" => [
+          "user",
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "comment_id",
+        ],
+        "checks" => [
+          "user_id:user_id",
+        ]
       ],
 
       "editComment" => [
-         "open_roles" => [
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
-         ],
-         "roles" => [
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "comment_id",
-         ],
-         "owner" => ["comment_id"],
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
+        ],
+        "roles" => [
+          "user",
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "comment_id",
+        ],
+        "owner" => ["comment_id"],
       ],
 
       "deleteComment" => [
-         "open_roles" => [
-            "super_moderator",
-            "super_moderator_v",
-            "principal",
-            "principal_v",
-            "admin"
-         ],
-         "roles" => [
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "comment_id",
-         ],
-         "owner" => ["comment_id"],
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
+        ],
+        "roles" => [
+          "user",
+          "moderator",
+          "moderator_v"
+        ],
+        "from_room" => [
+          "get_room" => "comment_id",
+        ],
+        "owner" => ["comment_id"],
       ],
 
     ],
@@ -185,51 +185,51 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     ],
 
     "Command" => [
-        "getCommands" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
-     
-        "deleteCommand" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
- 
-        "getCommandBaseData" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
- 
-        "getDueCommands" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
- 
-        "addCommand" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
- 
-        "setActiveStatus" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
- 
-        "setCommandStatus" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
- 
-        "setCommandDate" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
+      "getCommands" => [
+        "open_roles" => ["admin", "tech_admin"]
+      ],
+
+      "deleteCommand" => [
+        "open_roles" => ["admin", "tech_admin"]
+      ],
+
+      "getCommandBaseData" => [
+        "open_roles" => ["admin", "tech_admin"]
+      ],
+
+      "getDueCommands" => [
+        "open_roles" => ["admin", "tech_admin"]
+      ],
+
+      "addCommand" => [
+        "open_roles" => ["admin", "tech_admin"]
+      ],
+
+      "setActiveStatus" => [
+        "open_roles" => ["admin", "tech_admin"]
+      ],
+
+      "setCommandStatus" => [
+        "open_roles" => ["admin", "tech_admin"]
+      ],
+
+      "setCommandDate" => [
+        "open_roles" => ["admin", "tech_admin"]
+      ],
     ],
 
-    "Settings" => 
+    "Settings" =>
       [
         "setWorkdays" => [
-           "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+          "roles" => ["principal", "principal_v", "admin", "tech_admin"]
         ],
 
         "setDailyStartTime" => [
-            "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+          "roles" => ["principal", "principal_v", "admin", "tech_admin"]
         ],
 
         "setDailyEndTime" => [
-            "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+          "roles" => ["principal", "principal_v", "admin", "tech_admin"]
         ],
 
         "setQuorum" => [
@@ -255,15 +255,15 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "setAllowRegistration" => [
           "open_roles" => ["admin", "tech_admin"]
         ],
- 
+
         "setInstanceOnlineMode" => [
           "open_roles" => ["admin", "tech_admin"]
         ],
 
         "setInstanceInfo" => [
-          "roles" => ["admin", "tech_admin"] 
+          "roles" => ["admin", "tech_admin"]
         ]
-    ],
+      ],
     "Converters" => [
       "getGlobalPhaseDurations" => [
         "roles" => ["all"]
@@ -281,7 +281,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "all"
         ]
       ],
-    
+
       "getTexts" => [
         "roles" => [
           "guest",
@@ -313,7 +313,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "roles" => [
           "all"
         ],
-        "checks" => [ "user_id:updater_id" ]
+        "checks" => ["user_id:updater_id"]
       ],
 
     ],
@@ -333,75 +333,75 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
       "getRooms" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin",
-           "tech_admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin",
+          "tech_admin"
         ]
       ],
 
       "getRoomsByUser" => [
         "open_roles" => ["principal", "principal_v", "admin"],
-        "roles" => [ "all" ],
-        "checks" => [ "user_id:user_id" ]
+        "roles" => ["all"],
+        "checks" => ["user_id:user_id"]
       ],
 
       "getRoomBaseData" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v",
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "guest",
+          "user",
+          "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "from_room" => ["arg" => "room_id"]
       ],
 
       "getUsersInRoom" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v",
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "guest",
+          "user",
+          "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "from_room" => ["arg" => "room_id"]
       ]
-   
+
     ],
 
     "User" => [
       "getUsersByRoom" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
       ],
 
@@ -412,7 +412,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ],
 
       "refresh_token" => [
-        "roles" => [ "all" ]
+        "roles" => ["all"]
       ],
 
       "getDelegationStatus" => [
@@ -441,19 +441,19 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       # TODO: This need to be fixed on the frontend
       "getUsers" => [
         "roles" => [
-           "all"
+          "all"
         ]
       ],
-    
+
       "addUser" => [
         "roles" => [
-           "admin"
+          "admin"
         ]
       ],
- 
+
       "editUser" => [
         "roles" => [
-           "admin"
+          "admin"
         ]
       ],
 
@@ -463,7 +463,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "tech_admin"
         ],
         "roles" => [
-          "guest", 
+          "guest",
           "user",
           "moderator",
           "moderator_v",
@@ -474,16 +474,28 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "admin",
           "tech_admin"
         ],
-        "checks" => [ "user_id:user_id" ]
+        "checks" => ["user_id:user_id"]
       ],
 
       "setUserDisplayname" => [
-        "roles" => [
+        "open_roles" => [
           "admin",
           "tech_admin"
-        ]
+        ],
+        "roles" => [
+          "guest",
+          "user",
+          "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin",
+          "tech_admin"
+        ],
       ],
- 
+
       "setUserRealname" => [
         "roles" => [
           "admin",
@@ -507,7 +519,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
       "deleteUser" => [
         "roles" => [
-           "admin"
+          "admin"
         ]
       ],
 
@@ -518,34 +530,34 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "admin"
         ],
         "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v",
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "guest",
+          "user",
+          "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
-        "checks" => [ "user_id:user_id" ]
+        "checks" => ["user_id:user_id"]
       ],
- 
+
       "getUserGroups" => [
         "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v",
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "guest",
+          "user",
+          "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
-        "checks" => [ "user_id:user_id" ]
+        "checks" => ["user_id:user_id"]
       ],
- 
+
       "getUserBaseData" => [
         "open_roles" => [
           "principal",
@@ -553,58 +565,58 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "admin",
         ],
         "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v",
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "guest",
+          "user",
+          "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
-        "checks" => [ "user_id:user_id" ]
+        "checks" => ["user_id:user_id"]
       ],
 
       "getUserGDPRData" => [
         "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v",
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "guest",
+          "user",
+          "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
-        "checks" => [ "user_id:user_id" ]
+        "checks" => ["user_id:user_id"]
       ],
 
       "addUserToRoom" => [
         "roles" => [
-           "admin"
+          "admin"
         ]
       ],
 
       "removeUserFromRoom" => [
         "roles" => [
-           "admin"
+          "admin"
         ]
       ],
- 
+
       "addUserToGroup" => [
         "roles" => [
-           "admin"
+          "admin"
         ]
       ],
- 
+
       "removeUserFromGroup" => [
         "roles" => [
-           "admin"
+          "admin"
         ]
       ],
- 
+
     ],
 
     "Message" => [
@@ -666,11 +678,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     "Topic" => [
       "getTopicBaseData" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "roles" => ["all"],
         "from_room" => [
@@ -679,19 +691,19 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ],
       "getTopics" => [
         "open_roles" => [
-           "principal",
-           "principal_v",
-           "admin"
+          "principal",
+          "principal_v",
+          "admin"
         ]
       ],
 
       "addTopic" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "roles" => [
           "moderator",
@@ -704,11 +716,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
       "editTopic" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "roles" => [
           "moderator",
@@ -721,11 +733,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
       "deleteTopic" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "roles" => [
           "moderator",
@@ -739,11 +751,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
       "getTopicsByPhase" => [
         "open_roles" => [
-           "super_moderator",
-           "super_moderator_v",
-           "principal",
-           "principal_v",
-           "admin"
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin"
         ],
         "roles" => ["all"],
         "from_room" => [
@@ -754,7 +766,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     ],
 
     "Idea" =>
-       [
+      [
         "setToWinning" => [
           "open_roles" => ["super_moderator", "super_moderator_v", "principal", "principal_v", "admin"],
           "roles" => ["moderator"],
@@ -813,16 +825,16 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "principal_v",
             "admin"
           ],
-         "roles" => [
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "idea_id",
-         ],
-         "owner" => ["idea_id"],
-         "checks" => ["user_id:updater_id"]
+          "roles" => [
+            "user",
+            "moderator",
+            "moderator_v"
+          ],
+          "from_room" => [
+            "get_room" => "idea_id",
+          ],
+          "owner" => ["idea_id"],
+          "checks" => ["user_id:updater_id"]
         ],
 
         "deleteIdea" => [
@@ -836,14 +848,14 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         ],
 
         "getLikeStatus" => [
-           "open_roles" => [
-              "super_moderator",
-              "super_moderator_v",
-              "principal",
-              "principal_v",
-              "admin"
-           ],
-           "roles" => [
+          "open_roles" => [
+            "super_moderator",
+            "super_moderator_v",
+            "principal",
+            "principal_v",
+            "admin"
+          ],
+          "roles" => [
             "guest",
             "user",
             "moderator",
@@ -1008,14 +1020,14 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "principal",
             "principal_v",
             "admin"
-         ],
-         "roles" => [
+          ],
+          "roles" => [
             "guest",
             "user",
             "moderator",
             "moderator_v"
-         ],
-         "from_room" => ["arg" => "room_id"]
+          ],
+          "from_room" => ["arg" => "room_id"]
         ],
 
         "getIdeaBaseData" => [
@@ -1089,7 +1101,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "get_room" => "idea_id"
           ]
         ],
- 
+
         "getIdeasByTopic" => [
           "open_roles" => [
             "super_moderator",
@@ -1097,17 +1109,17 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "principal",
             "principal_v",
             "admin"
-         ],
-         "roles" => [
-           "guest",
-           "user",
-           "moderator",
-           "moderator_v"
-         ],
-         "from_room" => [
-           "get_room" => "topic_id",
-           "get_room_method" => "getTopicRoom"
-         ]
+          ],
+          "roles" => [
+            "guest",
+            "user",
+            "moderator",
+            "moderator_v"
+          ],
+          "from_room" => [
+            "get_room" => "topic_id",
+            "get_room_method" => "getTopicRoom"
+          ]
         ],
 
         "addCategory" => [
@@ -1160,20 +1172,21 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "principal_v",
             "admin"
           ],
-          "roles" => ["user",
-                      "moderator",
-                      "moderator_v",
+          "roles" => [
+            "user",
+            "moderator",
+            "moderator_v",
           ],
           "checks" => ["user_id:user_id", "user_id:updater_id"],
           "from_room" => ["arg" => "room_id"]
         ]
       ]
   ];
-  
+
   if (in_array($model_name, $all_models)) {
     if (!in_array($model_name, array_keys($permissions_table))) {
-      return [ "allowed" => false ];
-    } 
+      return ["allowed" => false];
+    }
 
     $all_checks = [];
 
@@ -1181,17 +1194,17 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       # check open roles
       if (in_array("open_roles", array_keys($permissions_table[$model_name][$method]))) {
         if (in_array($roles_map[$userlevel], $permissions_table[$model_name][$method]["open_roles"])) {
-          return ["allowed" => true];  
+          return ["allowed" => true];
         }
 
         if (in_array("owner", $permissions_table[$model_name][$method]["open_roles"])) {
           $isOwner = $model->isOwner($user_id, $arguments[$permissions_table[$model_name][$method]["owner"]]);
 
           if ($isOwner) {
-            return ["allowed" => true];  
+            return ["allowed" => true];
           }
         }
-      } 
+      }
 
       # check roles
       if (in_array("roles", array_keys($permissions_table[$model_name][$method]))) {
@@ -1202,8 +1215,8 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             array_push($all_checks, true);
           }
         }
-      } 
-      
+      }
+
       # check owner content
       if (in_array("checks", array_keys($permissions_table[$model_name][$method]))) {
         $checks = $permissions_table[$model_name][$method]["checks"];
@@ -1215,7 +1228,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             $total_checks += 1;
           }
         }
-        if (count($checks) == $total_checks) { 
+        if (count($checks) == $total_checks) {
           array_push($all_checks, true);
         } else {
           return ["allowed" => false];
@@ -1229,7 +1242,8 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           $user_roles_in_room = array_values(array_filter($roles, fn($r) => $r->room == $request_room_id));
 
           if (count($user_roles_in_room) > 0) {
-            if (in_array("all", $permissions_table[$model_name][$method]["roles"])
+            if (
+              in_array("all", $permissions_table[$model_name][$method]["roles"])
               || in_array($roles_map[$user_roles_in_room[0]->role], $permissions_table[$model_name][$method]["roles"])
               || (in_array("open_roles", array_keys($permissions_table[$model_name][$method]))
                 && in_array($roles_map[$user_roles_in_room[0]->role], $permissions_table[$model_name][$method]["open_roles"]))
@@ -1240,20 +1254,21 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             }
           } else {
             array_push($all_checks, false);
-          } 
+          }
         } else if (in_array("get_room", array_keys($permissions_table[$model_name][$method]["from_room"]))) {
           $get_room_method = "getRoom";
           if (in_array("get_room_method", array_keys($permissions_table[$model_name][$method]["from_room"]))) {
             $get_room_method = $permissions_table[$model_name][$method]["from_room"]["get_room_method"];
-          } 
-          
+          }
+
           $room_hash = $model->$get_room_method($arguments[$permissions_table[$model_name][$method]["from_room"]["get_room"]]);
           $user_roles_in_room = array_values(array_filter($roles, fn($r) => $r->room == $room_hash));
 
           if (count($user_roles_in_room) > 0) {
             if (in_array('all', $permissions_table[$model_name][$method]["roles"])) {
-               array_push($all_checks, true);
-            } else if (in_array($roles_map[$user_roles_in_room[0]->role], $permissions_table[$model_name][$method]["roles"]) 
+              array_push($all_checks, true);
+            } else if (
+              in_array($roles_map[$user_roles_in_room[0]->role], $permissions_table[$model_name][$method]["roles"])
               || (in_array("open_roles", array_keys($permissions_table[$model_name][$method]))
                 && in_array($roles_map[$user_roles_in_room[0]->role], $permissions_table[$model_name][$method]["open_roles"]))
             ) {
@@ -1263,7 +1278,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             }
           } else {
             array_push($all_checks, false);
-          } 
+          }
         }
       }
 
@@ -1271,12 +1286,12 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         foreach ($all_checks as $c) {
           if (!$c)
             return ["allowed" => false];
-        } 
+        }
         return ["allowed" => true];
-      } 
-    } 
+      }
+    }
   }
-  
+
   return ["allowed" => false];
 }
 
