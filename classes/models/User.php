@@ -465,7 +465,7 @@ class User
     $topic_id = $this->converters->checkTopicId($topic_id);
 
     # helper - returns the status of delegation for a defined user and topic
-    $stmt = $this->db->query('SELECT ' . $this->db->au_delegation . '.*, ' . $this->db->au_users_basedata . '.hash_id as delegate_hash_id, ' . $this->db->au_users_basedata . '.realname as delegate_realname, ' . $this->db->au_users_basedata . '.displayname as delegate_displayname FROM ' . $this->db->au_users_basedata . ' LEFT JOIN ' . $this->db->au_delegation . ' ON (' . $this->db->au_users_basedata . '.id = ' . $this->db->au_delegation . '.user_id_original) WHERE ' . $this->db->au_delegation . '.user_id_original = :user_id AND ' . $this->db->au_delegation . '.topic_id = :topic_id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_delegation . '.*, ' . $this->db->au_users_basedata . '.hash_id as delegate_hash_id, ' . $this->db->au_users_basedata . '.realname as delegate_realname, ' . $this->db->au_users_basedata . '.displayname as delegate_displayname FROM ' . $this->db->au_users_basedata . ' LEFT JOIN ' . $this->db->au_delegation . ' ON (' . $this->db->au_users_basedata . '.id = ' . $this->db->au_delegation . '.user_id_target) WHERE ' . $this->db->au_delegation . '.user_id_original = :user_id AND ' . $this->db->au_delegation . '.topic_id = :topic_id');
 
     // bind all VALUES
     $this->db->bind(':topic_id', $topic_id);
