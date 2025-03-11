@@ -3944,7 +3944,7 @@ class Idea
       //echo ("<br>no votes found");
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // db error code
-      $returnvalue['data'] = 0; // returned data
+      $returnvalue['data'] = null; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
