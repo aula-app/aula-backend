@@ -287,6 +287,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "guest",
           "user",
           "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
           "admin"
         ]
       ],
