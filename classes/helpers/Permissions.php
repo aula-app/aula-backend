@@ -410,7 +410,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "principal_v",
         ],
         "from_room" => ["arg" => "room_id"],
-        "checks" => ["user_hash:user_id"]
+        "checks" => ["user_id:user_id"]
       ],
 
       "getUsersByRoom" => [
