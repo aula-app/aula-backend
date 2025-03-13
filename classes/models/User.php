@@ -3741,6 +3741,49 @@ class User
 
   }// end function
 
+  public function getPossibleDelegations($user_id, $room_id, $topic_id)
+  {
+    $room_id = $this->converters->checkRoomId($room_id);
+    $user_id = $this->converters->checkUserId($user_id);
+    $topic_id = $this->converters->checkTopicId($topic_id);
+
+    $query = <<<EOD
+      SELECT {$this->db->au_users_basedata}.hash_id, {$this->db->au_users_basedata}.username, {$this->db->au_users_basedata}.displayname, false as 'is_delegate'
+        FROM  {$this->db->au_rel_rooms_users}  
+        INNER JOIN {$this->db->au_users_basedata} ON ({$this->db->au_rel_rooms_users}.user_id = {$this->db->au_users_basedata}.id)
+        WHERE {$this->db->au_rel_rooms_users}.room_id = :room_id AND
+        {$this->db->au_rel_rooms_users}.user_id NOT IN (SELECT user_id_target FROM {$this->db->au_delegation} WHERE user_id_original = :user_id AND topic_id = :topic_id)
+    EOD;
+
+    $this->db->query($query);
+    $this->db->bind(":room_id", $room_id);
+    $this->db->bind(":user_id", $user_id);
+    $this->db->bind(":topic_id", $topic_id);
+
+    $this->db->execute();
+    $usersInRoom = $this->db->resultSet();
+
+    $query = <<<EOD
+      SELECT {$this->db->au_users_basedata}.hash_id, {$this->db->au_users_basedata}.username, {$this->db->au_users_basedata}.displayname, true as 'is_delegate'
+        FROM  {$this->db->au_users_basedata}  
+        WHERE id IN (SELECT user_id_target FROM {$this->db->au_delegation} WHERE user_id_original = :user_id AND topic_id = :topic_id)
+    EOD;
+
+    $this->db->query($query);
+    $this->db->bind(":user_id", $user_id);
+    $this->db->bind(":topic_id", $topic_id);
+    $this->db->execute();
+    $userDelegatesInRoom = $this->db->resultSet();
+
+    $allUsers= array_merge($usersInRoom, $userDelegatesInRoom);
+    $returnvalue['success'] = true;
+    $returnvalue['error_code'] = 0;
+    $returnvalue['data'] = $allUsers;
+    $returnvalue['count'] = count($allUsers);
+    return $returnvalue;
+
+  }
+
   public function userInRoom($user_id, $room_id)
   {
     $room = new Room($this->db, $this->crypt, $this->syslog);

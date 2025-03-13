@@ -4,7 +4,7 @@ require_once('../base_config.php'); // load base config with paths to classes et
 require_once('../error_msg.php');
 require_once($baseHelperDir . 'Crypt.php');
 
-function checkPermissions($model_name, $model, $method, $arguments, $user_id, $userlevel, $roles)
+function checkPermissions($model_name, $model, $method, $arguments, $user_id, $userlevel, $roles, $user_hash)
 {
   $roles_map = [
     10 => "guest",
@@ -401,6 +401,18 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     ],
 
     "User" => [
+      "getPossibleDelegations" => [
+        "open_roles" => ["admin"],
+        "roles" => [
+          "user",
+          "moderator_v",
+          "super_moderator_v",
+          "principal_v",
+        ],
+        "from_room" => ["arg" => "room_id"],
+        "checks" => ["user_hash:user_id"]
+      ],
+
       "getUsersByRoom" => [
         "open_roles" => [
           "super_moderator",

@@ -28,6 +28,7 @@ if ($check_jwt["success"]) {
   $jwt_payload = $jwt->payload();
   $user_id = $jwt_payload->user_id;
   $userlevel = $jwt_payload->user_level;
+  $user_hash = $jwt_payload->user_hash;
   $roles = $jwt_payload->roles;
 
   $current_settings = $settings->getInstanceSettings();
@@ -62,7 +63,7 @@ if ($check_jwt["success"]) {
     $decrypt_fields = [];
   }
 
-  $permissions = checkPermissions($model_name, $model, $method, $arguments, $user_id, $userlevel, $roles, );
+  $permissions = checkPermissions($model_name, $model, $method, $arguments, $user_id, $userlevel, $roles, $user_hash);
 
   if (!$permissions["allowed"]) {
     http_response_code(403);
