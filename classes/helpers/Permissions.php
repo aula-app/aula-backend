@@ -287,6 +287,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "guest",
           "user",
           "moderator",
+          "moderator_v",
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
           "admin"
         ]
       ],
@@ -416,6 +421,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ],
 
       "getDelegationStatus" => [
+        "roles" => ["all"],
+        "checks" => ["user_id:user_id"]
+      ],
+
+      "getReceivedDelegations" => [
         "roles" => ["all"],
         "checks" => ["user_id:user_id"]
       ],
@@ -560,6 +570,8 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
 
       "getUserBaseData" => [
         "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
           "principal",
           "principal_v",
           "admin",
@@ -569,8 +581,6 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "user",
           "moderator",
           "moderator_v",
-          "super_moderator",
-          "super_moderator_v",
           "principal",
           "principal_v",
           "admin"
@@ -691,6 +701,8 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
       ],
       "getTopics" => [
         "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
           "principal",
           "principal_v",
           "admin"

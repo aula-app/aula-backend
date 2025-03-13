@@ -968,7 +968,7 @@ class Idea
     $room_id = $topic->getRoom($topic_id);
     $number_of_users = $this->getNumberOfUsers($room_id);
 
-    $select_part = 'SELECT ' . $this->db->au_users_basedata . '.displayname, '. $this->db->au_ideas . '.sum_votes, '. $number_of_users . ' as number_of_users, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_rooms . '.hash_id as room_hash_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment FROM ' . $this->db->au_ideas;
+    $select_part = 'SELECT ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.sum_votes, ' . $number_of_users . ' as number_of_users, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_rooms . '.hash_id as room_hash_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.topic_id, ' . $this->db->au_ideas . '.content,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.is_winner, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment FROM ' . $this->db->au_ideas;
     $join = 'INNER JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id)';
     $join2 = ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id ';
     $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_rel_topics_ideas . '.topic_id= :topic_id ' . $extra_where;
@@ -2415,6 +2415,7 @@ class Idea
         if ($idea_id) {
           $idea_id = intval($idea_id);
           # add idea to topic / box
+          $this->setApprovalStatus($idea_id, 1, '');
           $this->addIdeaToTopic($insertid, $idea_id, $updater_id);
         }
 
@@ -3943,7 +3944,7 @@ class Idea
       //echo ("<br>no votes found");
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // db error code
-      $returnvalue['data'] = 0; // returned data
+      $returnvalue['data'] = null; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
