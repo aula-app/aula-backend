@@ -24,6 +24,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     "Topic",
     "Idea",
     "Comment",
+    "Command",
     "Converters",
     "Settings",
     "Group",
