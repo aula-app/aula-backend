@@ -1289,6 +1289,8 @@ class Idea
   {
     /* returns number of delegated votes to this user (user_id), accepts database id (int)
      */
+    $topic_id = $this->converters->checkTopicId($topic_id);
+
     $stmt = $this->db->query('SELECT status, user_id_original FROM ' . $this->db->au_delegation . ' WHERE user_id_target = :user_id AND topic_id = :topic_id AND status = 1');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':topic_id', $topic_id); // bind topic id
