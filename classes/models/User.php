@@ -3748,7 +3748,7 @@ class User
     $topic_id = $this->converters->checkTopicId($topic_id);
 
     $query = <<<EOD
-      SELECT {$this->db->au_users_basedata}.hash_id, {$this->db->au_users_basedata}.username, {$this->db->au_users_basedata}.displayname, false as 'is_delegate'
+      SELECT {$this->db->au_users_basedata}.hash_id, {$this->db->au_users_basedata}.username, {$this->db->au_users_basedata}.realname, {$this->db->au_users_basedata}.displayname, false as 'is_delegate'
         FROM  {$this->db->au_rel_rooms_users}  
         INNER JOIN {$this->db->au_users_basedata} ON ({$this->db->au_rel_rooms_users}.user_id = {$this->db->au_users_basedata}.id)
         WHERE {$this->db->au_rel_rooms_users}.room_id = :room_id AND
@@ -3775,7 +3775,7 @@ class User
     $this->db->execute();
     $userDelegatesInRoom = $this->db->resultSet();
 
-    $allUsers= array_merge($usersInRoom, $userDelegatesInRoom);
+    $allUsers = array_merge($usersInRoom, $userDelegatesInRoom);
     $returnvalue['success'] = true;
     $returnvalue['error_code'] = 0;
     $returnvalue['data'] = $allUsers;
