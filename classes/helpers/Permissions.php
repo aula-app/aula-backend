@@ -425,6 +425,11 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "checks" => ["user_id:user_id"]
       ],
 
+      "getReceivedDelegations" => [
+        "roles" => ["all"],
+        "checks" => ["user_id:user_id"]
+      ],
+
       "setUserRoles" => [
         "open_roles" => ["admin"]
       ],
