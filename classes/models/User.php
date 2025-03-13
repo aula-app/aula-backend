@@ -570,6 +570,7 @@ class User
     /* returns received delegations for a specific user (user_id) in the topic
      */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $topic_id = $this->converters->checkTopicId($topic_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' LEFT JOIN ' . $this->db->au_delegation . ' ON (' . $this->db->au_users_basedata . '.id = ' . $this->db->au_delegation . '.user_id_original) WHERE ' . $this->db->au_delegation . '.user_id_target = :id AND ' . $this->db->au_delegation . '.topic_id = :topic_id');
     $this->db->bind(':id', $user_id); // bind userid
