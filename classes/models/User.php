@@ -3747,14 +3747,22 @@ class User
     $user_id = $this->converters->checkUserId($user_id);
     $topic_id = $this->converters->checkTopicId($topic_id);
 
+    // Get users in room with voting rights
     $query = <<<EOD
-      SELECT {$this->db->au_users_basedata}.hash_id, {$this->db->au_users_basedata}.username, {$this->db->au_users_basedata}.realname, {$this->db->au_users_basedata}.displayname, false as 'is_delegate'
+      SELECT {$this->db->au_users_basedata}.hash_id,
+             {$this->db->au_users_basedata}.username,
+             {$this->db->au_users_basedata}.displayname,
+            {$this->db->au_rel_rooms_users}.user_id IN
+            (SELECT user_id_original FROM {$this->db->au_delegation} WHERE user_id_target = :user_id AND topic_id = :topic_id)
+             as 'is_delegate'
         FROM  {$this->db->au_rel_rooms_users}  
         INNER JOIN {$this->db->au_users_basedata} ON ({$this->db->au_rel_rooms_users}.user_id = {$this->db->au_users_basedata}.id)
         WHERE {$this->db->au_rel_rooms_users}.room_id = :room_id AND
-        {$this->db->au_rel_rooms_users}.user_id NOT IN (SELECT user_id_target FROM {$this->db->au_delegation} WHERE user_id_original = :user_id AND topic_id = :topic_id)
+        {$this->db->au_users_basedata}.userlevel in (20, 31) AND
+        {$this->db->au_users_basedata}.id != :user_id
     EOD;
 
+    // Get delegates in room
     $this->db->query($query);
     $this->db->bind(":room_id", $room_id);
     $this->db->bind(":user_id", $user_id);
@@ -3763,19 +3771,23 @@ class User
     $this->db->execute();
     $usersInRoom = $this->db->resultSet();
 
+    // Get super users with voting rights
     $query = <<<EOD
-      SELECT {$this->db->au_users_basedata}.hash_id, {$this->db->au_users_basedata}.username, {$this->db->au_users_basedata}.displayname, true as 'is_delegate'
-        FROM  {$this->db->au_users_basedata}  
-        WHERE id IN (SELECT user_id_target FROM {$this->db->au_delegation} WHERE user_id_original = :user_id AND topic_id = :topic_id)
+      SELECT {$this->db->au_users_basedata}.hash_id,
+             {$this->db->au_users_basedata}.username,
+             {$this->db->au_users_basedata}.displayname,
+             {$this->db->au_users_basedata}.id IN (SELECT user_id_original FROM {$this->db->au_delegation} WHERE user_id_target = :user_id AND topic_id = :topic_id) as 'is_delegate'
+        FROM {$this->db->au_users_basedata}
+       WHERE userlevel in (41, 45)
     EOD;
 
     $this->db->query($query);
     $this->db->bind(":user_id", $user_id);
     $this->db->bind(":topic_id", $topic_id);
     $this->db->execute();
-    $userDelegatesInRoom = $this->db->resultSet();
+    $superUsersWithVotingRights = $this->db->resultSet();
 
-    $allUsers = array_merge($usersInRoom, $userDelegatesInRoom);
+    $allUsers = array_merge($usersInRoom, $superUsersWithVotingRights);
     $returnvalue['success'] = true;
     $returnvalue['error_code'] = 0;
     $returnvalue['data'] = $allUsers;
