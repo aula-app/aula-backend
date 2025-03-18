@@ -86,7 +86,8 @@ class Idea
       "content",
       "custom_field1",
       "custom_field2",
-      "approval_comment"
+      "approval_comment",
+      "au_users_basedata.displayname"
     ]);
   }
 
@@ -1370,7 +1371,13 @@ class Idea
     if ($search_field != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND " . $this->db->au_ideas . '.' . $search_field . " LIKE :search_text";
+
+        if (!str_contains($search_field, 'au_users_basedata')) {
+
+          $extra_where .= " AND " . $this->db->au_ideas . '.' . $search_field . " LIKE :search_text";
+        } else {
+          $extra_where .= " AND " . $search_field . " LIKE :search_text";
+        }
       }
     }
 
@@ -1419,11 +1426,15 @@ class Idea
         $asc_field = "DESC";
     }
 
+    $count_select = 'SELECT count(' . $this->db->au_ideas . '.id) as count FROM ' . $this->db->au_ideas;
     $select_part = 'SELECT ' . $this->db->au_topics . '.phase_id AS phase_id,  ' . $this->db->au_topics . '.description_public AS topic_description,  ' . $this->db->au_topics . '.name AS topic_name, ' . $this->db->au_topics . '.id AS topic_id,  ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.approved, ' . $this->db->au_ideas . '.approval_comment, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_rooms . '.hash_id as room_hash_id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_ideas . '.number_of_votes, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.status, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.user_id, ' . $this->db->au_users_basedata . '.displayname FROM ' . $this->db->au_ideas;
     $join = 'INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_topics . '.id = ' . $this->db->au_rel_topics_ideas . '.topic_id)';
     $join2 = ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id ';
     $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $join2 . ' ' . $where . $search_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+
+    $no_limit_query = $count_select . ' ' . $join . ' ' . $join2 . ' ' . $where . $search_where;
+    $query = $select_part . ' ' . $join . ' ' . $join2 . ' ' . $where . $search_where;
+    $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit_active) {
       // only bind if limit is set
@@ -1465,12 +1476,14 @@ class Idea
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets;
+        $this->db->query($no_limit_query);
         if ($search_field_valid) {
-          $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status, $search_field, $search_text);
-        } else {
-          $total_datasets = $this->converters->getTotalDatasets($this->db->au_ideas, $status . $extra_where);
+          $this->db->bind(':search_text', '%' . $search_text . '%');
         }
+
+        $this->db->execute();
+        $total_datasets = $this->db->resultSet()[0]['count'];
+        
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code
