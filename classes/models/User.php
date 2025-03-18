@@ -3752,6 +3752,7 @@ class User
       SELECT {$this->db->au_users_basedata}.hash_id,
              {$this->db->au_users_basedata}.username,
              {$this->db->au_users_basedata}.displayname,
+             {$this->db->au_users_basedata}.realname,
             {$this->db->au_rel_rooms_users}.user_id IN
             (SELECT user_id_original FROM {$this->db->au_delegation} WHERE user_id_target = :user_id AND topic_id = :topic_id)
              as 'is_delegate'
@@ -3776,6 +3777,7 @@ class User
       SELECT {$this->db->au_users_basedata}.hash_id,
              {$this->db->au_users_basedata}.username,
              {$this->db->au_users_basedata}.displayname,
+             {$this->db->au_users_basedata}.realname,
              {$this->db->au_users_basedata}.id IN (SELECT user_id_original FROM {$this->db->au_delegation} WHERE user_id_target = :user_id AND topic_id = :topic_id) as 'is_delegate'
         FROM {$this->db->au_users_basedata}
        WHERE userlevel in (41, 45)
@@ -3786,7 +3788,7 @@ class User
     $this->db->bind(":topic_id", $topic_id);
     $this->db->execute();
     $superUsersWithVotingRights = $this->db->resultSet();
- 
+
     $allUsers = array_merge($usersInRoom, $superUsersWithVotingRights);
     $returnvalue['success'] = true;
     $returnvalue['error_code'] = 0;
