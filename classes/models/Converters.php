@@ -1220,7 +1220,11 @@ class Converters
       }
 
       if (!str_contains($table, 'JOIN')) {
-        $extra_where .= $append_in_query . ' ' . $table . '.' . $search_field . " LIKE :search_text";
+        if (!str_contains($search_field, 'au_')) {
+          $extra_where .= $append_in_query . ' ' . $table . '.' . $search_field . " LIKE :search_text";
+        } else {
+          $extra_where .= $append_in_query . $search_field . " LIKE :search_text";
+        }
       } else {
         $extra_where .= $append_in_query . ' ' . $search_field . " LIKE :search_text";
       }
