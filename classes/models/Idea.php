@@ -4053,7 +4053,7 @@ class Idea
 
   }// end function
 
-  public function getUpdatesByUser($user_id, $mode = 0)
+  public function getUpdatesByUser($user_id, $mode = 0, $just_count = true)
   {
     /* returns statistics / updates for a defined user (userid) since last login of the user
     returns votes and comments with counts
@@ -4065,24 +4065,74 @@ class Idea
     # init return array
     $data = [];
 
-    $select_defaults = 'SELECT ' . $this->db->au_ideas . '.hash_id AS idea_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_topics . '.hash_id AS topic_id, ' . $this->db->au_topics . '.phase_id';
-    $join_topic = ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id = ' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
-    $join_user = ' LEFT JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id = ' . $this->db->au_users_basedata . '.id)';
-    # $join_room = ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id ';
+    $select_part = <<<EOD
+          {$this->db->au_votes}.id,
+          {$this->db->au_votes}.vote_value,
+          {$this->db->au_votes}.vote_weight,
+          {$this->db->au_votes}.number_of_delegations
+    EOD;
+    
+    $from_part = <<<EOD
+        FROM
+          {$this->db->au_votes}
+        LEFT JOIN
+          {$this->db->au_ideas}
+        ON
+          ({$this->db->au_votes}.idea_id = {$this->db->au_ideas}.id)
+    EOD;
 
-    # first get votes
-    $select_part = ', ' . $this->db->au_votes . '.id, ' . $this->db->au_votes . '.vote_value, ' . $this->db->au_votes . '.vote_weight, ' . $this->db->au_votes . '.number_of_delegations';
-    $from = ' FROM ' . $this->db->au_votes . ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_votes . '.idea_id = ' . $this->db->au_ideas . '.id)';
+    $join_topic = <<<EOD
+        LEFT JOIN
+          {$this->db->au_rel_topics_ideas}
+        ON
+          ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id)
+        LEFT JOIN
+          {$this->db->au_topics}
+        ON
+          ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
+    EOD;
+
+    $join_user = <<<EOD
+        LEFT JOIN
+          {$this->db->au_users_basedata}
+        ON
+          ({$this->db->au_ideas}.user_id = {$this->db->au_users_basedata}.id)
+    EOD;
+
+    $join_room = <<<EOD
+        LEFT JOIN
+          {$this->db->au_rooms}
+        ON
+          {$this->db->au_ideas}.room_id = {$this->db->au_rooms}.id
+    EOD;
+
+    $select_defaults = <<<EOD
+        SELECT
+          {$this->db->au_ideas}.hash_id AS idea_id,
+          {$this->db->au_ideas}.title,
+          {$this->db->au_ideas}.room_id,
+          {$this->db->au_topics}.hash_id AS topic_id,
+          {$this->db->au_topics}.phase_id,
+    EOD;
 
     if ($mode == 0) {
       // activity since last login of the user
-      $where = ' WHERE ' . $this->db->au_votes . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_ideas . '.user_id  = :user_id LIMIT 1)';
+      $where = <<<EOD
+          WHERE
+            {$this->db->au_votes}.last_update >
+          (SELECT 
+              {$this->db->au_users_basedata}.last_update_retrieval 
+            FROM
+              {$this->db->au_users_basedata}
+            WHERE
+              {$this->db->au_ideas}.user_id  = :user_id LIMIT 1)
+      EOD;
     } else {
       // all activity
-      $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
+      $where = " WHERE {$this->db->au_ideas}.user_id = :user_id";
     }
 
-    $stmt = $this->db->query($select_defaults . $select_part . $from . $join_topic . $join_user . $where);
+    $stmt = $this->db->query($select_defaults . $select_part . $from_part . $join_topic . $join_user . $where);
     $this->db->bind(':user_id', $user_id); // bind user id
 
     $err = false;
@@ -4101,15 +4151,31 @@ class Idea
     }
 
     # second get comments
-    $select_part = ', ' . $this->db->au_comments . '.id';
-    $from_part = ' FROM ' . $this->db->au_comments . ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_comments . '.idea_id = ' . $this->db->au_ideas . '.id)';
+    $select_part = "{$this->db->au_comments}.id";
+    $from_part = <<<EOD
+        FROM
+          {$this->db->au_comments}
+        LEFT JOIN
+          {$this->db->au_ideas}
+        ON
+          ({$this->db->au_comments}.idea_id = {$this->db->au_ideas}.id)
+    EOD;
 
     if ($mode == 0) {
       // activity since last login of the user
-      $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id AND ' . $this->db->au_comments . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_users_basedata . '.id  = :user_id LIMIT 1)';
+      $where = <<<EOD
+         WHERE
+          {$this->db->au_ideas}.user_id = :user_id 
+          AND {$this->db->au_comments}.last_update > (SELECT 
+              {$this->db->au_users_basedata}.last_update_retrieval
+              FROM
+                {$this->db->au_users_basedata}
+              WHERE
+                {$this->db->au_users_basedata}.id = :user_id LIMIT 1)
+      EOD;
     } else {
       // all activity
-      $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
+      $where = " WHERE {$this->db->au_ideas}.user_id = :user_id";
     }
 
     $stmt = $this->db->query($select_defaults . $select_part . $from_part . $join_topic . $join_user . $where);
@@ -4132,6 +4198,15 @@ class Idea
 
 
     $total_datasets = count($votes) + count($comments);
+
+    if (!$just_count) {
+      $update_user_query = <<<EOD
+        UPDATE {$this->db->au_users_basedata} SET last_update_retrieval = NOW() where id = :user_id
+      EOD;
+      $stmt = $this->db->query($update_user_query);
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->execute();
+    }
 
     if ($total_datasets < 1) { # nothing happened in the meantime
       $returnvalue['success'] = true; // set return value
@@ -4212,10 +4287,28 @@ class Idea
     }
 
 
-    $select_part = 'SELECT ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_rel_topics_ideas . '.topic_id AS topic_id , ' . $this->db->au_topics . '.phase_id AS phase_id FROM ' . $this->db->au_ideas;
-    $join = 'LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
-    $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_ideas . '.user_id= :user_id ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where);
+    $select_part =  <<<EOD
+        SELECT 
+          {$this->db->au_ideas}.id, 
+          {$this->db->au_ideas}.sum_likes, 
+          {$this->db->au_ideas}.sum_votes,
+          {$this->db->au_rel_topics_ideas}.topic_id AS topic_id,
+          {$this->db->au_topics}.phase_id AS phase_id 
+        FROM {$this->db->au_ideas}
+        LEFT JOIN 
+            {$this->db->au_rel_topics_ideas} 
+        ON 
+            ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id) 
+        LEFT JOIN
+            {$this->db->au_topics} 
+        ON
+            ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
+        WHERE
+            {$this->db->au_ideas}.id > 0 AND 
+            {$this->db->au_ideas}.user_id = :user_id {$extra_where}
+    EOD;
+
+    $stmt = $this->db->query($select_part);
 
     $this->db->bind(':user_id', $user_id); // bind user id
 
