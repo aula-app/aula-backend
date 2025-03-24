@@ -660,6 +660,10 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "roles" => ["all"]
       ],
 
+      "editMessage" => [
+        "roles" => ["all"]
+      ],
+
       "setMessageStatus" => [
         "roles" => ["admin"]
       ]
