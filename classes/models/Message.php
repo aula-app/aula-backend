@@ -29,13 +29,13 @@ class Message
 
   protected function buildCacheHash($key)
   {
-     # helper method => returns md5 hash
+    # helper method => returns md5 hash
     return md5($key);
   }
 
   public function getMessageOrderId($orderby)
   {
-     # helper method => converts an int id to a db field name (for ordering)
+    # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -66,7 +66,7 @@ class Message
 
   public function validSearchField($search_field)
   {
-     # helper method => defines allowed / valid database column names / fields
+    # helper method => defines allowed / valid database column names / fields
     return in_array($search_field, [
       "headline",
       "msg_type",
@@ -312,10 +312,10 @@ class Message
   public function getMessageBaseData($message_id)
   {
     /* returns message base data for a specified db id */
-    
+
     $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    
+
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE id = :id');
     $this->db->bind(':id', $message_id); // bind message id
     $messages = $this->db->resultSet();
@@ -713,7 +713,7 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR (target_group = 0 AND target_id = 0 AND room_id = 0) OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND msg_type < 4 AND status = :status '.$extra_where.' ORDER BY publish_date DESC');
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR (target_group = 0 AND target_id = 0 AND room_id = 0) OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND msg_type < 4 AND status = :status ' . $extra_where . ' ORDER BY publish_date DESC');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':status', $status); // bind status
     $this->db->bind(':target_date', $target_date); // bind target date
