@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    volumes:
+      - ./:/var/www/aula/api
+      - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini
+      - ./docker/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+      - ./docker/jwt/superkey.ini:/var/www/aula/api/superkey.ini
+      - ./docker/jwt/jwt_key.ini:/var/www/aula/api/jwt_key.ini
+  db:
+    image: mariadb:11.7
+    environment:
+      MARIADB_DATABASE: aula_database
+      MARIADB_ROOT_PASSWORD: example
+      MARIADB_USER: aula_user
+      MARIADB_PASSWORD: example
+    volumes:
+      - ./docker/mariadb_data:/var/lib/mysql
+      - ./docker/database:/docker-entrypoint-initdb.d
