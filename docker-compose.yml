@@ -1,20 +1,31 @@
 version: "3.8"
 services:
-  api:
+  # The main docker service builds
+  #   required php libs and apache, and uses information
+  #   from ./docker to populate it with sane defaults
+  #   note:
+  #    before running this, db_config.ini must be copied and filled in
+  #    as well as base_config.php
+  #    and they should both be filled in with information
+  #    from here
+  aula-api-docker-service:
     build:
       context: ./
       dockerfile: ./Dockerfile
+    environment:
+      JWT_KEY: kashdkashdkjashdkashdaskjdh
+      SUPERKEY: exashdkjh2w92elhawdhsjkadhkasdjhample
     ports:
       - "8080:80"
     depends_on:
-      - db
+      - aula-db-docker-service
     volumes:
       - ./:/var/www/aula/api
       - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini
       - ./docker/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
-      - ./docker/jwt/superkey.ini:/var/www/aula/api/superkey.ini
-      - ./docker/jwt/jwt_key.ini:/var/www/aula/api/jwt_key.ini
-  db:
+
+  # a mariadb instance is included here, in case you need it
+  aula-db-docker-service:
     image: mariadb:11.7
     environment:
       MARIADB_DATABASE: aula_database
@@ -23,4 +34,4 @@ services:
       MARIADB_PASSWORD: example
     volumes:
       - ./docker/mariadb_data:/var/lib/mysql
-      - ./docker/database:/docker-entrypoint-initdb.d
+      - ./init/aula_db_content.sql:/docker-entrypoint-initdb.d/aula_db_content.sql

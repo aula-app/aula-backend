@@ -1,13 +1,18 @@
 #!/bin/sh
 
-php -i
+echo "Starting the docker application!"
 
-#systemctl start memcached &
+# write the super keys from environment variables, where they
+#  should be kept.
+echo $JWT_KEY > api/jwt_key.ini
+echo $SUPERKEY > api/superkey.ini
+
+# php -i
 
 # run apache as expected
 /usr/sbin/apache2ctl -D FOREGROUND & 
 
 # make sure to show php errors in the docker log
-#  whie it is running
+#  while it is running
 tail -f /var/log/apache2/error.log
 

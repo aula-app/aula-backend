@@ -5,7 +5,7 @@ FROM ubuntu:24.04
 #
 
 # Environment variables
-ENV PROJECT_PATH=/var/www/aula \
+ENV PROJECT_PATH=/var/www/html \
   #PROJECT_PUBLIC_DIR=aula \
   DEBIAN_FRONTEND=noninteractive \
   APACHE_RUN_USER=www-data \
@@ -25,14 +25,14 @@ ENV LANG=en_US.UTF-8 \
   LANGUAGE=en_US:en \
   LC_ALL=en_US.UTF-8
 
-# Mandatory in order to use PHP v7.4 instead of default one (v7.2)
+# Mandatory in order to use different php ersions instead of default one (v7.2)
 RUN add-apt-repository ppa:ondrej/php
 
 # Yarn package managerc
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 RUN echo "deb http://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
-# Utilities, Apache, PHP, and supplementary programs
+# Utilities, Apache, PHP, and supplementary programs which the application requires
 RUN apt update -q 
 RUN apt install -yqq --force-yes vim
 RUN apt install -yqq --force-yes git npm wget yarn zip 
@@ -57,8 +57,6 @@ RUN a2enmod rewrite expires headers
 RUN echo "ServerName localhost" | tee /etc/apache2/conf-available/fqdn.conf
 RUN a2enconf fqdn
 
-
-
 # Cleanup
 RUN apt purge -yq \
   patch \
@@ -77,13 +75,11 @@ RUN ls
 # Workdir
 WORKDIR $PROJECT_PATH
 
+
 RUN ls
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-
-# RUN 
 
 # 
 #   aula specific config
