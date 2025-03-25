@@ -30,6 +30,9 @@ RUN apt install -yqq --force-yes memcached libmemcached-tools php-cli php-memcac
 RUN apt install -yqq --force-yes php8.3
 RUN apt install -yqq --force-yes php8.3-memcached
 RUN apt install -yqq --force-yes php-mysql
+RUN  apt install -yqq --force-yes php8.3-bcmath 
+RUN  apt install -yqq --force-yes php8.3-curl 
+RUN  apt install -yqq --force-yes  php8.3-dom php8.3-mbstring php8.3-intl
 RUN apt install -yqq --force-yes sendmail
 RUN apt install -yqq --force-yes libphp-phpmailer
 RUN apt install -yqq --force-yes php-mail
