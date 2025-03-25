@@ -1483,7 +1483,7 @@ class Idea
 
         $this->db->execute();
         $total_datasets = $this->db->resultSet()[0]['count'];
-        
+
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code
@@ -4071,7 +4071,7 @@ class Idea
           {$this->db->au_votes}.vote_weight,
           {$this->db->au_votes}.number_of_delegations
     EOD;
-    
+
     $from_part = <<<EOD
         FROM
           {$this->db->au_votes}
@@ -4120,8 +4120,8 @@ class Idea
       $where = <<<EOD
           WHERE
             {$this->db->au_votes}.last_update >
-          (SELECT 
-              {$this->db->au_users_basedata}.last_update_retrieval 
+          (SELECT
+              {$this->db->au_users_basedata}.last_update
             FROM
               {$this->db->au_users_basedata}
             WHERE
@@ -4287,7 +4287,7 @@ class Idea
     }
 
 
-    $select_part =  <<<EOD
+    $select_part = <<<EOD
         SELECT 
           {$this->db->au_ideas}.id, 
           {$this->db->au_ideas}.sum_likes, 
