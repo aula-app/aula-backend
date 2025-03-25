@@ -1264,8 +1264,8 @@ CREATE TABLE `au_users_basedata` (
 LOCK TABLES `au_users_basedata` WRITE;
 /*!40000 ALTER TABLE `au_users_basedata` DISABLE KEYS */;
 INSERT INTO `au_users_basedata` VALUES
-(1,'Admin User','Admin','admin','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','',NULL,1,'2023-06-17 14:58:43','2025-02-19 13:18:22',0,0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2025-02-19 13:18:22',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0,0,'[]'),
-(2,'Tech Admin User','Tech Admin','tech_admin','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','a1b2c3d4e5f67890abcdef1234567890','',NULL,1,'2023-06-17 14:58:43','2025-02-19 13:18:30',0,0,'21232f297a57a5a743894a0e4a801fc3',60,NULL,'2025-02-19 13:18:30',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0,0,'[]');
+(1,'Admin User','Admin','admin','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','',NULL,1,'2023-06-17 14:58:43','2025-02-19 13:18:22','2025-02-19 13:18:22',0,0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2025-02-19 13:18:22',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0,0,'[]'),
+(2,'Tech Admin User','Tech Admin','tech_admin','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','a1b2c3d4e5f67890abcdef1234567890','',NULL,1,'2023-06-17 14:58:43','2025-02-19 13:18:30','2025-02-19 13:18:30',0,0,'21232f297a57a5a743894a0e4a801fc3',60,NULL,'2025-02-19 13:18:30',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0,0,'[]');
 /*!40000 ALTER TABLE `au_users_basedata` ENABLE KEYS */;
 UNLOCK TABLES;
 
