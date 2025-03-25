@@ -24,14 +24,18 @@ services:
       - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini
       - ./docker/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
 
-  # a mariadb instance is included here, in case you need it
+  # a mariadb instance is included here as a docker service, in case you need it
   aula-db-docker-service:
     image: mariadb:11.7
     environment:
+      # note, if you use this container, these
+      #  values need to be reflectd in db_config.ini
       MARIADB_DATABASE: aula_database
       MARIADB_ROOT_PASSWORD: example
       MARIADB_USER: aula_user
       MARIADB_PASSWORD: example
     volumes:
-      - ./docker/mariadb_data:/var/lib/mysql
+      # create a place to store the db data:
+      - ./docker/_generated_mariadb_data:/var/lib/mysql
+      # use the inital data in the application to populate the db
       - ./init/aula_db_content.sql:/docker-entrypoint-initdb.d/aula_db_content.sql

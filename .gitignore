@@ -5,4 +5,6 @@ base_config.php
 info.php
 /superkey.ini
 /jwt_key.ini
-docker/mariadb_data/*
+
+docker/_generated_mariadb_data/*
+!docker/_generated_mariadb_data/.gitkeep

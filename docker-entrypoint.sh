@@ -7,6 +7,7 @@ echo "Starting the docker application!"
 echo $JWT_KEY > api/jwt_key.ini
 echo $SUPERKEY > api/superkey.ini
 
+# maye you will need this information at startup
 # php -i
 
 # run apache as expected

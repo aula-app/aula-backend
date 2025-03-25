@@ -5,28 +5,17 @@ FROM ubuntu:24.04
 #
 
 # Environment variables
-ENV PROJECT_PATH=/var/www/html \
-  #PROJECT_PUBLIC_DIR=aula \
-  DEBIAN_FRONTEND=noninteractive \
-  APACHE_RUN_USER=www-data \
-  APACHE_RUN_GROUP=www-data \
-  APACHE_LOG_DIR=/var/log/apache2 \
-  APACHE_LOCK_DIR=/var/lock/apache2 \
-  PHP_INI=/etc/php/8.3/apache2/php.ini \
-  TERM=xterm
+ENV PROJECT_PATH=/var/www/html 
+ENV DEBIAN_FRONTEND=noninteractive 
+ENV APACHE_RUN_USER=www-data 
+ENV APACHE_RUN_GROUP=www-data 
+ENV APACHE_LOG_DIR=/var/log/apache2 
+ENV APACHE_LOCK_DIR=/var/lock/apache2 
+ENV PHP_INI=/etc/php/8.3/apache2/php.ini 
+ENV TERM=xterm
 
 # Update, upgrade and cURL installation
 RUN apt update -q && apt upgrade -yqq && apt install -yqq software-properties-common curl locales gnupg
-
-# Locale generator
-RUN locale-gen en_US.UTF-8
-
-ENV LANG=en_US.UTF-8 \
-  LANGUAGE=en_US:en \
-  LC_ALL=en_US.UTF-8
-
-# Mandatory in order to use different php ersions instead of default one (v7.2)
-RUN add-apt-repository ppa:ondrej/php
 
 # Yarn package managerc
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
@@ -38,17 +27,13 @@ RUN apt install -yqq --force-yes vim
 RUN apt install -yqq --force-yes git npm wget yarn zip 
 RUN apt install -yqq --force-yes apache2 libapache2-mod-php 
 RUN apt install -yqq --force-yes memcached libmemcached-tools php-cli php-memcached
-RUN apt install -yqq --force-yes  php8.3
+RUN apt install -yqq --force-yes php8.3
 RUN apt install -yqq --force-yes php8.3-memcached
-#RUN  apt install -yqq --force-yes php7.4-bcmath 
-#RUN  apt install -yqq --force-yes php7.4-curl 
-#RUN  apt install -yqq --force-yes  php7.4-dom php7.4-mbstring php7.4-intl
 RUN apt install -yqq --force-yes php-mysql
 RUN apt install -yqq --force-yes sendmail
 RUN apt install -yqq --force-yes libphp-phpmailer
 RUN apt install -yqq --force-yes php-mail
 RUN apt install -yqq --force-yes default-mysql-client
-
 
 # Apache mods
 RUN a2enmod rewrite expires headers
@@ -64,19 +49,15 @@ RUN apt purge -yq \
   wget && \
   apt autoremove -yqq
 
-
 # Port to expose
 EXPOSE 80 443
 
 COPY ./ $PROJECT_PATH/api
 COPY ./docker-entrypoint.sh $PROJECT_PATH
 
-RUN ls
 # Workdir
 WORKDIR $PROJECT_PATH
 
-
-RUN ls
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
