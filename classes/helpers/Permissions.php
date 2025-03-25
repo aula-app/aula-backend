@@ -873,7 +873,17 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "principal",
             "principal_v",
             "admin"
-          ]
+          ],
+          "roles" => [
+            "user",
+            "moderator",
+            "moderator_v"
+          ],
+          "from_room" => [
+            "get_room" => "idea_id",
+          ],
+          "owner" => ["idea_id"],
+          "checks" => ["user_id:updater_id"]
         ],
 
         "getLikeStatus" => [
