@@ -8,3 +8,6 @@ info.php
 
 docker/_generated_mariadb_data/*
 !docker/_generated_mariadb_data/.gitkeep
+
+docker/_generated_files_data/*
+!docker/_generated_files_data/.gitkeep
