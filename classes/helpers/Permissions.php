@@ -461,6 +461,16 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "checks" => ["user_id:user_id"]
       ],
 
+      "getMissingConsents" => [
+        "roles" => ["all"],
+        "checks" => ["user_id:user_id"]
+      ],
+
+      "giveConsent" => [
+        "roles" => ["all"],
+        "checks" => ["user_id:user_id"]
+      ],
+
       # TODO: This need to be fixed on the frontend
       "getUsers" => [
         "roles" => [
