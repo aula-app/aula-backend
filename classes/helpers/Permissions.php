@@ -689,6 +689,16 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "tech_admin"
         ]
       ],
+      "getGroupBaseData" => [
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
+          "principal",
+          "principal_v",
+          "admin",
+          "tech_admin"
+        ]
+      ],
       "addGroup" => [
         "roles" => [
           "principal",
