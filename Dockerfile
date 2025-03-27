@@ -59,7 +59,7 @@ COPY ./ $PROJECT_PATH/api
 COPY ./docker-entrypoint.sh $PROJECT_PATH
 
 RUN mkdir -p $PROJECT_PATH/files
-RUN chown -R www-data:www-data $PROJECT_PATH/files
+RUN chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER $PROJECT_PATH/files
 
 # Workdir
 WORKDIR $PROJECT_PATH
