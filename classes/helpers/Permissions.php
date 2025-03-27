@@ -461,6 +461,16 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         "checks" => ["user_id:user_id"]
       ],
 
+      "getMissingConsents" => [
+        "roles" => ["all"],
+        "checks" => ["user_id:user_id"]
+      ],
+
+      "giveConsent" => [
+        "roles" => ["all"],
+        "checks" => ["user_id:user_id"]
+      ],
+
       # TODO: This need to be fixed on the frontend
       "getUsers" => [
         "roles" => [
@@ -517,6 +527,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
           "admin",
           "tech_admin"
         ],
+        "checks" => ["user_id:user_id"]
       ],
 
       "setUserRealname" => [
@@ -673,6 +684,16 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
     "Group" => [
       "getGroups" => [
         "open_roles" => [
+          "principal",
+          "principal_v",
+          "admin",
+          "tech_admin"
+        ]
+      ],
+      "getGroupBaseData" => [
+        "open_roles" => [
+          "super_moderator",
+          "super_moderator_v",
           "principal",
           "principal_v",
           "admin",
@@ -852,7 +873,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
             "super_moderator_v",
             "principal",
             "principal_v",
-            "admin"
+            "admin",
           ],
           "roles" => [
             "user",
@@ -1235,14 +1256,12 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         if (in_array($roles_map[$userlevel], $permissions_table[$model_name][$method]["open_roles"])) {
           return ["allowed" => true];
         }
+      }
 
-        if (in_array("owner", $permissions_table[$model_name][$method]["open_roles"])) {
-          $isOwner = $model->isOwner($user_id, $arguments[$permissions_table[$model_name][$method]["owner"]]);
-
-          if ($isOwner) {
-            return ["allowed" => true];
-          }
-        }
+      # check ownership
+      if (in_array("owner", array_keys($permissions_table[$model_name][$method]))) {
+        $isOwner = $model->isOwner($user_id, $arguments[$permissions_table[$model_name][$method]["owner"][0]]);
+        array_push($all_checks, $isOwner);
       }
 
       # check roles
@@ -1256,7 +1275,7 @@ function checkPermissions($model_name, $model, $method, $arguments, $user_id, $u
         }
       }
 
-      # check owner content
+      # check arguments
       if (in_array("checks", array_keys($permissions_table[$model_name][$method]))) {
         $checks = $permissions_table[$model_name][$method]["checks"];
 
