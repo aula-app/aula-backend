@@ -557,6 +557,12 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ]
       ],
 
+      "removeUserFromRoom" => [
+        "roles" => [
+          "admin"
+        ]
+      ],
+
       "getUserRooms" => [
         "open_roles" => [
           "principal",
