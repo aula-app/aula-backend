@@ -875,7 +875,7 @@ class Idea
     $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_categories_ideas . ' WHERE category_id = :category_id');
-    $this->db->bind(':topic_id', $category_id); // bind topic id
+    $this->db->bind(':category_id', $category_id); // bind topic id
 
     $err = false;
     try {
@@ -1580,7 +1580,7 @@ class Idea
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":room_id", $room_id, $select_part . ' ' . $join . ' ' . $where));
+        $total_datasets = $this->converters->getTotalDatasetsFree($select_part . ' ' . $join . ' WHERE ' . $where);
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
@@ -3488,7 +3488,6 @@ class Idea
     $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('SELECT user_id_target FROM ' . $this->db->au_delegation . ' WHERE user_id_original = :user_id AND topic_id = :topic_id AND status = 1');
-    //$stmt = $this->db->query('SELECT user_id_target FROM '.$this->db->au_delegation.' INNER JOIN '.$this->db->au_rel_topics_ideas.' ON ('.$this->db->au_rel_topics_ideas.'.idea_id = WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id AND status = 1');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':topic_id', $topic_id); // bind topic id
     $has_delegated = $this->db->resultSet();
@@ -4241,6 +4240,101 @@ class Idea
 
   } // end function getUpdatesByUser
 
+  public function getUserIdeasByPhase($user_id, $phase_id)
+  {
+  
+    $user_id = $this->converters->checkUserId($user_id);
+
+    if ($phase_id != 0) {
+      $topic_columns = <<<EOD
+        ,
+          {$this->db->au_topics}.hash_id AS topic_hash_id,
+          {$this->db->au_topics}.phase_id AS phase_id
+      EOD;
+    } else {
+      $topic_columns = '';
+    }
+
+    $select_part = <<<EOD
+        SELECT 
+          {$this->db->au_ideas}.hash_id, 
+          {$this->db->au_ideas}.title, 
+          {$this->db->au_ideas}.content, 
+          {$this->db->au_ideas}.created, 
+          {$this->db->au_ideas}.last_update, 
+          {$this->db->au_ideas}.sum_likes, 
+          {$this->db->au_ideas}.sum_votes,
+          {$this->db->au_users_basedata}.displayname,
+          {$this->db->au_users_basedata}.hash_id as user_hash_id,
+          {$this->db->au_rooms}.hash_id as room_hash_id,
+          {$this->db->au_ideas}.sum_comments{$topic_columns}
+        FROM {$this->db->au_ideas}
+        LEFT JOIN
+            {$this->db->au_rooms}
+        ON
+            ({$this->db->au_rooms}.id = {$this->db->au_ideas}.room_id)
+        LEFT JOIN
+            {$this->db->au_users_basedata}
+        ON
+            ({$this->db->au_users_basedata}.id = {$this->db->au_ideas}.user_id)
+    EOD;
+
+
+    if ($phase_id != 0) {
+
+      $where_part = <<<EOD
+        LEFT JOIN 
+            {$this->db->au_rel_topics_ideas} 
+        ON 
+            ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id) 
+        LEFT JOIN
+            {$this->db->au_topics} 
+        ON
+            ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
+        WHERE
+            {$this->db->au_ideas}.id > 0 AND 
+            {$this->db->au_ideas}.user_id = :user_id AND
+            {$this->db->au_topics}.phase_id = :phase_id
+      EOD;
+    } else {
+      $where_part = <<<EOD
+        WHERE
+            {$this->db->au_ideas}.id NOT IN (SELECT idea_id from au_rel_topics_ideas) AND
+            {$this->db->au_ideas}.user_id = :user_id
+      EOD;
+    }
+
+    $stmt = $this->db->query($select_part.$where_part);
+
+    $this->db->bind(':user_id', $user_id);
+
+    if ($phase_id > 0) {
+      $this->db->bind(':phase_id', $phase_id);
+    }
+
+    $err = false;
+    try {
+      $ideas = $this->db->resultSet();
+
+    } catch (Exception $e) {
+      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+    $returnvalue['success'] = true; // set return value
+    $returnvalue['error_code'] = 0; // error code
+    $returnvalue['data'] = $ideas; // returned data
+    $returnvalue['count'] = count($ideas); // returned count of datasets
+
+    return $returnvalue;
+  }
+
   public function getDashboardByUser($user_id, $status = 1, $room_id = -1, $limit = 0, $offset = 0)
   {
     /* returns all sorts of data for a specific user (like ideas, votes and activity) since last login
@@ -4277,13 +4371,11 @@ class Idea
 
     if ($status > -1) {
       // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
+      $extra_where .= " AND " . $this->db->au_ideas . ".status = :status";
     }
 
     if ($room_id > -1) {
-      $room_id = $this->converters->checkRoomId($room_id); // auto convert id
-      // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_ideas . ".room_id = " . $room_id;
+      $extra_where .= " AND " . $this->db->au_ideas . ".room_id = :room_id";
     }
 
 
@@ -4311,6 +4403,15 @@ class Idea
     $stmt = $this->db->query($select_part);
 
     $this->db->bind(':user_id', $user_id); // bind user id
+
+    if ($status > -1) {
+      $this->db->bind(':status', $status); // bind user id
+    }
+
+    if ($room_id > -1) {
+      $room_id = $this->converters->checkRoomId($room_id); // auto convert id
+      $this->db->bind(':room_id', $room_id); // bind user id
+    }
 
     $err = false;
     try {

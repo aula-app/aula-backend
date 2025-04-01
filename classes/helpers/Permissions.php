@@ -1226,6 +1226,10 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "checks" => ["user_id:user_id"]
         ],
 
+        "getUserIdeasByPhase" => [
+          "checks" => ["user_id:user_id"]
+        ],
+
         "getWildIdeasByUser" => [
           "checks" => ["user_id:user_id"]
         ],
