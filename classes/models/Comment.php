@@ -827,13 +827,13 @@ class Comment
 
   public function isOwner($user_id, $comment_id)
   {
-    $comment_id = $this->converters->checkIdeaId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $comment_id = $this->converters->checkCommentId($comment_id); // checks id and converts id to db id if necessary (when hash id was passed)
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
     $stmt = $this->db->query('SELECT ' . $this->db->au_comments . '.user_id FROM '  . $this->db->au_comments . '  WHERE ' . $this->db->au_comments . '.id = :id');
     $this->db->bind(':id', $comment_id); // bind topic id
     $comments = $this->db->resultSet();
 
-    if (count($ideas) > 0) {
+    if (count($comments) > 0) {
       return $comments[0]['user_id'] == $user_id;
     } else {
       return false;
