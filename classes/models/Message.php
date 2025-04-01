@@ -614,7 +614,7 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT au_messages.*, au_users_basedata.hash_id as user_hash_id FROM ' . $this->db->au_messages . ' JOIN au_users_basedata ON au_users_basedata.id = au_messages.target_id WHERE au_messages.id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
