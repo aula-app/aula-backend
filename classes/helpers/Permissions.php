@@ -152,6 +152,10 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "moderator",
           "moderator_v"
         ],
+        "bypass_checks" => [
+          "moderator",
+          "moderator_v"
+        ],
         "from_room" => [
           "get_room" => "comment_id",
         ],
@@ -168,6 +172,10 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ],
         "roles" => [
           "user",
+          "moderator",
+          "moderator_v"
+        ],
+        "bypass_checks" => [
           "moderator",
           "moderator_v"
         ],
@@ -886,6 +894,10 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
             "moderator",
             "moderator_v"
           ],
+          "bypass_checks" => [
+            "moderator",
+            "moderator_v"
+          ],
           "from_room" => [
             "get_room" => "idea_id",
           ],
@@ -909,6 +921,10 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "from_room" => [
             "get_room" => "idea_id",
           ],
+          "bypass_checks" => [
+            "moderator",
+            "moderator_v"
+          ], 
           "owner" => ["idea_id"],
           "checks" => ["user_id:updater_id"]
         ],
@@ -1270,12 +1286,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         }
       }
 
-      # check ownership
-      if (in_array("owner", array_keys($permissions_table[$model_name][$method]))) {
-        $isOwner = $model->isOwner($user_id, $arguments[$permissions_table[$model_name][$method]["owner"][0]]);
-        array_push($all_checks, $isOwner);
-      }
-
       # check roles
       if (in_array("roles", array_keys($permissions_table[$model_name][$method]))) {
         if (in_array("all", $permissions_table[$model_name][$method]["roles"])) {
@@ -1288,20 +1298,36 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       }
 
       # check arguments
-      if (in_array("checks", array_keys($permissions_table[$model_name][$method]))) {
-        $checks = $permissions_table[$model_name][$method]["checks"];
+      $bypass_checks = false;
 
-        $total_checks = 0;
-        foreach ($checks as $c) {
-          $cparts = explode(":", $c);
-          if (${$cparts[0]} == $arguments[$cparts[1]]) {
-            $total_checks += 1;
-          }
+      if (in_array("bypass_checks", array_keys($permissions_table[$model_name][$method]))) {
+        if (in_array($roles_map[$userlevel], $permissions_table[$model_name][$method]["bypass_checks"])) {
+          $bypass_checks = true;
         }
-        if (count($checks) == $total_checks) {
-          array_push($all_checks, true);
-        } else {
-          return ["allowed" => false];
+      }
+
+      # check ownership
+      if (!$bypass_checks) {
+        if (in_array("owner", array_keys($permissions_table[$model_name][$method]))) {
+          $isOwner = $model->isOwner($user_id, $arguments[$permissions_table[$model_name][$method]["owner"][0]]);
+          array_push($all_checks, $isOwner);
+        }
+
+        if (in_array("checks", array_keys($permissions_table[$model_name][$method]))) {
+          $checks = $permissions_table[$model_name][$method]["checks"];
+
+          $total_checks = 0;
+          foreach ($checks as $c) {
+            $cparts = explode(":", $c);
+            if (${$cparts[0]} == $arguments[$cparts[1]]) {
+              $total_checks += 1;
+            }
+          }
+          if (count($checks) == $total_checks) {
+            array_push($all_checks, true);
+          } else {
+            return ["allowed" => false];
+          }
         }
       }
 
