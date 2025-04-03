@@ -4343,79 +4343,35 @@ class Idea
     $user_id is the id of the user
     */
 
-    $asc = 0;
-    $orderby = 0;
+    $select_part = <<<EOD
+        SELECT 
+          count({$this->db->au_ideas}.id) as count 
+        FROM {$this->db->au_ideas}
+        LEFT JOIN
+            {$this->db->au_rooms}
+        ON
+            ({$this->db->au_rooms}.id = {$this->db->au_ideas}.room_id)
+        LEFT JOIN
+            {$this->db->au_users_basedata}
+        ON
+            ({$this->db->au_users_basedata}.id = {$this->db->au_ideas}.user_id)
+    EOD;
 
-    $offset = intval($offset);
-    $limit = intval($limit);
-    $orderby = intval($orderby);
-    $asc = intval($asc);
-    $status = intval($status);
+    $where_wild_ideas_part = <<<EOD
+      WHERE
+          {$this->db->au_ideas}.id NOT IN (SELECT idea_id from au_rel_topics_ideas) AND
+          {$this->db->au_ideas}.user_id = :user_id AND
+          {$this->db->au_ideas}.status = 1
+    EOD;
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    // init vars
-    $orderby_field = "";
-    $asc_field = "";
-
-    $limit_string = " LIMIT :offset , :limit ";
-    $limit_active = true;
-
-    // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
-    if ($offset == 0 && $limit == 0) {
-      $limit_string = "";
-      $limit_active = false;
-    }
-    // additional conditions for the WHERE clause
-    $extra_where = "";
-
-    if ($status > -1) {
-      // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_ideas . ".status = :status";
-    }
-
-    if ($room_id > -1) {
-      $extra_where .= " AND " . $this->db->au_ideas . ".room_id = :room_id";
-    }
-
-
-    $select_part = <<<EOD
-        SELECT 
-          {$this->db->au_ideas}.id, 
-          {$this->db->au_ideas}.sum_likes, 
-          {$this->db->au_ideas}.sum_votes,
-          {$this->db->au_rel_topics_ideas}.topic_id AS topic_id,
-          {$this->db->au_topics}.phase_id AS phase_id 
-        FROM {$this->db->au_ideas}
-        LEFT JOIN 
-            {$this->db->au_rel_topics_ideas} 
-        ON 
-            ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id) 
-        LEFT JOIN
-            {$this->db->au_topics} 
-        ON
-            ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
-        WHERE
-            {$this->db->au_ideas}.id > 0 AND 
-            {$this->db->au_ideas}.user_id = :user_id {$extra_where}
-    EOD;
-
-    $stmt = $this->db->query($select_part);
-
-    $this->db->bind(':user_id', $user_id); // bind user id
-
-    if ($status > -1) {
-      $this->db->bind(':status', $status); // bind user id
-    }
-
-    if ($room_id > -1) {
-      $room_id = $this->converters->checkRoomId($room_id); // auto convert id
-      $this->db->bind(':room_id', $room_id); // bind user id
-    }
+    $stmt = $this->db->query($select_part.$where_wild_ideas_part);
+    $this->db->bind(':user_id', $user_id);
 
     $err = false;
     try {
-      $ideas = $this->db->resultSet();
+      $count_wild_ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
       echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
@@ -4427,62 +4383,58 @@ class Idea
 
       return $returnvalue;
     }
-    $total_datasets = count($ideas);
 
-    // get count
-    $count_by_phase[0] = 0; # wild ideas
-    $count_by_phase[10] = 0; # wild ideas
-    $count_by_phase[20] = 0; # wild ideas
-    $count_by_phase[30] = 0; # wild ideas
-    $count_by_phase[40] = 0; # wild ideas/ approved / results /
-    $count_by_phase[41] = 0; # wild ideas/ approved / results /
-    $count_by_phase[42] = 0; # wild ideas/ disapproved / results /
+    $count_by_phase[0] = $count_wild_ideas[0]['count']; # wild ideas
 
-    $count_by_phase[50] = 0; # wild ideas
+    $total_ideas_num = $count_by_phase[0];
+    $where_part = <<<EOD
+      LEFT JOIN 
+          {$this->db->au_rel_topics_ideas} 
+      ON 
+          ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id) 
+      LEFT JOIN
+          {$this->db->au_topics} 
+      ON
+          ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
+      WHERE
+          {$this->db->au_ideas}.id > 0 AND 
+          {$this->db->au_ideas}.user_id = :user_id AND
+          {$this->db->au_topics}.phase_id = :phase_id
+    EOD;
+
+
+    $phases = array(10, 20, 30, 40);
+
+    foreach ($phases as $phase) {
+      $err = false;
+      try {
+        $stmt = $this->db->query($select_part.$where_part);
+        $this->db->bind(':user_id', $user_id);
+        $this->db->bind(':phase_id', $phase);
+        $count_ideas = $this->db->resultSet();
+        $count_by_phase[$phase] = $count_ideas[0]['count'];
+        $total_ideas_num += $count_by_phase[$phase];
+
+      } catch (Exception $e) {
+        echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+        $err = true;
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue['data'] = false; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    
+    }
 
     $data = [];
-
-    $data['total_wild'] = 0;
-    $data['total_idea_box'] = 0;
-    $data['idea_ids'] = "";
-    $data['idea_ids_wild'] = "";
-    $data['idea_ids_box'] = "";
-
-    $total_counter = 0;
-
-    foreach ($ideas as $idea_row) {
-      // get individual counts
-      $idea_phase_id = $idea_row['phase_id'];
-      $idea_topic_id = $idea_row['topic_id'];
-      $idea_id = $idea_row['id'];
-
-      if ($idea_phase_id == NULL) {
-        $idea_phase_id = 0;
-      }
-
-      $data['idea_ids'] .= $idea_id . ",";
-
-      if ($idea_topic_id == NULL) {
-        $idea_topic_id = 0;
-        $data['total_wild']++;
-        $data['idea_ids_wild'] .= $idea_id . ",";
-      } else {
-        $data['total_idea_box']++;
-        $data['idea_ids_box'] .= $idea_id . ",";
-
-      }
-
-      $count_by_phase[$idea_phase_id]++;
-
-
-
-    } // end foreach
     $data['phase_counts'] = $count_by_phase;
 
     $returnvalue['success'] = true; // set return value
     $returnvalue['error_code'] = 0; // error code
     $returnvalue['data'] = $data; // returned data
-    $returnvalue['count'] = count($ideas); // returned count of datasets
+    $returnvalue['count'] = $total_ideas_num;
 
     return $returnvalue;
 
