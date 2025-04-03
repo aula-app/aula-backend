@@ -647,7 +647,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ]
       ],
 
-      "removeUserFromRoom" => [
+      "getUsersInGroup" => [
         "roles" => [
           "admin"
         ]
@@ -924,7 +924,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "bypass_checks" => [
             "moderator",
             "moderator_v"
-          ], 
+          ],
           "owner" => ["idea_id"],
           "checks" => ["user_id:updater_id"]
         ],
@@ -1270,7 +1270,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
   ];
 
   if (in_array($model_name, $all_models)) {
-    $model =  $model = new $model_name($db, $crypt, $syslog);
+    $model = $model = new $model_name($db, $crypt, $syslog);
 
     if (!in_array($model_name, array_keys($permissions_table))) {
       return ["allowed" => false];
@@ -1287,7 +1287,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       }
 
 
-     $user_roles_in_room = [];
+      $user_roles_in_room = [];
       # check user room
       if (in_array("from_room", array_keys($permissions_table[$model_name][$method]))) {
         if (in_array("arg", array_keys($permissions_table[$model_name][$method]["from_room"]))) {
@@ -1350,8 +1350,10 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       $bypass_checks = false;
 
       if (in_array("bypass_checks", array_keys($permissions_table[$model_name][$method]))) {
-        if (count($user_roles_in_room) > 0 &&
-          in_array($roles_map[$user_roles_in_room[0]->role], $permissions_table[$model_name][$method]["bypass_checks"])) {
+        if (
+          count($user_roles_in_room) > 0 &&
+          in_array($roles_map[$user_roles_in_room[0]->role], $permissions_table[$model_name][$method]["bypass_checks"])
+        ) {
           $bypass_checks = true;
         }
       }
