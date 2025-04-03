@@ -647,12 +647,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ]
       ],
 
-      "getUsersInGroup" => [
-        "roles" => [
-          "admin"
-        ]
-      ],
-
       "addUserToGroup" => [
         "roles" => [
           "admin"
@@ -734,7 +728,12 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "principal_v",
           "admin"
         ]
-      ]
+      ],
+      "getUsersInGroup" => [
+        "roles" => [
+          "admin"
+        ]
+      ],
     ],
 
     "Topic" => [
