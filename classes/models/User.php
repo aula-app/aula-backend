@@ -632,7 +632,7 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_texts . '.status, ' . $this->db->au_texts . '.user_needs_to_consent, ' . $this->db->au_texts . '.service_id_consent, ' . $this->db->au_consent . '.date_consent ,' . $this->db->au_consent . '.consent , ' . $this->db->au_consent . '.date_revoke FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id) WHERE ' . $this->db->au_consent . '.user_id = :user_id');
-    $this->db->bind(':id', $user_id); // bind userid
+    $this->db->bind(':user_id', $user_id); // bind userid
     $consents = $this->db->resultSet();
     if (count($consents) < 1) {
       $returnvalue['success'] = true; // set return value
@@ -686,7 +686,7 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
     // first get all the mandatory consents for this user already given (consent =1)
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id FROM ' . $this->db->au_texts . ' INNER JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_consent . '.text_id = ' . $this->db->au_texts . '.id) WHERE (' . $this->db->au_consent . '.user_id = :user_id AND ' . $this->db->au_consent . '.consent = 1) AND ' . $this->db->au_texts . '.status = 1 AND ' . $this->db->au_texts . '.user_needs_to_consent  = 2');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id FROM ' . $this->db->au_texts . ' INNER JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_consent . '.text_id = ' . $this->db->au_texts . '.id) WHERE (' . $this->db->au_consent . '.user_id = :user_id AND ' . $this->db->au_consent . '.consent <> 0) AND ' . $this->db->au_texts . '.status = 1');
     $this->db->bind(':user_id', $user_id); // bind userid
 
     $consents = $this->db->resultSet();
@@ -700,7 +700,7 @@ class User
       $i++;
     }
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_consent . '.consent FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id) WHERE ' . $this->db->au_texts . '.id NOT IN (' . implode(",", $ids) . ') AND ' . $this->db->au_texts . '.user_needs_to_consent = 2 AND ' . $this->db->au_texts . '.status = 1');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_texts . '.user_needs_to_consent, ' . $this->db->au_consent . '.consent FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id) WHERE ' . $this->db->au_texts . '.id NOT IN (' . implode(",", $ids) . ') AND ' . $this->db->au_texts . '.status = 1');
 
     $texts = $this->db->resultSet();
     $missing_consents = count($texts);
@@ -2964,7 +2964,7 @@ class User
     $this->db->bind(':user_id', $user_id);
 
     $roles = json_decode($this->db->resultSet()[0]["roles"]);
-    $new_roles = array_filter($roles, fn($r) => $r->room != $room_hash);
+    $new_roles = array_values(array_filter($roles, fn($r) => $r->room != $room_hash));
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
     $this->db->bind(':user_id', $user_id);

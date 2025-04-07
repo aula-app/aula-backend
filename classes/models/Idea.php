@@ -875,7 +875,7 @@ class Idea
     $topic_id = $this->converters->checkTopicId($topic_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_rel_categories_ideas . ' WHERE category_id = :category_id');
-    $this->db->bind(':topic_id', $category_id); // bind topic id
+    $this->db->bind(':category_id', $category_id); // bind topic id
 
     $err = false;
     try {
@@ -1483,7 +1483,7 @@ class Idea
 
         $this->db->execute();
         $total_datasets = $this->db->resultSet()[0]['count'];
-        
+
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code
@@ -1580,7 +1580,7 @@ class Idea
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":room_id", $room_id, $select_part . ' ' . $join . ' ' . $where));
+        $total_datasets = $this->converters->getTotalDatasetsFree($select_part . ' ' . $join . ' WHERE ' . $where);
       }
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
@@ -3488,7 +3488,6 @@ class Idea
     $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
     $stmt = $this->db->query('SELECT user_id_target FROM ' . $this->db->au_delegation . ' WHERE user_id_original = :user_id AND topic_id = :topic_id AND status = 1');
-    //$stmt = $this->db->query('SELECT user_id_target FROM '.$this->db->au_delegation.' INNER JOIN '.$this->db->au_rel_topics_ideas.' ON ('.$this->db->au_rel_topics_ideas.'.idea_id = WHERE (user_id_original = :user_id) = :user_id AND room_id = :room_id AND status = 1');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':topic_id', $topic_id); // bind topic id
     $has_delegated = $this->db->resultSet();
@@ -4053,7 +4052,7 @@ class Idea
 
   }// end function
 
-  public function getUpdatesByUser($user_id, $mode = 0)
+  public function getUpdatesByUser($user_id, $mode = 0, $just_count = true)
   {
     /* returns statistics / updates for a defined user (userid) since last login of the user
     returns votes and comments with counts
@@ -4065,24 +4064,74 @@ class Idea
     # init return array
     $data = [];
 
-    $select_defaults = 'SELECT ' . $this->db->au_ideas . '.hash_id AS idea_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_topics . '.hash_id AS topic_id, ' . $this->db->au_topics . '.phase_id';
-    $join_topic = ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id = ' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
-    $join_user = ' LEFT JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id = ' . $this->db->au_users_basedata . '.id)';
-    # $join_room = ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_ideas . '.room_id = ' . $this->db->au_rooms . '.id ';
+    $select_part = <<<EOD
+          {$this->db->au_votes}.id,
+          {$this->db->au_votes}.vote_value,
+          {$this->db->au_votes}.vote_weight,
+          {$this->db->au_votes}.number_of_delegations
+    EOD;
 
-    # first get votes
-    $select_part = ', ' . $this->db->au_votes . '.id, ' . $this->db->au_votes . '.vote_value, ' . $this->db->au_votes . '.vote_weight, ' . $this->db->au_votes . '.number_of_delegations';
-    $from = ' FROM ' . $this->db->au_votes . ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_votes . '.idea_id = ' . $this->db->au_ideas . '.id)';
+    $from_part = <<<EOD
+        FROM
+          {$this->db->au_votes}
+        LEFT JOIN
+          {$this->db->au_ideas}
+        ON
+          ({$this->db->au_votes}.idea_id = {$this->db->au_ideas}.id)
+    EOD;
+
+    $join_topic = <<<EOD
+        LEFT JOIN
+          {$this->db->au_rel_topics_ideas}
+        ON
+          ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id)
+        LEFT JOIN
+          {$this->db->au_topics}
+        ON
+          ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
+    EOD;
+
+    $join_user = <<<EOD
+        LEFT JOIN
+          {$this->db->au_users_basedata}
+        ON
+          ({$this->db->au_ideas}.user_id = {$this->db->au_users_basedata}.id)
+    EOD;
+
+    $join_room = <<<EOD
+        LEFT JOIN
+          {$this->db->au_rooms}
+        ON
+          {$this->db->au_ideas}.room_id = {$this->db->au_rooms}.id
+    EOD;
+
+    $select_defaults = <<<EOD
+        SELECT
+          {$this->db->au_ideas}.hash_id AS idea_id,
+          {$this->db->au_ideas}.title,
+          {$this->db->au_ideas}.room_id,
+          {$this->db->au_topics}.hash_id AS topic_id,
+          {$this->db->au_topics}.phase_id,
+    EOD;
 
     if ($mode == 0) {
       // activity since last login of the user
-      $where = ' WHERE ' . $this->db->au_votes . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_ideas . '.user_id  = :user_id LIMIT 1)';
+      $where = <<<EOD
+          WHERE
+            {$this->db->au_votes}.last_update >
+          (SELECT
+              {$this->db->au_users_basedata}.last_update
+            FROM
+              {$this->db->au_users_basedata}
+            WHERE
+              {$this->db->au_ideas}.user_id  = :user_id LIMIT 1)
+      EOD;
     } else {
       // all activity
-      $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
+      $where = " WHERE {$this->db->au_ideas}.user_id = :user_id";
     }
 
-    $stmt = $this->db->query($select_defaults . $select_part . $from . $join_topic . $join_user . $where);
+    $stmt = $this->db->query($select_defaults . $select_part . $from_part . $join_topic . $join_user . $where);
     $this->db->bind(':user_id', $user_id); // bind user id
 
     $err = false;
@@ -4101,15 +4150,31 @@ class Idea
     }
 
     # second get comments
-    $select_part = ', ' . $this->db->au_comments . '.id';
-    $from_part = ' FROM ' . $this->db->au_comments . ' LEFT JOIN ' . $this->db->au_ideas . ' ON (' . $this->db->au_comments . '.idea_id = ' . $this->db->au_ideas . '.id)';
+    $select_part = "{$this->db->au_comments}.id";
+    $from_part = <<<EOD
+        FROM
+          {$this->db->au_comments}
+        LEFT JOIN
+          {$this->db->au_ideas}
+        ON
+          ({$this->db->au_comments}.idea_id = {$this->db->au_ideas}.id)
+    EOD;
 
     if ($mode == 0) {
       // activity since last login of the user
-      $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id AND ' . $this->db->au_comments . '.last_update > (SELECT ' . $this->db->au_users_basedata . '.last_login FROM ' . $this->db->au_users_basedata . ' WHERE ' . $this->db->au_users_basedata . '.id  = :user_id LIMIT 1)';
+      $where = <<<EOD
+         WHERE
+          {$this->db->au_ideas}.user_id = :user_id 
+          AND {$this->db->au_comments}.last_update > (SELECT 
+              {$this->db->au_users_basedata}.last_update_retrieval
+              FROM
+                {$this->db->au_users_basedata}
+              WHERE
+                {$this->db->au_users_basedata}.id = :user_id LIMIT 1)
+      EOD;
     } else {
       // all activity
-      $where = ' WHERE ' . $this->db->au_ideas . '.user_id = :user_id';
+      $where = " WHERE {$this->db->au_ideas}.user_id = :user_id";
     }
 
     $stmt = $this->db->query($select_defaults . $select_part . $from_part . $join_topic . $join_user . $where);
@@ -4132,6 +4197,15 @@ class Idea
 
 
     $total_datasets = count($votes) + count($comments);
+
+    if (!$just_count) {
+      $update_user_query = <<<EOD
+        UPDATE {$this->db->au_users_basedata} SET last_update_retrieval = NOW() where id = :user_id
+      EOD;
+      $stmt = $this->db->query($update_user_query);
+      $this->db->bind(':user_id', $user_id); // bind user id
+      $this->db->execute();
+    }
 
     if ($total_datasets < 1) { # nothing happened in the meantime
       $returnvalue['success'] = true; // set return value
@@ -4166,58 +4240,77 @@ class Idea
 
   } // end function getUpdatesByUser
 
-  public function getDashboardByUser($user_id, $status = 1, $room_id = -1, $limit = 0, $offset = 0)
+  public function getUserIdeasByPhase($user_id, $phase_id)
   {
-    /* returns all sorts of data for a specific user (like ideas, votes and activity) since last login
-     (associative array)
-    $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-    $user_id is the id of the user
-    */
+  
+    $user_id = $this->converters->checkUserId($user_id);
 
-    $asc = 0;
-    $orderby = 0;
-
-    $offset = intval($offset);
-    $limit = intval($limit);
-    $orderby = intval($orderby);
-    $asc = intval($asc);
-    $status = intval($status);
-
-    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-
-    // init vars
-    $orderby_field = "";
-    $asc_field = "";
-
-    $limit_string = " LIMIT :offset , :limit ";
-    $limit_active = true;
-
-    // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
-    if ($offset == 0 && $limit == 0) {
-      $limit_string = "";
-      $limit_active = false;
-    }
-    // additional conditions for the WHERE clause
-    $extra_where = "";
-
-    if ($status > -1) {
-      // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
+    if ($phase_id != 0) {
+      $topic_columns = <<<EOD
+        ,
+          {$this->db->au_topics}.hash_id AS topic_hash_id,
+          {$this->db->au_topics}.phase_id AS phase_id
+      EOD;
+    } else {
+      $topic_columns = '';
     }
 
-    if ($room_id > -1) {
-      $room_id = $this->converters->checkRoomId($room_id); // auto convert id
-      // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_ideas . ".room_id = " . $room_id;
+    $select_part = <<<EOD
+        SELECT 
+          {$this->db->au_ideas}.hash_id, 
+          {$this->db->au_ideas}.title, 
+          {$this->db->au_ideas}.content, 
+          {$this->db->au_ideas}.created, 
+          {$this->db->au_ideas}.last_update, 
+          {$this->db->au_ideas}.sum_likes, 
+          {$this->db->au_ideas}.sum_votes,
+          {$this->db->au_users_basedata}.displayname,
+          {$this->db->au_users_basedata}.hash_id as user_hash_id,
+          {$this->db->au_rooms}.hash_id as room_hash_id,
+          {$this->db->au_ideas}.sum_comments{$topic_columns}
+        FROM {$this->db->au_ideas}
+        LEFT JOIN
+            {$this->db->au_rooms}
+        ON
+            ({$this->db->au_rooms}.id = {$this->db->au_ideas}.room_id)
+        LEFT JOIN
+            {$this->db->au_users_basedata}
+        ON
+            ({$this->db->au_users_basedata}.id = {$this->db->au_ideas}.user_id)
+    EOD;
+
+
+    if ($phase_id != 0) {
+
+      $where_part = <<<EOD
+        LEFT JOIN 
+            {$this->db->au_rel_topics_ideas} 
+        ON 
+            ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id) 
+        LEFT JOIN
+            {$this->db->au_topics} 
+        ON
+            ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
+        WHERE
+            {$this->db->au_ideas}.id > 0 AND 
+            {$this->db->au_ideas}.user_id = :user_id AND
+            {$this->db->au_topics}.phase_id = :phase_id
+      EOD;
+    } else {
+      $where_part = <<<EOD
+        WHERE
+            {$this->db->au_ideas}.id NOT IN (SELECT idea_id from au_rel_topics_ideas) AND
+            {$this->db->au_ideas}.user_id = :user_id
+      EOD;
     }
 
+    $stmt = $this->db->query($select_part.$where_part);
 
-    $select_part = 'SELECT ' . $this->db->au_ideas . '.id, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_votes, ' . $this->db->au_rel_topics_ideas . '.topic_id AS topic_id , ' . $this->db->au_topics . '.phase_id AS phase_id FROM ' . $this->db->au_ideas;
-    $join = 'LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON (' . $this->db->au_rel_topics_ideas . '.idea_id=' . $this->db->au_ideas . '.id) LEFT JOIN ' . $this->db->au_topics . ' ON (' . $this->db->au_rel_topics_ideas . '.topic_id=' . $this->db->au_topics . '.id)';
-    $where = ' WHERE ' . $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_ideas . '.user_id= :user_id ' . $extra_where;
-    $stmt = $this->db->query($select_part . ' ' . $join . ' ' . $where);
+    $this->db->bind(':user_id', $user_id);
 
-    $this->db->bind(':user_id', $user_id); // bind user id
+    if ($phase_id > 0) {
+      $this->db->bind(':phase_id', $phase_id);
+    }
 
     $err = false;
     try {
@@ -4233,62 +4326,115 @@ class Idea
 
       return $returnvalue;
     }
-    $total_datasets = count($ideas);
 
-    // get count
-    $count_by_phase[0] = 0; # wild ideas
-    $count_by_phase[10] = 0; # wild ideas
-    $count_by_phase[20] = 0; # wild ideas
-    $count_by_phase[30] = 0; # wild ideas
-    $count_by_phase[40] = 0; # wild ideas/ approved / results /
-    $count_by_phase[41] = 0; # wild ideas/ approved / results /
-    $count_by_phase[42] = 0; # wild ideas/ disapproved / results /
+    $returnvalue['success'] = true; // set return value
+    $returnvalue['error_code'] = 0; // error code
+    $returnvalue['data'] = $ideas; // returned data
+    $returnvalue['count'] = count($ideas); // returned count of datasets
 
-    $count_by_phase[50] = 0; # wild ideas
+    return $returnvalue;
+  }
+
+  public function getDashboardByUser($user_id, $status = 1, $room_id = -1, $limit = 0, $offset = 0)
+  {
+    /* returns all sorts of data for a specific user (like ideas, votes and activity) since last login
+     (associative array)
+    $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
+    $user_id is the id of the user
+    */
+
+    $select_part = <<<EOD
+        SELECT 
+          count({$this->db->au_ideas}.id) as count 
+        FROM {$this->db->au_ideas}
+        LEFT JOIN
+            {$this->db->au_rooms}
+        ON
+            ({$this->db->au_rooms}.id = {$this->db->au_ideas}.room_id)
+        LEFT JOIN
+            {$this->db->au_users_basedata}
+        ON
+            ({$this->db->au_users_basedata}.id = {$this->db->au_ideas}.user_id)
+    EOD;
+
+    $where_wild_ideas_part = <<<EOD
+      WHERE
+          {$this->db->au_ideas}.id NOT IN (SELECT idea_id from au_rel_topics_ideas) AND
+          {$this->db->au_ideas}.user_id = :user_id AND
+          {$this->db->au_ideas}.status = 1
+    EOD;
+
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+
+    $stmt = $this->db->query($select_part.$where_wild_ideas_part);
+    $this->db->bind(':user_id', $user_id);
+
+    $err = false;
+    try {
+      $count_wild_ideas = $this->db->resultSet();
+
+    } catch (Exception $e) {
+      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+    $count_by_phase[0] = $count_wild_ideas[0]['count']; # wild ideas
+
+    $total_ideas_num = $count_by_phase[0];
+    $where_part = <<<EOD
+      LEFT JOIN 
+          {$this->db->au_rel_topics_ideas} 
+      ON 
+          ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id) 
+      LEFT JOIN
+          {$this->db->au_topics} 
+      ON
+          ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
+      WHERE
+          {$this->db->au_ideas}.id > 0 AND 
+          {$this->db->au_ideas}.user_id = :user_id AND
+          {$this->db->au_topics}.phase_id = :phase_id
+    EOD;
+
+
+    $phases = array(10, 20, 30, 40);
+
+    foreach ($phases as $phase) {
+      $err = false;
+      try {
+        $stmt = $this->db->query($select_part.$where_part);
+        $this->db->bind(':user_id', $user_id);
+        $this->db->bind(':phase_id', $phase);
+        $count_ideas = $this->db->resultSet();
+        $count_by_phase[$phase] = $count_ideas[0]['count'];
+        $total_ideas_num += $count_by_phase[$phase];
+
+      } catch (Exception $e) {
+        echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+        $err = true;
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 1; // error code
+        $returnvalue['data'] = false; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+
+        return $returnvalue;
+      }
+    
+    }
 
     $data = [];
-
-    $data['total_wild'] = 0;
-    $data['total_idea_box'] = 0;
-    $data['idea_ids'] = "";
-    $data['idea_ids_wild'] = "";
-    $data['idea_ids_box'] = "";
-
-    $total_counter = 0;
-
-    foreach ($ideas as $idea_row) {
-      // get individual counts
-      $idea_phase_id = $idea_row['phase_id'];
-      $idea_topic_id = $idea_row['topic_id'];
-      $idea_id = $idea_row['id'];
-
-      if ($idea_phase_id == NULL) {
-        $idea_phase_id = 0;
-      }
-
-      $data['idea_ids'] .= $idea_id . ",";
-
-      if ($idea_topic_id == NULL) {
-        $idea_topic_id = 0;
-        $data['total_wild']++;
-        $data['idea_ids_wild'] .= $idea_id . ",";
-      } else {
-        $data['total_idea_box']++;
-        $data['idea_ids_box'] .= $idea_id . ",";
-
-      }
-
-      $count_by_phase[$idea_phase_id]++;
-
-
-
-    } // end foreach
     $data['phase_counts'] = $count_by_phase;
 
     $returnvalue['success'] = true; // set return value
     $returnvalue['error_code'] = 0; // error code
     $returnvalue['data'] = $data; // returned data
-    $returnvalue['count'] = count($ideas); // returned count of datasets
+    $returnvalue['count'] = $total_ideas_num;
 
     return $returnvalue;
 

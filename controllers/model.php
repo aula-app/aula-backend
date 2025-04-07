@@ -48,7 +48,6 @@ if ($check_jwt["success"]) {
     return;
   }
 
-  $model = new $model_name($db, $crypt, $syslog);
   $method = $input["method"];
 
   if (array_key_exists("arguments", $input)) {
@@ -63,7 +62,7 @@ if ($check_jwt["success"]) {
     $decrypt_fields = [];
   }
 
-  $permissions = checkPermissions($model_name, $model, $method, $arguments, $user_id, $userlevel, $roles, $user_hash);
+  $permissions = checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments, $user_id, $userlevel, $roles, $user_hash);
 
   if (!$permissions["allowed"]) {
     http_response_code(403);
@@ -71,6 +70,7 @@ if ($check_jwt["success"]) {
     return;
   }  
 
+  $model = new $model_name($db, $crypt, $syslog);
   $data = $model->$method(...$arguments);
 
   if ($data['error_code'] == 1) {
