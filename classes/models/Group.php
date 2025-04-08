@@ -265,7 +265,7 @@ class Group
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
-    $orderby_field = $this->db->au_users_basedata . "." . $$this->user->getUserOrderId($orderby);
+    $orderby_field = $this->db->au_users_basedata . "." . $this->user->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
