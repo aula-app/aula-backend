@@ -678,7 +678,7 @@ class Message
     $personalMessages = $this->getPersonalMessagesByUser($user_id, $mode, $status, $search_field, $search_text)['data'];
   
     $query = <<<EOD
-      SELECT * from {$this->db->au_messages} WHERE target_id = NULL AND group_id = NULL
+      SELECT * from {$this->db->au_messages} WHERE target_id = NULL AND target_group = NULL
     EOD;
 
     $this->db->query($query);
