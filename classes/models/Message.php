@@ -673,6 +673,41 @@ class Message
     }
   }// end function
 
+  public function getAdminMessages($user_id, $mode = 0, $status = 1, $search_field = "", $search_text = "")
+  {
+    $personalMessages = $this->getPersonalMessagesByUser($user_id, $mode, $status, $search_field, $search_text)['data'];
+  
+    $query = <<<EOD
+      SELECT * from {$this->db->au_messages} WHERE target_id = NULL AND group_id = NULL
+    EOD;
+
+    $this->db->query($query);
+
+    try {
+      $messages = $this->db->resultSet();
+
+      $all_messages = array_merge($personalMessages, $messages);
+
+      $returnvalue['success'] = true; // set success value
+      $returnvalue['error_code'] = 0; // no data found
+      $returnvalue['data'] = $all_messages; // returned data is false
+      $returnvalue['count'] = count($all_messages); // returned count of datasets
+
+      return $returnvalue;
+
+    } catch (Exception $e) {
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 2; // database error while executing query
+      $returnvalue['data'] = false; // returned data is false
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+  }
+
+
   public function getPersonalMessagesByUser($user_id, $mode = 0, $status = 1, $search_field = "", $search_text = "")
   {
     /* returns message list (associative array) of messages that are for this user (specified by $user_id)
