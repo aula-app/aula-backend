@@ -37,7 +37,7 @@ class Message
   {
     $user_id = $this->converters->checkUserId($user_id);
     $message_id = $this->converters->checkMessageId($message_id);
-    $stmt = $this->db->query('SELECT ' . $this->db->au_messages . '.target_id as user_id FROM ' . $this->db->au_messages . '  WHERE ' . $this->db->au_messagess . '.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_messages . '.target_id as user_id FROM ' . $this->db->au_messages . '  WHERE ' . $this->db->au_messages . '.id = :id');
     $this->db->bind(':id', $message_id); // bind topic id
     $messages = $this->db->resultSet();
 
