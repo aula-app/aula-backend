@@ -553,7 +553,6 @@ class Message
       $limit_active = false;
     }
 
-
     if ($target_group > 0) {
       // if a target group is set then add to where clause
       $extra_where .= " AND (target_group = " . $target_group;
@@ -629,7 +628,8 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT au_messages.*, au_users_basedata.hash_id as user_hash_id FROM ' . $this->db->au_messages . ' JOIN au_users_basedata ON au_users_basedata.id = au_messages.target_id WHERE au_messages.id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT au_messages.*, au_users_basedata.hash_id as user_hash_id FROM ' . $this->db->au_messages . ' LEFT JOIN au_users_basedata ON au_users_basedata.id = au_messages.target_id WHERE au_messages.id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -824,7 +824,7 @@ class Message
     /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
     $headline is the headline of the mesage, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
     target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
-    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report, 5=request, 6=bug)
+    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report, 5=bug, 6=request)
     publish_date (datetime) specifies the date when this message should be published Format DB datetime (2023-06-14 14:21:03)
     level_of_detail (int) specifies how detailed the scope of this message is (low = general, high = very specific)
     only_on_dashboard (int 0,1) specifies if the message should only be displayed on the dashboard (1) or also pushed to the user (email / push notification)
