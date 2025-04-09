@@ -671,6 +671,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       ],
 
       "getMessageBaseData" => [
+        "open_roles" => ["admin"],
         "owner" => ["message_id"],
       ],
 
