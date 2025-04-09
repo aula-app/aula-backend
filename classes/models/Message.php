@@ -35,10 +35,10 @@ class Message
 
   public function isOwner($user_id, $message_id)
   {
-    $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    $message_id = $this->converters->checkMessageId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $user_id = $this->converters->checkUserId($user_id);
+    $message_id = $this->converters->checkMessageId($message_id);
     $stmt = $this->db->query('SELECT ' . $this->db->au_messages . '.target_id as user_id FROM ' . $this->db->au_messages . '  WHERE ' . $this->db->au_messagess . '.id = :id');
-    $this->db->bind(':id', $idea_id); // bind topic id
+    $this->db->bind(':id', $message_id); // bind topic id
     $messages = $this->db->resultSet();
 
     if (count($messages) > 0) {
