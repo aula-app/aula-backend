@@ -33,6 +33,21 @@ class Message
     return md5($key);
   }
 
+  public function isOwner($user_id, $message_id)
+  {
+    $idea_id = $this->converters->checkIdeaId($idea_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $message_id = $this->converters->checkMessageId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_messages . '.target_id as user_id FROM ' . $this->db->au_messages . '  WHERE ' . $this->db->au_messagess . '.id = :id');
+    $this->db->bind(':id', $idea_id); // bind topic id
+    $messages = $this->db->resultSet();
+
+    if (count($messages) > 0) {
+      return $messages[0]['user_id'] == $user_id;
+    } else {
+      return false;
+    }
+  }
+
   public function getMessageOrderId($orderby)
   {
     # helper method => converts an int id to a db field name (for ordering)

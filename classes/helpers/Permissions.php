@@ -666,6 +666,10 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         "checks" => ["user_id:user_id"]
       ],
 
+      "getMessageBaseData" => [
+        "owner" => ["message_id"],
+      ],
+
       "getPersonalMessagesByUser" => [
         "checks" => ["user_id:user_id"]
       ],
