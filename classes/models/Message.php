@@ -676,7 +676,7 @@ class Message
   public function getAdminMessages($user_id, $mode = 0, $status = 1, $search_field = "", $search_text = "")
   {
     $personalMessages = $this->getPersonalMessagesByUser($user_id, $mode, $status, $search_field, $search_text)['data'];
-  
+
     $query = <<<EOD
       SELECT * from {$this->db->au_messages} WHERE target_id = NULL AND target_group = NULL
     EOD;
@@ -763,7 +763,7 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR (target_group = 0 AND target_id = 0 AND room_id = 0) OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND msg_type < 4 AND status = :status ' . $extra_where . ' ORDER BY publish_date DESC');
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR (target_group = 0 AND target_id = 0 AND room_id = 0) OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND status = :status ' . $extra_where . ' ORDER BY publish_date DESC');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':status', $status); // bind status
     $this->db->bind(':target_date', $target_date); // bind target date
@@ -824,7 +824,7 @@ class Message
     /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
     $headline is the headline of the mesage, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
     target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
-    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report, 5= requests )
+    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report, 5=request, 6=bug)
     publish_date (datetime) specifies the date when this message should be published Format DB datetime (2023-06-14 14:21:03)
     level_of_detail (int) specifies how detailed the scope of this message is (low = general, high = very specific)
     only_on_dashboard (int 0,1) specifies if the message should only be displayed on the dashboard (1) or also pushed to the user (email / push notification)
