@@ -15,7 +15,6 @@ class Settings
   private $db;
   # deals with everything around system settings
 
-
   public function __construct($db, $crypt, $syslog)
   {
     // db = database class, crypt = crypt class, $syslog = system logger class
@@ -32,22 +31,6 @@ class Settings
   protected function buildCacheHash($key)
   {
     return md5($key);
-  }
-
-  public function hasPermissions($user_id, $userlevel, $method, $arguments)
-  {
-    # helper method to retireve if a certain user has rights on sepcified methods 
-    # returns true if ok, false if not 
-
-    if ($method == "getInstanceSettings" or $method == "getCustomfields") {
-       return ["allowed" => true];
-    }
-
-    if ($userlevel >= 50) {
-      return ["allowed" => true];
-    } else {
-      return ["allowed" => false, "message" => "Not Authorized"];
-    }
   }
 
   public function getInstanceSettings()

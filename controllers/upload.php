@@ -9,7 +9,7 @@ require_once($baseHelperDir . 'JWT.php');
 $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog($db);
-$jwt = new JWT($jwtKeyFile);
+$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
 $media = new Media($db, $crypt, $syslog, $filesDir);
 
 $check_jwt = $jwt->check_jwt();

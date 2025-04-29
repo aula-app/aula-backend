@@ -453,7 +453,7 @@ class Room
     }
   }// end function
 
-  public function getRoomsByUser($user_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1)
+  public function getRoomsByUser($user_id, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = -1, $type = -1)
   {
     /* returns roomlist (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
@@ -480,7 +480,6 @@ class Room
     $limit_string = " LIMIT " . $offset . " , " . $limit;
     $limit_active = true;
 
-
     // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
     if ($offset == 0 && $limit == 0) {
       $limit_string = "";
@@ -495,6 +494,11 @@ class Room
     if ($status > -1) {
       // specific status selected / -1 = get all status values
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
+    }
+
+    if ($type > -1) {
+      // specific status selected / -1 = get all status values
+      $extra_where .= " AND type = " . $type;
     }
 
     $orderby_field = $this->getRoomOrderId($orderby);
@@ -555,6 +559,16 @@ class Room
     }
   }// end function
 
+  public function isDefaultRoom($room_id)
+  {
+    $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $query = 'SELECT type FROM ' .$this->db->au_rooms .' WHERE ' . $this->db->au_rooms . '.id= :room_id ';
+    $this->db->query($query);
+    $this->db->bind(':room_id', $room_id); // bind room id
+    $result = $this->db->resultSet();
+
+    return $result[0]['type'] == 1;
+  }
 
   public function getUsersInRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0)
   {
@@ -594,7 +608,7 @@ class Room
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
-    $orderby_field = $this->db->au_users_basedata . "." . $$this->user->getUserOrderId($orderby);
+    $orderby_field = $this->db->au_users_basedata . "." . $this->user->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:

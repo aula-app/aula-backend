@@ -10,7 +10,7 @@ require_once "Mail.php";
 $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
-$jwt = new JWT($jwtKeyFile);
+$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $email =  $_GET["email"];

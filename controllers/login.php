@@ -12,7 +12,7 @@ $syslog = new Systemlog($db); // systemlog
 $user = new User($db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
 
-$jwt = new JWT($jwtKeyFile);
+$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
 
 
 header('Content-Type: application/json; charset=utf-8');

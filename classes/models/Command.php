@@ -49,7 +49,6 @@ class Command
     }
   }// end function
 
-
   public function getCommandBaseData($command_id)
   {
     /* returns command base data for a specified db id */

@@ -10,7 +10,7 @@ $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
 $user = new User ($db, $crypt, $syslog);
-$jwt = new JWT($jwtKeyFile);
+$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
 
 $check_jwt = $jwt->check_jwt();
 

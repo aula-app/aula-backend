@@ -259,6 +259,20 @@ class Topic
     }
   } // end function
 
+  public function getRoom($topic_id)
+  {
+    $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
+    $stmt = $this->db->query('SELECT ' . $this->db->au_rooms . '.hash_id FROM '  . $this->db->au_rooms . ' LEFT JOIN ' . $this->db->au_topics . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_topics . '.id = :id');
+    $this->db->bind(':id', $topic_id); // bind topic id
+    $topics = $this->db->resultSet();
+
+    if (count($topics) > 0) {
+      return $topics[0]['hash_id'];
+    } else {
+      return false;
+    }
+  }
+
   public function getTopicBaseData($topic_id)
   {
     /* returns topic base data for a specified db id */
@@ -1270,7 +1284,6 @@ class Topic
       return $returnvalue;
     }
   }
-
 
   public function removeAllIdeasFromTopic($topic_id)
   {

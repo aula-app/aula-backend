@@ -9,7 +9,7 @@ require_once ($baseHelperDir.'JWT.php');
 $db = new Database();
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
-$jwt = new JWT($jwtKeyFile);
+$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $password = $input['password'];
   $new_password = $input['new_password'];
 
-  $stmt = $db->query('SELECT id, username, pw, temp_pw, userlevel FROM ' . $db->au_users_basedata . ' WHERE id = :user_id');
+  $stmt = $db->query('SELECT id, hash_id, roles, username, pw, temp_pw, userlevel FROM ' . $db->au_users_basedata . ' WHERE id = :user_id');
   try {
     $db->bind(':user_id', $user_id); // blind index
     $users = $db->resultSet();
