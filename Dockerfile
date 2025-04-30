@@ -49,6 +49,8 @@ EXPOSE 80 443
 
 COPY ./ $PROJECT_PATH/api
 COPY ./docker-entrypoint.sh $PROJECT_PATH
+COPY ./base_config.php-example $PROJECT_PATH/api/base_config.php
+COPY ./db_config.ini-example $PROJECT_PATH/api/db_config.ini
 
 RUN mkdir -p $PROJECT_PATH/files && \
   chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER $PROJECT_PATH/files
