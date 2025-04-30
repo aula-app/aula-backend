@@ -11,3 +11,6 @@ docker/_generated_mariadb_data/*
 
 docker/_generated_files_data/*
 !docker/_generated_files_data/.gitkeep
+
+docker-compose.override.yml
+.env
