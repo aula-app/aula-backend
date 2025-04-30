@@ -28,6 +28,7 @@ services:
   # a mariadb instance is included here as a docker service, in case you need it
   aula-db-docker-service:
     image: mariadb:11.7
+    user: "${UID}:${GID}"
     environment:
       # note, if you use this container, these
       #  values need to be reflectd in db_config.ini
