@@ -692,6 +692,10 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         "roles" => ["all"]
       ],
 
+      "deleteMessage" => [
+        "roles" => ["admin"]
+      ],
+
       "setMessageStatus" => [
         "roles" => ["admin"]
       ]
