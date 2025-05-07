@@ -11,15 +11,13 @@ function base64_url_encode($text): string
 
 class JWT
 {
-  private $key;
+  private $key, $user;
+
 
   public function __construct($keyFile, $db, $crypt, $syslog)
   {
     $this->key = file_get_contents($keyFile);
     $this->key = str_replace(PHP_EOL, '', $this->key);
-    $this->db = $db;
-    $this->crypt = $crypt;
-    $this->syslog = $syslog;
     $this->user = new User($db, $crypt, $syslog);
   }
 
@@ -86,7 +84,6 @@ class JWT
         } else {
           return ["success" => false, "error" => "invalid_signature"];
         }
-
       } else {
         return false;
       }
@@ -110,4 +107,3 @@ class JWT
     }
   }
 }
-?>

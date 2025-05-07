@@ -6,7 +6,6 @@ require_once('../base_config.php');
 require_once "Mail.php";
 
 if ($allowed_include == 1) {
-
 } else {
   exit;
 }
@@ -48,7 +47,7 @@ class User
     # deal with sending email to user for welcome mail
 
     $this->smtp = Mail::factory('smtp', $params);
-  }// end function
+  } // end function
 
   private function decrypt($content)
   {
@@ -85,7 +84,7 @@ class User
       default:
         return "last_update";
     }
-  }// end function
+  } // end function
 
   public function validSearchField($search_field)
   {
@@ -129,7 +128,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
   public function getUserHashId($user_id)
   {
@@ -154,9 +153,8 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserProperty($user_id, $property, $prop_value, $updater_id = 0)
   {
@@ -200,7 +198,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
   public function revokeVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
@@ -262,9 +260,8 @@ class User
 
         return $returnvalue;
       }
-
     }
-  }// end function
+  } // end function
 
   public function delegateVoteRight($user_id, $user_id_target, $topic_id, $updater_id)
   {
@@ -313,8 +310,6 @@ class User
         $returnvalue['count'] = 1; // returned count of datasets
 
         return $returnvalue;
-
-
       } else {
         $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; //db  error code
@@ -322,9 +317,7 @@ class User
         $returnvalue['count'] = 0; // returned count of datasets
 
         return $returnvalue;
-
       }
-
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; //  error code
@@ -332,9 +325,7 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-
   } // end function
 
   public function changeGivenConsent($user_id, $inc_value = 1)
@@ -369,8 +360,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
-
     } else {
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; //db  error code
@@ -378,11 +367,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-
-
-  }// end function
+  } // end function
 
   public function giveConsent($user_id, $text_id, $consent_value = 1, $updater_id = 0)
   {
@@ -435,8 +421,6 @@ class User
         $returnvalue['count'] = 1; // returned count of datasets
 
         return $returnvalue;
-
-
       } else {
         $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; //db  error code
@@ -444,9 +428,7 @@ class User
         $returnvalue['count'] = 0; // returned count of datasets
 
         return $returnvalue;
-
       }
-
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; //db  error code
@@ -454,9 +436,7 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-
   } // end function
 
   public function getDelegationStatus($user_id, $topic_id)
@@ -491,7 +471,6 @@ class User
       $returnvalue['count'] = $count_data; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $this->syslog->addSystemEvent(1, "Error retrieving delegation status for user " . $user_id . " and topic " . $topic_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -552,7 +531,6 @@ class User
       $returnvalue['count'] = $count_data; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $this->syslog->addSystemEvent(1, "Error changing delegation status of user " . $user_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -561,9 +539,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function getReceivedDelegations($user_id, $topic_id)
   {
@@ -675,7 +652,6 @@ class User
       $returnvalue['count'] = $needed_consents; // returned count of datasets
 
       return $returnvalue;
-
     }
   } // end function
 
@@ -700,7 +676,7 @@ class User
       $i++;
     }
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_texts . '.user_needs_to_consent, ' . $this->db->au_consent . '.consent FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id AND '. $this->db->au_consent .'.user_id = :user_id) WHERE ' . $this->db->au_texts . '.id NOT IN (' . implode(",", $ids) . ') AND ' . $this->db->au_texts . '.status = 1');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_texts . '.id, ' . $this->db->au_texts . '.headline, ' . $this->db->au_texts . '.body, ' . $this->db->au_texts . '.consent_text, ' . $this->db->au_texts . '.user_needs_to_consent, ' . $this->db->au_consent . '.consent FROM ' . $this->db->au_texts . ' LEFT JOIN ' . $this->db->au_consent . ' ON (' . $this->db->au_texts . '.id = ' . $this->db->au_consent . '.text_id AND ' . $this->db->au_consent . '.user_id = :user_id) WHERE ' . $this->db->au_texts . '.id NOT IN (' . implode(",", $ids) . ') AND ' . $this->db->au_texts . '.status = 1');
     $this->db->bind(':user_id', $user_id); // bind userid
 
     $texts = $this->db->resultSet();
@@ -721,7 +697,6 @@ class User
     $returnvalue['count'] = $missing_consents; // returned count of datasets
 
     return $returnvalue;
-
   } // end function
 
   public function checkHasUserGivenConsentsForUsage($user_id)
@@ -829,7 +804,6 @@ class User
       $returnvalue['count'] = intval($this->db->rowCount()); // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id " . $user_id_target . " for topic " . $topic_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -839,7 +813,6 @@ class User
 
       return $returnvalue;
     }
-
   }
 
   public function removeUserDelegations($user_id, $topic_id = 0, $target = 0)
@@ -885,7 +858,6 @@ class User
       $returnvalue['count'] = $count_data; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $this->syslog->addSystemEvent(1, "Error deleting user delegation(s) with id " . $user_id . " for topic " . $topic_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -894,10 +866,7 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
-
     }
-
   } // end function
 
   public function getRoles($user_id)
@@ -966,7 +935,6 @@ class User
         $returnvalue['count'] = 1; // returned count of datasets
 
         return $returnvalue;
-
       } else {
         $this->syslog->addSystemEvent(0, "Error while adding user " . $user_id . " to room " . $room_id, 0, "", 1);
 
@@ -977,7 +945,6 @@ class User
 
         return $returnvalue;
       }
-
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
@@ -986,7 +953,6 @@ class User
 
       return $returnvalue;
     }
-
   } // end function
 
   public function getStandardRoom()
@@ -999,7 +965,6 @@ class User
     $room_id = $room[0]['id']; // get room id from db
 
     return $room_id;
-
   }
 
   public function addUserToStandardRoom($user_id, $status = 1, $updater_id = 0)
@@ -1052,7 +1017,6 @@ class User
         $returnvalue['count'] = 1; // returned count of datasets
 
         return $returnvalue;
-
       } else {
         $this->syslog->addSystemEvent(0, "Error while adding user " . $user_id . " to standard room " . $room_id, 0, "", 1);
 
@@ -1063,7 +1027,6 @@ class User
 
         return $returnvalue;
       }
-
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
@@ -1072,7 +1035,6 @@ class User
 
       return $returnvalue;
     }
-
   } // end function
 
 
@@ -1104,9 +1066,7 @@ class User
         $returnvalue['count'] = 0; // returned count of datasets
 
         return $returnvalue;
-
       }
-
     } else {
       // error occured while removing from room 1
       $returnvalue['success'] = false; // set return value
@@ -1146,9 +1106,7 @@ class User
         $returnvalue['count'] = 0; // returned count of datasets
 
         return $returnvalue;
-
       }
-
     } else {
       // error occured while removing from group 1
       $returnvalue['success'] = false; // set return value
@@ -1178,7 +1136,6 @@ class User
 
       $this->deleteUserRole($user_id, $room_id);
       $this->setRefresh($user_id, true);
-
     } catch (Exception $e) {
       echo 'Error occured while deleting user ' . $user_id . ' from room: ' . $room_id, $e->getMessage(), "\n"; // display error
       $err = true;
@@ -1188,7 +1145,6 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
     // remove delegations for this user
     // todo -> remove delegations from this user
@@ -1205,9 +1161,7 @@ class User
     $returnvalue['count'] = 1; // returned count of datasets
 
     return $returnvalue;
-
-
-  }// end function
+  } // end function
 
   public function followUser($user_id, $user_id_target)
   {
@@ -1290,7 +1244,6 @@ class User
         $returnvalue['count'] = 1; // returned count of datasets
 
         return $returnvalue;
-
       } else {
         $this->syslog->addSystemEvent(0, "Error while adding user relation (type:" . $type . ") " . $user_id, 0, "", 1);
 
@@ -1302,7 +1255,6 @@ class User
 
         return $returnvalue;
       }
-
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
@@ -1311,7 +1263,6 @@ class User
 
       return $returnvalue;
     }
-
   } // end function
 
   public function removeUserRelation($user_id, $user_id_target)
@@ -1329,7 +1280,6 @@ class User
     try {
       $users = $this->db->execute();
       $rowcount = $this->db->rowCount();
-
     } catch (Exception $e) {
       echo 'Error occured while removing relation between user ' . $user_id . ' and user ' . $user_id_target, $e->getMessage(), "\n"; // display error
       //$this->syslog->addSystemEvent(0, "Error while removing user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
@@ -1348,8 +1298,7 @@ class User
     $returnvalue['count'] = 1; // returned count of datasets
 
     return $returnvalue;
-
-  }// end function
+  } // end function
 
   public function removeUserFromGroup($group_id, $user_id)
   {
@@ -1363,7 +1312,6 @@ class User
     $err = false;
     try {
       $groups = $this->db->resultSet();
-
     } catch (Exception $e) {
       //echo 'Error occured while removing user from group: ',  $e->getMessage(), "\n"; // display error
       $err = true;
@@ -1382,8 +1330,7 @@ class User
     $returnvalue['count'] = $this->db->rowCount(); // returned count of datasets
 
     return $returnvalue;
-
-  }// end function
+  } // end function
 
   public function addCSV($csv, $room_id, $user_level = 20, $separator = ";")
   {
@@ -1454,7 +1401,6 @@ class User
             array_push($output_user, $user_array);
           }
         }
-
       } // end foreach
     } else {
       # error occurs on CSV parsing
@@ -1518,7 +1464,6 @@ class User
         $returnvalue['count'] = 1; // returned count of datasets
 
         return $returnvalue;
-
       } else {
         $this->syslog->addSystemEvent(0, "Error while adding user " . $user_id . " to group " . $group_id, 0, "", 1);
 
@@ -1529,7 +1474,6 @@ class User
 
         return $returnvalue;
       }
-
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
@@ -1538,7 +1482,6 @@ class User
 
       return $returnvalue;
     }
-
   } // end function
 
   public function checkLogin($username, $pw)
@@ -1572,8 +1515,6 @@ class User
         $returnvalue['count'] = 1; // returned count of datasets
 
         return $returnvalue;
-
-
       } else {
         $this->syslog->addSystemEvent(1, "DB Error login user " . $username, 0, "", 1);
         $returnvalue['success'] = false; // set return value
@@ -1582,7 +1523,6 @@ class User
         $returnvalue['count'] = 0; // returned count of datasets
 
         return $returnvalue;
-
       }
     } else {
       $this->syslog->addSystemEvent(1, "DB Error login user " . $username, 0, "", 1);
@@ -1592,8 +1532,7 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
-    }// end if
+    } // end if
   } // end function
 
   public function getReactivationDate($user_id)
@@ -1613,8 +1552,6 @@ class User
     }
 
     return $reactivation_date;
-
-
   }
 
   public function setRefresh($user_id, $refresh_value = true)
@@ -1630,7 +1567,6 @@ class User
     } catch (Exception $e) {
       print_r($e);
     }
-
   }
 
   public function getUserPayload($user_id)
@@ -1644,7 +1580,6 @@ class User
       $users = $this->db->resultSet();
       $user_status = $users[0]['status'];
       $user_id = $users[0]['id'];
-
     } catch (Exception $e) {
       print_r($e);
     }
@@ -1675,7 +1610,6 @@ class User
     $returnvalue['count'] = 1; // returned count of datasets
 
     return $returnvalue;
-
   }
 
 
@@ -1698,7 +1632,6 @@ class User
       $users = $this->db->resultSet();
       $user_status = $users[0]['status'];
       $user_id = $users[0]['id'];
-
     } catch (Exception $e) {
       print_r($e);
     }
@@ -1739,7 +1672,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
 
       $returnvalue['success'] = true; // set return value
@@ -1749,10 +1681,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-
-  }// end function
+  } // end function
 
 
   public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $both_names = "", $search_field = "", $search_text = "", $extra_where = "", $status = -1, $userlevel = -1, $room_id = -1)
@@ -1844,7 +1774,6 @@ class User
     $err = false;
     try {
       $users = $this->db->resultSet();
-
     } catch (Exception $e) {
       echo 'Error occured while getting users: ', $e->getMessage(), "\n"; // display error
       $err = true;
@@ -1854,7 +1783,6 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
 
     $count_data = count($users);
@@ -1866,8 +1794,6 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
-
     } else {
       $total_datasets = 0;
       if ($search_field_valid) {
@@ -1881,10 +1807,8 @@ class User
       $returnvalue['count'] = $total_datasets; // returned count of datasets
 
       return $returnvalue;
-
-
     }
-  }// end function
+  } // end function
 
   public function checkUserExistsByUsername($username, $email = "")
   {
@@ -1917,7 +1841,6 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $user_id = $users[0]['id']; // get user id from db
       $returnvalue['success'] = true; // set return value
@@ -1926,7 +1849,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     }
   }
 
@@ -1956,7 +1878,6 @@ class User
     if ($offset == 0 && $limit == 0) {
       $limit_string = "";
       $limit_active = false;
-
     }
     if ($offset > 0 && $limit == 0) {
       $limit_string = " LIMIT " . $offset . " , 9999999999999999";
@@ -2008,7 +1929,6 @@ class User
     $err = false;
     try {
       $rooms = $this->db->resultSet();
-
     } catch (Exception $e) {
       echo $e;
       $err = true;
@@ -2046,7 +1966,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
 
   function checkForCharacterCondition($string)
@@ -2073,7 +1993,6 @@ class User
       $j++;
       return $this->generate_pass();
     }
-
   }
 
   public function getUsersByGroup($group_id, $status = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0)
@@ -2102,7 +2021,6 @@ class User
     if ($offset == 0 && $limit == 0) {
       $limit_string = "";
       $limit_active = false;
-
     }
     if ($offset > 0 && $limit == 0) {
       $limit_string = " LIMIT " . $offset . " , 9999999999999999";
@@ -2136,7 +2054,6 @@ class User
     $err = false;
     try {
       $rooms = $this->db->resultSet();
-
     } catch (Exception $e) {
       $err = true;
       $returnvalue['success'] = false; // set return value to false
@@ -2169,7 +2086,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
 
   public function addUser($realname, $displayname, $username, $email = "", $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10, $nomail = false)
@@ -2262,7 +2179,6 @@ class User
 
       # add user to default standard room  (aula)
       $this->addUserToStandardRoom($insertid);
-
     } catch (Exception $e) {
 
       print_r($e);
@@ -2330,7 +2246,6 @@ class User
         $email_body = str_replace("<USERNAME>", $username, $email_body);
 
         $mail = $this->smtp->send($email, $headers, $email_body);
-
       }
 
       $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
@@ -2340,8 +2255,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
-
     } else {
       $this->syslog->addSystemEvent(1, "Error adding user ", 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -2350,9 +2263,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function editUser($user_id, $realname, $displayname, $username, $email, $userlevel, $about_me = "", $position = "", $updater_id = 0, $status = 1)
   {
@@ -2393,8 +2305,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error while editing user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -2403,9 +2313,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserAbsence($user_id, $presence = 1, $absent_until = "", $auto_delegation = 0)
   {
@@ -2483,7 +2392,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing status of user ".$user_id." to ".$status." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -2492,9 +2400,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function revokeConsent($user_id, $text_id)
   {
@@ -2530,7 +2437,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -2538,9 +2444,7 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-
   } // end function
 
   public function setUserConsent($user_id, $text_id, $consent, $status = 1, $updater_id = 0)
@@ -2582,7 +2486,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -2590,9 +2493,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function grantInfiniteVotesToUser($user_id)
   {
@@ -2634,7 +2536,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
   public function getUserGDPRData($user_id)
   {
@@ -2663,7 +2565,6 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       // data found, continue...
       $data_found = true;
@@ -2708,7 +2609,6 @@ class User
     if (count($comments) > 0) {
       // data found
       $data_found = true;
-
     }
 
     // iterate through comments, concatenate
@@ -2735,7 +2635,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } // end else
 
   } // end function
@@ -2765,7 +2664,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
   public function getUserLastLogin($user_id)
   {
@@ -2791,7 +2690,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
 
   public function getUserLevel($user_id)
@@ -2818,7 +2717,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
   public function getUserRooms($user_id, $type = -1)
   {
@@ -2853,7 +2752,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
 
   public function getUserGroups($user_id)
@@ -2881,7 +2780,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
   public function downgradeUserRoles($user_id, $userlevel)
   {
@@ -2948,7 +2847,6 @@ class User
       $returnvalue['data'] = 0; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
     }
-
   }
 
   public function deleteUserRole($user_id, $room_id)
@@ -2972,7 +2870,6 @@ class User
     $this->db->bind(':roles', json_encode($new_roles));
 
     $this->db->execute();
-
   }
 
 
@@ -3011,6 +2908,7 @@ class User
     return $users[0]["refresh_token"];
   }
 
+  // @NOTE: nikola - i don't think this is being used, test removing the method
   public function refresh_token()
   {
     $jwt = new JWT($jwtKeyFile, $this->db, $this->crypt, $this->syslog);
@@ -3018,7 +2916,6 @@ class User
     $check_jwt = $jwt->check_jwt(true);
 
     echo $check_jwt;
-
   }
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)
@@ -3079,7 +2976,7 @@ class User
 
       return $returnvalue;
     }
-  }// end function
+  } // end function
 
   public function suspendUser($user_id, $updater_id = 0)
   {
@@ -3153,7 +3050,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $this->syslog->addSystemEvent(1, "Error changing status of user " . $user_id . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3162,9 +3058,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserAbout($user_id, $about_me, $updater_id = 0)
   {
@@ -3200,7 +3095,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing abouttext of user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3209,9 +3103,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserPosition($user_id, $userposition, $updater_id = 0)
   {
@@ -3247,7 +3140,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing position of user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3256,9 +3148,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserRealname($user_id, $realname, $updater_id = 0)
   {
@@ -3290,7 +3181,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing real name of user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3299,9 +3189,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserDisplayname($user_id, $displayname, $updater_id = 0)
   {
@@ -3334,7 +3223,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing display name of user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3343,9 +3231,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserEmail($user_id, $email, $updater_id = 0)
   {
@@ -3378,7 +3265,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing email of user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3387,9 +3273,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserUsername($user_id, $username, $updater_id = 0)
   {
@@ -3422,7 +3307,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing display name of user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3431,9 +3315,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function setUserPW($user_id, $pw, $updater_id = 0)
   {
@@ -3469,7 +3352,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing pw of user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3478,9 +3360,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
 
 
@@ -3516,7 +3397,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error changing reg status of user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3525,9 +3405,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-  }// end function
+  } // end function
 
   public function deleteUser($user_id, $delete_mode = 0, $updater_id = 0)
   {
@@ -3544,7 +3423,6 @@ class User
     try {
       $action = $this->db->execute(); // do the query
       $rows_affected = intval($this->db->rowCount());
-
     } catch (Exception $e) {
 
       $err = true;
@@ -3563,7 +3441,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3580,7 +3457,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3597,7 +3473,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3615,7 +3490,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3633,7 +3507,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3651,7 +3524,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3669,7 +3541,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3688,7 +3559,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3706,7 +3576,6 @@ class User
         try {
           $action = $this->db->execute(); // do the query
           $rows_affected = intval($this->db->rowCount());
-
         } catch (Exception $e) {
 
           $returnvalue['success'] = false; // set return value
@@ -3716,7 +3585,6 @@ class User
 
           return $returnvalue;
         }
-
       } //end if
 
 
@@ -3728,7 +3596,6 @@ class User
       $returnvalue['count'] = 1; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error deleting user with id ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
@@ -3737,10 +3604,8 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
-
-  }// end function
+  } // end function
 
   public function getPossibleDelegations($user_id, $room_id, $topic_id)
   {
@@ -3796,7 +3661,6 @@ class User
     $returnvalue['data'] = $allUsers;
     $returnvalue['count'] = count($allUsers);
     return $returnvalue;
-
   }
 
   public function userInRoom($user_id, $room_id)
@@ -3816,4 +3680,3 @@ class User
     }
   }
 }
-?>
