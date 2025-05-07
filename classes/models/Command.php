@@ -89,9 +89,9 @@ class Command
     $date_now = date('Y-m-d H:i:s');
 
     $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_commands . ' WHERE active = 1 AND date_start = :start_date');
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_commands . ' WHERE active = 1 AND date_start <= :date_now');
 
-    $this->db->bind(':start_date', $date_now); // bind date
+    $this->db->bind(':date_now', $date_now); // bind date
 
     $err = false;
     try {
