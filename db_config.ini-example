@@ -1,7 +1,8 @@
-host="devel.aula.de"
-user="aula_dbadmin"
-pass="ZtHrCWh{5GbDSk=r"
-dbname="aula_db"
+host="aula-db-docker-service"
+user="aula_user"
+pass="example"
+dbname="aula_database"
+
 au_ideas="au_ideas"
 au_topics="au_topics"
 au_consent="au_consent"
