@@ -479,10 +479,9 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         "checks" => ["user_id:user_id"]
       ],
 
-      # TODO: This need to be fixed on the frontend
       "getUsers" => [
         "roles" => [
-          "all"
+          "admin"
         ]
       ],
 
