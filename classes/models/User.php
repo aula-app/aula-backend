@@ -2925,6 +2925,10 @@ class User
 
     $roles = json_decode($this->db->resultSet()[0]["roles"]);
 
+    if (is_null($roles)) {
+      $roles = [];
+    }
+
     $new_roles = array_values(array_filter($roles, fn($r) => $r->room != $room_hash));
     array_push($new_roles, ["role" => $role, "room" => $room_hash]);
 
