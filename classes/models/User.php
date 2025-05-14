@@ -1558,10 +1558,11 @@ class User
   {
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET refresh_token = :refresh_value WHERE id = :user_id ');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET refresh_token = :refresh_value, token_data_version = token_data_version + :token_data_version_increment WHERE id = :user_id ');
     try {
       $this->db->bind(':user_id', $user_id);
       $this->db->bind(':refresh_value', $refresh_value);
+      $this->db->bind(':token_data_version_increment', $refresh_value ? 1 : 0);
 
       $users = $this->db->execute();
     } catch (Exception $e) {
@@ -1574,7 +1575,7 @@ class User
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT id, userlevel, temp_pw, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id ');
+    $stmt = $this->db->query('SELECT id, userlevel, temp_pw, hash_id, status, roles, token_data_version FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id ');
     try {
       $this->db->bind(':user_id', $user_id); // blind index
       $users = $this->db->resultSet();
@@ -2897,15 +2898,22 @@ class User
     }
   }
 
-  public function checkRefresh($user_id)
+  // Returns true if `au_users_basedata.refresh_token` is set or `jwt.payload.token_data_version` is less than
+  // `au_users_basedata.token_data_version`, meaning that data stored in the JWT token is not up-to-date
+  public function shouldRefreshToken($jwt_user_id, $jwt_token_data_version)
   {
-    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-    $stmt = $this->db->query('SELECT refresh_token FROM ' . $this->db->au_users_basedata . '  WHERE id = :user_id');
+    $user_id = $this->converters->checkUserId($jwt_user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $stmt = $this->db->query('SELECT refresh_token, token_data_version FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
     $this->db->bind(':user_id', $user_id);
     $action = $this->db->execute(); // do the query
     $users = $this->db->resultSet();
 
-    return $users[0]["refresh_token"];
+    $tokenDataVersion = $users[0]["token_data_version"];
+    if ($tokenDataVersion) {
+      return !$jwt_token_data_version || ($jwt_token_data_version < $tokenDataVersion);
+    } else {
+      return $users[0]["refresh_token"];
+    }
   }
 
   // @NOTE: nikola - i don't think this is being used, test removing the method

@@ -26,11 +26,8 @@ if ($check_jwt["success"]) {
     $user->setRefresh($jwt_payload->user_id, false);
     echo json_encode(["success" => true, 'JWT' => $new_jwt]);
   } else {
-    return [ "succes" => false ];
+    return ["succes" => false];
   }
 } else {
-  return [ "succes" => false ];
+  return ["succes" => false];
 }
- 
-
-?>

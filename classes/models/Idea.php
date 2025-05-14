@@ -3642,6 +3642,7 @@ class Idea
           //echo ("<br>current sum: ".$current_sum);
           // echo ("<br>current sum: ".$current_sum." vote value original: ".$vote_value_original);
           $new_vote_value = intval(intval($current_sum) - intval($vote_value_original)); // calculate difference votes
+          // @TODO: nikola - possible race conditioning on the "caching" of num-of-votes for idea
           $this->IdeaSetVotes($idea_id, $new_vote_value); // adjust sum_votes in idea (note - group bias is already in calculation)
 
         }

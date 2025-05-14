@@ -70,13 +70,10 @@ class JWT
         if ($valid_signature) {
           $p = json_decode($payload);
 
-          if ($ignore_refresh) {
-            return ["success" => true];
-          }
-
-          $refresh = $this->user->checkRefresh($p->user_id);
-
-          if ($refresh) {
+          if (
+            !$ignore_refresh &&
+            $this->user->shouldRefreshToken($p->user_id, $p->token_data_version)
+          ) {
             return ["success" => false, "error" => "refresh_token"];
           } else {
             return ["success" => true];
