@@ -60,6 +60,7 @@ WORKDIR $PROJECT_PATH
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN cd $PROJECT_PATH/api && /usr/local/bin/composer install
 
 # 
 #   aula specific config

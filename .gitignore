@@ -14,3 +14,6 @@ docker/_generated_files_data/*
 
 docker-compose.override.yml
 .env
+
+# composer
+vendor/
