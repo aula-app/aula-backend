@@ -572,9 +572,24 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $topic_id = $this->converters->checkTopicId($topic_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT u.hash_id, u.displayname, u.status, u.realname, u.username ' .
-      ' FROM ' . $this->db->au_users_basedata . ' u LEFT JOIN ' . $this->db->au_delegation . ' d ' .
-      ' ON (u.id = d.user_id_original) WHERE d.user_id_target = :id AND d.topic_id = :topic_id');
+    $query = <<<EOD
+      SELECT
+          u.hash_id,
+          u.displayname,
+          u.status,
+          u.realname,
+          u.username
+      FROM
+        {$this->db->au_users_basedata} u
+      LEFT JOIN
+        {$this->db->au_delegation} d
+      ON
+        (u.id = d.user_id_original)
+      WHERE
+        d.user_id_target = :id AND d.topic_id = :topic_id
+    EOD;
+
+    $stmt = $this->db->query($query);
     $this->db->bind(':id', $user_id); // bind userid
     $this->db->bind(':topic_id', $topic_id); // bind topic id
     $users = $this->db->resultSet();
@@ -1968,15 +1983,39 @@ class User
         $asc_field = "DESC";
     }
 
-    $query = 'SELECT u.hash_id, ' .
-      '   u.id, u.status, u.creator_id, u.created, u.displayname, u.realname, u.username, u.email, ' .
-      '   u.userlevel, u.about_me, u.temp_pw, u.last_update ' .
-      ' FROM ' . $this->db->au_rel_rooms_users . ' ru INNER JOIN ' . $this->db->au_users_basedata . ' u ' .
-      ' ON (ru.user_id = u.id) ' .
-      ' WHERE ru.room_id = :room_id ' . $extra_where;
-    $total_query = $this->db->au_rel_rooms_users . ' ru INNER JOIN ' . $this->db->au_users_basedata . ' u ' .
-      ' ON (ru.user_id = u.id) ' .
-      ' WHERE ru.room_id = :room_id';
+    $query = <<<EOD
+      SELECT
+        u.hash_id,
+        u.id,
+        u.status,
+        u.creator_id,
+        u.created,
+        u.displayname,
+        u.realname,
+        u.username,
+        u.email,
+        u.userlevel,
+        u.about_me,
+        u.temp_pw,
+        u.last_update
+      FROM
+        {$this->db->au_rel_rooms_users} ru
+      INNER JOIN
+        {$this->db->au_users_basedata} u
+      ON
+        (ru.user_id = u.id)
+      WHERE
+        ru.room_id = :room_id {$extra_where};
+    EOD;
+
+    $total_query = <<<EOD
+        {$this->db->au_rel_rooms_users} ru
+      INNER JOIN {$this->db->au_users_basedata} u
+      ON
+        (ru.user_id = u.id)
+      WHERE
+        ru.room_id = :room_id;
+    EOD;
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
