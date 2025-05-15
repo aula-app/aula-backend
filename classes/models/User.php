@@ -105,7 +105,7 @@ class User
     /* returns user base data for a specified db id */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
+    $stmt = $this->db->query('SELECT username, displayname, hash_id, realname, email, about_me FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
     $this->db->bind(':id', $user_id); // bind userid
     $users = $this->db->resultSet();
     if (count($users) < 1) {
