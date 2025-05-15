@@ -124,12 +124,10 @@ public function getUserBaseData($user_id)
 public function getUserHashId($user_id)
 public function getUsers($offset, $limit, $orderby=3, $asc=0, $status=1, $extra_where="")
 public function getReceivedDelegations ($user_id, $topic_id)
-public function getGivenDelegations ($user_id, $topic_id)
 public function getUserInfiniteVotesStatus($user_id)
 public function getUserLastLogin($user_id)
 public function getUserAbsence($user_id)
 public function getGivenConsents ($user_id)
-public function getNecessaryConsents ()
 public function getMissingConsents ($user_id)
 
 Setters
