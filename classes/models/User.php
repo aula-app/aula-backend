@@ -1965,23 +1965,23 @@ class User
 
     if ($status > -1) {
       // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
+      $extra_where .= " AND u.status = " . $status;
     }
 
     if ($userlevel > -1) {
       // specific level selected / -1 = get all levels
-      $extra_where .= " AND " . $this->db->au_users_basedata . ".userlevel = " . $userlevel;
+      $extra_where .= " AND u.userlevel = " . $userlevel;
     }
 
     $search_field_valid = false;
     if ($search_field != "" && $search_text != "") {
       if ($this->validSearchField($search_field)) {
         $search_field_valid = true;
-        $extra_where .= " AND " . $this->db->au_users_basedata . "." . $search_field . " LIKE :search_text";
+        $extra_where .= " AND u." . $search_field . " LIKE :search_text ";
       }
     }
 
-    $orderby_field = $this->db->au_users_basedata . "." . $this->getUserOrderId($orderby);
+    $orderby_field = "u." . $this->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -1994,8 +1994,15 @@ class User
         $asc_field = "DESC";
     }
 
-    $query = 'SELECT ' . $this->db->au_users_basedata . '.* FROM ' . $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ' . $extra_where;
-    $total_query = $this->db->au_rel_rooms_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_rooms_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_rooms_users . '.room_id= :room_id ';
+    $query = 'SELECT u.hash_id, ' .
+      '   u.id, u.status, u.creator_id, u.created, u.displayname, u.realname, u.username, u.email, ' .
+      '   u.userlevel, u.about_me, u.temp_pw, u.last_update ' .
+      ' FROM ' . $this->db->au_rel_rooms_users . ' ru INNER JOIN ' . $this->db->au_users_basedata . ' u ' .
+      ' ON (ru.user_id = u.id) ' .
+      ' WHERE ru.room_id = :room_id ' . $extra_where;
+    $total_query = $this->db->au_rel_rooms_users . ' ru INNER JOIN ' . $this->db->au_users_basedata . ' u ' .
+      ' ON (ru.user_id = u.id) ' .
+      ' WHERE ru.room_id = :room_id';
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
@@ -2008,7 +2015,6 @@ class User
     $err = false;
     try {
       $rooms = $this->db->resultSet();
-
     } catch (Exception $e) {
       echo $e;
       $err = true;
