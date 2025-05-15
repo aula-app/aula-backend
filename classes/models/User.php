@@ -572,7 +572,9 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $topic_id = $this->converters->checkTopicId($topic_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' LEFT JOIN ' . $this->db->au_delegation . ' ON (' . $this->db->au_users_basedata . '.id = ' . $this->db->au_delegation . '.user_id_original) WHERE ' . $this->db->au_delegation . '.user_id_target = :id AND ' . $this->db->au_delegation . '.topic_id = :topic_id');
+    $stmt = $this->db->query('SELECT u.hash_id, u.displayname, u.status, u.realname, u.username ' .
+      ' FROM ' . $this->db->au_users_basedata . ' u LEFT JOIN ' . $this->db->au_delegation . ' d ' .
+      ' ON (u.id = d.user_id_original) WHERE d.user_id_target = :id AND d.topic_id = :topic_id');
     $this->db->bind(':id', $user_id); // bind userid
     $this->db->bind(':topic_id', $topic_id); // bind topic id
     $users = $this->db->resultSet();
@@ -587,34 +589,6 @@ class User
       return $returnvalue;
     } else {
 
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $users; // returned data
-      $returnvalue['count'] = count($users); // returned count of datasets
-
-      return $returnvalue;
-    }
-  } // end function
-
-
-  public function getGivenDelegations($user_id, $topic_id)
-  {
-    /* returns given delegations for a specific user (user_id) for the topic
-     */
-    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' LEFT JOIN ' . $this->db->au_delegation . ' ON (' . $this->db->au_users_basedata . '.id = ' . $this->db->au_delegation . '.user_id_target) WHERE ' . $this->db->au_delegation . '.user_id_original = :id AND ' . $this->db->au_delegation . '.topic_id = :topic_id');
-    $this->db->bind(':id', $user_id); // bind userid
-    $this->db->bind(':topic_id', $topic_id); // bind topic id
-    $users = $this->db->resultSet();
-    if (count($users) < 1) {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $users; // returned data
