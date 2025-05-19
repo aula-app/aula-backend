@@ -39,19 +39,6 @@ class Converters
     return md5($key);
   }
 
-  public function hasPermissions($user_id, $userlevel, $method, $arguments)
-  {
-    # checks if the user $user_id has certain rights and levels
-    # $method, $ arguments are for future use to allow granular differentiation of users rigths
-    # returns true if user is allowed, false if user is not allowed 
-
-    if ($userlevel >= 50) {
-      return ["allowed" => true];
-    } else {
-      return ["allowed" => false, "message" => "Not Authorized"];
-    }
-  }
-
   public function getToday()
   {
     # returns today's date
@@ -1064,7 +1051,7 @@ class Converters
     if (is_int($category_id)) {
       return $category_id;
     } else {
-      return $this->getTopicIdByHashId($category_id);
+      return $this->getCategoryIdByHashId($category_id);
     }
   } // end function
 
@@ -1233,7 +1220,11 @@ class Converters
       }
 
       if (!str_contains($table, 'JOIN')) {
-        $extra_where .= $append_in_query . ' ' . $table . '.' . $search_field . " LIKE :search_text";
+        if (!str_contains($search_field, 'au_')) {
+          $extra_where .= $append_in_query . ' ' . $table . '.' . $search_field . " LIKE :search_text";
+        } else {
+          $extra_where .= $append_in_query . $search_field . " LIKE :search_text";
+        }
       } else {
         $extra_where .= $append_in_query . ' ' . $search_field . " LIKE :search_text";
       }

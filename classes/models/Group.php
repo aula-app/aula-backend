@@ -265,7 +265,7 @@ class Group
       $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
     }
 
-    $orderby_field = $this->db->au_users_basedata . "." . $$this->user->getUserOrderId($orderby);
+    $orderby_field = $this->db->au_users_basedata . "." . $this->user->getUserOrderId($orderby);
 
     switch (intval($asc)) {
       case 0:
@@ -278,7 +278,7 @@ class Group
         $asc_field = "DESC";
     }
 
-    $query = 'SELECT ' . $this->db->au_users_basedata . '.realname, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.id, ' . $this->db->au_users_basedata . '.username, ' . $this->db->au_users_basedata . '.email FROM ' . $this->db->au_rel_groups_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_groups_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_groups_users . '.group_id= :group_id ';
+    $query = 'SELECT '. $this->db->au_users_basedata . '.hash_id, ' . $this->db->au_users_basedata . '.realname, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_users_basedata . '.id, ' . $this->db->au_users_basedata . '.username, ' . $this->db->au_users_basedata . '.email FROM ' . $this->db->au_rel_groups_users . ' INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_rel_groups_users . '.user_id=' . $this->db->au_users_basedata . '.id) WHERE ' . $this->db->au_rel_groups_users . '.group_id= :group_id ';
     $stmt = $this->db->query($query . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':group_id', $group_id); // bind group id
     //$this->db->bind(':status', $status); // bind status

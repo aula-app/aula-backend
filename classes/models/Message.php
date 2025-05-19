@@ -29,13 +29,28 @@ class Message
 
   protected function buildCacheHash($key)
   {
-     # helper method => returns md5 hash
+    # helper method => returns md5 hash
     return md5($key);
+  }
+
+  public function isOwner($user_id, $message_id)
+  {
+    $user_id = $this->converters->checkUserId($user_id);
+    $message_id = $this->converters->checkMessageId($message_id);
+    $stmt = $this->db->query('SELECT ' . $this->db->au_messages . '.target_id as user_id FROM ' . $this->db->au_messages . '  WHERE ' . $this->db->au_messages . '.id = :id');
+    $this->db->bind(':id', $message_id); // bind topic id
+    $messages = $this->db->resultSet();
+
+    if (count($messages) > 0) {
+      return $messages[0]['user_id'] == $user_id;
+    } else {
+      return false;
+    }
   }
 
   public function getMessageOrderId($orderby)
   {
-     # helper method => converts an int id to a db field name (for ordering)
+    # helper method => converts an int id to a db field name (for ordering)
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -66,7 +81,7 @@ class Message
 
   public function validSearchField($search_field)
   {
-     # helper method => defines allowed / valid database column names / fields
+    # helper method => defines allowed / valid database column names / fields
     return in_array($search_field, [
       "headline",
       "msg_type",
@@ -312,10 +327,10 @@ class Message
   public function getMessageBaseData($message_id)
   {
     /* returns message base data for a specified db id */
-    
+
     $message_id = $this->converters->checkMessageId($message_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    
+
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE id = :id');
     $this->db->bind(':id', $message_id); // bind message id
     $messages = $this->db->resultSet();
@@ -538,7 +553,6 @@ class Message
       $limit_active = false;
     }
 
-
     if ($target_group > 0) {
       // if a target group is set then add to where clause
       $extra_where .= " AND (target_group = " . $target_group;
@@ -614,7 +628,8 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT au_messages.*, au_users_basedata.hash_id as user_hash_id FROM ' . $this->db->au_messages . ' LEFT JOIN au_users_basedata ON au_users_basedata.id = au_messages.target_id WHERE au_messages.id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -657,6 +672,41 @@ class Message
       return $returnvalue; // return an array (associative) with all the data
     }
   }// end function
+
+  public function getAdminMessages($user_id, $mode = 0, $status = 1, $search_field = "", $search_text = "")
+  {
+    $personalMessages = $this->getPersonalMessagesByUser($user_id, $mode, $status, $search_field, $search_text)['data'];
+
+    $query = <<<EOD
+      SELECT * from {$this->db->au_messages} WHERE target_id = 0 AND target_group = 0
+    EOD;
+
+    $this->db->query($query);
+
+    try {
+      $messages = $this->db->resultSet();
+
+      $all_messages = array_merge($personalMessages, $messages);
+
+      $returnvalue['success'] = true; // set success value
+      $returnvalue['error_code'] = 0; // no data found
+      $returnvalue['data'] = $all_messages; // returned data is false
+      $returnvalue['count'] = count($all_messages); // returned count of datasets
+
+      return $returnvalue;
+
+    } catch (Exception $e) {
+      $err = true;
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 2; // database error while executing query
+      $returnvalue['data'] = false; // returned data is false
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+  }
+
 
   public function getPersonalMessagesByUser($user_id, $mode = 0, $status = 1, $search_field = "", $search_text = "")
   {
@@ -713,7 +763,7 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR (target_group = 0 AND target_id = 0 AND room_id = 0) OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND msg_type < 4 AND status = :status '.$extra_where.' ORDER BY publish_date DESC');
+    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND status = :status ' . $extra_where . ' ORDER BY publish_date DESC');
     $this->db->bind(':user_id', $user_id); // bind user id
     $this->db->bind(':status', $status); // bind status
     $this->db->bind(':target_date', $target_date); // bind target date
@@ -774,7 +824,7 @@ class Message
     /* adds a new message and returns insert id (message id) if successful, accepts the above parameters
     $headline is the headline of the mesage, $body the content, $target_group (int) specifies a certain group that this message is intended for, set to 0 for all groups
     target_id specifies a certain user that this message is intended for (like private message), set to 0 for no specification of a certain
-    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report, 5= requests )
+    msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report, 5=bug, 6=request)
     publish_date (datetime) specifies the date when this message should be published Format DB datetime (2023-06-14 14:21:03)
     level_of_detail (int) specifies how detailed the scope of this message is (low = general, high = very specific)
     only_on_dashboard (int 0,1) specifies if the message should only be displayed on the dashboard (1) or also pushed to the user (email / push notification)

@@ -49,7 +49,6 @@ class Command
     }
   }// end function
 
-
   public function getCommandBaseData($command_id)
   {
     /* returns command base data for a specified db id */
@@ -445,6 +444,7 @@ class Command
       $this->db->bind(':id', $command_id);
 
 
+      $err = false;
       try {
         $action = $this->db->execute(); // do the query
 
@@ -452,6 +452,7 @@ class Command
 
         $err = true;
       }
+
       if (!$err) {
         $count_datasets = intval($this->db->rowCount());
         $this->syslog->addSystemEvent(0, "Command deleted, id=" . $command_id . " by " . $updater_id, 0, "", 1);

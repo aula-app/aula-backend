@@ -1,7 +1,7 @@
 /*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19-11.4.3-MariaDB, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: aula_Q9Ik0
+-- Host: localhost    Database: aula
 -- ------------------------------------------------------
 -- Server version	11.4.3-MariaDB-ubu2310
 
@@ -62,7 +62,7 @@ CREATE TABLE `au_categories` (
   `updater_id` int(11) DEFAULT NULL COMMENT 'user id of the updater',
   `hash_id` varchar(1024) DEFAULT NULL COMMENT 'hash id of the category',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -71,9 +71,6 @@ CREATE TABLE `au_categories` (
 
 LOCK TABLES `au_categories` WRITE;
 /*!40000 ALTER TABLE `au_categories` DISABLE KEYS */;
-INSERT INTO `au_categories` VALUES
-(1,'Formaggio','','cheese',1,'2025-02-19 13:28:15','2025-02-19 13:28:15',1,'38b870e5af03fbb84f2932d480d4b14f'),
-(2,'Robot','','bot',1,'2025-02-19 13:28:30','2025-02-19 13:28:30',1,'b51d1289c08716d969b981788654a2b7');
 /*!40000 ALTER TABLE `au_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -681,18 +678,6 @@ CREATE TABLE `au_rel_rooms_users` (
 
 LOCK TABLES `au_rel_rooms_users` WRITE;
 /*!40000 ALTER TABLE `au_rel_rooms_users` DISABLE KEYS */;
-INSERT INTO `au_rel_rooms_users` VALUES
-(1,3,1,'2025-02-19 13:36:17','2025-02-19 13:36:17',0),
-(1,4,1,'2025-02-19 13:40:13','2025-02-19 13:40:13',0),
-(1,5,1,'2025-02-19 13:45:30','2025-02-19 13:45:30',0),
-(1,6,1,'2025-02-19 13:48:06','2025-02-19 13:48:06',0),
-(1,7,1,'2025-02-19 13:53:06','2025-02-19 13:53:06',0),
-(1,8,1,'2025-02-19 13:54:34','2025-02-19 13:54:34',0),
-(1,9,1,'2025-02-19 13:54:52','2025-02-19 13:54:52',0),
-(1,10,1,'2025-02-19 13:55:05','2025-02-19 13:55:05',0),
-(2,4,1,'2025-02-19 13:42:18','2025-02-19 13:42:18',1),
-(3,5,1,'2025-02-19 13:46:21','2025-02-19 13:46:21',1),
-(4,6,1,'2025-02-19 13:48:22','2025-02-19 13:48:22',1);
 /*!40000 ALTER TABLE `au_rel_rooms_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -920,7 +905,7 @@ CREATE TABLE `au_rooms` (
   `phase_duration_4` int(11) DEFAULT 0 COMMENT 'phase_duration_4',
   `type` int(11) DEFAULT 0 COMMENT '0 = standard room 1 = MAIN ROOM (aula)',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -930,11 +915,7 @@ CREATE TABLE `au_rooms` (
 LOCK TABLES `au_rooms` WRITE;
 /*!40000 ALTER TABLE `au_rooms` DISABLE KEYS */;
 INSERT INTO `au_rooms` VALUES
-(1,'Schule',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,'965bbe32b06bbb58f1e28cfd78906371',NULL,NULL,0,0,0,0,0,1),
-(2,'user','user room','',1,1,10,'2025-02-19 13:36:43','2025-02-19 13:36:43',1,'a1af19831c8edea6c8b120939756fe25','$2y$10$0jLLfUN4rxkOG.qswOPCrugPPLUdMUzqaUUUeM/pnRx69UFJk5A8i','',0,5,5,5,5,0),
-(3,'moderator','moderator','',1,1,10,'2025-02-19 13:46:20','2025-02-19 13:46:20',1,'6ada88a18ccc458a8f047303cb79096b','$2y$10$Ul2MeYGC15QVz99SPVfumehQRPJdz18MNc59lquz5jzH5jff4zQy6','',0,5,5,5,5,0),
-(4,'moderator V','moderator with voting rights','',1,1,10,'2025-02-19 13:47:47','2025-02-19 13:47:47',1,'4b036414d99256f4e49fdb6ad56b1366','$2y$10$vyd61DyAdrSaglWQARtKYOMG/vUfNIzptGpLubnB209H.T0N8mOrW','',0,5,5,5,5,0),
-(5,'super_moderator','super\\_moderator','',1,1,10,'2025-02-19 13:52:49','2025-02-19 13:52:49',1,'a6e1d5a4b7403799221a99fae04c2344','$2y$10$y3NAqXbxCyEqQwMP1d61B.KVmseK2UPWLYaltuwqRZuiGyPkYH4p2','',0,5,5,5,5,0);
+(1,'Schule',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,'965bbe32b06bbb58f1e28cfd78906371',NULL,NULL,0,0,0,0,0,1);
 /*!40000 ALTER TABLE `au_rooms` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1007,7 +988,7 @@ CREATE TABLE `au_system_current_state` (
 LOCK TABLES `au_system_current_state` WRITE;
 /*!40000 ALTER TABLE `au_system_current_state` DISABLE KEYS */;
 INSERT INTO `au_system_current_state` VALUES
-(1,1,NULL,NULL,NULL,'2025-02-19 13:27:47',1);
+(1,1,NULL,NULL,NULL,'2025-02-19 13:18:31',2);
 /*!40000 ALTER TABLE `au_system_current_state` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1077,7 +1058,7 @@ CREATE TABLE `au_systemlog` (
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of this entry',
   `updater_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1095,82 +1076,7 @@ INSERT INTO `au_systemlog` VALUES
 (6,0,'Successful login user admin',0,'','2025-02-19 13:18:22','2025-02-19 13:18:22',0),
 (7,0,'Successful login user tech_admin',0,'','2025-02-19 13:18:30','2025-02-19 13:18:30',0),
 (8,0,'Online mode set to 1',0,'','2025-02-19 13:18:31','2025-02-19 13:18:31',0),
-(9,0,'Online mode set to 1',0,'','2025-02-19 13:18:31','2025-02-19 13:18:31',0),
-(10,0,'Successful login user admin',0,'','2025-02-19 13:23:40','2025-02-19 13:23:40',0),
-(11,0,'Online mode set to 1',0,'','2025-02-19 13:27:47','2025-02-19 13:27:47',0),
-(12,0,'Online mode set to 1',0,'','2025-02-19 13:27:47','2025-02-19 13:27:47',0),
-(13,0,'Added new category (#1) Formaggio',0,'','2025-02-19 13:28:15','2025-02-19 13:28:15',0),
-(14,0,'Added new category (#2) Robot',0,'','2025-02-19 13:28:30','2025-02-19 13:28:30',0),
-(15,0,'Added user 3 to standard room 1',0,'','2025-02-19 13:36:17','2025-02-19 13:36:17',0),
-(16,0,'Added new user 3',0,'','2025-02-19 13:36:17','2025-02-19 13:36:17',0),
-(17,0,'Added new room (#2) user',0,'','2025-02-19 13:36:43','2025-02-19 13:36:43',0),
-(18,0,'Successful login user guest',0,'','2025-02-19 13:37:14','2025-02-19 13:37:14',0),
-(19,0,'User pw changed 3 by 0',0,'','2025-02-19 13:37:23','2025-02-19 13:37:23',0),
-(20,0,'Successful login user guest',0,'','2025-02-19 13:39:41','2025-02-19 13:39:41',0),
-(21,0,'Successful login user admin',0,'','2025-02-19 13:39:56','2025-02-19 13:39:56',0),
-(22,0,'Added user 4 to standard room 1',0,'','2025-02-19 13:40:13','2025-02-19 13:40:13',0),
-(23,0,'Added new user 4',0,'','2025-02-19 13:40:13','2025-02-19 13:40:13',0),
-(24,0,'Successful login user user',0,'','2025-02-19 13:40:32','2025-02-19 13:40:32',0),
-(25,0,'User pw changed 4 by 0',0,'','2025-02-19 13:40:48','2025-02-19 13:40:48',0),
-(26,0,'Successful login user user',0,'','2025-02-19 13:41:35','2025-02-19 13:41:35',0),
-(27,0,'Successful login user admin',0,'','2025-02-19 13:41:43','2025-02-19 13:41:43',0),
-(28,0,'Edited user 4 by 1',0,'','2025-02-19 13:42:17','2025-02-19 13:42:17',0),
-(29,0,'Added user 4 to room 2',0,'','2025-02-19 13:42:18','2025-02-19 13:42:18',0),
-(30,1,'DB Error login user user',0,'','2025-02-19 13:42:35','2025-02-19 13:42:35',0),
-(31,0,'Successful login user user',0,'','2025-02-19 13:42:39','2025-02-19 13:42:39',0),
-(32,0,'Successful login user admin',0,'','2025-02-19 13:42:50','2025-02-19 13:42:50',0),
-(33,0,'Added user 5 to standard room 1',0,'','2025-02-19 13:45:30','2025-02-19 13:45:30',0),
-(34,0,'Added new user 5',0,'','2025-02-19 13:45:30','2025-02-19 13:45:30',0),
-(35,0,'Successful login user moderator',0,'','2025-02-19 13:45:42','2025-02-19 13:45:42',0),
-(36,0,'User pw changed 5 by 0',0,'','2025-02-19 13:45:49','2025-02-19 13:45:49',0),
-(37,0,'Successful login user moderator',0,'','2025-02-19 13:45:56','2025-02-19 13:45:56',0),
-(38,0,'Successful login user admin',0,'','2025-02-19 13:46:03','2025-02-19 13:46:03',0),
-(39,0,'Added new room (#3) moderator',0,'','2025-02-19 13:46:20','2025-02-19 13:46:20',0),
-(40,0,'Added user 5 to room 3',0,'','2025-02-19 13:46:21','2025-02-19 13:46:21',0),
-(41,0,'Successful login user moderator',0,'','2025-02-19 13:46:31','2025-02-19 13:46:31',0),
-(42,0,'Successful login user admin',0,'','2025-02-19 13:46:43','2025-02-19 13:46:43',0),
-(43,0,'Added new room (#4) moderator V',0,'','2025-02-19 13:47:47','2025-02-19 13:47:47',0),
-(44,0,'Added user 6 to standard room 1',0,'','2025-02-19 13:48:06','2025-02-19 13:48:06',0),
-(45,0,'Added new user 6',0,'','2025-02-19 13:48:06','2025-02-19 13:48:06',0),
-(46,0,'Edited user 6 by 1',0,'','2025-02-19 13:48:22','2025-02-19 13:48:22',0),
-(47,0,'Added user 6 to room 4',0,'','2025-02-19 13:48:22','2025-02-19 13:48:22',0),
-(48,0,'Successful login user moderator_v',0,'','2025-02-19 13:48:33','2025-02-19 13:48:33',0),
-(49,0,'User pw changed 6 by 0',0,'','2025-02-19 13:48:40','2025-02-19 13:48:40',0),
-(50,0,'Successful login user moderator_v',0,'','2025-02-19 13:48:47','2025-02-19 13:48:47',0),
-(51,0,'Successful login user admin',0,'','2025-02-19 13:48:56','2025-02-19 13:48:56',0),
-(52,0,'Added new room (#5) super_moderator',0,'','2025-02-19 13:52:49','2025-02-19 13:52:49',0),
-(53,0,'Added user 7 to standard room 1',0,'','2025-02-19 13:53:06','2025-02-19 13:53:06',0),
-(54,0,'Added new user 7',0,'','2025-02-19 13:53:06','2025-02-19 13:53:06',0),
-(55,0,'Added user 8 to standard room 1',0,'','2025-02-19 13:54:34','2025-02-19 13:54:34',0),
-(56,0,'Added new user 8',0,'','2025-02-19 13:54:34','2025-02-19 13:54:34',0),
-(57,0,'Added user 9 to standard room 1',0,'','2025-02-19 13:54:52','2025-02-19 13:54:52',0),
-(58,0,'Added new user 9',0,'','2025-02-19 13:54:52','2025-02-19 13:54:52',0),
-(59,0,'Added user 10 to standard room 1',0,'','2025-02-19 13:55:05','2025-02-19 13:55:05',0),
-(60,0,'Added new user 10',0,'','2025-02-19 13:55:05','2025-02-19 13:55:05',0),
-(61,0,'Successful login user super_moderator',0,'','2025-02-19 13:55:22','2025-02-19 13:55:22',0),
-(62,0,'User pw changed 7 by 0',0,'','2025-02-19 13:55:28','2025-02-19 13:55:28',0),
-(63,0,'Successful login user super_moderator',0,'','2025-02-19 13:55:36','2025-02-19 13:55:36',0),
-(64,0,'Successful login user admin',0,'','2025-02-19 13:55:55','2025-02-19 13:55:55',0),
-(65,0,'Successful login user super_moderator_v',0,'','2025-02-19 13:56:30','2025-02-19 13:56:30',0),
-(66,0,'User pw changed 8 by 0',0,'','2025-02-19 13:56:37','2025-02-19 13:56:37',0),
-(67,0,'Successful login user super_moderator_v',0,'','2025-02-19 13:56:45','2025-02-19 13:56:45',0),
-(68,0,'Successful login user admin',0,'','2025-02-19 13:56:56','2025-02-19 13:56:56',0),
-(69,0,'Successful login user principal',0,'','2025-02-19 13:57:08','2025-02-19 13:57:08',0),
-(70,0,'User pw changed 9 by 0',0,'','2025-02-19 13:57:13','2025-02-19 13:57:13',0),
-(71,1,'DB Error login user principal',0,'','2025-02-19 13:57:21','2025-02-19 13:57:21',0),
-(72,0,'Successful login user principal',0,'','2025-02-19 13:57:26','2025-02-19 13:57:26',0),
-(73,0,'Successful login user admin',0,'','2025-02-19 13:57:37','2025-02-19 13:57:37',0),
-(74,0,'Successful login user principal_v',0,'','2025-02-19 13:57:50','2025-02-19 13:57:50',0),
-(75,0,'User pw changed 10 by 0',0,'','2025-02-19 13:57:57','2025-02-19 13:57:57',0),
-(76,1,'DB Error login user principal_v',0,'','2025-02-19 13:58:04','2025-02-19 13:58:04',0),
-(77,0,'Successful login user principal_v',0,'','2025-02-19 13:58:08','2025-02-19 13:58:08',0),
-(78,0,'Successful login user admin',0,'','2025-02-19 14:04:41','2025-02-19 14:04:41',0),
-(79,0,'Successful login user guest',0,'','2025-02-19 15:18:03','2025-02-19 15:18:03',0),
-(80,0,'Successful login user user',0,'','2025-02-19 15:18:12','2025-02-19 15:18:12',0),
-(81,1,'DB Error login user guest',0,'','2025-02-19 15:18:59','2025-02-19 15:18:59',0),
-(82,0,'Successful login user guest',0,'','2025-02-19 15:19:02','2025-02-19 15:19:02',0),
-(83,0,'Successful login user user',0,'','2025-02-19 15:19:15','2025-02-19 15:19:15',0),
-(84,0,'Successful login user admin',0,'','2025-02-19 15:51:56','2025-02-19 15:51:56',0);
+(9,0,'Online mode set to 1',0,'','2025-02-19 13:18:31','2025-02-19 13:18:31',0);
 /*!40000 ALTER TABLE `au_systemlog` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1348,7 +1254,7 @@ CREATE TABLE `au_users_basedata` (
   `refresh_token` tinyint(1) DEFAULT 0 COMMENT 'refresh token request',
   `roles` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT '[]' COMMENT 'roles of the user' CHECK (json_valid(`roles`)),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1358,16 +1264,8 @@ CREATE TABLE `au_users_basedata` (
 LOCK TABLES `au_users_basedata` WRITE;
 /*!40000 ALTER TABLE `au_users_basedata` DISABLE KEYS */;
 INSERT INTO `au_users_basedata` VALUES
-(1,'Admin User','Admin','admin','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','',NULL,1,'2023-06-17 14:58:43','2025-02-19 15:51:56',0,0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2025-02-19 15:51:56',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0,0,'[]'),
-(2,'Tech Admin User','Tech Admin','tech_admin','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','a1b2c3d4e5f67890abcdef1234567890','',NULL,1,'2023-06-17 14:58:43','2025-02-19 13:18:30',0,0,'21232f297a57a5a743894a0e4a801fc3',60,NULL,'2025-02-19 13:18:30',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0,0,'[]'),
-(3,'guest','guest','guest','','$2y$10$c3..tFKsz.BDmprIXETgQeRhINt.h6/PKlG.TwFJQZ6aTEPKtRMXS',NULL,'d01f1059c96aef19942a97c52f064c60','',NULL,1,'2025-02-19 13:36:17','2025-02-19 15:19:02',0,NULL,'084e0343a0486ff05530df6c705c8bb4',10,NULL,'2025-02-19 15:19:02',1,NULL,0,NULL,103,103,103,0,0,'',0,0,'[{\"role\": 10, \"room\": \"965bbe32b06bbb58f1e28cfd78906371\"}]'),
-(4,'user','user','user','','$2y$10$xtHrWb1q//Y0Cu015ri9b.CUP84EA60nbAN1K7FNgy3.z7OPHS3CG','','1956d91a937eafe8d5d1475b161c9ccf','',NULL,1,'2025-02-19 13:40:13','2025-02-19 15:19:15',1,NULL,'ee11cbb19052e40b07aac0ca060c23ee',20,NULL,'2025-02-19 15:19:15',1,NULL,0,NULL,117,117,117,0,0,'',0,0,'[{\"role\": 20, \"room\": \"965bbe32b06bbb58f1e28cfd78906371\"}, {\"role\": 20, \"room\": \"a1af19831c8edea6c8b120939756fe25\"}]'),
-(5,'moderator','moderator','moderator','','$2y$10$fWMBTS3HQE6t.rv9TE84ReV.jLlPXPU4xew6T9H.RaPp9UP4hJnNC',NULL,'753ec30b3af529aff1501d6227a6eeea','',NULL,1,'2025-02-19 13:45:30','2025-02-19 13:46:31',0,NULL,'0408f3c997f309c03b08bf3a4bc7b730',30,NULL,'2025-02-19 13:46:31',1,NULL,0,NULL,109,109,109,0,0,'',0,0,'[{\"role\": 30, \"room\": \"965bbe32b06bbb58f1e28cfd78906371\"}, {\"role\": 30, \"room\": \"6ada88a18ccc458a8f047303cb79096b\"}]'),
-(6,'moderator_v','moderator_v','moderator_v','','$2y$10$K/nNUoiqYTo.r8/0SVRBweoGmyAzwvz7BhBwkQaGrcB/BZp.p5vF2','','16e8a2bb4708256e2e0506ec85d270f1','',NULL,1,'2025-02-19 13:48:06','2025-02-19 13:48:47',0,NULL,'be41282168af65caed9122caa2040955',31,NULL,'2025-02-19 13:48:47',1,NULL,0,NULL,109,109,109,0,0,'',0,0,'[{\"role\": 31, \"room\": \"965bbe32b06bbb58f1e28cfd78906371\"}, {\"role\": 31, \"room\": \"4b036414d99256f4e49fdb6ad56b1366\"}]'),
-(7,'super_moderator','super_moderator','super_moderator','','$2y$10$uhIxBylkaXYhQM6hdXayhOrWA70TkwLPfhUYvED5VjYRdrI01npYu',NULL,'7a02453e589199dc9e042256e065c9f6','',NULL,1,'2025-02-19 13:53:06','2025-02-19 13:55:36',0,NULL,'8c8339460247459152d10c5020294358',40,NULL,'2025-02-19 13:55:36',1,NULL,0,NULL,115,115,115,0,0,'',0,0,'[{\"role\": 40, \"room\": \"965bbe32b06bbb58f1e28cfd78906371\"}]'),
-(8,'super_moderator_v','super_moderator_v','super_moderator_v','','$2y$10$OdcqrE1VhT/lgOMVRJfNwub3DdktPYr3k3IG736cJwIUyg./yIiKm',NULL,'5d57eadb0dae759b1d01daca64048395','',NULL,1,'2025-02-19 13:54:34','2025-02-19 13:56:45',0,NULL,'782fa82970b4e8a1a2e3bf5edc902ec1',41,NULL,'2025-02-19 13:56:45',1,NULL,0,NULL,115,115,115,0,0,'',0,0,'[{\"role\": 41, \"room\": \"965bbe32b06bbb58f1e28cfd78906371\"}]'),
-(9,'principal','principal','principal','','$2y$10$clWA.I/CJNRuNPfqtn7IU.t3/69Bdvsn4WAVBfTHblCzQP7dJIQva',NULL,'0245048fb6ae9d5b34b3db87e30bdc3c','',NULL,1,'2025-02-19 13:54:52','2025-02-19 13:57:26',0,NULL,'e7d715a9b79d263ae527955341bbe9b1',44,NULL,'2025-02-19 13:57:26',1,NULL,0,NULL,112,112,112,0,0,'',0,0,'[{\"role\": 44, \"room\": \"965bbe32b06bbb58f1e28cfd78906371\"}]'),
-(10,'principal_v','principal_v','principal_v','','$2y$10$YIAX/NAZ/0WV/ut.viJOnORAM8Gwgi.IbzptKSoLaLPviDeyWCujq',NULL,'ad89561d8f0af8a04021e07a72298e3d','',NULL,1,'2025-02-19 13:55:05','2025-02-19 13:58:08',0,NULL,'9f4e9b26f3ddfad618d70954194afbf3',45,NULL,'2025-02-19 13:58:08',1,NULL,0,NULL,112,112,112,0,0,'',0,0,'[{\"role\": 45, \"room\": \"965bbe32b06bbb58f1e28cfd78906371\"}]');
+(1,'Admin User','Admin','admin','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','3ca2a93f5f309431f65c6770194d1dc6','',NULL,1,'2023-06-17 14:58:43','2025-02-19 13:18:22','2025-02-19 13:18:22',0,0,'21232f297a57a5a743894a0e4a801fc3',50,NULL,'2025-02-19 13:18:22',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0,0,'[]'),
+(2,'Tech Admin User','Tech Admin','tech_admin','aula@aula.de','$2y$10$.IPqFlsIXv71/l2Chtopx.GnAuL55I75l.a5fxjn7BLlzPda71AbK','0','a1b2c3d4e5f67890abcdef1234567890','',NULL,1,'2023-06-17 14:58:43','2025-02-19 13:18:30','2025-02-19 13:18:30',0,0,'21232f297a57a5a743894a0e4a801fc3',60,NULL,'2025-02-19 13:18:30',NULL,NULL,0,NULL,NULL,NULL,NULL,0,-3,NULL,0,0,'[]');
 /*!40000 ALTER TABLE `au_users_basedata` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1440,4 +1338,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-02-19 17:01:21
+-- Dump completed on 2025-02-19 13:19:08

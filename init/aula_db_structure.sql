@@ -838,6 +838,7 @@ CREATE TABLE `au_users_basedata` (
   `status` int(11) DEFAULT NULL COMMENT '0=inactive 1=active 2=suspended 3=archive',
   `created` datetime DEFAULT NULL COMMENT 'created time',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update',
+  `last_update_retrieval` datetime DEFAULT NOW() ON UPDATE current_timestamp() COMMENT 'last update_retrieval',
   `updater_id` int(11) DEFAULT NULL COMMENT 'user_id of the updater',
   `creator_id` int(11) DEFAULT NULL COMMENT 'user_id of the creator',
   `bi` varchar(1024) DEFAULT NULL COMMENT 'blind index',
@@ -855,6 +856,8 @@ CREATE TABLE `au_users_basedata` (
   `consents_needed` int(11) DEFAULT 0 COMMENT 'needed consents',
   `temp_pw` varchar(256) DEFAULT NULL COMMENT 'temp pw for user',
   `pw_changed` int(11) DEFAULT 0 COMMENT 'user has changed his initial pw',
+  `refresh_token` boolean DEFAULT 0 COMMENT 'refresh token request',
+  `roles` json DEFAULT '[]' COMMENT 'roles of the user',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
