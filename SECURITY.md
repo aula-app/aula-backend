@@ -11,7 +11,7 @@ If you believe you have found a security vulnerability in this project, please
 report it privately. **Do not** file a public issue and do not otherwise
 disclose the vulnerability before it has been fixed.
 
-You can [https://github.com/aula-app/aula-backend/security/advisories/new](report a vulnerability)
+You can [report a vulnerability](https://github.com/aula-app/aula-backend/security/advisories/new)
 on GitHub.
 
 Alternatively, you may send an email to `dev@aula.de`. <!-- @TODO: nikola - in future, include PGP key -->
