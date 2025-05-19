@@ -3,7 +3,6 @@
 // this prevents direct call of this script
 
 if ($allowed_include == 1) {
-
 } else {
   exit;
 }
@@ -32,7 +31,7 @@ class Converters
     $this->long_caching_time = 300; // time in seconds for long caching (persistent data)
     $this->global_default_phase_duration = 14; // default phase duration if globals are not set in db
 
-  }// end function
+  } // end function
 
   protected function buildCacheHash($key)
   {
@@ -45,7 +44,6 @@ class Converters
     $day = strtotime("today", $dt1);
     $return_date = date("Y-m-d H:i:s", $day);
     return $return_date;
-
   }
   public function getYesterday()
   {
@@ -137,7 +135,6 @@ class Converters
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     }
 
     $total_datasets = count($ideas);
@@ -149,7 +146,6 @@ class Converters
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // db error code
@@ -157,50 +153,6 @@ class Converters
       $returnvalue['count'] = $total_datasets; // returned count of datasets with pagination or $total_datasets returns all datasets (without pagination)
       return $returnvalue;
     }
-
-  } // end function
-
-  public function exportUsersCSV($status = 1)
-  {
-    // exports all users with a certain status, defaults to active users (status = 1)
-
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_users_basedata . ' WHERE status = :status');
-
-    $this->db->bind(':status', $status); // bind status
-
-    $err = false;
-    try {
-      $users = $this->db->resultSet();
-
-    } catch (Exception $e) {
-      $err = true;
-      $returnvalue['success'] = false; // set return value
-      $returnvalue['error_code'] = 1; // db error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-
-    }
-
-    $total_datasets = count($users);
-
-    if ($total_datasets < 1) {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 2; // no datasets error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-
-    } else {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // db error code
-      $returnvalue['data'] = $users; // returned data
-      $returnvalue['count'] = $total_datasets; // returned count of datasets with pagination or $total_datasets returns all datasets (without pagination)
-      return $returnvalue;
-    }
-
   } // end function
 
   public function getTextConsentValue($text_id)
@@ -212,33 +164,6 @@ class Converters
     $texts = $this->db->resultSet();
 
     return "1," . $texts[0]['user_needs_to_consent']; // return consent value id for the text
-
-  }// end function
-
-  public function createDBDump()
-  {
-    // creates a db dump and sends it back to frontend to create file
-    global $baseUploadDir;
-
-    $r = $this->getNow() . "_" . mt_rand();
-
-    $dir = $baseUploadDir . "aula_dump_" . $r . ".sql";
-
-    try {
-      exec("mysqldump --user=".$this->db->getUser()." --password=".$this->db->getPass()." --host=".$this->db->getHost()." ".$this->db->getDbName()." 2>&1", $dump_output);
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // error code (user not existent)
-      $returnvalue['data'] = $dump_output; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-    } catch (Exception $e) {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 2; // error code (dump empty)
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-    }
-    
-    return $returnvalue;
 
   } // end function
 
@@ -381,7 +306,7 @@ class Converters
 
     return "1," . $texts[0]['user_needs_to_consent']; // return consent value id for the text
 
-  }// end function
+  } // end function
 
   public function setLastDataChange()
   {
@@ -413,7 +338,6 @@ class Converters
 
       return $returnvalue;
     }
-
   }
 
   public function getGlobalPhaseDurations()
@@ -430,7 +354,6 @@ class Converters
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
-
     } else {
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // error code - db error
@@ -438,7 +361,6 @@ class Converters
       $returnvalue['count'] = $total_datasets; // returned count of datasets
 
       return $returnvalue;
-
     }
   }
 
@@ -455,7 +377,7 @@ class Converters
     } else {
       return "1," . $ideas[0]['hash_id']; // return hash id for the idea
     }
-  }// end function
+  } // end function
 
   public function checkUserId($user_id)
   {
@@ -541,7 +463,7 @@ class Converters
 
       return $users[0]['id']; // return user id
     }
-  }// end function
+  } // end function
 
   public function getCommandIdByHashId($hash_id)
   {
@@ -569,7 +491,7 @@ class Converters
 
       return $commands[0]['id']; // return command id
     }
-  }// end function
+  } // end function
 
   public function setSpecificGlobalPhaseDuration($phase_id, $duration, $updater_id = 0)
   {
@@ -620,8 +542,6 @@ class Converters
 
       return $returnvalue;
     }
-
-
   }
 
   public function editSpecificGlobalPhase($phase_id, $duration, $name, $description_internal, $description_public, $time_scale = 0, $status = 1, $updater_id = 0)
@@ -685,7 +605,6 @@ class Converters
       return $returnvalue;
     }
     return 0;
-
   }
 
 
@@ -715,7 +634,7 @@ class Converters
 
       return $services[0]['id']; // return service id
     }
-  }// end function
+  } // end function
 
   public function getCommentIdByHashId($hash_id)
   {
@@ -743,7 +662,7 @@ class Converters
       $this->cache->set($check_hash, $comments[0]['id'], $this->long_caching_time);
       return $comments[0]['id']; // return id
     }
-  }// end function
+  } // end function
 
   public function getIdeaIdByHashId($hash_id)
   {
@@ -771,7 +690,7 @@ class Converters
       $this->cache->set($check_hash, $ideas[0]['id'], $this->long_caching_time);
       return $ideas[0]['id']; // return idea id
     }
-  }// end function
+  } // end function
 
   public function getTextIdByHashId($hash_id)
   {
@@ -799,7 +718,7 @@ class Converters
       $this->cache->set($check_hash, $texts[0]['id'], $this->long_caching_time);
       return $texts[0]['id']; // return idea id
     }
-  }// end function
+  } // end function
 
   public function getTopicIdByHashId($hash_id)
   {
@@ -829,7 +748,7 @@ class Converters
 
       return $topics[0]['id']; // return topic id
     }
-  }// end function
+  } // end function
 
   public function getMessageIdByHashId($hash_id)
   {
@@ -846,8 +765,8 @@ class Converters
     } catch (Exception $e) {
       // cache error
     }
-    error_log ('convesion base:'.$hash_id);
-      
+    error_log('convesion base:' . $hash_id);
+
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_messages . ' WHERE hash_id = :hash_id');
     $this->db->bind(':hash_id', $hash_id); // bind hash id
     $messages = $this->db->resultSet();
@@ -858,7 +777,7 @@ class Converters
       $this->cache->set($check_hash, $messages[0]['id'], $this->long_caching_time);
       return $messages[0]['id']; // return message id
     }
-  }// end function
+  } // end function
 
   public function getMediaIdByHashId($hash_id)
   {
@@ -886,7 +805,7 @@ class Converters
       $this->cache->set($check_hash, $media[0]['id'], $this->long_caching_time);
       return $media[0]['id']; // return media id
     }
-  }// end function
+  } // end function
 
 
   public function checkGroupId($group_id)
@@ -943,7 +862,7 @@ class Converters
 
       return $groups[0]['id']; // return group id
     }
-  }// end function
+  } // end function
 
 
   public function checkIdeaId($idea_id)
@@ -966,10 +885,10 @@ class Converters
     */
 
     if (is_int(($room_id))) {
-      
+
       return $room_id;
     } else {
-      
+
       return $this->getRoomIdByHashId($room_id);
     }
   } // end function
@@ -996,7 +915,7 @@ class Converters
     if (is_int(($message_id))) {
       return $message_id;
     } else {
-      
+
       return $this->getMessageIdByHashId($message_id);
     }
   } // end function
@@ -1023,7 +942,7 @@ class Converters
     try {
       if ($this->cache->get($check_hash) != null) {
         $data = $this->cache->get($check_hash);
-        error_log ("Using cache for ".$hash_id." data = ".$data);
+        error_log("Using cache for " . $hash_id . " data = " . $data);
         return $data;
       }
     } catch (Exception $e) {
@@ -1040,7 +959,7 @@ class Converters
       $this->cache->set($check_hash, $rooms[0]['id'], $this->long_caching_time);
       return $rooms[0]['id']; // return room id
     }
-  }// end function
+  } // end function
 
   public function checkCategoryId($category_id)
   {
@@ -1082,7 +1001,7 @@ class Converters
       $this->cache->set($check_hash, $categories[0]['id'], $this->long_caching_time);
       return $categories[0]['id']; // return category id
     }
-  }// end function
+  } // end function
 
   public function checkTopicExist($topic_id)
   {
@@ -1238,7 +1157,6 @@ class Converters
     $res = $this->db->resultSet();
     $total_rows = $res[0]['total'];
     return $total_rows;
-
   } // end function
 
   public function getTotalDatasetsFree($query, $search_field = "", $search_text = "")
@@ -1260,14 +1178,11 @@ class Converters
 
       $res = $this->db->resultSet();
       $total_rows = count($res);
-
     } catch (Exception $e) {
 
       return -1;
     }
     return intval($total_rows);
-
   } // end function
 
 } // end class
-?>
