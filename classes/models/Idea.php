@@ -117,7 +117,7 @@ class Idea
     /* returns number of users in this room (room_id ) */
     $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-    $room_hash = $this->room->getRoomHashId($room_id);
+    $room_hash = $this->room->getRoomHashId($room_id)["data"];
 
     // Get only users in the room that have voting roles: (20, User) and (31, Moderator with voting rights)
     // We can't use the information from the au_rel_rooms_users because we don't have the user role information
@@ -127,12 +127,7 @@ class Idea
       FROM {$this->db->au_users_basedata}
       WHERE
         id in (SELECT user_id FROM {$this->db->au_rel_rooms_users} WHERE room_id = :room_id)
-        AND JSON_CONTAINS(
-          roles, 
-          '{"room": :room_hash}', 
-          '$[*]'
-        )
-        AND NOT EXISTS (
+        AND EXISTS (
           SELECT 1
           FROM JSON_TABLE(
             roles,
