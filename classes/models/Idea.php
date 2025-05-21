@@ -117,16 +117,42 @@ class Idea
     /* returns number of users in this room (room_id ) */
     $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
 
-    $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_rel_rooms_users . ' WHERE room_id = :room_id');
+    $room_hash = $this->room->getRoomHashId($room_id)["data"];
+
+    // Get only users in the room that have voting roles: (20, User) and (31, Moderator with voting rights)
+    // We can't use the information from the au_rel_rooms_users because we don't have the user role information
+    // in this table.
+    $get_voting_users_query = <<<EOD
+      SELECT id 
+      FROM {$this->db->au_users_basedata}
+      WHERE
+        id in (SELECT user_id FROM {$this->db->au_rel_rooms_users} WHERE room_id = :room_id)
+        AND EXISTS (
+          SELECT 1
+          FROM JSON_TABLE(
+            roles,
+            '$[*]' COLUMNS (
+              room VARCHAR(255) PATH '$.room',
+              role INT PATH '$.role'
+            )
+          ) AS jt
+          WHERE jt.room = :room_hash
+          AND jt.role IN (20, 31)
+        );
+    EOD;
+
+    $stmt = $this->db->query($get_voting_users_query);
     $this->db->bind(':room_id', $room_id); // bind room id
-    $users = $this->db->resultSet();
+    $this->db->bind(':room_hash', $room_hash); // bind room id
+
+    $users_id = $this->db->resultSet();
 
     // Count super_moderator and principals with voting rights
     $query = "select count(id) as count from au_users_basedata where userlevel in (41,45)";
     $stmt = $this->db->query($query);
     $super_voters_count = $this->db->resultSet()[0]['count'];
 
-    return count($users) + $super_voters_count;
+    return count($users_id) + $super_voters_count;
 
   }// end function
 
