@@ -1809,7 +1809,7 @@ class User
       }
     }
 
-    $stmt = $this->db->query('SELECT realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw FROM ' . $this->db->au_users_basedata . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT roles, realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw FROM ' . $this->db->au_users_basedata . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit) {
       // only bind if limit is set
