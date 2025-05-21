@@ -2051,7 +2051,7 @@ class User
     // pw generator 
 
     $j = 1;
-    $allowedCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`!@#$%^&*()_{}[]';
+    $allowedCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ_!@';
     $pass = '';
     $max = mb_strlen($allowedCharacters, '8bit') - 1;
     for ($i = 0; $i < $length; ++$i) {
