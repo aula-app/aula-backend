@@ -640,34 +640,6 @@ class User
     }
   } // end function
 
-  public function getNecessaryConsents()
-  {
-    // gets consents that are necessary to use the system
-
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE status = 1 AND user_needs_to_consent = 2');
-
-    $texts = $this->db->resultSet();
-    $needed_consents = count($texts);
-
-    if (count($texts) < 1) {
-      // no texts that need consent present
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = 0; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    } else {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = $texts; // returned data
-      $returnvalue['count'] = $needed_consents; // returned count of datasets
-
-      return $returnvalue;
-
-    }
-  } // end function
-
   public function getMissingConsents($user_id)
   {
     // returns all the missing consents that this user has not yet consented / reacted to

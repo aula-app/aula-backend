@@ -276,9 +276,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
     "Converters" => [
       "getGlobalPhaseDurations" => [
         "roles" => ["all"]
-      ],
-      "createDBDump" => [
-        "roles" => ["admin", "tech_admin"]
       ]
     ],
 
@@ -1406,5 +1403,3 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
 
   return ["allowed" => false];
 }
-
-?>
