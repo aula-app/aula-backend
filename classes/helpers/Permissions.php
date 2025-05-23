@@ -555,6 +555,13 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ]
       ],
 
+      "setUserDisplayname" => [
+        "roles" => [
+          "admin",
+          "tech_admin"
+        ]
+      ],
+
       "deleteUser" => [
         "roles" => [
           "admin"
