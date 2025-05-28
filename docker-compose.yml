@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   # The main docker service builds
   #   required php libs and apache, and uses information
@@ -13,14 +12,13 @@ services:
       context: ./
       dockerfile: ./Dockerfile
     environment:
-      JWT_KEY: kashdkashdkjashdkashdaskjdh
-      SUPERKEY: exashdkjh2w92elhawdhsjkadhkasdjhample
+      JWT_KEY: CHANGE_ME
+      SUPERKEY: CHANGE_ME
     ports:
       - "8080:80"
     depends_on:
       - aula-db-docker-service
     volumes:
-      - ./:/var/www/aula/api
       - ./docker/_generated_files_data:/var/www/html/files
       - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini
       - ./docker/000-default.conf:/etc/apache2/sites-enabled/000-default.conf

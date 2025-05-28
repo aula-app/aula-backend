@@ -1,6 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "Starting the docker application!"
+
+if [[ "$JWT_KEY" == "CHANGE_ME" || "$SUPERKEY" == "CHANGE_ME" ]]; then
+  echo "[ERROR] You seem to be using the default encryption keys." >&2
+  echo "[ERROR] Please update the environment variables (probably in the docker-compose.yml file)."
+  exit 1;
+fi
 
 # write the super keys from environment variables, where they
 #  should be kept.

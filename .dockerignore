@@ -2,3 +2,5 @@
 .github
 *.log
 .DS_Store
+docker/_generated_files_data
+docker/_generated_mariadb_data
