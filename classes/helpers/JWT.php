@@ -72,6 +72,19 @@ class JWT
         if ($valid_signature) {
           $p = json_decode($payload);
 
+          // Check if user exists in database
+          $userBaseData = $this->user->getUserBaseData($p->user_hash);
+          if (!$userBaseData['success'] || !$userBaseData['data']) {
+            return ["success" => false, "error" => "user_not_found"];
+          }
+
+          $userData = $userBaseData['data'];
+
+          // Check if user is active
+          if ($userData['status'] != 1) { // 1 = active status
+            return ["success" => false, "error" => "user_not_active"];
+          }
+
           if ($ignore_refresh) {
             return ["success" => true];
           }
