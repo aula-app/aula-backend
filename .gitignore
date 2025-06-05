@@ -1,10 +1,11 @@
-db_config.ini
+**/db_config.ini
+**/base_config.php
+**/superkey.ini
+**/jwt_key.ini
+
 db_config.devel.ini
 .DS_Store
-base_config.php
 info.php
-/superkey.ini
-/jwt_key.ini
 
 docker/_generated_mariadb_data/*
 !docker/_generated_mariadb_data/.gitkeep
@@ -14,3 +15,8 @@ docker/_generated_files_data/*
 
 docker-compose.override.yml
 .env
+
+config/*.ini
+config/*.php
+
+node_modules/
