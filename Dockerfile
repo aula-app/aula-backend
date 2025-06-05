@@ -49,22 +49,17 @@ EXPOSE 80 443
 
 COPY ./ $PROJECT_PATH/api
 COPY ./docker-entrypoint.sh $PROJECT_PATH
-COPY ./config/base_config.php-example $PROJECT_PATH/config/base_config.php
-COPY ./config/db_config.ini-example $PROJECT_PATH/config/db_config.ini
+# COPY ./config/base_config.php $PROJECT_PATH/config/base_config.php
+# COPY ./config/db_config.ini $PROJECT_PATH/config/db_config.ini
 
 RUN mkdir -p $PROJECT_PATH/files && \
   chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER $PROJECT_PATH/files
 
-# Workdir
 WORKDIR $PROJECT_PATH
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# 
-#   aula specific config
-#
-
-# Start apache
+# Grab encryption keys from envvars and start apache2
 CMD ["./docker-entrypoint.sh"]
 

@@ -7,7 +7,7 @@ services:
   #    as well as base_config.php
   #    and they should both be filled in with information
   #    from here
-  aula-api-docker-service:
+  aula-backend:
     build:
       context: ./
       dockerfile: ./Dockerfile
@@ -17,14 +17,17 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - aula-db-docker-service
+      - mariadb
     volumes:
-      - ./docker/_generated_files_data:/var/www/html/files
+      - ./config/base_config.php:/var/www/html/config/base_config.php
+      - ./config/db_config.ini:/var/www/html/config/db_config.ini
       - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini
       - ./docker/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+      # If you want to have access to uploaded files, make sure the www-data user can write to it
+      # - ./docker/_generated_files_data:/var/www/html/files
 
   # a mariadb instance is included here as a docker service, in case you need it
-  aula-db-docker-service:
+  mariadb:
     image: mariadb:11.7
     environment:
       # note, if you use this container, these
