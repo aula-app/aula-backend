@@ -2,8 +2,7 @@
 // only process script if variable $allowed_include is set to 1, otherwise exit
 // this prevents direct call of this script
 
-global $baseConfigDir;
-require_once($baseConfigDir.'base_config.php');
+require_once (__DIR__ . '/../../../config/base_config.php');
 require_once "Mail.php";
 
 if ($allowed_include == 1) {
