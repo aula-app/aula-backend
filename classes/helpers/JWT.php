@@ -1,6 +1,6 @@
 <?php
 
-require_once('../config/base_config.php'); // load base config with paths to classes etc.
+require_once(__DIR__ . '/../../../config/base_config.php'); // load base config with paths to classes etc.
 require_once('../error_msg.php');
 require_once($baseHelperDir . 'Crypt.php');
 
@@ -99,7 +99,6 @@ class JWT
         } else {
           return ["success" => false, "error" => "invalid_signature"];
         }
-
       } else {
         return false;
       }
@@ -123,4 +122,3 @@ class JWT
     }
   }
 }
-?>
