@@ -1,17 +1,20 @@
 <?php
 /* base configuration file for path definition */
-$baseHelperDir = "/var/www/html/api/classes/helpers/";
-$baseClassDir = "/var/www/html/api/classes/";
-$baseClassModelDir = "/var/www/html/api/classes/models/";
-$baseUploadDir = "/var/www/html/api/uploads/";
+$baseDir =            "/var/www/html/api/";
+$baseClassDir =       "/var/www/html/api/classes/";
+$baseHelperDir =      "/var/www/html/api/classes/helpers/";
+$baseClassModelDir =  "/var/www/html/api/classes/models/";
 
-$baseDir = "/var/www/html/api/";
-$baseConfigDir = "/var/www/html/api/";
+# Here mount directories for runtime uploads
+$baseUploadDir =      "/var/www/html/uploads/";
+$filesDir =           "/var/www/html/files";
 
-$cryptFile="/var/www/html/api/superkey.ini";
-$jwtKeyFile="/var/www/html/api/jwt_key.ini";
+# Here mount your config files
+$baseConfigDir =      "/var/www/html/config/";
 
-$filesDir="/var/www/html/files";
+# These will be created by docker-entrypoint.sh from envvars
+$cryptFile =          "/var/www/html/config/superkey.ini";
+$jwtKeyFile =         "/var/www/html/config/jwt_key.ini";
 
 $oauth_redirect="";
 
@@ -35,5 +38,3 @@ $AUTH0_REDIRECT_URI = "https://devel.aula.de/api/controllers/auth0.php";
 
 $AUTH0_FRONTEND_REDIRECT = "https://devel.aula.de/oauth-login/";
 
-
-?>

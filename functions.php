@@ -1,6 +1,6 @@
 <?php
 
-require_once ('base_config.php'); // load base config with paths to classes etc.
+require_once ('config/base_config.php'); // load base config with paths to classes etc.
 
 function load_model($class_name)
 {

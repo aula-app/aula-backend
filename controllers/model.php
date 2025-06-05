@@ -1,6 +1,6 @@
 <?php
 
-require_once('../base_config.php');
+require_once('../config/base_config.php');
 require_once('../error_msg.php');
 require('../functions.php');
 require($baseHelperDir . 'Permissions.php');
