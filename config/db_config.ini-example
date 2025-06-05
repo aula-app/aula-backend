@@ -1,4 +1,4 @@
-host="aula-db-docker-service"
+host="mariadb"
 user="aula_user"
 pass="example"
 dbname="aula_database"
