@@ -1,14 +1,14 @@
 <?php
 
-require_once (__DIR__ . '/../../config/base_config.php');
-require_once ('../error_msg.php');
-require ('../functions.php');
-require_once ($baseHelperDir.'Crypt.php');
-require_once ($baseHelperDir.'JWT.php');
+require_once(__DIR__ . '/../../config/base_config.php');
+require_once('../error_msg.php');
+require('../functions.php');
+require_once($baseHelperDir . 'Crypt.php');
+require_once($baseHelperDir . 'JWT.php');
 
 $db = new Database();
 $crypt = new Crypt($cryptFile);
-$syslog = new Systemlog ($db);
+$syslog = new Systemlog($db);
 $jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
 
 
@@ -33,16 +33,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pw = $users[0]['pw'];
     $check_password = password_verify($password, $pw);
   } else {
-    $check_password = hash_equals($users[0]['temp_pw'], $password); 
+    $check_password = hash_equals($users[0]['temp_pw'], $password);
     if ($check_password) {
-      $stmt = $db->query('UPDATE '. $db->au_users_basedata . ' SET temp_pw = "" WHERE id = :user_id');
+      $stmt = $db->query('UPDATE ' . $db->au_users_basedata . ' SET temp_pw = "" WHERE id = :user_id');
       $db->bind(':user_id', $user_id); // blind index
       $remove_temp_pw = $db->resultSet();
     }
   }
 
   if ($check_password) {
-    $user = new User ($db, $crypt, $syslog);
+    $user = new User($db, $crypt, $syslog);
     $user->setUserPW($user_id, $new_password);
     if (!$temp_pw) {
       header('Content-Type: application/json; charset=utf-8');
@@ -58,5 +58,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode(["success" => false]);
   }
 }
-
-?>

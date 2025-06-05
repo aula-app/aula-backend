@@ -44,22 +44,19 @@ RUN apt purge -yq \
   apt clean && \
   rm -rf /var/cache/apt/*
 
-# Port to expose
 EXPOSE 80 443
 
-COPY ./ $PROJECT_PATH/api
-COPY ./docker-entrypoint.sh $PROJECT_PATH
-# COPY ./config/base_config.php $PROJECT_PATH/config/base_config.php
-# COPY ./config/db_config.ini $PROJECT_PATH/config/db_config.ini
-
-RUN mkdir -p $PROJECT_PATH/files && \
-  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER $PROJECT_PATH/files
-
 WORKDIR $PROJECT_PATH
+COPY ./src ./api
+COPY ./docker-entrypoint.sh ./
+# COPY ./config/base_config.php ./config/base_config.php
+# COPY ./config/db_config.ini ./config/db_config.ini
+
+RUN mkdir -p ./files && \
+  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./files
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Grab encryption keys from envvars and start apache2
 CMD ["./docker-entrypoint.sh"]
-
