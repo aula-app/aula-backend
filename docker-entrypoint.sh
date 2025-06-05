@@ -10,8 +10,8 @@ fi
 
 # write the super keys from environment variables, where they
 #  should be kept.
-echo $JWT_KEY > api/jwt_key.ini
-echo $SUPERKEY > api/superkey.ini
+echo $JWT_KEY > config/jwt_key.ini
+echo $SUPERKEY > config/superkey.ini
 
 # maye you will need this information at startup
 # php -i
