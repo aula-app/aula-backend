@@ -2818,6 +2818,7 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     // additional conditions for the WHERE clause
+
     $extra_where = "";
 
     if ($type > -1) {
