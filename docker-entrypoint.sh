@@ -6,12 +6,14 @@ echo "Starting the docker application!"
 if [[ "$APP_ENV" == "local" ]]; then
   TARGET_USER_NAME=$(ls -l ./config/base_config.php | awk '{ print $3 }')
   usermod -aG $APACHE_RUN_GROUP $TARGET_USER_NAME
+  mkdir -p ./config && mkdir -p ./files && \
+    mkdir -p ./empty && chmod 600 ./empty
+else
+  # set up directory structure in the container
+  mkdir -p ./config && mkdir -p ./files && \
+    chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./ && \
+    mkdir -p ./empty && chmod 600 ./empty
 fi
-
-# set up directory structure
-mkdir -p ./config && mkdir -p ./files && \
-  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./ && \
-  mkdir -p ./empty && chmod 600 ./empty
 
 if [[ "$JWT_KEY" == "CHANGE_ME" || "$SUPERKEY" == "CHANGE_ME" ]]; then
   echo "[ERROR] You seem to be using the default encryption keys." >&2

@@ -10,6 +10,7 @@ ENV PROJECT_PATH=/var/www/html \
   TERM=xterm
 EXPOSE 80 443
 WORKDIR $PROJECT_PATH
+USER root
 
 # Utilities, Apache, PHP, and supplementary programs which the application requires
 RUN set -eux; apt update -q && \
@@ -22,28 +23,23 @@ RUN set -eux; apt update -q && \
   apt purge -yq patch software-properties-common && \
   apt autoremove -yqq && \
   apt clean && \
-  rm -rf /var/cache/apt/* && \
-	rm -rf /var/lib/apt/lists/*
+  rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-# Apache mods & conf
+# Apache mods & conf (logs should be forwarded to stdout & stderr for docker; ServerName fqdn)
 RUN a2enmod rewrite expires headers && \
-  echo 'ServerName ${APACHE_SERVER_NAME}' | tee /etc/apache2/conf-available/fqdn.conf && \
-  a2enconf fqdn
+  rm -f /var/log/apache2/access.log /var/log/apache2/error.log && \
+  ln -sf /dev/stdout /var/log/apache2/access.log && \
+  ln -sf /dev/stderr /var/log/apache2/error.log && \
+  rm -f /etc/logrotate.d/apache2 && \
+  echo 'ServerName ${APACHE_SERVER_NAME}' | tee /etc/apache2/conf-available/fqdn.conf && a2enconf fqdn
 # This envvar should be injected at runtime, localhost is the fallback value
 ENV APACHE_SERVER_NAME="localhost"
 
 COPY ./docker-entrypoint.sh ./
 COPY ./src ./api
 
-# Logs should be forwarded to stdout & stderr
-RUN rm -f /var/log/apache2/access.log /var/log/apache2/error.log && \
-  ln -sf /dev/stdout /var/log/apache2/access.log && \
-  ln -sf /dev/stderr /var/log/apache2/error.log && \
-  rm -f /etc/logrotate.d/apache2
-
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Grab encryption keys from envvars and start apache2
-USER root
 CMD ["./docker-entrypoint.sh"]

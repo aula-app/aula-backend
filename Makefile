@@ -25,4 +25,5 @@ run-release:
 	docker compose -f docker-compose.yml up -d
 
 run-local: prepare
-	docker compose up -d --build
+	docker build -t "aulaapp/aula-backend:latest" .
+	docker compose up -d
