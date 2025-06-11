@@ -2,6 +2,10 @@
 
 echo "Starting the docker application!"
 
+# add our local user to apache run group
+TARGET_USER_NAME=$(ls -l ./config/base_config.php | awk '{ print $3 }')
+usermod -aG $APACHE_RUN_GROUP $TARGET_USER_NAME
+
 if [[ "$JWT_KEY" == "CHANGE_ME" || "$SUPERKEY" == "CHANGE_ME" ]]; then
   echo "[ERROR] You seem to be using the default encryption keys." >&2
   echo "[ERROR] Please update the environment variables (probably in the docker-compose.yml file)."
@@ -9,12 +13,8 @@ if [[ "$JWT_KEY" == "CHANGE_ME" || "$SUPERKEY" == "CHANGE_ME" ]]; then
 fi
 
 # write the super keys from environment variables, where they should be kept.
-echo $JWT_KEY > config/jwt_key.ini
-echo $SUPERKEY > config/superkey.ini
+echo $JWT_KEY > config/jwt_key.ini && chown $APACHE_RUN_USER:$APACHE_RUN_GROUP config/jwt_key.ini && chmod 600 config/jwt_key.ini
+echo $SUPERKEY > config/superkey.ini && chown $APACHE_RUN_USER:$APACHE_RUN_GROUP config/superkey.ini && chmod 600 config/superkey.ini
 
-# run apache as expected
-/usr/sbin/apache2ctl -D FOREGROUND & 
-
-# make sure to show php errors in the docker log while it is running
-tail -f /var/log/apache2/error.log
-
+# Start the apache server in foreground (so Docker doesn't exit)
+exec /usr/sbin/apache2ctl -D FOREGROUND
