@@ -1,3 +1,0 @@
-services:
-  mariadb:
-    user: "1000:1000"
