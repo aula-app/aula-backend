@@ -8,6 +8,8 @@ ENV PROJECT_PATH=/var/www/html \
   APACHE_LOCK_DIR=/var/lock/apache2 \
   PHP_INI=/etc/php/8.3/apache2/php.ini \
   TERM=xterm
+EXPOSE 80 443
+WORKDIR $PROJECT_PATH
 
 # Utilities, Apache, PHP, and supplementary programs which the application requires
 RUN set -eux; apt update -q && \
@@ -17,7 +19,11 @@ RUN set -eux; apt update -q && \
     php-mysql default-mysql-client \
     php8.3-bcmath php8.3-curl php8.3-dom php8.3-mbstring php8.3-intl \
     sendmail libphp-phpmailer php-mail && \
-  apt autoremove -yqq
+  apt purge -yq patch software-properties-common && \
+  apt autoremove -yqq && \
+  apt clean && \
+  rm -rf /var/cache/apt/* && \
+	rm -rf /var/lib/apt/lists/*
 
 # Apache mods & conf
 RUN a2enmod rewrite expires headers && \
@@ -26,16 +32,6 @@ RUN a2enmod rewrite expires headers && \
 # This envvar should be injected at runtime, localhost is the fallback value
 ENV APACHE_SERVER_NAME="localhost"
 
-# Cleanup
-RUN apt purge -yq patch software-properties-common && \
-  apt autoremove -yqq && \
-  apt clean && \
-  rm -rf /var/cache/apt/* && \
-	rm -rf /var/lib/apt/lists/*;
-
-EXPOSE 80 443
-
-WORKDIR $PROJECT_PATH
 COPY ./docker-entrypoint.sh ./
 COPY ./src ./api
 
