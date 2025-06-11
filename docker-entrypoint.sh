@@ -9,9 +9,9 @@ if [[ "$APP_ENV" == "local" ]]; then
 fi
 
 # set up directory structure
-mkdir ./config && mkdir ./files && \
+mkdir -p ./config && mkdir -p ./files && \
   chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./ && \
-  mkdir empty && chmod 600 empty
+  mkdir -p ./empty && chmod 600 ./empty
 
 if [[ "$JWT_KEY" == "CHANGE_ME" || "$SUPERKEY" == "CHANGE_ME" ]]; then
   echo "[ERROR] You seem to be using the default encryption keys." >&2

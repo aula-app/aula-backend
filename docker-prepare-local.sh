@@ -19,7 +19,9 @@ fi
 if [ ! -f ./docker-compose.override.yml ]; then
   echo "[*] Adapting docker-compose.override.yml to your local environment..."
   cp ./docker-compose.override.yml.template ./docker-compose.override.yml
-  sed -i.bak '1i# AUTO-GENERATED file, using prepare-local.sh.\n# Changes to this file will be lost when using "make" command.' docker-compose.override.yml
+  sed -i.bak '1i\
+    # AUTO-GENERATED file, using prepare-local.sh.\
+    # Changes to this file will be lost when using "make" command.' docker-compose.override.yml
 
   sed -i.bak "s/UID/$(id -u)/g" docker-compose.override.yml
   sed -i.bak "s/GID/$(id -g)/g" docker-compose.override.yml
