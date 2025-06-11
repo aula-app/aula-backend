@@ -3,6 +3,7 @@ services:
     environment:
       JWT_KEY: CHANGE_ME
       SUPERKEY: CHANGE_ME
+      APP_ENV: local
     volumes:
       - ./docker/_generated_files_data:/var/www/html/files:rw
       # @NOTE: By mounting the source dir straight to the running container, we can
@@ -17,3 +18,5 @@ services:
     user: "UID:GID"
     volumes:
       - ./docker/_generated_mariadb_data:/var/lib/mysql:rw
+
+# vim: set ft=yaml:

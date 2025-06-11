@@ -6,7 +6,6 @@ ENV PROJECT_PATH=/var/www/html \
   APACHE_RUN_USER=www-data \
   APACHE_RUN_GROUP=www-data \
   APACHE_LOCK_DIR=/var/lock/apache2 \
-  APACHE_SERVER_NAME=localhost \
   PHP_INI=/etc/php/8.3/apache2/php.ini \
   TERM=xterm
 
@@ -22,14 +21,13 @@ RUN set -eux; apt update -q && \
 
 # Apache mods & conf
 RUN a2enmod rewrite expires headers && \
-  echo "ServerName $APACHE_SERVER_NAME" | tee /etc/apache2/conf-available/fqdn.conf && \
+  echo 'ServerName ${APACHE_SERVER_NAME}' | tee /etc/apache2/conf-available/fqdn.conf && \
   a2enconf fqdn
+# This envvar should be injected at runtime, localhost is the fallback value
+ENV APACHE_SERVER_NAME="localhost"
 
 # Cleanup
-RUN apt purge -yq \
-  patch \
-  software-properties-common \
-  wget && \
+RUN apt purge -yq patch software-properties-common && \
   apt autoremove -yqq && \
   apt clean && \
   rm -rf /var/cache/apt/* && \
@@ -40,9 +38,6 @@ EXPOSE 80 443
 WORKDIR $PROJECT_PATH
 COPY ./docker-entrypoint.sh ./
 COPY ./src ./api
-RUN mkdir ./config && mkdir ./files && \
-  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./ && \
-  mkdir empty && chmod 600 empty
 
 # Logs should be forwarded to stdout & stderr
 RUN rm -f /var/log/apache2/access.log /var/log/apache2/error.log && \
