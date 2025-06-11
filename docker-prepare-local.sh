@@ -11,8 +11,8 @@ if [ ! -f ./docker-compose.override.yml ]; then
   cp ./docker-compose.override.yml.template ./docker-compose.override.yml
   sed -i '1i # AUTO-GENERATED file, using prepare-local.sh.\n# Changes to this file will be lost when using "make" command.' docker-compose.override.yml
 
-  sed -i s/UID/$(id -u)/g docker-compose.override.yml
-  sed -i s/GID/$(id -g)/g docker-compose.override.yml
+  sed -i "s/UID/$(id -u)/g docker-compose.override.yml"
+  sed -i "s/GID/$(id -g)/g docker-compose.override.yml"
 
   ENCRYPTION_KEY_1=$(LC_ALL=C tr -dc 'A-Za-z0-9#%&()+,-.:;<=>@^_~' </dev/urandom | head -c 64; echo)
   ENCRYPTION_KEY_2=$(LC_ALL=C tr -dc 'A-Za-z0-9#%&()+,-.:;<=>@^_~' </dev/urandom | head -c 64; echo)

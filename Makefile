@@ -5,7 +5,7 @@
 
 .PHONY: publish-release build-release run-local run-release prepare
 
-DATE := $(shell date --iso-8601)
+DATE := $(shell date "+%Y-%m-%d")
 
 prepare:
 	./docker-prepare-local.sh
@@ -23,4 +23,3 @@ run-release:
 
 run-local: prepare
 	docker compose up -d --build
-
