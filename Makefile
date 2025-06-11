@@ -3,12 +3,15 @@
 # 	  2. locally building the image and running it on your machine
 #   Neither of these is a production setup.
 
-.PHONY: publish-release build-release run-local run-release prepare
+.PHONY: publish-release build-release run-local run-release prepare clean
 
 DATE := $(shell date "+%Y-%m-%d")
 
 prepare:
 	./docker-prepare-local.sh
+
+clean:
+	rm docker-compose.override.yml
 
 build-release:
 	docker build -t "aulaapp/aula-backend:latest" -t "aulaapp/aula-backend:$(DATE)" .
