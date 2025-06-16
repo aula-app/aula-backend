@@ -11,7 +11,7 @@ cp ./config/db_config.ini-example ./config/db_config.ini
 if [ -f ./docker-compose.override.yml ]; then
   echo "[*] You already have docker-compose.override.yml."
   REPLY=$(read -p "-> Do you want to regenerate it? [y/N] " -r)
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
     rm -fv ./docker-compose.override.yml
   fi
 fi
