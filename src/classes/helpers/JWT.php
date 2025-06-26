@@ -13,10 +13,9 @@ class JWT
 {
   private $key;
 
-  public function __construct($keyFile, $db, $crypt, $syslog)
+  public function __construct($key, $db, $crypt, $syslog)
   {
-    $this->key = file_get_contents($keyFile);
-    $this->key = str_replace(PHP_EOL, '', $this->key);
+    $this->key = ($key);
     $this->db = $db;
     $this->crypt = $crypt;
     $this->syslog = $syslog;

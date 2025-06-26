@@ -6,13 +6,14 @@ require('../functions.php');
 require($baseHelperDir . 'Permissions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
+require_once('../db.php');
 
 $headers = apache_request_headers();
 
 $db = new Database($headers["code"]);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog($db);
-$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
+$jwt = new JWT($databases[$code]['jwt_key'], $db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
 
 $json = file_get_contents('php://input');
