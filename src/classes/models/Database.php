@@ -1,6 +1,4 @@
 <?php
-
-    require_once(__DIR__ . '/../../config/instances_config.php');
     # db provides helper functions and db connection for the system
     class Database {
 
@@ -12,8 +10,43 @@
     private $error;
     private $stmt;
 
+    public string $au_ideas = 'au_ideas';
+    public string $au_groups = 'au_groups';
+    public string $au_rooms = 'au_rooms';
+    public string $au_votes = 'au_votes';
+    public string $au_likes = 'au_likes';
+    public string $au_topics = 'au_topics';
+    public string $au_consent = 'au_consent';
+    public string $au_services = 'au_services';
+    public string $au_delegation = 'au_delegation';
+    public string $au_media = 'au_media';
+    public string $au_messages = 'au_messages';
+    public string $au_comments = 'au_comments';
+    public string $au_commands = 'au_commands';
+    public string $au_systemlog = 'au_systemlog';
+    public string $au_texts = 'au_texts';
+    public string $au_reported = 'au_reported';
+    public string $au_categories = 'au_categories';
+    public string $au_activitylog = 'au_activitylog';
+    public string $au_users_basedata = 'au_users_basedata';
+    public string $au_users_settings = 'au_users_settings';
+    public string $au_user_levels = 'au_user_levels';
+    public string $au_system_current_state = 'au_system_current_state';
+    public string $au_system_global_config = 'au_system_global_config';
+    public string $au_phases_global_config = 'au_phases_global_config';
+    public string $au_rel_user_user = 'au_rel_user_user';
+    public string $au_rel_rooms_users = 'au_rel_rooms_users';
+    public string $au_rel_topics_ideas = 'au_rel_topics_ideas';
+    public string $au_rel_topics_media = 'au_rel_topics_media';
+    public string $au_rel_groups_users = 'au_rel_groups_users';
+    public string $au_rel_categories_ideas = 'au_rel_categories_ideas';
+    public string $au_rel_categories_rooms = 'au_rel_categories_rooms';
+    public string $au_rel_users_messages = 'au_rel_users_messages';
+    public string $au_rel_users_services = 'au_rel_users_services';
+    public string $au_userlevel_methods = 'au_userlevel_methods';
+
     public function __construct($code) {
-        // Load the database configuration from the instances config
+        // Load the database configuration from db config
         global $instances;
 
         //base config
@@ -21,44 +54,6 @@
         $this->user = $instances[$code]['user'];
         $this->pass = $instances[$code]['pass'];
         $this->dbname = $instances[$code]['dbname'];
-
-        //table names
-        $this->au_ideas = 'au_ideas';
-        $this->au_groups = 'au_groups';
-        $this->au_rooms = 'au_rooms';
-        $this->au_votes = 'au_votes';
-        $this->au_likes = 'au_likes';
-        $this->au_topics = 'au_topics';
-        $this->au_consent = 'au_consent';
-        $this->au_services = 'au_services';
-        $this->au_delegation = 'au_delegation';
-        $this->au_media = 'au_media';
-        #$this->au_daily_stats = 'au_daily_stats'];
-        $this->au_messages = 'au_messages';
-        $this->au_comments = 'au_comments';
-        $this->au_commands = 'au_commands';
-        $this->au_systemlog = 'au_systemlog';
-        $this->au_texts = 'au_texts';
-        $this->au_reported = 'au_reported';
-        $this->au_categories = 'au_categories';
-        $this->au_activitylog = 'au_activitylog';
-        $this->au_users_basedata = 'au_users_basedata';
-        $this->au_users_settings = 'au_users_settings';
-        $this->au_user_levels = 'au_user_levels';
-        $this->au_system_current_state = 'au_system_current_state';
-        $this->au_system_global_config = 'au_system_global_config';
-        $this->au_phases_global_config = 'au_phases_global_config';
-
-        $this->au_rel_user_user = 'au_rel_user_user';
-        $this->au_rel_rooms_users = 'au_rel_rooms_users';
-        $this->au_rel_topics_ideas = 'au_rel_topics_ideas';
-        $this->au_rel_topics_media = 'au_rel_topics_media';
-        $this->au_rel_groups_users = 'au_rel_groups_users';
-        $this->au_rel_categories_ideas = 'au_rel_categories_ideas';
-        $this->au_rel_categories_rooms = 'au_rel_categories_rooms';
-        $this->au_rel_users_messages = 'au_rel_users_messages';
-        $this->au_rel_users_services = 'au_rel_users_services';
-        $this->au_userlevel_methods = 'au_userlevel_methods';
 
         // Set up a PDO connection
         $dsn = "mysql:host=$this->host;dbname=$this->dbname";
@@ -158,4 +153,3 @@
     }
     
 }
-?>
