@@ -1,0 +1,12 @@
+<?PHP
+
+  $databases = [];
+  $databases["SINGLE"] = [
+    "host" => "localhost",
+    "user" => "aula_user",
+    "pass" => "dbpassword",
+    "dbname" => "aula_db"
+  ];
+
+?>
+

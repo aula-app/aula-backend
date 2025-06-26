@@ -7,7 +7,9 @@ require_once ($baseHelperDir.'Crypt.php');
 require_once ($baseHelperDir.'JWT.php');
 require_once "Mail.php";
 
-$db = new Database();
+$headers = apache_request_headers();
+
+$db = new Database($headers["code"]);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
 $jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
