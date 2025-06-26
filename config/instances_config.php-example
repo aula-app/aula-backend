@@ -1,13 +1,10 @@
 <?PHP
 
-  $instances = [];
-  $instances["SINGLE"] = [
-    "host" => "localhost",
-    "user" => "aula_user",
-    "pass" => "dbpassword",
-    "dbname" => "aula_db",
-    "jwt_key" => "CHANGE_ME"
-  ];
-
-?>
-
+$instances = [];
+$instances["SINGLE"] = [
+  "host" => "localhost",
+  "user" => "aula_user",
+  "pass" => "dbpassword",
+  "dbname" => "aula_db",
+  "jwt_key" => "CHANGE_ME"
+];

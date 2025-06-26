@@ -11,8 +11,8 @@ require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
 
 $headers = apache_request_headers();
-$code = $headers["code"];
-$db = new Database($headers["code"]);
+$code = $headers['aula-instance-code'];
+$db = new Database($headers['aula-instance-code']);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog($db);
 $jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);

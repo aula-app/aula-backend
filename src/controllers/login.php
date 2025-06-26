@@ -6,10 +6,12 @@ require('../functions.php'); // include Class autoloader (models)
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
 require_once(__DIR__ . '/../../config/instances_config.php');
+global $instances;
 
 $headers = apache_request_headers();
-$code = $headers["code"];
-$db = new Database($headers["code"]);
+$code = $headers['aula-instance-code'];
+
+$db = new Database($code);
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog($db); // systemlog
 $user = new User($db, $crypt, $syslog);
@@ -52,5 +54,3 @@ if ($loginResult["success"] && $loginResult["error_code"] == 0) {
 } else {
   echo json_encode(["success" => false]);
 }
-
-?>
