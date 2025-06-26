@@ -8,7 +8,7 @@ require_once ($baseHelperDir.'JWT.php');
 require_once('../db.php');
 
 $headers = apache_request_headers();
-
+$code = $headers["code"];
 $db = new Database($headers["code"]);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
