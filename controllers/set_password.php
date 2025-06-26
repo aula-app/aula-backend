@@ -7,8 +7,8 @@ require_once ($baseHelperDir.'Crypt.php');
 require_once ($baseHelperDir.'JWT.php');
 require_once('../db.php');
 
-$db = new Database($headers["code"]);
-$code = $headers["code"];
+$db = new Database($headers['aula-instance-code']);
+$code = $headers['aula-instance-code'];
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
 $jwt = new JWT($databases[$code]['jwt_key'], $db, $crypt, $syslog);

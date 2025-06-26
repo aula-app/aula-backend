@@ -9,8 +9,8 @@ require_once "Mail.php";
 require_once('../db.php');
 
 $headers = apache_request_headers();
-$code = $headers["code"];
-$db = new Database($headers["code"]);
+$code = $headers['aula-instance-code'];
+$db = new Database($headers['aula-instance-code']);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
 $jwt = new JWT($databases[$code]['jwt_key'], $db, $crypt, $syslog);

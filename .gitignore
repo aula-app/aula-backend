@@ -2,6 +2,7 @@ db_config.ini
 db_config.devel.ini
 .DS_Store
 base_config.php
+instances_config.php
 info.php
 /superkey.ini
 /jwt_key.ini
