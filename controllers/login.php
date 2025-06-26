@@ -5,16 +5,17 @@ require_once('../error_msg.php');
 require('../functions.php'); // include Class autoloader (models)
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
+require_once('../db.php');
 
 $headers = apache_request_headers();
-
+$code = $headers["code"];
 $db = new Database($headers["code"]);
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog($db); // systemlog
 $user = new User($db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
 
-$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
+$jwt = new JWT($databases[$code]['jwt_key'], $db, $crypt, $syslog);
 
 
 header('Content-Type: application/json; charset=utf-8');

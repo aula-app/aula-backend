@@ -5,11 +5,13 @@ require_once ('../error_msg.php');
 require ('../functions.php');
 require_once ($baseHelperDir.'Crypt.php');
 require_once ($baseHelperDir.'JWT.php');
+require_once('../db.php');
 
-$db = new Database();
+$db = new Database($headers["code"]);
+$code = $headers["code"];
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
-$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
+$jwt = new JWT($databases[$code]['jwt_key'], $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $secret =  $_GET["secret"];
