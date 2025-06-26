@@ -5,11 +5,13 @@ set -e
 echo "[*] Preparing environment..."
 
 echo "[*] Copying example config files... (generated files are NOT PRODUCTION READY)"
+# @TODO: nikola - don't overwrite if already existing?
 cp ./config/base_config.php-example ./config/base_config.php
 cp ./config/instances_config.php-example ./config/instances_config.php
 
 if [ -f ./docker-compose.override.yml ]; then
   echo "[*] You already have docker-compose.override.yml."
+  # @FIXME: nikola - this check doesn't work
   REPLY=$(read -p "-> Do you want to regenerate it? [y/N] " -r)
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     rm -fv ./docker-compose.override.yml

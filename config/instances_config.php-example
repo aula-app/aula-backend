@@ -2,9 +2,9 @@
 
 $instances = [];
 $instances["SINGLE"] = [
-  "host" => "localhost",
+  "host" => "mariadb",
   "user" => "aula_user",
-  "pass" => "dbpassword",
-  "dbname" => "aula_db",
+  "pass" => "example",
+  "dbname" => "aula_database",
   "jwt_key" => "CHANGE_ME"
 ];
