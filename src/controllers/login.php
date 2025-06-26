@@ -5,7 +5,7 @@ require_once('../error_msg.php');
 require('../functions.php'); // include Class autoloader (models)
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
-require_once('../db.php');
+require_once(__DIR__ . '/../../config/instances_config.php');
 
 $headers = apache_request_headers();
 $code = $headers["code"];
@@ -15,7 +15,7 @@ $syslog = new Systemlog($db); // systemlog
 $user = new User($db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
 
-$jwt = new JWT($databases[$code]['jwt_key'], $db, $crypt, $syslog);
+$jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
 
 
 header('Content-Type: application/json; charset=utf-8');

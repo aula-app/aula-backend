@@ -1,6 +1,6 @@
 <?php
+    require_once(__DIR__ . '/../../config/instances_config.php');
 
-    require('../db.php');
     # db provides helper functions and db connection for the system
     class Database {
 
@@ -13,55 +13,52 @@
     private $stmt;
 
     public function __construct($code) {
-        // Load the database configuration from db config
-        global $baseClassDir;
-        global $baseConfigDir;
-        global $databases;
+        // Load the database configuration from the instances config
+        global $instances;
 
-        $config = parse_ini_file($baseConfigDir.'db_config.ini');
         //base config
-        $this->host = $databases[$code]['host'];
-        $this->user = $databases[$code]['user'];
-        $this->pass = $databases[$code]['pass'];
-        $this->dbname = $databases[$code]['dbname'];
+        $this->host = $instances[$code]['host'];
+        $this->user = $instances[$code]['user'];
+        $this->pass = $instances[$code]['pass'];
+        $this->dbname = $instances[$code]['dbname'];
 
         //table names
-        $this->au_ideas = $config['au_ideas'];
-        $this->au_groups = $config['au_groups'];
-        $this->au_rooms = $config['au_rooms'];
-        $this->au_votes = $config['au_votes'];
-        $this->au_likes = $config['au_likes'];
-        $this->au_topics = $config['au_topics'];
-        $this->au_consent = $config['au_consent'];
-        $this->au_services = $config['au_services'];
-        $this->au_delegation = $config['au_delegation'];
-        $this->au_media = $config['au_media'];
-        #$this->au_daily_stats = $config['au_daily_stats'];
-        $this->au_messages = $config['au_messages'];
-        $this->au_comments = $config['au_comments'];
-        $this->au_commands = $config['au_commands'];
-        $this->au_systemlog = $config['au_systemlog'];
-        $this->au_texts = $config['au_texts'];
-        $this->au_reported = $config['au_reported'];
-        $this->au_categories = $config['au_categories'];
-        $this->au_activitylog = $config['au_activitylog'];
-        $this->au_users_basedata = $config['au_users_basedata'];
-        $this->au_users_settings = $config['au_users_settings'];
-        $this->au_user_levels = $config['au_user_levels'];
-        $this->au_system_current_state = $config['au_system_current_state'];
-        $this->au_system_global_config = $config['au_system_global_config'];
-        $this->au_phases_global_config = $config ['au_phases_global_config'];
+        $this->au_ideas = 'au_ideas';
+        $this->au_groups = 'au_groups';
+        $this->au_rooms = 'au_rooms';
+        $this->au_votes = 'au_votes';
+        $this->au_likes = 'au_likes';
+        $this->au_topics = 'au_topics';
+        $this->au_consent = 'au_consent';
+        $this->au_services = 'au_services';
+        $this->au_delegation = 'au_delegation';
+        $this->au_media = 'au_media';
+        #$this->au_daily_stats = 'au_daily_stats'];
+        $this->au_messages = 'au_messages';
+        $this->au_comments = 'au_comments';
+        $this->au_commands = 'au_commands';
+        $this->au_systemlog = 'au_systemlog';
+        $this->au_texts = 'au_texts';
+        $this->au_reported = 'au_reported';
+        $this->au_categories = 'au_categories';
+        $this->au_activitylog = 'au_activitylog';
+        $this->au_users_basedata = 'au_users_basedata';
+        $this->au_users_settings = 'au_users_settings';
+        $this->au_user_levels = 'au_user_levels';
+        $this->au_system_current_state = 'au_system_current_state';
+        $this->au_system_global_config = 'au_system_global_config';
+        $this->au_phases_global_config = 'au_phases_global_config';
 
-        $this->au_rel_user_user = $config['au_rel_user_user'];
-        $this->au_rel_rooms_users = $config['au_rel_rooms_users'];
-        $this->au_rel_topics_ideas = $config['au_rel_topics_ideas'];
-        $this->au_rel_topics_media = $config['au_rel_topics_media'];
-        $this->au_rel_groups_users = $config['au_rel_groups_users'];
-        $this->au_rel_categories_ideas = $config['au_rel_categories_ideas'];
-        $this->au_rel_categories_rooms = $config['au_rel_categories_rooms'];
-        $this->au_rel_users_messages = $config['au_rel_users_messages'];
-        $this->au_rel_users_services = $config['au_rel_users_services'];
-        $this->au_userlevel_methods = $config['au_userlevel_methods'];
+        $this->au_rel_user_user = 'au_rel_user_user';
+        $this->au_rel_rooms_users = 'au_rel_rooms_users';
+        $this->au_rel_topics_ideas = 'au_rel_topics_ideas';
+        $this->au_rel_topics_media = 'au_rel_topics_media';
+        $this->au_rel_groups_users = 'au_rel_groups_users';
+        $this->au_rel_categories_ideas = 'au_rel_categories_ideas';
+        $this->au_rel_categories_rooms = 'au_rel_categories_rooms';
+        $this->au_rel_users_messages = 'au_rel_users_messages';
+        $this->au_rel_users_services = 'au_rel_users_services';
+        $this->au_userlevel_methods = 'au_userlevel_methods';
 
         // Set up a PDO connection
         $dsn = "mysql:host=$this->host;dbname=$this->dbname";

@@ -18,8 +18,8 @@ services:
         bind:
           create_host_path: false
       - type: bind
-        source: ./config/db_config.ini
-        target: /var/www/html/config/db_config.ini
+        source: ./config/instances_config.php
+        target: /var/www/html/config/instances_config.php
         bind:
           create_host_path: false
       - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini

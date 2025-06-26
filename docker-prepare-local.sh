@@ -6,7 +6,7 @@ echo "[*] Preparing environment..."
 
 echo "[*] Copying example config files... (generated files are NOT PRODUCTION READY)"
 cp ./config/base_config.php-example ./config/base_config.php
-cp ./config/db_config.ini-example ./config/db_config.ini
+cp ./config/instances_config.php-example ./config/instances_config.php
 
 if [ -f ./docker-compose.override.yml ]; then
   echo "[*] You already have docker-compose.override.yml."
