@@ -9,8 +9,8 @@ require_once($baseHelperDir . 'JWT.php');
 require_once('../db.php');
 
 $headers = apache_request_headers();
-
-$db = new Database($headers["code"]);
+$code = $headers["code"];
+$db = new Database($code);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog($db);
 $jwt = new JWT($databases[$code]['jwt_key'], $db, $crypt, $syslog);
