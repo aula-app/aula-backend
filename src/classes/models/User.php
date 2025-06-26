@@ -1781,7 +1781,7 @@ class User
       }
     }
 
-    $stmt = $this->db->query('SELECT realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw FROM ' . $this->db->au_users_basedata . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT roles, realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw FROM ' . $this->db->au_users_basedata . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit) {
       // only bind if limit is set
@@ -1977,7 +1977,7 @@ class User
       ON
         (ru.user_id = u.id)
       WHERE
-        ru.room_id = :room_id {$extra_where};
+        ru.room_id = :room_id {$extra_where}
     EOD;
 
     $total_query = <<<EOD
@@ -1986,7 +1986,7 @@ class User
       ON
         (ru.user_id = u.id)
       WHERE
-        ru.room_id = :room_id;
+        ru.room_id = :room_id
     EOD;
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);

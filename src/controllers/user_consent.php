@@ -6,7 +6,9 @@ require ('../functions.php'); // include Class autoloader (models)
 require ($baseHelperDir.'JWT.php');
 require_once ($baseHelperDir.'Crypt.php');
 
-$db = new Database();
+$headers = apache_request_headers();
+
+$db = new Database($headers["code"]);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
 $user = new User ($db, $crypt, $syslog); 
