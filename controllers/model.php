@@ -6,11 +6,14 @@ require('../functions.php');
 require($baseHelperDir . 'Permissions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
+require_once(__DIR__ . '/../config/instances_config.php');
 
-$db = new Database();
+$headers = apache_request_headers();
+$code = $headers['aula-instance-code'];
+$db = new Database($code);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog($db);
-$jwt = new JWT($jwtKeyFile, $db, $crypt, $syslog);
+$jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
 
 $json = file_get_contents('php://input');

@@ -18,7 +18,7 @@ jobs:
         run: |
           cp -vr * /var/www-aula-staging/api
           echo "Instances backend updated"
-          /home/actions-runner/recreate_staging_db.sh
-          echo "Database recreated"
+          # /home/actions-runner/recreate_staging_db.sh
+          # echo "Database recreated"
         shell: bash
 
