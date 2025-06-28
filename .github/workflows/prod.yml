@@ -1,0 +1,23 @@
+name: Update production backend
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  build:
+    runs-on: self-hosted
+    env:
+      CI: true
+      LOCAL: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Copy files
+        run: |
+          cp -vr * /var/www-aula-prod/api
+          echo "Instances of backend on PROD updated"
+          # /home/actions-runner/recreate_staging_db.sh
+          # echo "Database recreated"
+        shell: bash
