@@ -1,23 +1,23 @@
-name: Update test backend
+name: Update production backend
 
-on: 
+on:
   push:
     branches:
-      - dev
+      - prod
 
 jobs:
   build:
     runs-on: self-hosted
     env:
       CI: true
-      LOCAL: dev
+      LOCAL: test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Copy files
         run: |
-          cp -vr * /var/www-aula-dev/api
-          echo "Instances backend updated"
-          # /home/actions-runner/recreate_db.sh
+          cp -vr * /var/www-aula-prod/api
+          echo "Instances of backend on PROD updated"
+          # /home/actions-runner/recreate_staging_db.sh
           # echo "Database recreated"
         shell: bash

@@ -6,7 +6,7 @@ require('../functions.php');
 require($baseHelperDir . 'Permissions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
-require_once('../config/instances_config.php');
+require_once(__DIR__ . '/../config/instances_config.php');
 
 $headers = apache_request_headers();
 $code = $headers['aula-instance-code'];
