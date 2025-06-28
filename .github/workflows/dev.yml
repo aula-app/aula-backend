@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Copy files
         run: |
-          cp -vr * /var/www/api
+          cp -vr * /var/www-aula-dev/api
           echo "Instances backend updated"
           # /home/actions-runner/recreate_db.sh
           # echo "Database recreated"
