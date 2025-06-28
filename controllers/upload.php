@@ -9,6 +9,10 @@ require_once(__DIR__ . '/../config/instances_config.php');
 
 $headers = apache_request_headers();
 $code = $headers['aula-instance-code'];
+preg_match('/^[0-9a-zA-Z]{5}|SINGLE$/', $code, $matches);
+if (!isset($matches[0])) {
+  throw new RuntimeException('Invalid instance code');
+}
 
 $db = new Database($headers['aula-instance-code']);
 $crypt = new Crypt($cryptFile);
@@ -72,7 +76,7 @@ if ($check_jwt) {
 
     $random_part = bin2hex(random_bytes(8)) . number_format(microtime(true), 0, '', '');
     $file_name = sha1_file($_FILES['file']['tmp_name']) . $random_part . "." . $ext;
-    $file_path = sprintf($filesDir . '/'. $code . '/%s', $file_name);
+    $file_path = sprintf($filesDir . '/' . $code . '/%s', $file_name);
     if (
       !move_uploaded_file(
         $_FILES['file']['tmp_name'],
@@ -88,10 +92,7 @@ if ($check_jwt) {
     }
 
     echo json_encode(["success" => true, "status" => "File is uploaded successfully.", "data" => $file_name]);
-
   } catch (RuntimeException $e) {
     echo $e->getMessage();
   }
 }
-
-?>
