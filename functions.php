@@ -1,6 +1,6 @@
 <?php
 
-require_once("db.php");
+require_once('config/instances_config.php');
 require_once ('base_config.php'); // load base config with paths to classes etc.
 
 function load_model($class_name)

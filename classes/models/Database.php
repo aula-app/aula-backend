@@ -1,6 +1,6 @@
 <?php
 
-    require('../db.php');
+    require_once(__DIR__ . '/../../config/instances_config.php');
     # db provides helper functions and db connection for the system
     class Database {
 
@@ -16,14 +16,14 @@
         // Load the database configuration from db config
         global $baseClassDir;
         global $baseConfigDir;
-        global $databases;
+        global $instances;
 
         $config = parse_ini_file($baseConfigDir.'db_config.ini');
         //base config
-        $this->host = $databases[$code]['host'];
-        $this->user = $databases[$code]['user'];
-        $this->pass = $databases[$code]['pass'];
-        $this->dbname = $databases[$code]['dbname'];
+        $this->host = $instances[$code]['host'];
+        $this->user = $instances[$code]['user'];
+        $this->pass = $instances[$code]['pass'];
+        $this->dbname = $instances[$code]['dbname'];
 
         //table names
         $this->au_ideas = $config['au_ideas'];
