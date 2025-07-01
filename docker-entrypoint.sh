@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Starting the docker application!"
+echo "[*] Preparing the runtime environment for the docker application..."
 
 # add our local user to apache run group so we can live edit files
 if [[ "$APP_ENV" == "local" ]]; then
@@ -24,5 +24,6 @@ fi
 # write the super key from environment variable, where it should be kept.
 echo $SUPERKEY > config/superkey.ini && chown $APACHE_RUN_USER:$APACHE_RUN_GROUP config/superkey.ini && chmod 600 config/superkey.ini
 
+echo "[✓] Runtime environment prepared. Starting apache2 server."
 # Start the apache server in foreground (so Docker doesn't exit)
 exec /usr/sbin/apache2ctl -D FOREGROUND

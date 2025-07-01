@@ -2,17 +2,19 @@
 
 set -e
 
-echo "[*] Preparing environment..."
+echo "[*] Preparing local environment configuration..."
 
 echo "[*] Copying example config files... (generated files are NOT PRODUCTION READY)"
-# @TODO: nikola - don't overwrite if already existing?
-cp ./config/base_config.php-example ./config/base_config.php
-cp ./config/instances_config.php-example ./config/instances_config.php
+[ -f ./config/base_config.php ] && \
+  echo "  [*] You already have ./config/base_config.php. Delete it to regenerate it." || \
+  cp -n ./config/base_config.php-example ./config/base_config.php
+[ -f ./config/instances_config.php ] && \
+  echo "  [*] You already have ./config/instances_config.php. Delete it to regenerate it." || \
+  cp -n ./config/instances_config.php-example ./config/instances_config.php
 
 if [ -f ./docker-compose.override.yml ]; then
   echo "[*] You already have docker-compose.override.yml."
-  # @FIXME: nikola - this check doesn't work
-  REPLY=$(read -p "-> Do you want to regenerate it? [y/N] " -r)
+  read -p '  -> Do you want to regenerate it? [y/N] '
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     rm -fv ./docker-compose.override.yml
   fi
@@ -37,4 +39,4 @@ else
   echo "[*] Reusing existing docker-compose.override.yml... Delete it to regenerate it (you will lose the random keys)."
 fi
 
-echo "[✓] Environment prepared."
+echo "[✓] Local environment prepared."
