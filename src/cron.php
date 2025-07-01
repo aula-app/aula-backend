@@ -9,10 +9,12 @@ echo ("baseClassModelDir: ".$baseClassModelDir."\n");
 require_once ($baseHelperDir.'Crypt.php');
 
 require ('functions.php'); // include Class autoloader (models)
+$headers = apache_request_headers();
+$code = $headers['aula-instance-code'];
 
 echo ("LOADING DB\n");
 // Create a new Database object with the MySQL credentials
-$db = new Database();
+$db = new Database($code);
 
 
 echo ("LOADING CRYPT AND SYSLOG CLASS WITH CRYPTFILE ".$cryptFile."\n");

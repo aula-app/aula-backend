@@ -3008,12 +3008,15 @@ class User
 
   public function refresh_token()
   {
-    $jwt = new JWT($jwtKeyFile, $this->db, $this->crypt, $this->syslog);
+    require_once(__DIR__ . '/../../../config/instances_config.php');
+    global $instances;
+    $headers = apache_request_headers();
+    $code = $headers['aula-instance-code'];
+
+    $jwt = new JWT($instances[$code]['jwt_key'], $this->db, $this->crypt, $this->syslog);
 
     $check_jwt = $jwt->check_jwt(true);
-
     echo $check_jwt;
-
   }
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)

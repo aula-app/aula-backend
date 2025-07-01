@@ -7,9 +7,11 @@ require ('functions.php'); // include Class autoloader (models)
 
 //load helper classes
 require_once ($baseHelperDir.'Crypt.php');
+$headers = apache_request_headers();
+$code = $headers['aula-instance-code'];
 
 // Create a new Database object with the MySQL credentials
-$db = new Database();
+$db = new Database($code);
 $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog ($db); // systemlog
 $idea = new Idea ($db, $crypt, $syslog); //, $syslog); // instanciate group model class
