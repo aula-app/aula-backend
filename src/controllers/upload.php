@@ -76,6 +76,9 @@ if ($check_jwt) {
 
     $random_part = bin2hex(random_bytes(8)) . number_format(microtime(true), 0, '', '');
     $file_name = sha1_file($_FILES['file']['tmp_name']) . $random_part . "." . $ext;
+    if (!file_exists($filesDir . '/' . $code)) {
+      mkdir($filesDir . '/' . $code);
+    }
     $file_path = sprintf($filesDir . '/' . $code . '/%s', $file_name);
     if (
       !move_uploaded_file(

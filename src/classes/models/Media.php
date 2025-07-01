@@ -325,7 +325,9 @@ class Media
     }
 
     if ($has_avatar) {
-      unlink($this->files_dir . '/' . $old_avatar["filename"]);
+      if (file_exists($this->files_dir . '/' . $old_avatar["filename"])) {
+        unlink($this->files_dir . '/' . $old_avatar["filename"]);
+      }
       $stmt = $this->db->query('DELETE FROM ' . $this->db->au_media . ' WHERE updater_id = :updater_id');
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
       try {
