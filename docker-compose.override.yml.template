@@ -1,7 +1,6 @@
 services:
   aula-backend:
     environment:
-      JWT_KEY: CHANGE_ME
       SUPERKEY: CHANGE_ME
       APP_ENV: local
     volumes:

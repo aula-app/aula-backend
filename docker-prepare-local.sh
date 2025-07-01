@@ -30,10 +30,8 @@ if [ ! -f ./docker-compose.override.yml ]; then
   sed -i.bak "s/UID/$(id -u)/g" docker-compose.override.yml
   sed -i.bak "s/GID/$(id -g)/g" docker-compose.override.yml
 
-  ENCRYPTION_KEY_1=$(LC_ALL=C tr -dc 'A-Za-z0-9#%()+,-.:;<=>@^_~' </dev/urandom | head -c 64; echo)
-  ENCRYPTION_KEY_2=$(LC_ALL=C tr -dc 'A-Za-z0-9#%()+,-.:;<=>@^_~' </dev/urandom | head -c 64; echo)
-  sed -i.bak "s/JWT_KEY: CHANGE_ME/JWT_KEY: \"$ENCRYPTION_KEY_1\"/g" docker-compose.override.yml
-  sed -i.bak "s/SUPERKEY: CHANGE_ME/SUPERKEY: \"$ENCRYPTION_KEY_2\"/g" docker-compose.override.yml
+  ENCRYPTION_KEY=$(LC_ALL=C tr -dc 'A-Za-z0-9#%()+,-.:;<=>@^_~' </dev/urandom | head -c 64; echo)
+  sed -i.bak "s/SUPERKEY: CHANGE_ME/SUPERKEY: \"$ENCRYPTION_KEY\"/g" docker-compose.override.yml
   rm -vf ./docker-compose.override.yml.bak
 else
   echo "[*] Reusing existing docker-compose.override.yml... Delete it to regenerate it (you will lose the random keys)."

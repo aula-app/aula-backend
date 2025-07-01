@@ -4,7 +4,6 @@ services:
     build:
       context: ./
     environment:
-      JWT_KEY: CHANGE_ME
       SUPERKEY: CHANGE_ME
       APACHE_SERVER_NAME: localhost
     ports:
@@ -30,7 +29,7 @@ services:
     image: mariadb:11.7
     environment:
       # @NOTE: if you use this container, these
-      #  values need to be reflected in ./config/db_config.ini
+      #  values need to be reflected in ./config/instances_config.php
       MARIADB_DATABASE: aula_database
       MARIADB_ROOT_PASSWORD: example
       MARIADB_USER: aula_user

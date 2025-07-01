@@ -15,14 +15,13 @@ else
     mkdir -p ./empty && chmod 600 ./empty
 fi
 
-if [[ "$JWT_KEY" == "CHANGE_ME" || "$SUPERKEY" == "CHANGE_ME" ]]; then
-  echo "[ERROR] You seem to be using the default encryption keys." >&2
+if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
+  echo "[ERROR] You seem to be using the default encryption key." >&2
   echo "[ERROR] Please update the environment variables (probably in the docker-compose.yml file)."
   exit 1;
 fi
 
-# write the super keys from environment variables, where they should be kept.
-echo $JWT_KEY > config/jwt_key.ini && chown $APACHE_RUN_USER:$APACHE_RUN_GROUP config/jwt_key.ini && chmod 600 config/jwt_key.ini
+# write the super key from environment variable, where it should be kept.
 echo $SUPERKEY > config/superkey.ini && chown $APACHE_RUN_USER:$APACHE_RUN_GROUP config/superkey.ini && chmod 600 config/superkey.ini
 
 # Start the apache server in foreground (so Docker doesn't exit)
