@@ -8,7 +8,6 @@ if ($allowed_include == 1) {
 }
 
 
-
 class Converters
 {
   # The converters class is a collection of useful methods for the system. An example is the conversion of entity hash ids (like user id) to int ids.
@@ -18,12 +17,8 @@ class Converters
 
   public function __construct($db)
   {
-    // db = database class
-    global $baseUploadDir;
 
     $this->db = $db;
-    $this->baseUploadDir = $baseUploadDir;
-
 
     $this->cache = new Memcached();
     $this->cache->addServer('localhost', 11211) or die("Could not connect");

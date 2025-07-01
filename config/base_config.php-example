@@ -6,7 +6,6 @@ $baseHelperDir =      "/var/www/html/api/classes/helpers/";
 $baseClassModelDir =  "/var/www/html/api/classes/models/";
 
 # Here mount directories for runtime uploads
-$baseUploadDir =      "/var/www/html/uploads/";
 $filesDir =           "/var/www/html/files";
 
 # Here mount your config files
