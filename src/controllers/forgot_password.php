@@ -3,7 +3,7 @@
 require_once (__DIR__ . '/../../config/base_config.php');
 require_once(__DIR__ . '/../../config/instances_config.php');
 global $instances;
-require_once ('../error_msg.php');
+
 require ('../functions.php');
 require_once ($baseHelperDir.'Crypt.php');
 require_once ($baseHelperDir.'JWT.php');

@@ -1,7 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/../../../config/base_config.php'); // load base config with paths to classes etc.
-require_once('../error_msg.php');
+
 require_once($baseHelperDir . 'Crypt.php');
 
 function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments, $user_id, $userlevel, $roles, $user_hash)

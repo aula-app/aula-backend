@@ -2,7 +2,7 @@
 
 require_once(__DIR__ . '/../../config/base_config.php'); // load base config with paths to classes etc.
 require_once(__DIR__ . '/../../config/instances_config.php');
-require_once('../error_msg.php');
+
 require_once('../functions.php'); // include Class autoloader (models)
 
 header('Content-Type: application/json; charset=utf-8');

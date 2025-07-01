@@ -1,7 +1,7 @@
 <?php
 
 require_once (__DIR__ . '/../../config/base_config.php'); // load base config with paths to classes etc.
-require_once ('../error_msg.php');
+
 require ('../functions.php'); // include Class autoloader (models)
 require_once ($baseHelperDir . 'Crypt.php');
 require_once ($baseHelperDir . 'JWT.php');

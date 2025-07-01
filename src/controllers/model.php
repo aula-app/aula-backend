@@ -1,7 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/../../config/base_config.php');
-require_once('../error_msg.php');
+
 require('../functions.php');
 require($baseHelperDir . 'Permissions.php');
 require_once($baseHelperDir . 'Crypt.php');
