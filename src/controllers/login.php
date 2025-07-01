@@ -8,6 +8,11 @@ require_once($baseHelperDir . 'JWT.php');
 require_once(__DIR__ . '/../../config/instances_config.php');
 global $instances;
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  return;
+}
+
 $headers = apache_request_headers();
 $code = $headers['aula-instance-code'];
 

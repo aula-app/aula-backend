@@ -8,3 +8,5 @@ $instances["SINGLE"] = [
   "dbname" => "aula_database",
   "jwt_key" => "CHANGE_ME"
 ];
+
+# vim: set ft=php:

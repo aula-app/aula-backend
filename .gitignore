@@ -1,10 +1,13 @@
+.DS_Store
+
 **/db_config.ini
 **/base_config.php
 **/superkey.ini
 **/jwt_key.ini
+**/db.php
+**/instances_config.php
 
 db_config.devel.ini
-.DS_Store
 info.php
 
 docker/_generated_mariadb_data/*

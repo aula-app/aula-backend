@@ -1,4 +1,5 @@
 <?php
+    require_once(__DIR__ . '/../../config/instances_config.php');
     # db provides helper functions and db connection for the system
     class Database {
 

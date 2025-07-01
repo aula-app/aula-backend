@@ -38,3 +38,4 @@ $AUTH0_REDIRECT_URI = "https://devel.aula.de/api/controllers/auth0.php";
 
 $AUTH0_FRONTEND_REDIRECT = "https://devel.aula.de/oauth-login/";
 
+# vim: set ft=php:

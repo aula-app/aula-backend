@@ -45,3 +45,5 @@ au_system_global_config = "au_system_global_config"
 au_phases_global_config = "au_phases_global_config"
 au_new_password_queue = "au_new_password_queue"
 au_userlevel_methods = "au_userlevel_methods"
+
+# vim: set ft=ini:
