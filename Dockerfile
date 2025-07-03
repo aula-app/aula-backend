@@ -36,7 +36,7 @@ RUN a2enmod rewrite expires headers && \
 ENV APACHE_SERVER_NAME="localhost"
 
 # These are safe fallbacks
-COPY ./docker/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+COPY ./apache2-aula-default.conf /etc/apache2/sites-enabled/000-default.conf
 COPY ./config/base_config.php-example ./config/base_config.php
 
 # instances_config should be omitted so we force the docker image users to add it

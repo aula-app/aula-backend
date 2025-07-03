@@ -22,7 +22,6 @@ services:
         bind:
           create_host_path: false
       - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini
-      - ./docker/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
 
   # a mariadb instance is included here as a docker service, in case you need it
   mariadb:

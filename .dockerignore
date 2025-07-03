@@ -7,9 +7,10 @@ info.php
 *.md
 *.log
 
-docker/
+docker-local/
 docker-compose.*
 
+config/
 !config/*-example
 **/db_config.ini
 **/db_config.devel.ini
