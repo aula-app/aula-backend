@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     	'Content-type' => $content);
     
     $email_body = sprintf($email_forgot_password_body, $realname, $secret, $secret);
-    $email_body = str_replace("<CODE>", $this->db->code, $email_body);
+    $email_body = str_replace("<CODE>", $code, $email_body);
 
     $mail = $smtp->send($email, $headers, $email_body);
 
