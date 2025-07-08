@@ -2319,6 +2319,7 @@ class User
         $email_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
         $email_body = str_replace("<NAME>", $realname, $email_body);
         $email_body = str_replace("<USERNAME>", $username, $email_body);
+        $email_body = str_replace("<CODE>", $this->db->code, $email_body);
 
         $mail = $this->smtp->send($email, $headers, $email_body);
 
