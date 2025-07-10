@@ -11,6 +11,7 @@
     private $dbh;
     private $error;
     private $stmt;
+    public $code;
 
     public function __construct($code) {
         // Load the database configuration from db config
@@ -24,6 +25,7 @@
         $this->user = $instances[$code]['user'];
         $this->pass = $instances[$code]['pass'];
         $this->dbname = $instances[$code]['dbname'];
+        $this->code = $code;
 
         //table names
         $this->au_ideas = $config['au_ideas'];

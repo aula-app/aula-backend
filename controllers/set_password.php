@@ -7,6 +7,7 @@ require_once ($baseHelperDir.'Crypt.php');
 require_once ($baseHelperDir.'JWT.php');
 require_once(__DIR__ . '/../config/instances_config.php');
 
+$headers = apache_request_headers();
 $db = new Database($headers['aula-instance-code']);
 $code = $headers['aula-instance-code'];
 $crypt = new Crypt($cryptFile);
