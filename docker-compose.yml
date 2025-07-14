@@ -21,7 +21,11 @@ services:
         target: /var/www/html/config/instances_config.php
         bind:
           create_host_path: false
-      - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini
+      - type: bind
+        source: ./docker-local/php.ini-development
+        target: /etc/php/8.3/apache2/php.ini
+        bind:
+          create_host_path: true
 
   # a mariadb instance is included here as a docker service, in case you need it
   mariadb:
