@@ -27,7 +27,7 @@ if ($auth0->getExchangeParameters()) {
     $session = $auth0->getCredentials();
     if ($session->user["email"]) {
       $user_email = $session->user["email"];
-      $crypt = new Crypt($cryptFile);
+      $crypt = new Crypt();
       $db = new Database($code);
       $syslog = new Systemlog($db); // systemlog
       $settings = new Settings($db, $crypt, $syslog);

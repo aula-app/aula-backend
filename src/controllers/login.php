@@ -1,7 +1,6 @@
 <?php
 
 require_once(__DIR__ . '/../../config/base_config.php'); // load base config with paths to classes etc.
-
 require('../functions.php'); // include Class autoloader (models)
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
@@ -17,7 +16,7 @@ $headers = apache_request_headers();
 $code = $headers['aula-instance-code'];
 
 $db = new Database($code);
-$crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
+$crypt = new Crypt(); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog($db); // systemlog
 $user = new User($db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);

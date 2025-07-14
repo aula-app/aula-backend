@@ -21,9 +21,6 @@ if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
   exit 1;
 fi
 
-# write the super key from environment variable, where it should be kept.
-echo $SUPERKEY > config/superkey.ini && chown $APACHE_RUN_USER:$APACHE_RUN_GROUP config/superkey.ini && chmod 600 config/superkey.ini
-
 echo "[✓] Runtime environment prepared. Starting apache2 server."
 # Start the apache server in foreground (so Docker doesn't exit)
 exec /usr/sbin/apache2ctl -D FOREGROUND

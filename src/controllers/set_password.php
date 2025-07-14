@@ -10,7 +10,7 @@ require_once(__DIR__ . '/../../config/instances_config.php');
 $headers = apache_request_headers();
 $db = new Database($headers['aula-instance-code']);
 $code = $headers['aula-instance-code'];
-$crypt = new Crypt($cryptFile);
+$crypt = new Crypt();
 $syslog = new Systemlog ($db);
 $jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
 

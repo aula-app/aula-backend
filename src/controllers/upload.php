@@ -15,7 +15,7 @@ if (!isset($matches[0])) {
 }
 
 $db = new Database($code);
-$crypt = new Crypt($cryptFile);
+$crypt = new Crypt();
 $syslog = new Systemlog($db);
 $jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
 $media = new Media($db, $crypt, $syslog, $filesDir);

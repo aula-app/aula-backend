@@ -11,7 +11,7 @@ require_once(__DIR__ . '/../../config/instances_config.php');
 $headers = apache_request_headers();
 $code = $headers['aula-instance-code'];
 $db = new Database($code);
-$crypt = new Crypt($cryptFile);
+$crypt = new Crypt();
 $syslog = new Systemlog($db);
 $jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
@@ -71,7 +71,7 @@ if ($check_jwt["success"]) {
     http_response_code(403);
     echo json_encode(["success" => false, "message" => "Unauthorized"]);
     return;
-  }  
+  }
 
   $model = new $model_name($db, $crypt, $syslog);
   $data = $model->$method(...$arguments);
@@ -115,11 +115,8 @@ if ($check_jwt["success"]) {
   } else {
     echo json_encode(['success' => true, 'count' => $data['count'], 'error_code' => $data['error_code'], 'data' => $data['data']]);
   }
-
 } else {
 
   http_response_code(401);
   echo json_encode(['success' => false, 'error' => $check_jwt["error"]]);
 }
-
-?>

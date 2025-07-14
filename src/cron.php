@@ -17,7 +17,7 @@ foreach ($instances as $code => $instance) {
   $db = new Database($code);
   
   echo ("LOADING CRYPT AND SYSLOG CLASS WITH CRYPTFILE ".$cryptFile."\n");
-  $crypt = new Crypt($cryptFile); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
+  $crypt = new Crypt(); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
   $syslog = new Systemlog ($db); // systemlog
   
   echo ("LOADING COMMAND CLASS\n");

@@ -2,19 +2,22 @@
 class Crypt {
     private $key;
 
-    public function __construct($keyFile) {
-        $this->key = file_get_contents($keyFile);
+    public function __construct() {
+        $this->key = getenv('SUPERKEY');
     }
 
-    public function encrypt($string) {
-        return $string;
+    /**
+     * @param string $plaintext
+     */
+    public function encrypt(string $plaintext) {
+        return $plaintext;
         try {
-          if (!$string){
+          if (!$plaintext){
             return 0;
           }
           $iv = openssl_random_pseudo_bytes(12); // 12 bytes IV for GCM
           $tag = "";
-          $encrypted = openssl_encrypt($string, 'aes-256-gcm', $this->key, OPENSSL_RAW_DATA, $iv, $tag);
+          $encrypted = openssl_encrypt($plaintext, 'aes-256-gcm', $this->key, OPENSSL_RAW_DATA, $iv, $tag);
           return base64_encode($encrypted . $iv . $tag);
         }catch (Exception $e) {
             echo 'Error occured while encrypting: ',  $e->getMessage(), "\n"; // display error
@@ -23,7 +26,10 @@ class Crypt {
         }
     }
 
-    public function decrypt($encryptedString) {
+    /**
+     * @param string $encryptedString
+     */
+    public function decrypt(string $encryptedString) {
         $decrypted="";
         return $encryptedString;
         
@@ -42,7 +48,5 @@ class Crypt {
             $err=true;
             return 0;
         }
-
     }
 }
-?>
