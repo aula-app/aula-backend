@@ -59,7 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     	'MIME-Version' => $mime,
     	'Content-type' => $content);
     
-    $mail = $smtp->send($email, $headers, sprintf($email_forgot_password_body, $realname, $secret, $secret));
+    $email_body = sprintf($email_forgot_password_body, $realname, $secret, $secret);
+    $email_body = str_replace("<CODE>", $code, $email_body);
+
+    $mail = $smtp->send($email, $headers, $email_body);
 
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(["success" => true]);

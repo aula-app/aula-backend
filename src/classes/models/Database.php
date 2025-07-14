@@ -10,6 +10,7 @@
     private $dbh;
     private $error;
     private $stmt;
+    public $code;
 
     public string $au_ideas = 'au_ideas';
     public string $au_groups = 'au_groups';
@@ -55,6 +56,7 @@
         $this->user = $instances[$code]['user'];
         $this->pass = $instances[$code]['pass'];
         $this->dbname = $instances[$code]['dbname'];
+        $this->code = $code;
 
         // Set up a PDO connection
         $dsn = "mysql:host=$this->host;dbname=$this->dbname";
