@@ -6,5 +6,6 @@ $instances["SINGLE"] = [
   "user" => "aula_user",
   "pass" => "dbpassword",
   "dbname" => "aula_db",
-  "jwt_key" => "CHANGE_ME"
+  "jwt_key" => "CHANGE_ME",
+  "instance_api_url" => "https://neu.aula.de"
 ];
