@@ -7,5 +7,7 @@ $instances["SINGLE"] = [
   "pass" => "dbpassword",
   "dbname" => "aula_db",
   "jwt_key" => "CHANGE_ME",
-  "instance_api_url" => "https://neu.aula.de"
+  "instance_api_url" => "CHANGE_ME"
 ];
+
+# vim: set ft=php:
