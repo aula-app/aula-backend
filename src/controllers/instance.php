@@ -14,7 +14,11 @@ $data = json_decode($json);
 
 global $instances;
 if (array_key_exists($data->code, $instances)) {
-  echo json_encode(["status" => true]);
+  if (array_key_exists("instance_api_url", $instances[$data->code])) {
+    echo json_encode(["status" => true, "instanceApiUrl" => $instances[$data->code]["instance_api_url"]]);
+  } else {
+    echo json_encode(["status" => true]);
+  }
 } else {
   echo json_encode(["status" => false]);
 }

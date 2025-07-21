@@ -4,9 +4,10 @@ $instances = [];
 $instances["SINGLE"] = [
   "host" => "mariadb",
   "user" => "aula_user",
-  "pass" => "example",
-  "dbname" => "aula_database",
-  "jwt_key" => "CHANGE_ME"
+  "pass" => "dbpassword",
+  "dbname" => "aula_db",
+  "jwt_key" => "CHANGE_ME",
+  "instance_api_url" => "CHANGE_ME"
 ];
 
 # vim: set ft=php:
