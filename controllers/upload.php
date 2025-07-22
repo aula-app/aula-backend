@@ -14,11 +14,11 @@ if (!isset($matches[0])) {
   throw new RuntimeException('Invalid instance code');
 }
 
-$db = new Database($headers['aula-instance-code']);
+$db = new Database($code);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog($db);
 $jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
-$media = new Media($db, $crypt, $syslog, $filesDir);
+$media = new Media($db, $crypt, $syslog, $filesDir . '/' . $code);
 
 $check_jwt = $jwt->check_jwt();
 
@@ -72,6 +72,10 @@ if ($check_jwt) {
       )
     ) {
       throw new RuntimeException('Invalid file format.');
+    }
+
+    if (!file_exists($filesDir . '/' . $code)) {
+      mkdir($filesDir . '/' . $code);
     }
 
     $random_part = bin2hex(random_bytes(8)) . number_format(microtime(true), 0, '', '');
