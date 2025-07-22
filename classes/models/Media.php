@@ -309,6 +309,7 @@ class Media
     $status = intval($status);
     $type = intval($type);
     $system_type = intval($system_type);
+    $result = [];
 
     // if it is an avatar
     if ($system_type == 0) {
@@ -316,15 +317,15 @@ class Media
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
 
       try {
-        $action = $this->db->execute(); // do the query
-        $has_avatar = count($this->db->resultSet()) > 0;
-        $old_avatar = $this->db->resultSet()[0];
+        $result = $this->db->resultSet(); // do the query
+        $has_avatar = !empty($result);
       } catch (Exception $e) {
         $err = true;
       }
     }
 
     if ($has_avatar) {
+      $old_avatar = $result[0];
       unlink($this->files_dir . '/' . $old_avatar["filename"]);
       $stmt = $this->db->query('DELETE FROM ' . $this->db->au_media . ' WHERE updater_id = :updater_id');
       $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
