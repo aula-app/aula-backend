@@ -74,6 +74,10 @@ if ($check_jwt) {
       throw new RuntimeException('Invalid file format.');
     }
 
+    if (!file_exists($filesDir . '/' . $code)) {
+      mkdir($filesDir . '/' . $code);
+    }
+
     $random_part = bin2hex(random_bytes(8)) . number_format(microtime(true), 0, '', '');
     $file_name = sha1_file($_FILES['file']['tmp_name']) . $random_part . "." . $ext;
     $file_path = sprintf($filesDir . '/' . $code . '/%s', $file_name);
