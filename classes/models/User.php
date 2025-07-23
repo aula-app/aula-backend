@@ -2179,15 +2179,21 @@ class User
     // generate hash password
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata . ' (temp_pw, pw_changed, o1, o2, o3, about_me, presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:temp_pw, :pw_changed, :o1, :o2, :o3, :about_me, 1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata
+      . ' ( temp_pw,  pw_changed,  o1,  o2,  o3,  about_me, presence, auto_delegation, realname,  displayname,  username,  email,  pw,        status,  hash_id, created, last_update,  updater_id,  userlevel) VALUES '
+      . ' (:temp_pw, :pw_changed, :o1, :o2, :o3, :about_me, 1,        0,              :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(),   NOW(),       :updater_id, :userlevel)');
     // bind all VALUES
-    $this->db->bind(':username', $this->crypt->encrypt($username));
+    $this->db->bind(':temp_pw', $send_email ? "" : $this->generate_pass(8)); # if no email is provided, generate a temporary password
+    $this->db->bind(':pw_changed', 0); # set flag so user has to change the temporary password
+    $this->db->bind(':o1', mb_ord(strtolower(trim($username))));
+    $this->db->bind(':o2', mb_ord(strtolower(trim($realname))));
+    $this->db->bind(':o3', mb_ord(strtolower(trim($displayname))));
+    $this->db->bind(':about_me', $this->crypt->encrypt($about_me));
     $this->db->bind(':realname', $this->crypt->encrypt($realname));
     $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
+    $this->db->bind(':username', $this->crypt->encrypt($username));
     $this->db->bind(':email', $this->crypt->encrypt($email));
-    $this->db->bind(':about_me', $this->crypt->encrypt($about_me));
     $this->db->bind(':password', $hash);
-    $this->db->bind(':userlevel', $userlevel);
     $this->db->bind(':status', $status);
     // generate unique hash for this user
     $testrand = rand(100, 10000000);
@@ -2195,24 +2201,9 @@ class User
     $hash_id = md5($username . $appendix); // create hash id for this user
     $this->db->bind(':hash_id', $hash_id);
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-    $o1 = mb_ord(strtolower(trim($username)));
-    $o2 = mb_ord(strtolower(trim($realname)));
-    $o3 = mb_ord(strtolower(trim($displayname)));
-    $this->db->bind(':o1', $o1);
-    $this->db->bind(':o2', $o2);
-    $this->db->bind(':o3', $o3);
-
+    $this->db->bind(':userlevel', $userlevel);
     #set flag so user has to change pw
     $this->db->bind(':pw_changed', 0);
-
-    $temp_pw = "";
-
-    if (!$send_email) {
-      # if email link option is not set, set a temp pw - 8 chars
-      $temp_pw = $this->generate_pass(8);
-    }
-
-    $this->db->bind(':temp_pw', $temp_pw);
 
     $data = []; # init return array
 
