@@ -1,5 +1,10 @@
 <?php
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  return;
+}
+
 require_once(__DIR__ . '/../../config/base_config.php');
 
 require('../functions.php');
@@ -7,6 +12,7 @@ require($baseHelperDir . 'Permissions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
 require_once(__DIR__ . '/../../config/instances_config.php');
+global $instances;
 
 $headers = apache_request_headers();
 $code = $headers['aula-instance-code'];
@@ -21,11 +27,6 @@ $input = json_decode($json, true);
 $check_jwt = $jwt->check_jwt();
 
 header('Content-Type: application/json; charset=utf-8');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  http_response_code(200);
-  return;
-}
 
 if ($check_jwt["success"]) {
   $jwt_payload = $jwt->payload();

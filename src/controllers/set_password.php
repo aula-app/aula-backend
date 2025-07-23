@@ -21,7 +21,6 @@ if (array_key_exists('aula-instance-code', $headers)) {
   }
 }
 $db = new Database($headers['aula-instance-code']);
-$code = $headers['aula-instance-code'];
 $crypt = new Crypt();
 $syslog = new Systemlog($db);
 $jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
