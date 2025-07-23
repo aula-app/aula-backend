@@ -718,7 +718,6 @@ class User
       }
 
       $stmt = $this->db->query('SELECT text_id FROM ' . $this->db->au_consent . ' WHERE user_id = :user_id AND text_id IN (' . implode(",", $ids) . ') AND consent = 1');
-      //echo ('<br>SELECT text_id FROM '.$this->db->au_consent.' WHERE user_id = :user_id AND text_id IN ('.implode(",", $ids).') AND consent = 1');
       $this->db->bind(':user_id', $user_id); // bind userid
 
       $consents = $this->db->resultSet();
@@ -1139,9 +1138,8 @@ class User
 
       $this->deleteUserRole($user_id, $room_id);
       $this->setRefresh($user_id, true);
-
     } catch (Exception $e) {
-      echo 'Error occured while deleting user ' . $user_id . ' from room: ' . $room_id, $e->getMessage(), "\n"; // display error
+      error_log('Error occured while deleting user ' . $user_id . ' from room: ' . $room_id . ': ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -1290,9 +1288,8 @@ class User
     try {
       $users = $this->db->execute();
       $rowcount = $this->db->rowCount();
-
     } catch (Exception $e) {
-      echo 'Error occured while removing relation between user ' . $user_id . ' and user ' . $user_id_target, $e->getMessage(), "\n"; // display error
+      error_log('Error occured while removing relation between user ' . $user_id . ' and user ' . $user_id_target . ': ' . $e->getMessage()); // display error
       //$this->syslog->addSystemEvent(0, "Error while removing user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
       $err = true;
       $returnvalue['success'] = false; // set return value
@@ -1324,9 +1321,8 @@ class User
     $err = false;
     try {
       $groups = $this->db->resultSet();
-
     } catch (Exception $e) {
-      //echo 'Error occured while removing user from group: ',  $e->getMessage(), "\n"; // display error
+      error_log('Error occured while removing user from group: ' . $e->getMessage()); // display error
       $err = true;
 
       $returnvalue['success'] = false; // set return value
@@ -1804,7 +1800,7 @@ class User
       $users = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting users: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting users: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // db error code
@@ -1978,7 +1974,7 @@ class User
     try {
       $rooms = $this->db->resultSet();
     } catch (Exception $e) {
-      echo $e;
+      error_log('Error ocurred when getUsersByRoom: ' . $e->getMessage());
       $err = true;
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 1; // error code - db error
@@ -2975,16 +2971,6 @@ class User
     $users = $this->db->resultSet();
 
     return $users[0]["refresh_token"];
-  }
-
-  public function refresh_token()
-  {
-    $jwt = new JWT($jwtKeyFile, $this->db, $this->crypt, $this->syslog);
-
-    $check_jwt = $jwt->check_jwt(true);
-
-    echo $check_jwt;
-
   }
 
   public function setUserInfiniteVote($user_id, $infinite, $updater_id = 0)

@@ -839,7 +839,7 @@ class Idea
       $topics = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while deleting idea from topic: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while deleting idea from topic: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // db error code
@@ -874,7 +874,7 @@ class Idea
       $topics = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while deleting idea from category: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while deleting idea from category: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -908,7 +908,7 @@ class Idea
       $topics = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while deleting all ideas from category: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while deleting all ideas from category: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -1017,7 +1017,7 @@ class Idea
       $ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       return 0;
     }
@@ -1168,7 +1168,7 @@ class Idea
       $categories = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       return 0;
     }
@@ -1267,7 +1267,7 @@ class Idea
       $ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       return 0;
     }
@@ -1584,7 +1584,7 @@ class Idea
       $ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -1693,7 +1693,7 @@ class Idea
       $ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -1806,7 +1806,7 @@ class Idea
       $ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      //echo 'Error occured while getting ideas: ',  $e->getMessage(), "\n"; // display error
+      //error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -1918,7 +1918,7 @@ class Idea
       $ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -3086,7 +3086,7 @@ class Idea
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-        echo 'Error occured while setting status: ', $e->getMessage(), "\n"; // display error
+        error_log('Error occured while setting status: ' . $e->getMessage()); // display error
         $err = true;
       }
       $stmt = $this->db->query('DELETE FROM ' . $this->db->au_votes);
@@ -4165,7 +4165,7 @@ class Idea
       $votes = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting updates: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting updates: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -4211,7 +4211,7 @@ class Idea
       $comments = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting updates: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting updates: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -4343,7 +4343,7 @@ class Idea
       $ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -4400,7 +4400,7 @@ class Idea
       $count_wild_ideas = $this->db->resultSet();
 
     } catch (Exception $e) {
-      echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+      error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -4442,7 +4442,7 @@ class Idea
         $total_ideas_num += $count_by_phase[$phase];
 
       } catch (Exception $e) {
-        echo 'Error occured while getting ideas: ', $e->getMessage(), "\n"; // display error
+        error_log('Error occured while getting ideas: ' . $e->getMessage()); // display error
         $err = true;
         $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; // error code
