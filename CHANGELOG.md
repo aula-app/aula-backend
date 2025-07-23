@@ -5,9 +5,9 @@
 
 # 1.3
 
-- fix: duplicate users (1)[https://github.com/aula-app/aula-frontend/issues/625] and (2)[https://github.com/aula-app/aula-frontend/issues/620]
-- fix: (can't sign on new user)[https://github.com/aula-app/aula-backend/issues/232]
-- fix: (upload profile photo issue)[https://github.com/aula-app/aula-backend/pull/234]
+- fix: duplicate users [1](https://github.com/aula-app/aula-frontend/issues/625) and [2](https://github.com/aula-app/aula-frontend/issues/620)
+- fix: [can't sign on new user](https://github.com/aula-app/aula-backend/issues/232)
+- fix: [upload profile photo issue](https://github.com/aula-app/aula-backend/pull/234)
 
 # 1.2
 
