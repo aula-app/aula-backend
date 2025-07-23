@@ -48,10 +48,11 @@ class JWT
   {
     $secret = $this->key;
     $headers = apache_request_headers();
+    $authHeader = $headers['authorization'] ?? $headers['Authorization'];
 
-    if (isset($headers['authorization'])) {
+    if (isset($authHeader)) {
       $matches = array();
-      preg_match('/Bearer (.*)/', $headers['authorization'], $matches);
+      preg_match('/Bearer (.*)/', $authHeader, $matches);
       if (isset($matches[1])) {
         $token = $matches[1];
 
@@ -108,10 +109,11 @@ class JWT
   {
     $secret = $this->key;
     $headers = apache_request_headers();
+    $authHeader = $headers['authorization'] ?? $headers['Authorization'];
 
     if ($this->check_jwt()) {
       $matches = array();
-      preg_match('/Bearer (.*)/', $headers['authorization'], $matches);
+      preg_match('/Bearer (.*)/', $authHeader, $matches);
       if (isset($matches[1])) {
         $token = $matches[1];
         $tokenParts = explode('.', $token);
