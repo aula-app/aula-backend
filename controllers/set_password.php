@@ -7,14 +7,27 @@ require_once ($baseHelperDir.'Crypt.php');
 require_once ($baseHelperDir.'JWT.php');
 require_once(__DIR__ . '/../config/instances_config.php');
 
-$db = new Database($headers['aula-instance-code']);
-$code = $headers['aula-instance-code'];
+$headers = apache_request_headers();
+
+if (array_key_exists('aula-instance-code', $headers)) {
+  $code = $headers['aula-instance-code'];
+} else {
+  if (array_key_exists('code', $_GET)) {
+    $code = $_GET['code'];
+  } else {
+    echo json_encode(["success" => false, "message" => "Fail to get instance code."]);
+    return;
+  }
+}
+
+$db = new Database($code);
 $crypt = new Crypt($cryptFile);
 $syslog = new Systemlog ($db);
 $jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $secret =  $_GET["secret"];
+
   $stmt = $db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
   $db->bind(':secret', $secret); 
   

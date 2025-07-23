@@ -11,6 +11,7 @@
     private $dbh;
     private $error;
     private $stmt;
+    public $code;
 
     public function __construct($code) {
         // Load the database configuration from db config
@@ -24,6 +25,7 @@
         $this->user = $instances[$code]['user'];
         $this->pass = $instances[$code]['pass'];
         $this->dbname = $instances[$code]['dbname'];
+        $this->code = $code;
 
         //table names
         $this->au_ideas = $config['au_ideas'];
@@ -85,23 +87,31 @@
     }
 
     public function bind($param, $value, $type = null) {
-        # provides binding functionality
-        if (is_null($type)) {
-            switch (true) {
-                case is_int($value):
-                    $type = PDO::PARAM_INT;
-                    break;
-                case is_bool($value):
-                    $type = PDO::PARAM_BOOL;
-                    break;
-                case is_null($value):
-                    $type = PDO::PARAM_NULL;
-                    break;
-                default:
-                    $type = PDO::PARAM_STR;
+        if (str_starts_with($param, ':')) {
+            # provides binding functionality
+            if (is_null($type)) {
+                switch (true) {
+                    case is_int($value):
+                        $type = PDO::PARAM_INT;
+                        break;
+                    case is_bool($value):
+                        $type = PDO::PARAM_BOOL;
+                        break;
+                    case is_null($value):
+                        $type = PDO::PARAM_NULL;
+                        break;
+                    default:
+                        $type = PDO::PARAM_STR;
+                }
             }
+            $this->stmt->bindValue($param, $value, $type);
         }
-        $this->stmt->bindValue($param, $value, $type);
+    }
+
+    public function bindAll($keyvalues) {
+        foreach ($keyvalues as $key => $value) {
+            $this->bind($key, $value);
+        }
     }
 
     public function execute() {
@@ -159,6 +169,4 @@
     public function getDbname() {
         return $this->dbname;
     }
-    
 }
-?>

@@ -1372,11 +1372,11 @@ class User
         $data = str_getcsv($line, $separator);
         $line_counter++;
 
-        $real_name = $data[0];
-        $display_name = $data[1];
-        $user_name = $data[2];
-        $email = $data[3];
-        $about_me = $data[4];
+        $real_name = trim($data[0]);
+        $display_name = trim($data[1]);
+        $user_name = trim($data[2]);
+        $email = strtolower(trim($data[3]));
+        $about_me = trim($data[4]);
 
         // check if user name is still available
         $user_ok = false;
@@ -1386,14 +1386,13 @@ class User
 
         while ($user_ok == false && $attempts < 100) {
           $temp_user = $this->checkUserExistsByUsername($user_name, $email); // check username / email in db
-          $temp_user_id = $temp_user['data']; // get id from array
 
           $attempts++; # increment attempts to find a proper username
 
-          if ($temp_user_id > 0) {
-            # user exists
+          if ($temp_user['count'] > 0) {
+            # user exists, hence not OK
             $user_ok = false;
-            #alter user name
+            # retry with altered username
             $suffix = $this->generate_pass(3);
             $user_name = $base_user_name . "_" . $suffix;
           } else {
@@ -1601,7 +1600,7 @@ class User
 
     $stmt = $this->db->query('SELECT id, userlevel, temp_pw, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id ');
     try {
-      $this->db->bind(':user_id', $user_id); // blind index
+      $this->db->bind(':user_id', $user_id);
       $users = $this->db->resultSet();
       $user_status = $users[0]['status'];
       $user_id = $users[0]['id'];
@@ -1648,14 +1647,12 @@ class User
     pw is clear text
     */
 
-    // create temp blind index (future use for o1 parameter)
-    $bi = md5(strtolower($username));
     $user_status = 0;
     $user_id = 0;
 
     $stmt = $this->db->query('SELECT id, username, pw, refresh_token, temp_pw, userlevel, hash_id, status, roles FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ');
     try {
-      $this->db->bind(':username', $username); // blind index
+      $this->db->bind(':username', $username);
       $users = $this->db->resultSet();
       $user_status = $users[0]['status'];
       $user_id = $users[0]['id'];
@@ -1850,45 +1847,25 @@ class User
   public function checkUserExistsByUsername($username, $email = "")
   {
     // helper function: checks if a user with this username or email adress is already in database
-    // generate blind index
 
-    $bi = md5(strtolower(trim($username)));
+    $check_email = strlen(trim($email)) > 2;
 
-    # init
-    $check_email = false;
-    $extra_where = "";
-
-    if (strlen(trim($email)) > 2) {
-      $extra_where = " OR email = :email";
-      $check_email = true;
-    }
-
-    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_users_basedata . ' WHERE bi = :bi' . $extra_where);
-
-    if ($check_email) {
-      $this->db->bind(':email', $email); // bind email
-    }
-    $this->db->bind(':bi', $bi); // bind blind index
+    // our mariadb uses case-insensitive collation by default => string comparisons are case-insensitive
+    $this->db->query('SELECT id FROM ' . $this->db->au_users_basedata . ' WHERE username = :username ' .
+      ($check_email ? ' OR email = :email' : ''));
+    $this->db->bind(':username', trim($username));
+    $this->db->bind(($check_email ? ':email' : ''), trim($email));
 
     $users = $this->db->resultSet();
-    if (count($users) < 1) {
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 2; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-
+    $returnvalue['success'] = true;
+    $returnvalue['count'] = count($users);
+    $returnvalue['error_code'] = 0;
+    if (count($users) > 1 || empty($users)) {
+      $returnvalue['data'] = false;
     } else {
-      $user_id = $users[0]['id']; // get user id from db
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $user_id; // returned data
-      $returnvalue['count'] = 1; // returned count of datasets
-
-      return $returnvalue;
-
+      $returnvalue['data'] = $users[0]['id'];
     }
+    return $returnvalue;
   }
 
   public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $search_field = "", $search_text = "", $userlevel = -1)
@@ -2180,7 +2157,7 @@ class User
     $realname = trim($realname);
     $displayname = trim($displayname);
     $username = trim($username);
-    $email = trim($email);
+    $email = strtolower(trim($email));
     $about_me = trim($about_me);
     $password = trim($password);
     $updater_id = intval($updater_id);
@@ -2189,12 +2166,11 @@ class User
 
     // check if user name is still available
     $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
-    $temp_user_id = $temp_user['data']; // get id from array
 
-    if ($temp_user_id > 0) {
+    if ($temp_user['count'] > 0) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // db error code
-      $returnvalue['data'] = $temp_user_id; // returned data
+      $returnvalue['data'] = $temp_user['data']; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
 
       return $returnvalue;
@@ -2202,8 +2178,6 @@ class User
 
     // generate hash password
     $hash = password_hash($password, PASSWORD_DEFAULT);
-    // generate blind index
-    $bi = md5(strtolower(trim($username)));
 
     $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata . ' (temp_pw, pw_changed, o1, o2, o3, about_me, presence, auto_delegation, realname, displayname, username, email, pw, status, hash_id, created, last_update, updater_id, bi, userlevel) VALUES (:temp_pw, :pw_changed, :o1, :o2, :o3, :about_me, 1, 0, :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(), NOW(), :updater_id, :bi, :userlevel)');
     // bind all VALUES
@@ -2213,7 +2187,6 @@ class User
     $this->db->bind(':email', $this->crypt->encrypt($email));
     $this->db->bind(':about_me', $this->crypt->encrypt($about_me));
     $this->db->bind(':password', $hash);
-    $this->db->bind(':bi', $bi);
     $this->db->bind(':userlevel', $userlevel);
     $this->db->bind(':status', $status);
     // generate unique hash for this user
@@ -2319,6 +2292,7 @@ class User
         $email_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
         $email_body = str_replace("<NAME>", $realname, $email_body);
         $email_body = str_replace("<USERNAME>", $username, $email_body);
+        $email_body = str_replace("<CODE>", $this->db->code, $email_body);
 
         $mail = $this->smtp->send($email, $headers, $email_body);
 
@@ -2354,14 +2328,25 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $status = intval($status);
 
+    $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
+    // if there's more users with the new email/username, or if the new email/username belong to another user
+    if ($temp_user['count'] > 1 || $temp_user['data'] != $user_id) {
+      $this->syslog->addSystemEvent(1, "Error (username or email already exists) while editing user ".$user_id." by ".$updater_id, 0, "", 1);
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+      return $returnvalue;
+    }
+
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET userlevel = :userlevel, realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id, status= :status WHERE id= :userid');
     // bind all VALUES
-    $this->db->bind(':username', $this->crypt->encrypt($username));
-    $this->db->bind(':realname', $this->crypt->encrypt($realname));
-    $this->db->bind(':about_me', $this->crypt->encrypt($about_me));
-    $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
-    $this->db->bind(':position', $this->crypt->encrypt($position));
-    $this->db->bind(':email', $this->crypt->encrypt($email));
+    $this->db->bind(':username', trim($username));
+    $this->db->bind(':realname', trim($realname));
+    $this->db->bind(':about_me', trim($about_me));
+    $this->db->bind(':displayname', trim($displayname));
+    $this->db->bind(':position', trim($position));
+    $this->db->bind(':email', strtolower(trim($email)));
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
     $this->db->bind(':userlevel', $userlevel); // user level (10 default)
     $this->db->bind(':status', $status); // user level (10 default)
@@ -2373,28 +2358,23 @@ class User
       $action = $this->db->execute(); // do the query
       $this->downgradeUserRoles($user_id, $userlevel);
     } catch (Exception $e) {
-
       $err = true;
     }
+
     if (!$err) {
       $this->syslog->addSystemEvent(0, "Edited user " . $user_id . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = intval($this->db->rowCount()); // returned data
       $returnvalue['count'] = 1; // returned count of datasets
-
       return $returnvalue;
-
-
     } else {
       //$this->syslog->addSystemEvent(1, "Error while editing user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
       $returnvalue['data'] = false; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
-
       return $returnvalue;
-
     }
   }// end function
 
