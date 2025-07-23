@@ -1,24 +1,27 @@
 <?php
 
 require_once(__DIR__ . '/../../config/base_config.php');
+global $filesDir;
 
 require('../functions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
 require_once(__DIR__ . '/../../config/instances_config.php');
+global $instances;
 
 $headers = apache_request_headers();
-$code = $headers['aula-instance-code'];
-preg_match('/^[0-9a-zA-Z]{5}|SINGLE$/', $code, $matches);
+$instanceCode = $headers['aula-instance-code'];
+$instanceDir = $filesDir . '/' . $instanceCode;
+preg_match('/^[0-9a-zA-Z]{5}|SINGLE$/', $instanceCode, $matches);
 if (!isset($matches[0])) {
   throw new RuntimeException('Invalid instance code');
 }
 
-$db = new Database($code);
+$db = new Database($instanceCode);
 $crypt = new Crypt();
 $syslog = new Systemlog($db);
-$jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
-$media = new Media($db, $crypt, $syslog, $filesDir);
+$jwt = new JWT($instances[$instanceCode]['jwt_key'], $db, $crypt, $syslog);
+$media = new Media($db, $crypt, $syslog, $instanceDir);
 
 $check_jwt = $jwt->check_jwt();
 
@@ -74,12 +77,13 @@ if ($check_jwt) {
       throw new RuntimeException('Invalid file format.');
     }
 
+    if (!file_exists($instanceDir)) {
+      mkdir($instanceDir);
+    }
+
     $random_part = bin2hex(random_bytes(8)) . number_format(microtime(true), 0, '', '');
     $file_name = sha1_file($_FILES['file']['tmp_name']) . $random_part . "." . $ext;
-    if (!file_exists($filesDir . '/' . $code)) {
-      mkdir($filesDir . '/' . $code);
-    }
-    $file_path = sprintf($filesDir . '/' . $code . '/%s', $file_name);
+    $file_path = sprintf($instanceDir . '/%s', $file_name);
     if (
       !move_uploaded_file(
         $_FILES['file']['tmp_name'],
