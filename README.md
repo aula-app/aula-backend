@@ -9,7 +9,9 @@ You can use one of the two following:
 ```bash
 # Run the latest published release locally
 make run-release
+```
 
+```bash
 # Run locally live development environment (files you edit get updated immediately)
 make run-local
 ```

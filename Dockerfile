@@ -8,7 +8,7 @@ ENV PROJECT_PATH=/var/www/html \
   APACHE_LOCK_DIR=/var/lock/apache2 \
   PHP_INI=/etc/php/8.3/apache2/php.ini \
   TERM=xterm
-EXPOSE 80 443
+EXPOSE 80
 WORKDIR $PROJECT_PATH
 USER root
 
