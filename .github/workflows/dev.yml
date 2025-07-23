@@ -11,6 +11,8 @@ jobs:
     env:
       CI: true
       LOCAL: dev
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
