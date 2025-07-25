@@ -63,7 +63,7 @@ class Systemlog {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+          error_log('Error occured: ' . $e->getMessage()); // display error
           $err=true;
       }
       if (!$err)
@@ -97,7 +97,7 @@ class Systemlog {
         $entries = $this->db->resultSet();
 
       } catch (Exception $e) {
-          echo 'Error occured while getting system log: ',  $e->getMessage(), "\n"; // display error
+          error_log('Error occured while getting system log: ' . $e->getMessage()); // display error
           $err=true;
           $returnvalue['success'] = false; // set return value to false
           $returnvalue['error_code'] = 1; //  error code
@@ -137,7 +137,7 @@ class Systemlog {
           $action = $this->db->execute(); // do the query
 
         } catch (Exception $e) {
-            echo 'Error occured: ',  $e->getMessage(), "\n"; // display error
+            error_log('Error occured: ' . $e->getMessage()); // display error
             $err=true;
         }
         if (!$err)
