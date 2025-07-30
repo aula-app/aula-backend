@@ -3,6 +3,8 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+- ref: email templates using named parameters https://github.com/aula-app/aula-backend/pull/243
+
 # 1.3
 
 - fix: duplicate users [issue 1](https://github.com/aula-app/aula-frontend/issues/625) and [issue 2](https://github.com/aula-app/aula-frontend/issues/620)
