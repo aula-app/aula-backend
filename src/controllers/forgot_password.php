@@ -59,8 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     	'MIME-Version' => $mime,
     	'Content-type' => $content);
     
+    // @TODO: remove the sprintf call after the next deployment, it will be noop once the template is updated
     $email_body = sprintf($email_forgot_password_body, $realname, $secret, $secret);
     $email_body = str_replace("<CODE>", $code, $email_body);
+    $email_body = str_replace("<NAME>", $realname, $email_body);
+    $email_body = str_replace("<SECRET_KEY>", $secret, $email_body);
 
     $mail = $smtp->send($email, $headers, $email_body);
 

@@ -20,7 +20,7 @@ class Crypt {
           $encrypted = openssl_encrypt($plaintext, 'aes-256-gcm', $this->key, OPENSSL_RAW_DATA, $iv, $tag);
           return base64_encode($encrypted . $iv . $tag);
         }catch (Exception $e) {
-            echo 'Error occured while encrypting: ',  $e->getMessage(), "\n"; // display error
+            error_log('Error occured while encrypting: ' . $e->getMessage()); // display error
             $err=true;
             return 0;
         }
@@ -44,7 +44,7 @@ class Crypt {
           $decrypted = openssl_decrypt($encrypted, 'aes-256-gcm', $this->key, OPENSSL_RAW_DATA, $iv, $tag);
           return $decrypted;
         } catch (Exception $e) {
-            echo 'Error occured while decrypting: ',  $e->getMessage(), "\n"; // display error
+            error_log('Error occured while decrypting: ' . $e->getMessage()); // display error
             $err=true;
             return 0;
         }

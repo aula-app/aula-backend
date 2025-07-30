@@ -434,10 +434,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ]
       ],
 
-      "refresh_token" => [
-        "roles" => ["all"]
-      ],
-
       "getDelegationStatus" => [
         "roles" => ["all"],
         "checks" => ["user_id:user_id"]
