@@ -1,0 +1,25 @@
+name: Build docker image based on commit sha
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_TAG_SHA: "aulaapp/aula-backend:${{ github.sha }}"
+
+jobs:
+  build:
+    runs-on: [self-hosted, cicd]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and tag Docker image
+        run: docker build -t $IMAGE_TAG_SHA .
+
+      - name: Push Docker image tag
+        run: docker push $IMAGE_TAG_SHA

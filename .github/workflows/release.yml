@@ -1,0 +1,29 @@
+name: Release docker image based on (1) commit sha (2) release tag version (3) :latest
+
+on:
+  release:
+    types: [published]
+
+env:
+  IMAGE_TAG_SHA: "aulaapp/aula-backend:${{ github.sha }}"
+  IMAGE_TAG_LATEST: "aulaapp/aula-backend:latest"
+  IMAGE_TAG_VERSION: "aulaapp/aula-backend:${{ github.event.release.tag_name }}"
+
+jobs:
+  build:
+    runs-on: [self-hosted, cicd]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and tag Docker images
+        run: docker build -t $IMAGE_TAG_SHA -t $IMAGE_TAG_VERSION -t $IMAGE_TAG_LATEST .
+
+      - name: Push Docker image tags
+        run: |
+          docker push $IMAGE_TAG_SHA && \
+          docker push $IMAGE_TAG_VERSION && \
+          docker push $IMAGE_TAG_LATEST

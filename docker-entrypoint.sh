@@ -9,6 +9,7 @@ if [[ "$APP_ENV" == "local" ]]; then
   mkdir -p ./config && mkdir -p ./files && \
     mkdir -p ./empty && chmod 600 ./empty
 else
+  echo -n '{"success":false,"error":"API_NOT_FOUND"}' > "./error.json"
   # set up directory structure in the container
   mkdir -p ./config && mkdir -p ./files && \
     chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./ && \
@@ -20,6 +21,7 @@ if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
   echo "[ERROR] Please update the environment variables (probably in the docker-compose.yml file)."
   exit 1;
 fi
+
 
 echo "[✓] Runtime environment prepared. Starting apache2 server."
 # Start the apache server in foreground (so Docker doesn't exit)

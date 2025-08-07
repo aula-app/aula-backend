@@ -45,8 +45,5 @@ COPY ./config/base_config.php-example ./config/base_config.php
 COPY ./docker-entrypoint.sh ./
 COPY ./src ./api
 
-# Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
 # Grab encryption keys from envvars and start apache2
 CMD ["./docker-entrypoint.sh"]
