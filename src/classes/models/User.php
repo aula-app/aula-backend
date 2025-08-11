@@ -2316,8 +2316,8 @@ class User
     $status = intval($status);
 
     $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
-    // if there's more users with the new email/username, or if the new email/username belong to another user
-    if ($temp_user['count'] > 1 || $temp_user['data'] != $user_id) {
+    // if there's more users with the new email/username, or if the new email/username belongs to another user
+    if ($temp_user['count'] > 1 || ($temp_user['count'] == 1 && $temp_user['data'] != $user_id)) {
       $this->syslog->addSystemEvent(1, "Error (username or email already exists) while editing user ".$user_id." by ".$updater_id, 0, "", 1);
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 2; // error code
