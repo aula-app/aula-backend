@@ -2174,12 +2174,13 @@ class User
 
     // generate hash password
     $hash = password_hash($password, PASSWORD_DEFAULT);
+    $temp_pw = $send_email ? "" : $this->generate_pass(8); # if no email is provided, generate a temporary password
 
     $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata
       . ' ( temp_pw,  pw_changed,  o1,  o2,  o3,  about_me, presence, auto_delegation, realname,  displayname,  username,  email,  pw,        status,  hash_id, created, last_update,  updater_id,  userlevel) VALUES '
       . ' (:temp_pw, :pw_changed, :o1, :o2, :o3, :about_me, 1,        0,              :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(),   NOW(),       :updater_id, :userlevel)');
     // bind all VALUES
-    $this->db->bind(':temp_pw', $send_email ? "" : $this->generate_pass(8)); # if no email is provided, generate a temporary password
+    $this->db->bind(':temp_pw', $temp_pw);
     $this->db->bind(':pw_changed', 0); # set flag so user has to change the temporary password
     $this->db->bind(':o1', mb_ord(strtolower(trim($username))));
     $this->db->bind(':o2', mb_ord(strtolower(trim($realname))));
