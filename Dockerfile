@@ -35,8 +35,13 @@ RUN a2enmod rewrite expires headers && \
 # This envvar should be injected at runtime, localhost is the fallback value
 ENV APACHE_SERVER_NAME="localhost"
 
-COPY ./docker-entrypoint.sh ./
 COPY ./src ./api
+COPY ./docker-entrypoint.sh ./
+# COPY ./config/base_config.php ./config/base_config.php
+# COPY ./config/db_config.ini ./config/db_config.ini
+
+RUN mkdir -p ./files && \
+  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./files
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
