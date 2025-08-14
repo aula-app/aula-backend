@@ -17,7 +17,6 @@ class Converters
 
   public function __construct($db)
   {
-
     $this->db = $db;
 
     $this->cache = new Memcached();

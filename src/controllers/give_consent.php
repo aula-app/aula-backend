@@ -9,7 +9,7 @@ require_once(__DIR__ . '/../../config/instances_config.php');
 
 $headers = apache_request_headers();
 $code = $headers['aula-instance-code'];
-$db = new Database($headers['aula-instance-code']);
+$db = new Database($code);
 $crypt = new Crypt();
 $syslog = new Systemlog ($db);
 $user = new User ($db, $crypt, $syslog); 
@@ -26,5 +26,3 @@ if ($check_jwt) {
   $give_consent = $user->giveConsent($user_id, $text_id);
   echo json_encode($give_consent);
 }
-
-?>

@@ -9,7 +9,7 @@ require_once(__DIR__ . '/../../config/instances_config.php');
 
 $headers = apache_request_headers();
 $code = $headers['aula-instance-code'];
-$db = new Database($headers['aula-instance-code']);
+$db = new Database($code);
 $crypt = new Crypt();
 $syslog = new Systemlog ($db);
 $user = new User ($db, $crypt, $syslog);

@@ -18,20 +18,13 @@ class Idea
 
   public function __construct($db, $crypt, $syslog)
   {
-    // db = database class, crypt = crypt class, $syslog = helper for system protocols
     $this->db = $db;
     $this->crypt = $crypt;
-    //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
     $this->group = new Group($db, $crypt, $syslog); // init group class
     $this->user = new User($db, $crypt, $syslog);
     $this->room = new Room($db, $crypt, $syslog);
     $this->converters = new Converters($db); // load converters
-    /*
-    $memcache = new Memcached();
-    $memcache->addServer('localhost', 11211) or die ("Could not connect");
-    */
-    #dele
   }// end function
 
   public function getIdeaOrderId($orderby)
