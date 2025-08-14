@@ -3,8 +3,8 @@
 echo "[*] Preparing the runtime environment for the docker application..."
 
 mkdir -p ./config && \
-  mkdir -p ./files && chmod 755 ./files && \
-  mkdir -p ./errors && chmod 755 ./errors && \
+  mkdir -p ./files && chmod 750 ./files && \
+  mkdir -p ./errors && chmod 750 ./errors && \
   echo -n '{"success":false,"error":"API_NOT_FOUND"}' > ./errors/404.json
 
 if [[ "$APP_ENV" == "local" ]]; then
