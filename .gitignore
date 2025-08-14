@@ -1,17 +1,25 @@
-db_config.ini
-db_config.devel.ini
 .DS_Store
-base_config.php
-instances_config.php
+
+config/*.ini
+config/*.php
+!config/*-example
+**/db_config.ini
+**/base_config.php
+**/superkey.ini
+**/jwt_key.ini
+**/db.php
+**/instances_config.php
+**/db_config.devel.ini
+
 info.php
-/superkey.ini
-/jwt_key.ini
 
-docker/_generated_mariadb_data/*
-!docker/_generated_mariadb_data/.gitkeep
+docker-local/_generated_mariadb_data/*
+!docker-local/_generated_mariadb_data/.gitkeep
 
-docker/_generated_files_data/*
-!docker/_generated_files_data/.gitkeep
+docker-local/_generated_files_data/*
+!docker-local/_generated_files_data/.gitkeep
 
 docker-compose.override.yml
 .env
+
+node_modules/

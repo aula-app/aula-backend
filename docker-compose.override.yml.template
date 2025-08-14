@@ -1,0 +1,21 @@
+services:
+  aula-backend:
+    environment:
+      SUPERKEY: CHANGE_ME
+      APP_ENV: local
+    volumes:
+      - ./docker-local/_generated_files_data:/var/www/html/files:rw
+      # @NOTE: By mounting the source dir straight to the running container, we can
+      #  "live edit" the runtime environment, without the need to rebuild the image
+      - type: bind
+        source: ./src
+        target: /var/www/html/api
+        bind:
+          create_host_path: false
+
+  mariadb:
+    user: "UID:GID"
+    volumes:
+      - ./docker-local/_generated_mariadb_data:/var/lib/mysql:rw
+
+# vim: set ft=yaml:

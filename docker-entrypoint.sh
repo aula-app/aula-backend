@@ -1,19 +1,28 @@
-#!/bin/sh
+#!/bin/bash
 
-echo "Starting the docker application!"
+echo "[*] Preparing the runtime environment for the docker application..."
 
-# write the super keys from environment variables, where they
-#  should be kept.
-echo $JWT_KEY > api/jwt_key.ini
-echo $SUPERKEY > api/superkey.ini
+mkdir -p ./config && \
+  mkdir -p ./files && chmod 750 ./files && \
+  mkdir -p ./errors && chmod 750 ./errors && \
+  echo -n '{"success":false,"error":"API_NOT_FOUND"}' > ./errors/404.json
 
-# maye you will need this information at startup
-# php -i
+if [[ "$APP_ENV" == "local" ]]; then
+  # add our local user to apache run group so we can live edit files
+  TARGET_USER_NAME=$(ls -l ./config/base_config.php | awk '{ print $3 }')
+  usermod -aG $APACHE_RUN_GROUP $TARGET_USER_NAME
+  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./errors
+else
+  # set up directory structure in the container
+  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./
+fi
 
-# run apache as expected
-/usr/sbin/apache2ctl -D FOREGROUND & 
+if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
+  echo "[ERROR] You seem to be using the default encryption key." >&2
+  echo "[ERROR] Please update the environment variables (probably in the docker-compose.yml file)."
+  exit 1;
+fi
 
-# make sure to show php errors in the docker log
-#  while it is running
-tail -f /var/log/apache2/error.log
-
+echo "[✓] Runtime environment prepared. Starting apache2 server."
+# Start the apache server in foreground (so Docker doesn't exit)
+exec /usr/sbin/apache2ctl -D FOREGROUND

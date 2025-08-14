@@ -1,4 +1,0 @@
-version: "3.8"
-services:
-  aula-db-docker-service:
-    user: "1000:1000"

@@ -1,42 +1,42 @@
-version: "3.8"
 services:
-  # The main docker service builds
-  #   required php libs and apache, and uses information
-  #   from ./docker to populate it with sane defaults
-  #   note:
-  #    before running this, db_config.ini must be copied and filled in
-  #    as well as base_config.php
-  #    and they should both be filled in with information
-  #    from here
-  aula-api-docker-service:
+  aula-backend:
+    image: aulaapp/aula-backend:latest
     build:
       context: ./
-      dockerfile: ./Dockerfile
     environment:
-      JWT_KEY: kashdkashdkjashdkashdaskjdh
-      SUPERKEY: exashdkjh2w92elhawdhsjkadhkasdjhample
+      SUPERKEY: CHANGE_ME
+      APACHE_SERVER_NAME: localhost
     ports:
       - "8080:80"
     depends_on:
-      - aula-db-docker-service
+      - mariadb
     volumes:
-      - ./:/var/www/aula/api
-      - ./docker/_generated_files_data:/var/www/html/files
-      - ./docker/php.ini-development:/etc/php/8.3/apache2/php.ini
-      - ./docker/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+      - type: bind
+        source: ./config/base_config.php
+        target: /var/www/html/config/base_config.php
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config/instances_config.php
+        target: /var/www/html/config/instances_config.php
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./docker-local/php.ini-development
+        target: /etc/php/8.3/apache2/php.ini
+        bind:
+          create_host_path: true
 
   # a mariadb instance is included here as a docker service, in case you need it
-  aula-db-docker-service:
+  mariadb:
     image: mariadb:11.7
     environment:
-      # note, if you use this container, these
-      #  values need to be reflectd in db_config.ini
+      # @NOTE: if you use this container, these
+      #  values need to be reflected in ./config/instances_config.php
       MARIADB_DATABASE: aula_database
       MARIADB_ROOT_PASSWORD: example
       MARIADB_USER: aula_user
       MARIADB_PASSWORD: example
     volumes:
-      # create a place to store the db data:
-      - ./docker/_generated_mariadb_data:/var/lib/mysql
       # use the inital data in the application to populate the db
       - ./init/aula_db_content.sql:/docker-entrypoint-initdb.d/aula_db_content.sql
