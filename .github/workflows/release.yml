@@ -5,7 +5,6 @@ on:
     types: [published]
 
 env:
-  IMAGE_TAG_SHA: "aulaapp/aula-backend:${{ github.sha }}"
   IMAGE_TAG_LATEST: "aulaapp/aula-backend:latest"
   IMAGE_TAG_VERSION: "aulaapp/aula-backend:${{ github.event.release.tag_name }}"
 
@@ -19,11 +18,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Add IMAGE_TAG_SHORT_SHA env property with commit short sha
+        run: echo "IMAGE_TAG_SHORT_SHA=aulaapp/aula-backend:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Build and tag Docker images
-        run: docker build -t $IMAGE_TAG_SHA -t $IMAGE_TAG_VERSION -t $IMAGE_TAG_LATEST .
+        run: docker build -t $IMAGE_TAG_SHORT_SHA -t $IMAGE_TAG_LATEST -t $IMAGE_TAG_VERSION .
 
       - name: Push Docker image tags
         run: |
-          docker push $IMAGE_TAG_SHA && \
+          docker push $IMAGE_TAG_SHORT_SHA && \
           docker push $IMAGE_TAG_VERSION && \
           docker push $IMAGE_TAG_LATEST
