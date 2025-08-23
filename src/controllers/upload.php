@@ -78,7 +78,7 @@ if ($check_jwt) {
     }
 
     if (!file_exists($instanceDir)) {
-      mkdir($instanceDir);
+      mkdir($instanceDir, permissions: 0750);
     }
 
     $random_part = bin2hex(random_bytes(8)) . number_format(microtime(true), 0, '', '');
