@@ -11,10 +11,10 @@ if [[ "$APP_ENV" == "local" ]]; then
   # add our local user to apache run group so we can live edit files
   TARGET_USER_NAME=$(ls -l ./config/base_config.php | awk '{ print $3 }')
   usermod -aG $APACHE_RUN_GROUP $TARGET_USER_NAME
-  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./errors
+  chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./errors
 else
   # set up directory structure in the container
-  chown -R $APACHE_RUN_GROUP:$APACHE_RUN_USER ./
+  chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./
 fi
 
 if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
