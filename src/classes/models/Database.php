@@ -8,7 +8,6 @@
     private $pass;
     private $dbname;
     private $dbh;
-    private $error;
     private $stmt;
     public $code;
 
@@ -67,10 +66,13 @@
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch(PDOException $e) {
-            $this->error = $e->getMessage();
             error_log("ERROR occurred: ".$e->getMessage());
         }
         
+    }
+
+    public function prepareStatement($query) {
+        return $this->dbh->prepare($query);
     }
 
     public function query($query) {
@@ -136,15 +138,16 @@
         return $this->dbh->lastInsertId();
     }
 
-    public function beginTransaction() {
+    public function beginTransaction($transactionLevel = "SERIALIZABLE") {
+        $this->dbh->exec("SET TRANSACTION ISOLATION LEVEL $transactionLevel");
         return $this->dbh->beginTransaction();
     }
 
-    public function endTransaction() {
+    public function commitTransaction() {
         return $this->dbh->commit();
     }
 
-    public function cancelTransaction() {
+    public function rollBackTransaction() {
         return $this->dbh->rollBack();
     }
 

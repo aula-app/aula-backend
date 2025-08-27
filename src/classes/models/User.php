@@ -31,11 +31,6 @@ class User
     global $email_port;
     global $email_username;
     global $email_password;
-    global $email_from;
-    global $email_address;
-    global $email_creation_subject;
-    global $email_creation_body;
-    global $mailgun_key;
 
     $params = array(
       'host' => $email_host,
@@ -1433,6 +1428,118 @@ class User
     return $returnvalue;
   } # end function
 
+  public function addAllCSV($csv, $room_ids, $user_level = 20, $updater_id = 0, $separator = ";")
+  {
+    /*
+      Parses CSV and adds all users to all rooms. If a User already exists with the same fields, its user_id is reused. If a User exists with some of the fields from CSV not matching the ones in the database, this is an error and the whole operation will not be committed.
+     */
+
+    // TODO: nikola - check if all room_ids exist
+    try {
+      $this->db->beginTransaction("SERIALIZABLE");
+      $errors = array();
+      $warnings = array();
+      $addedUsers = array();
+      $lineCounter = 0;
+
+      $checkUserStmt = $this->db->prepareStatement("SELECT * FROM ${this->db->au_users_basedata} WHERE username = :username OR email = :email FOR UPDATE");
+      $insertUserStmt = $this->db->prepareStatement("INSERT INTO ${this-db-au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
+      $upsertRelUserRoomStmt = $this->db->prepareStatement("INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = 1, last_update = NOW(), updater_id = :updater_id");
+
+      // basic check of CSV
+      if (strlen($csv) > 1 && str_contains($csv, ';')) {
+        $csv_lines = explode("\n", $csv);
+        $lineCounter = 0;
+
+        foreach ($csv_lines as $line) {
+          $data = str_getcsv($line, $separator);
+          $lineCounter++;
+
+          $user = [
+            'realname' => trim($data[0]),
+            'displayname' => trim($data[1]),
+            'username' => trim($data[2]),
+            'email' => strtolower(trim($data[3])),
+            'about_me' => trim($data[4])
+          ];
+
+          // Check if user exists with row-level locking
+          $checkUserStmt->execute([':username' => $user['username'], ':email' => $user['email']]);
+          $existingUser = $checkUserStmt->fetch(PDO::FETCH_ASSOC);
+
+          if (!$existingUser) {
+            $send_email = $user['email'] != '';
+            // if no email is provided, generate a temporary password
+            $temp_pw = $send_email ? "" : $this->generate_pass(8);
+            // generate unique hash for this user
+            $testrand = rand(100, 10000000);
+            $appendix = microtime(true) . $testrand;
+            $hash_id = md5($user['username'] . $appendix);
+            // User does not exist, insert new user
+            $insertUserStmt->execute([
+              ':realname' => $this->crypt->encrypt($user['realname']),
+              ':displayname' => $this-crypt-encrypt($user['displayname']),
+              ':username' => $this-crypt-encrypt($user['username']), 
+              ':email' => $this-crypt-encrypt($user['email']),
+              ':about_me' => $this-crypt-encrypt($user['about_me']),
+              ':o1' => mb_ord(strtolower($user['username'])),
+              ':o2' => mb_ord(strtolower($user['realname'])),
+              ':o3' => mb_ord(strtolower($user['displayname'])),
+              ':temp_pw' => $temp_pw,
+              ':hash_id' => $hash_id,
+              ':updater_id' => $updater_id,
+              ':userlevel' => $user_level,
+            ]);
+            $userId = $this->db->lastInsertId();
+          } else {
+            // User exists, check fields
+            $fieldsMatch = true;
+            //$existingUser = $this->getUserBaseData($existingUser['id']);
+            foreach ($user as $key => $value) {
+              if ($existingUser[$key] !== $value) {
+                $fieldsMatch = false;
+                break;
+              }
+            }
+
+            if ($fieldsMatch) {
+              // Fields are equal, reuse user_id
+              $warnings[] = "User {$user['username']} already exists with matching fields.";
+              $userId = $existingUser['user_id'];
+            } else {
+              // Fields do not match, flag as error
+              $errors[] = "Error: User {$user['username']} exists with different fields.";
+              continue; // Skip to the next user
+            }
+          }
+
+          $addedUsers[] = $user;
+        }
+
+        foreach ($room_ids as $room_id) {
+          $upsertRelUserRoomStmt->execute([
+            ':user_id' => $userId,
+            ':room_id' => $room_id,
+            ':updater_id' => $updater_id
+          ]);
+        }
+      }
+
+      if (!empty($errors)) {
+        $this->db->rollBackTransaction();
+        // return response with errors
+      } else {
+        $this->db->commitTransaction();
+        // return response with warnings and data
+        return ['status' => 'success', 'data' => $addedUsers];
+      }
+    } catch (Exception $e) {
+      $this->db->rollBackTransaction();
+      error_log("Error parsing CSV: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+      return ['status' => 'error'];
+    }
+  }
+
   public function addUserToGroup($user_id, $group_id, $updater_id, $status = 1)
   {
     /* adds a user to a group, accepts user_id (by hash or id) and group id (by hash or id)
@@ -2326,6 +2433,10 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
       return $returnvalue;
     }
+
+    /* if ($temp_user['data'].email != $email && not validated) { */
+    /*   send email to validate */
+    /* } */
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET userlevel = :userlevel, realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id, status= :status WHERE id= :userid');
     // bind all VALUES
