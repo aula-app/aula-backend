@@ -68,7 +68,7 @@
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch(PDOException $e) {
             $this->error = $e->getMessage();
-            error_log("ERROR occured: ".$e->getMessage());
+            error_log("ERROR occurred: ".$e->getMessage());
         }
         
     }
@@ -108,8 +108,13 @@
     }
 
     public function execute() {
-        # executes a query
-        return $this->stmt->execute();
+        try {
+            # executes a query
+            return $this->stmt->execute();
+        } catch(PDOException $e) {
+            $this->error = $e->getMessage();
+            error_log("ERROR occured: ".$e->getMessage());
+        }
     }
 
     public function resultSet() {
