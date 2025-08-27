@@ -213,7 +213,7 @@ class Room
   {
     /* edits a room and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
      $duration 0-4 : durations (int) for phases (default)
-     
+
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -562,7 +562,7 @@ class Room
   public function isDefaultRoom($room_id)
   {
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    $query = 'SELECT type FROM ' .$this->db->au_rooms .' WHERE ' . $this->db->au_rooms . '.id= :room_id ';
+    $query = 'SELECT type FROM ' . $this->db->au_rooms . ' WHERE ' . $this->db->au_rooms . '.id= :room_id ';
     $this->db->query($query);
     $this->db->bind(':room_id', $room_id); // bind room id
     $result = $this->db->resultSet();
@@ -903,7 +903,7 @@ class Room
   public function addRoom($room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $restricted = 1, $order_importance = 10, $updater_id = 0, $phase_duration_0 = 0, $phase_duration_1 = 0, $phase_duration_2 = 0, $phase_duration_3 = 0, $phase_duration_4 = 0)
   {
     /* adds a new room and returns insert id (room id) if successful, accepts the above parameters
-     
+
     */
 
     $access_code = trim($access_code);
@@ -1256,7 +1256,7 @@ class Room
     $err = false;
     try {
       $action = $this->db->execute(); // do the query
-      $rowcount = intval($this->db->rowCount());
+      $rowCount = intval($this->db->rowCount());
 
     } catch (Exception $e) {
 
