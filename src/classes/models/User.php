@@ -1463,65 +1463,32 @@ class User
         return $this->responseBuilder->error(errorDescription: "CSV file is in bad format.");
       }
 
-      $errors = array();
-      $warnings = array();
-      $addedUsers = array();
-
-      $checkUserStmt = $this->db->prepareStatement("SELECT * FROM {$this->db->au_users_basedata} WHERE username = :username OR email = :email FOR UPDATE");
-      $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
-
-      $this->db->beginTransaction("SERIALIZABLE");
-
-      foreach ($csv_lines as $line) {
+      // Parse CSV into array of Users
+      $users = array_map(function($line) use ($separator) {
         $data = str_getcsv($line, $separator);
-
-        $user = [
+        return [
           'realname' => trim($data[0]),
           'displayname' => trim($data[1]),
           'username' => trim($data[2]),
           'email' => strtolower(trim($data[3])),
           'about_me' => trim($data[4])
         ];
+      }, $csv_lines);
+
+      $errors = array();
+      $warnings = array();
+      $addedUsers = array();
+
+      $this->db->beginTransaction("SERIALIZABLE");
+      foreach ($users as $user) {
 
         // Check if user exists with row-level locking
-        $checkUserStmt->execute([':username' => $user['username'], ':email' => $user['email']]);
-        $existingUser = $checkUserStmt->fetch(PDO::FETCH_ASSOC);
+        $existingUser = $this->getUserForUpdate($user['username'], $user['email']);
 
         if (!$existingUser) {
-          $send_email = $user['email'] != '';
-          // if no email is provided, generate a temporary password
-          $temp_pw = $send_email ? "" : $this->generate_pass(8);
-          // generate unique hash for this user
-          $testrand = rand(100, 10000000);
-          $appendix = microtime(true) . $testrand;
-          $hash_id = md5($user['username'] . $appendix);
-          // User does not exist, insert new user
-          $insertUserStmt->execute([
-            ':realname' => $this->crypt->encrypt($user['realname']),
-            ':displayname' => $this->crypt->encrypt($user['displayname']),
-            ':username' => $this->crypt->encrypt($user['username']), 
-            ':email' => $this->crypt->encrypt($user['email']),
-            ':about_me' => $this->crypt->encrypt($user['about_me']),
-            ':o1' => mb_ord(strtolower($user['username'])),
-            ':o2' => mb_ord(strtolower($user['realname'])),
-            ':o3' => mb_ord(strtolower($user['displayname'])),
-            ':temp_pw' => $temp_pw,
-            ':hash_id' => $hash_id,
-            ':updater_id' => $updater_id,
-            ':userlevel' => $user_level,
-          ]);
-          $userId = $this->db->lastInsertId();
+          $userId = $this->addUserInternal($user, $user_level, $updater_id);
         } else {
-          // User exists, check fields
-          $fieldsMatch = true;
-          foreach ($user as $key => $value) {
-            if ($existingUser[$key] !== $value) {
-              $fieldsMatch = false;
-              break;
-            }
-          }
-
-          if ($fieldsMatch) {
+          if ($this->isSameUser($user, $existingUser)) {
             // Fields are equal, reuse user_id
             $warnings[] = "User {$user['username']} already exists with matching fields.";
             $userId = $existingUser['id'];
@@ -1541,11 +1508,12 @@ class User
 
       if (!empty($errors)) {
         $this->db->rollBackTransaction();
-        // return response with errors
         return $this->responseBuilder->error(1, $errors);
       } else {
+        $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($users), 0, "", 1);
         $this->db->commitTransaction();
-        // return response with warnings and data
+        // @TODO: nikola - send emails to all $addedUsers
+        // @TODO: nikola - return response with warnings and data
         return $this->responseBuilder->success($addedUsers);
       }
     } catch (Exception $e) {
@@ -1553,6 +1521,53 @@ class User
       error_log("Error parsing CSV: " . $e->getMessage() . "\n" . $e->getTraceAsString());
       return $this->responseBuilder->error(2);
     }
+  }
+
+  private function getUserForUpdate($username, $email)
+  {
+    $checkUserStmt = $this->db->prepareStatement("SELECT * FROM {$this->db->au_users_basedata} WHERE username = :username OR email = :email FOR UPDATE");
+    $checkUserStmt->execute([':username' => $username, ':email' => $email]);
+    return $checkUserStmt->fetch(PDO::FETCH_ASSOC);
+  }
+
+  private function isSameUser($user, $existingUser): bool
+  {
+    $fieldsMatch = true;
+    foreach ($user as $key => $value) {
+      if ($existingUser[$key] !== $value) {
+        $fieldsMatch = false;
+        break;
+      }
+    }
+    return $fieldsMatch;
+  }
+
+  private function addUserInternal($user, $user_level, $updater_id): int
+  {
+    $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
+    $send_email = $user['email'] != '';
+    // if no email is provided, generate a temporary password
+    $temp_pw = $send_email ? "" : $this->generate_pass(8);
+    // generate unique hash for this user
+    $testrand = rand(100, 10000000);
+    $appendix = microtime(true) . $testrand;
+    $hash_id = md5($user['username'] . $appendix);
+    // User does not exist, insert new user
+    $insertUserStmt->execute([
+      ':realname' => $this->crypt->encrypt($user['realname']),
+      ':displayname' => $this->crypt->encrypt($user['displayname']),
+      ':username' => $this->crypt->encrypt($user['username']), 
+      ':email' => $this->crypt->encrypt($user['email']),
+      ':about_me' => $this->crypt->encrypt($user['about_me']),
+      ':o1' => mb_ord(strtolower($user['username'])),
+      ':o2' => mb_ord(strtolower($user['realname'])),
+      ':o3' => mb_ord(strtolower($user['displayname'])),
+      ':temp_pw' => $temp_pw,
+      ':hash_id' => $hash_id,
+      ':updater_id' => $updater_id,
+      ':userlevel' => $user_level,
+    ]);
+    return $this->db->lastInsertId();
   }
 
   public function addUserToGroup($user_id, $group_id, $updater_id, $status = 1)
