@@ -31,11 +31,6 @@ class User
     global $email_port;
     global $email_username;
     global $email_password;
-    global $email_from;
-    global $email_address;
-    global $email_creation_subject;
-    global $email_creation_body;
-    global $mailgun_key;
 
     $params = array(
       'host' => $email_host,
@@ -2261,6 +2256,7 @@ class User
 
         global $email_from;
         global $email_creation_subject;
+        global $email_address_support;
         global $email_creation_body;
 
         $headers = array(
