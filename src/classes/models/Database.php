@@ -115,7 +115,7 @@
             return $this->stmt->execute();
         } catch(PDOException $e) {
             $this->error = $e->getMessage();
-            error_log("ERROR occured: ".$e->getMessage());
+            error_log("ERROR occurred: ".$e->getMessage().PHP_EOL.$e->getTraceAsString());
         }
     }
 

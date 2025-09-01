@@ -4,6 +4,10 @@
 
 require_once (__DIR__ . '/../../../config/base_config.php');
 require_once "Mail.php";
+global $baseHelperDir;
+global $baseClassDir;
+require_once ($baseHelperDir . 'ResponseBuilder.php');
+require_once ($baseClassDir . 'repositories/RoomRepository.php');
 
 if ($allowed_include == 1) {
 
@@ -18,6 +22,8 @@ class User
   # User class provides a collection of methods dealing with everything around the user entity like adding or deleting etc.
 
   private $db;
+  private $responseBuilder;
+  private $roomRepository;
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -26,6 +32,8 @@ class User
     $this->crypt = $crypt;
     $this->syslog = $syslog;
     $this->converters = new Converters($db); // load converters
+    $this->roomRepository = new RoomRepository($db);
+    $this->responseBuilder = new ResponseBuilder();
 
     global $email_host;
     global $email_port;
@@ -1434,109 +1442,116 @@ class User
       Parses CSV and adds all users to all rooms. If a User already exists with the same fields, its user_id is reused. If a User exists with some of the fields from CSV not matching the ones in the database, this is an error and the whole operation will not be committed.
      */
 
-    // TODO: nikola - check if all room_ids exist
     try {
-      $this->db->beginTransaction("SERIALIZABLE");
+      $rooms = $this->roomRepository->getRoomsByHashIds($room_ids);
+      if (count($rooms) != count($room_ids)) {
+        return $this->responseBuilder->error(
+          errorDescription: "Validation of Room ids failed. Make sure all Rooms are existing."
+        );
+      }
+    } catch (Exception $exception) {
+      return $this->responseBuilder->error(errorDescription: $exception->getMessage());
+    }
+
+    try {
+      $csv_lines = explode("\n", $csv);
+      if (
+        empty($csv_lines)
+          || !str_contains($csv, $separator)
+          || (count($csv_lines) == 1 && $csv_lines[0] == "realname;displayname;username;email;about_me")
+      ) {
+        return $this->responseBuilder->error(errorDescription: "CSV file is in bad format.");
+      }
+
       $errors = array();
       $warnings = array();
       $addedUsers = array();
-      $lineCounter = 0;
 
-      $checkUserStmt = $this->db->prepareStatement("SELECT * FROM ${this->db->au_users_basedata} WHERE username = :username OR email = :email FOR UPDATE");
-      $insertUserStmt = $this->db->prepareStatement("INSERT INTO ${this-db-au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
-      $upsertRelUserRoomStmt = $this->db->prepareStatement("INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = 1, last_update = NOW(), updater_id = :updater_id");
+      $checkUserStmt = $this->db->prepareStatement("SELECT * FROM {$this->db->au_users_basedata} WHERE username = :username OR email = :email FOR UPDATE");
+      $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
 
-      // basic check of CSV
-      if (strlen($csv) > 1 && str_contains($csv, ';')) {
-        $csv_lines = explode("\n", $csv);
-        $lineCounter = 0;
+      $this->db->beginTransaction("SERIALIZABLE");
 
-        foreach ($csv_lines as $line) {
-          $data = str_getcsv($line, $separator);
-          $lineCounter++;
+      foreach ($csv_lines as $line) {
+        $data = str_getcsv($line, $separator);
 
-          $user = [
-            'realname' => trim($data[0]),
-            'displayname' => trim($data[1]),
-            'username' => trim($data[2]),
-            'email' => strtolower(trim($data[3])),
-            'about_me' => trim($data[4])
-          ];
+        $user = [
+          'realname' => trim($data[0]),
+          'displayname' => trim($data[1]),
+          'username' => trim($data[2]),
+          'email' => strtolower(trim($data[3])),
+          'about_me' => trim($data[4])
+        ];
 
-          // Check if user exists with row-level locking
-          $checkUserStmt->execute([':username' => $user['username'], ':email' => $user['email']]);
-          $existingUser = $checkUserStmt->fetch(PDO::FETCH_ASSOC);
+        // Check if user exists with row-level locking
+        $checkUserStmt->execute([':username' => $user['username'], ':email' => $user['email']]);
+        $existingUser = $checkUserStmt->fetch(PDO::FETCH_ASSOC);
 
-          if (!$existingUser) {
-            $send_email = $user['email'] != '';
-            // if no email is provided, generate a temporary password
-            $temp_pw = $send_email ? "" : $this->generate_pass(8);
-            // generate unique hash for this user
-            $testrand = rand(100, 10000000);
-            $appendix = microtime(true) . $testrand;
-            $hash_id = md5($user['username'] . $appendix);
-            // User does not exist, insert new user
-            $insertUserStmt->execute([
-              ':realname' => $this->crypt->encrypt($user['realname']),
-              ':displayname' => $this-crypt-encrypt($user['displayname']),
-              ':username' => $this-crypt-encrypt($user['username']), 
-              ':email' => $this-crypt-encrypt($user['email']),
-              ':about_me' => $this-crypt-encrypt($user['about_me']),
-              ':o1' => mb_ord(strtolower($user['username'])),
-              ':o2' => mb_ord(strtolower($user['realname'])),
-              ':o3' => mb_ord(strtolower($user['displayname'])),
-              ':temp_pw' => $temp_pw,
-              ':hash_id' => $hash_id,
-              ':updater_id' => $updater_id,
-              ':userlevel' => $user_level,
-            ]);
-            $userId = $this->db->lastInsertId();
-          } else {
-            // User exists, check fields
-            $fieldsMatch = true;
-            //$existingUser = $this->getUserBaseData($existingUser['id']);
-            foreach ($user as $key => $value) {
-              if ($existingUser[$key] !== $value) {
-                $fieldsMatch = false;
-                break;
-              }
-            }
-
-            if ($fieldsMatch) {
-              // Fields are equal, reuse user_id
-              $warnings[] = "User {$user['username']} already exists with matching fields.";
-              $userId = $existingUser['user_id'];
-            } else {
-              // Fields do not match, flag as error
-              $errors[] = "Error: User {$user['username']} exists with different fields.";
-              continue; // Skip to the next user
+        if (!$existingUser) {
+          $send_email = $user['email'] != '';
+          // if no email is provided, generate a temporary password
+          $temp_pw = $send_email ? "" : $this->generate_pass(8);
+          // generate unique hash for this user
+          $testrand = rand(100, 10000000);
+          $appendix = microtime(true) . $testrand;
+          $hash_id = md5($user['username'] . $appendix);
+          // User does not exist, insert new user
+          $insertUserStmt->execute([
+            ':realname' => $this->crypt->encrypt($user['realname']),
+            ':displayname' => $this->crypt->encrypt($user['displayname']),
+            ':username' => $this->crypt->encrypt($user['username']), 
+            ':email' => $this->crypt->encrypt($user['email']),
+            ':about_me' => $this->crypt->encrypt($user['about_me']),
+            ':o1' => mb_ord(strtolower($user['username'])),
+            ':o2' => mb_ord(strtolower($user['realname'])),
+            ':o3' => mb_ord(strtolower($user['displayname'])),
+            ':temp_pw' => $temp_pw,
+            ':hash_id' => $hash_id,
+            ':updater_id' => $updater_id,
+            ':userlevel' => $user_level,
+          ]);
+          $userId = $this->db->lastInsertId();
+        } else {
+          // User exists, check fields
+          $fieldsMatch = true;
+          foreach ($user as $key => $value) {
+            if ($existingUser[$key] !== $value) {
+              $fieldsMatch = false;
+              break;
             }
           }
 
-          $addedUsers[] = $user;
+          if ($fieldsMatch) {
+            // Fields are equal, reuse user_id
+            $warnings[] = "User {$user['username']} already exists with matching fields.";
+            $userId = $existingUser['id'];
+          } else {
+            // Fields do not match, flag as error
+            $errors[] = "Error: User {$user['username']} exists with different fields.";
+            continue; // Skip to the next user
+          }
         }
 
-        foreach ($room_ids as $room_id) {
-          $upsertRelUserRoomStmt->execute([
-            ':user_id' => $userId,
-            ':room_id' => $room_id,
-            ':updater_id' => $updater_id
-          ]);
+        foreach ($rooms as $room) {
+          $this->roomRepository->insertOrUpdateUserToRoom($room['id'], $userId, $updater_id);
         }
+
+        $addedUsers[] = $user;
       }
 
       if (!empty($errors)) {
         $this->db->rollBackTransaction();
         // return response with errors
+        return $this->responseBuilder->error(1, $errors);
       } else {
         $this->db->commitTransaction();
         // return response with warnings and data
-        return ['status' => 'success', 'data' => $addedUsers];
+        return $this->responseBuilder->success($addedUsers);
       }
     } catch (Exception $e) {
       $this->db->rollBackTransaction();
       error_log("Error parsing CSV: " . $e->getMessage() . "\n" . $e->getTraceAsString());
-      return ['status' => 'error'];
+      return $this->responseBuilder->error(2);
     }
   }
 
