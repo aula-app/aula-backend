@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $headers = array ('From' => $email_from,
     	'To' => $email,
     	'Subject' => 	$email_forgot_password_subject,
-    	'Reply-To' => $email_address,
+    	'Reply-To' => $email_address_support,
     	'MIME-Version' => $mime,
     	'Content-type' => $content);
     
