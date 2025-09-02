@@ -1464,7 +1464,7 @@ class User
       }
 
       // Parse CSV into array of Users
-      $users = array_map(function($line) use ($separator) {
+      $csvUsers = array_map(function($line) use ($separator) {
         $data = str_getcsv($line, $separator);
         return [
           'realname' => trim($data[0]),
@@ -1478,49 +1478,84 @@ class User
       $errors = array();
       $warnings = array();
       $addedUsers = array();
+      $existingUsers = array();
 
       $this->db->beginTransaction("SERIALIZABLE");
-      foreach ($users as $user) {
+      foreach ($csvUsers as $csvUser) {
 
         // Check if user exists with row-level locking
-        $existingUser = $this->getUserForUpdate($user['username'], $user['email']);
+        $existingUser = $this->getUserForUpdate($csvUser['username'], $csvUser['email']);
 
         if (!$existingUser) {
-          $userId = $this->addUserInternal($user, $user_level, $updater_id);
+          $csvUser['id'] = $this->addUserInternal($csvUser, $user_level, $updater_id);
+          $addedUsers[] = $csvUser;
         } else {
-          if ($this->isSameUser($user, $existingUser)) {
+          if ($this->isSameUser($csvUser, $existingUser)) {
             // Fields are equal, reuse user_id
-            $warnings[] = "User {$user['username']} already exists with matching fields.";
-            $userId = $existingUser['id'];
+            $warnings[] = "User {$csvUser['username']} already exists with matching fields.";
+            $csvUser['id'] = $existingUser['id'];
+            $existingUsers[] = $csvUser;
           } else {
             // Fields do not match, flag as error
-            $errors[] = "Error: User {$user['username']} exists with different fields.";
+            $errors[] = "Error: User {$csvUser['username']} exists with different fields.";
             continue; // Skip to the next user
           }
         }
 
         foreach ($rooms as $room) {
-          $this->roomRepository->insertOrUpdateUserToRoom($room['id'], $userId, $updater_id);
+          $this->roomRepository->insertOrUpdateUserToRoom($room['id'], $csvUser['id'], $updater_id);
         }
-
-        $addedUsers[] = $user;
       }
 
       if (!empty($errors)) {
         $this->db->rollBackTransaction();
         return $this->responseBuilder->error(1, $errors);
       } else {
-        $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($users), 0, "", 1);
+        $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($csvUsers), 0, "", 1);
+        $this->addChangePasswordForUpdateAndScheduleSendEmail(array_filter($addedUsers, function ($user) {
         $this->db->commitTransaction();
-        // @TODO: nikola - send emails to all $addedUsers
+          return (bool) preg_match('/^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/', $user['email']);
+        }));
         // @TODO: nikola - return response with warnings and data
-        return $this->responseBuilder->success($addedUsers);
+        return $this->responseBuilder->success(array_merge($addedUsers, $existingUsers));
       }
     } catch (Exception $e) {
       $this->db->rollBackTransaction();
       error_log("Error parsing CSV: " . $e->getMessage() . "\n" . $e->getTraceAsString());
       return $this->responseBuilder->error(2);
     }
+  }
+
+  private function addChangePasswordForUpdateAndScheduleSendEmail(array $users)
+  {
+    // Generate and save all the secrets
+    $numberOfUsers = count($users);
+    $secrets = array();
+    while (count($secrets) < $numberOfUsers) {
+      $secret = bin2hex(random_bytes(32));
+      $secretExists = $this->db->prepareStatement('SELECT user_id FROM au_change_password WHERE secret = :secret FOR UPDATE');
+      $secretExists->execute([':secret' => $secret]);
+      $rows = $secretExists->fetchAll(PDO::FETCH_ASSOC);
+      if (count($rows) == 0) {
+        $secrets[] = $secret;
+      }
+    }
+
+    $values = array();
+    foreach ($users as $user) {
+      $values[] = $user['id'];
+      $values[] = $user['secret'];
+    }
+
+    $placeholders = implode(',', array_fill(0, $numberOfUsers, '(?,?)'));
+    $stmt = $this->db->prepareStatement(<<<EOD
+      INSERT INTO au_change_password (user_id, secret)
+      VALUES {$placeholders}
+      ON DUPLICATE KEY UPDATE created_at = NOW()
+    EOD);
+    $stmt->execute($values);
+
+    // TODO: schedule email sending Command
   }
 
   private function getUserForUpdate($username, $email)
