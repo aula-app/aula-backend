@@ -1544,15 +1544,17 @@ class User
       }
     }
 
+    // Prepare values for bulk insertion
     $values = array();
-    foreach ($users as $user) {
-      $values[] = $user['id'];
-      $values[] = $user['secret'];
+    for ($i = 0; $i < $numberOfUsers; $i++) {
+      $values[] = $users[$i]['id'];
+      $values[] = $secrets[$i];
     }
 
-    $placeholders = implode(',', array_fill(0, $numberOfUsers, '(?,?)'));
+    // Bulk insert change_password rows into database
+    $placeholders = implode(',', array_fill(0, $numberOfUsers, '(?,?,NOW())'));
     $stmt = $this->db->prepareStatement(<<<EOD
-      INSERT INTO au_change_password (user_id, secret)
+      INSERT INTO au_change_password (user_id, secret, created_at)
       VALUES {$placeholders}
       ON DUPLICATE KEY UPDATE created_at = NOW()
     EOD);
