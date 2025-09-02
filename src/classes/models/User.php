@@ -1466,11 +1466,13 @@ class User
       // Parse CSV into array of Users
       $csvUsers = array_map(function($line) use ($separator) {
         $data = str_getcsv($line, $separator);
+        $email = strtolower(trim($data[3]));
+        $isValidEmail = (bool) preg_match('/^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/', $email);
         return [
           'realname' => trim($data[0]),
           'displayname' => trim($data[1]),
           'username' => trim($data[2]),
-          'email' => strtolower(trim($data[3])),
+          'email' => $isValidEmail ? $email : null,
           'about_me' => trim($data[4])
         ];
       }, $csv_lines);
@@ -1515,7 +1517,7 @@ class User
     if (empty($errors)) {
       $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($csvUsers), 0, "", 1);
       $this->addChangePasswordForUpdateAndScheduleSendEmail(array_filter($addedUsers, function ($user) {
-        return (bool) preg_match('/^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/', $user['email']);
+        return $user['email'] != null;
       }));
       $this->db->commitTransaction();
 
@@ -1565,7 +1567,7 @@ class User
 
   private function getUserForUpdate($username, $email)
   {
-    $checkUserStmt = $this->db->prepareStatement("SELECT * FROM {$this->db->au_users_basedata} WHERE username = :username OR email = :email FOR UPDATE");
+    $checkUserStmt = $this->db->prepareStatement("SELECT * FROM {$this->db->au_users_basedata} WHERE username = :username OR (:email IS NOT NULL AND email = :email) FOR UPDATE");
     $checkUserStmt->execute([':username' => $username, ':email' => $email]);
     return $checkUserStmt->fetch(PDO::FETCH_ASSOC);
   }
@@ -1585,7 +1587,7 @@ class User
   private function addUserInternal($user, $user_level, $updater_id): int
   {
     $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
-    $send_email = $user['email'] != '';
+    $send_email = $user['email'] != null;
     // if no email is provided, generate a temporary password
     $temp_pw = $send_email ? "" : $this->generate_pass(8);
     // generate unique hash for this user
@@ -1597,7 +1599,7 @@ class User
       ':realname' => $this->crypt->encrypt($user['realname']),
       ':displayname' => $this->crypt->encrypt($user['displayname']),
       ':username' => $this->crypt->encrypt($user['username']), 
-      ':email' => $this->crypt->encrypt($user['email']),
+      ':email' => $user['email'] != null ? $this->crypt->encrypt($user['email']) : null,
       ':about_me' => $this->crypt->encrypt($user['about_me']),
       ':o1' => mb_ord(strtolower($user['username'])),
       ':o2' => mb_ord(strtolower($user['realname'])),
@@ -2366,7 +2368,7 @@ class User
     $this->db->bind(':realname', $this->crypt->encrypt($realname));
     $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
     $this->db->bind(':username', $this->crypt->encrypt($username));
-    $this->db->bind(':email', $this->crypt->encrypt($email));
+    $this->db->bind(':email', $email == '' ? null : $this->crypt->encrypt($email));
     $this->db->bind(':password', $hash);
     $this->db->bind(':status', $status);
     // generate unique hash for this user
