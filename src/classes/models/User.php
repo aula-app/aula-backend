@@ -1492,12 +1492,12 @@ class User
         } else {
           if ($this->isSameUser($csvUser, $existingUser)) {
             // Fields are equal, reuse user_id
-            $warnings[] = "User {$csvUser['username']} already exists with matching fields.";
+            $warnings[] = $csvUser['username'];
             $csvUser['id'] = $existingUser['id'];
             $existingUsers[] = $csvUser;
           } else {
             // Fields do not match, flag as error
-            $errors[] = "Error: User {$csvUser['username']} exists with different fields.";
+            $errors[] = $csvUser;
             continue; // Skip to the next user
           }
         }
@@ -1506,30 +1506,33 @@ class User
           $this->roomRepository->insertOrUpdateUserToRoom($room['id'], $csvUser['id'], $updater_id);
         }
       }
-
-      if (!empty($errors)) {
-        $this->db->rollBackTransaction();
-        return $this->responseBuilder->error(1, $errors);
-      } else {
-        $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($csvUsers), 0, "", 1);
-        $this->addChangePasswordForUpdateAndScheduleSendEmail(array_filter($addedUsers, function ($user) {
-        $this->db->commitTransaction();
-          return (bool) preg_match('/^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/', $user['email']);
-        }));
-        // @TODO: nikola - return response with warnings and data
-        return $this->responseBuilder->success(array_merge($addedUsers, $existingUsers));
-      }
     } catch (Exception $e) {
       $this->db->rollBackTransaction();
       error_log("Error parsing CSV: " . $e->getMessage() . "\n" . $e->getTraceAsString());
       return $this->responseBuilder->error(2);
     }
+
+    if (empty($errors)) {
+      $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($csvUsers), 0, "", 1);
+      $this->addChangePasswordForUpdateAndScheduleSendEmail(array_filter($addedUsers, function ($user) {
+        return (bool) preg_match('/^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/', $user['email']);
+      }));
+      $this->db->commitTransaction();
+
+      // @TODO: nikola - return response with warnings and data
+      return $this->responseBuilder->success(array_merge($addedUsers, $existingUsers));
+    } else {
+      $this->db->rollBackTransaction();
+      return $this->responseBuilder->error(1, "Usernames or Emails already exist with different data.", errors: $errors);
+    }
   }
 
   private function addChangePasswordForUpdateAndScheduleSendEmail(array $users)
   {
-    // Generate and save all the secrets
     $numberOfUsers = count($users);
+    if ($numberOfUsers == 0) return ;
+
+    // Generate all the secrets
     $secrets = array();
     while (count($secrets) < $numberOfUsers) {
       $secret = bin2hex(random_bytes(32));

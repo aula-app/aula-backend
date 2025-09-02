@@ -7,7 +7,7 @@
 class ResponseBuilder
 {
   /**
-   * @return array<string,mixed>
+   * @return array<string,mixed> associative array representing successful response
    */
   public function success(mixed $domainEntity): array
   {
@@ -19,18 +19,17 @@ class ResponseBuilder
       'count' => is_array($domainEntity) ? count($domainEntity) : ((int) !(is_null($domainEntity)))
     ];
   }
-
   /**
-   * @return array<string,mixed>
+   * @return array<string,mixed> associative array representing error response
    */
-  public function error(int $errorCode = 1, string|array $errorDescription = "Something went wrong"): array
+  public function error(int $errorCode = 1, string $errorDescription = "Something went wrong", array|null $errors = null): array
   {
-    $err = is_array($errorDescription) ? json_encode($errorDescription) : $errorDescription;
     return [
       'success' => false,
       'error_code' => $errorCode,
-      'error' => $errorCode != 1 ? null : $err,
-      'data' => $errorCode == 1 ? null : $err,
+      'error' => $errorCode != 1 ? null : $errorDescription,
+      'errors' => $errors,
+      'data' => $errorCode == 1 ? null : $errors,
       'count' => 0
     ];
   }
