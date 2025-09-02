@@ -32,13 +32,15 @@ class RoomRepository
         return (bool) preg_match('/^[a-f0-9]{32}$/', $room);
       })) != count($roomHashIds)
     ) {
-      error_log("getRoomsByHashIds Room hash IDs has entries in bad format: " . json_encode($roomHashIds));
-      throw new RuntimeException();
+      error_log("getRoomsByHashIds Input array of Room hash IDs has entries in bad format: " . json_encode($roomHashIds));
+      throw new RuntimeException(/* no info shared on suspicious client activity */);
     }
 
-    $query = "SELECT * FROM {$this->db->au_rooms} WHERE hash_id IN ('" .  join("','", $roomHashIds) . "')";
-    $this->db->query($query);
-    return $this->db->resultSet();
+    $placeholders = implode(',', array_fill(0, count($roomHashIds), '?'));
+    $query = "SELECT * FROM {$this->db->au_rooms} WHERE hash_id IN ({$placeholders})";
+    $stmt = $this->db->prepareStatement($query);
+    $stmt->execute($roomHashIds);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
   /**
