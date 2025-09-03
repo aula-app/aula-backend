@@ -3,6 +3,17 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+## 1.4.3
+
+- fix(csv): import CSV of users and assign them to multiple Rooms
+
+## 1.4.2
+
+- fix(email): change Reply-To to support email instead of automated email sender address
+
+# 1.4
+
+- fix(security): don't leak exceptions to the API responses, instead log them as errors
 - ref: email templates using named parameters https://github.com/aula-app/aula-backend/pull/243
 
 # 1.3

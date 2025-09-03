@@ -433,6 +433,11 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "admin"
         ]
       ],
+      "addAllCSV" => [
+        "open_roles" => [
+          "admin"
+        ]
+      ],
 
       "getDelegationStatus" => [
         "roles" => ["all"],

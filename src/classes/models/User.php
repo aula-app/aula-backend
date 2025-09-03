@@ -4,6 +4,10 @@
 
 require_once (__DIR__ . '/../../../config/base_config.php');
 require_once "Mail.php";
+global $baseHelperDir;
+global $baseClassDir;
+require_once ($baseHelperDir . 'ResponseBuilder.php');
+require_once ($baseClassDir . 'repositories/RoomRepository.php');
 
 if ($allowed_include == 1) {
 
@@ -18,6 +22,8 @@ class User
   # User class provides a collection of methods dealing with everything around the user entity like adding or deleting etc.
 
   private $db;
+  private $responseBuilder;
+  private $roomRepository;
 
   public function __construct($db, $crypt, $syslog)
   {
@@ -26,6 +32,8 @@ class User
     $this->crypt = $crypt;
     $this->syslog = $syslog;
     $this->converters = new Converters($db); // load converters
+    $this->roomRepository = new RoomRepository($db);
+    $this->responseBuilder = new ResponseBuilder();
 
     global $email_host;
     global $email_port;
@@ -1428,6 +1436,191 @@ class User
     return $returnvalue;
   } # end function
 
+  public function addAllCSV($csv, $room_ids, $user_level = 20, $updater_id = 0, $separator = ";")
+  {
+    /*
+      Parses CSV and adds all users to all rooms. If a User already exists with the same fields, its user_id is reused. If a User exists with some of the fields from CSV not matching the ones in the database, this is an error and the whole operation will not be committed.
+     */
+
+    try {
+      $rooms = $this->roomRepository->getRoomsByHashIds($room_ids);
+      if (count($rooms) != count($room_ids)) {
+        return $this->responseBuilder->error(
+          errorDescription: "Validation of Room ids failed. Make sure all Rooms are existing."
+        );
+      }
+    } catch (Exception $exception) {
+      return $this->responseBuilder->error(errorDescription: $exception->getMessage());
+    }
+
+    try {
+      $csv_lines = explode("\n", $csv);
+      if (
+        empty($csv_lines)
+          || !str_contains($csv, $separator)
+          || (count($csv_lines) == 1 && $csv_lines[0] == "realname;displayname;username;email;about_me")
+      ) {
+        return $this->responseBuilder->error(errorDescription: "CSV file is in bad format.");
+      }
+
+      // Parse CSV into array of Users
+      $csvUsers = array_map(function($line) use ($separator) {
+        $data = str_getcsv($line, $separator);
+        $email = strtolower(trim($data[3]));
+        $isValidEmail = (bool) preg_match('/^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/', $email);
+        return [
+          'realname' => trim($data[0]),
+          'displayname' => trim($data[1]),
+          'username' => trim($data[2]),
+          'email' => $isValidEmail ? $email : null,
+          'about_me' => trim($data[4])
+        ];
+      }, $csv_lines);
+
+      $errors = array();
+      $warnings = array();
+      $addedUsers = array();
+      $existingUsers = array();
+      $lineNumber = 0;
+
+      $this->db->beginTransaction("SERIALIZABLE");
+      foreach ($csvUsers as $csvUser) {
+
+        // Check if user exists with row-level locking
+        $existingUser = $this->getUserForUpdate($csvUser['username'], $csvUser['email']);
+
+        if (!$existingUser) {
+          $csvUser['id'] = $this->addUserInternal($csvUser, $user_level, $updater_id);
+          $addedUsers[] = $csvUser;
+        } else {
+          if ($this->isSameUser($csvUser, $existingUser)) {
+            // Fields are equal, reuse user_id
+            $warnings[] = $csvUser['username'];
+            $csvUser['id'] = $existingUser['id'];
+            $existingUsers[] = $csvUser;
+          } else {
+            // Fields do not match, flag as error
+            $collisionKeys = array_filter(['username', 'email'], function ($key) use ($csvUser, $existingUser) {
+              return $csvUser[$key] === $existingUser[$key] && !is_null($csvUser[$key]);
+            });
+            $errors[] = [ 
+              'collision_keys' => $collisionKeys,
+              'line_number' => $lineNumber,
+            ];
+            $lineNumber++;
+            continue; // Skip to the next user
+          }
+        }
+
+        foreach ($rooms as $room) {
+          $this->roomRepository->insertOrUpdateUserToRoom($room['id'], $csvUser['id'], $updater_id);
+        }
+        $lineNumber++;
+      }
+    } catch (Exception $e) {
+      $this->db->rollBackTransaction();
+      error_log("Error parsing CSV: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+      return $this->responseBuilder->error(2);
+    }
+
+    if (empty($errors)) {
+      $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($csvUsers), 0, "", 1);
+      $this->addChangePasswordForUpdateAndScheduleSendEmail(array_filter($addedUsers, function ($user) {
+        return $user['email'] != null;
+      }));
+      $this->db->commitTransaction();
+
+      // @TODO: nikola - return response with warnings and data
+      return $this->responseBuilder->success(array_merge($addedUsers, $existingUsers));
+    } else {
+      $this->db->rollBackTransaction();
+      return $this->responseBuilder->error(1, "Usernames or Emails already exist with different data.", errors: $errors);
+    }
+  }
+
+  private function addChangePasswordForUpdateAndScheduleSendEmail(array $users)
+  {
+    $numberOfUsers = count($users);
+    if ($numberOfUsers == 0) return ;
+
+    // Generate all the secrets
+    $secrets = array();
+    while (count($secrets) < $numberOfUsers) {
+      $secret = bin2hex(random_bytes(32));
+      $secretExists = $this->db->prepareStatement('SELECT user_id FROM au_change_password WHERE secret = :secret FOR UPDATE');
+      $secretExists->execute([':secret' => $secret]);
+      $rows = $secretExists->fetchAll(PDO::FETCH_ASSOC);
+      if (count($rows) == 0) {
+        $secrets[] = $secret;
+      }
+    }
+
+    // Prepare values for bulk insertion
+    $values = array();
+    for ($i = 0; $i < $numberOfUsers; $i++) {
+      $values[] = $users[$i]['id'];
+      $values[] = $secrets[$i];
+    }
+
+    // Bulk insert change_password rows into database
+    $placeholders = implode(',', array_fill(0, $numberOfUsers, '(?,?,NOW())'));
+    $stmt = $this->db->prepareStatement(<<<EOD
+      INSERT INTO au_change_password (user_id, secret, created_at)
+      VALUES {$placeholders}
+      ON DUPLICATE KEY UPDATE created_at = NOW()
+    EOD);
+    $stmt->execute($values);
+
+    // TODO: schedule email sending Command
+  }
+
+  private function getUserForUpdate($username, $email)
+  {
+    $checkUserStmt = $this->db->prepareStatement("SELECT * FROM {$this->db->au_users_basedata} WHERE username = :username OR (:email IS NOT NULL AND email = :email) FOR UPDATE");
+    $checkUserStmt->execute([':username' => $username, ':email' => $email]);
+    return $checkUserStmt->fetch(PDO::FETCH_ASSOC);
+  }
+
+  private function isSameUser($user, $existingUser): bool
+  {
+    $fieldsMatch = true;
+    foreach ($user as $key => $value) {
+      if ($existingUser[$key] !== $value) {
+        $fieldsMatch = false;
+        break;
+      }
+    }
+    return $fieldsMatch;
+  }
+
+  private function addUserInternal($user, $user_level, $updater_id): int
+  {
+    $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
+    $send_email = $user['email'] != null;
+    // if no email is provided, generate a temporary password
+    $temp_pw = $send_email ? "" : $this->generate_pass(8);
+    // generate unique hash for this user
+    $testrand = rand(100, 10000000);
+    $appendix = microtime(true) . $testrand;
+    $hash_id = md5($user['username'] . $appendix);
+    // User does not exist, insert new user
+    $insertUserStmt->execute([
+      ':realname' => $this->crypt->encrypt($user['realname']),
+      ':displayname' => $this->crypt->encrypt($user['displayname']),
+      ':username' => $this->crypt->encrypt($user['username']), 
+      ':email' => $user['email'] != null ? $this->crypt->encrypt($user['email']) : null,
+      ':about_me' => $this->crypt->encrypt($user['about_me']),
+      ':o1' => mb_ord(strtolower($user['username'])),
+      ':o2' => mb_ord(strtolower($user['realname'])),
+      ':o3' => mb_ord(strtolower($user['displayname'])),
+      ':temp_pw' => $temp_pw,
+      ':hash_id' => $hash_id,
+      ':updater_id' => $updater_id,
+      ':userlevel' => $user_level,
+    ]);
+    return $this->db->lastInsertId();
+  }
+
   public function addUserToGroup($user_id, $group_id, $updater_id, $status = 1)
   {
     /* adds a user to a group, accepts user_id (by hash or id) and group id (by hash or id)
@@ -2184,7 +2377,7 @@ class User
     $this->db->bind(':realname', $this->crypt->encrypt($realname));
     $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
     $this->db->bind(':username', $this->crypt->encrypt($username));
-    $this->db->bind(':email', $this->crypt->encrypt($email));
+    $this->db->bind(':email', $email == '' ? null : $this->crypt->encrypt($email));
     $this->db->bind(':password', $hash);
     $this->db->bind(':status', $status);
     // generate unique hash for this user
@@ -2317,6 +2510,10 @@ class User
       $returnvalue['count'] = 0; // returned count of datasets
       return $returnvalue;
     }
+
+    /* if ($temp_user['data'].email != $email && not validated) { */
+    /*   send email to validate */
+    /* } */
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET userlevel = :userlevel, realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id, status= :status WHERE id= :userid');
     // bind all VALUES
