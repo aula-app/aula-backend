@@ -2447,20 +2447,16 @@ class User
         $content = "text/html; charset=utf-8";
         $mime = "1.0";
 
-        global $email_host;
-        global $email_port;
-        global $email_username;
-        global $email_password;
         global $email_from;
-        global $email_address;
         global $email_creation_subject;
+        global $email_address_support;
         global $email_creation_body;
 
         $headers = array(
           'From' => $email_from,
           'To' => $email,
           'Subject' => $email_creation_subject,
-          'Reply-To' => $email_address,
+          'Reply-To' => $email_address_support,
           'MIME-Version' => $mime,
           'Content-type' => $content
         );
