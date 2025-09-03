@@ -1481,6 +1481,7 @@ class User
       $warnings = array();
       $addedUsers = array();
       $existingUsers = array();
+      $lineNumber = 0;
 
       $this->db->beginTransaction("SERIALIZABLE");
       foreach ($csvUsers as $csvUser) {
@@ -1499,7 +1500,14 @@ class User
             $existingUsers[] = $csvUser;
           } else {
             // Fields do not match, flag as error
-            $errors[] = $csvUser;
+            $collisionKeys = array_filter(['username', 'email'], function ($key) use ($csvUser, $existingUser) {
+              return $csvUser[$key] === $existingUser[$key] && !is_null($csvUser[$key]);
+            });
+            $errors[] = [ 
+              'collision_keys' => $collisionKeys,
+              'line_number' => $lineNumber,
+            ];
+            $lineNumber++;
             continue; // Skip to the next user
           }
         }
@@ -1507,6 +1515,7 @@ class User
         foreach ($rooms as $room) {
           $this->roomRepository->insertOrUpdateUserToRoom($room['id'], $csvUser['id'], $updater_id);
         }
+        $lineNumber++;
       }
     } catch (Exception $e) {
       $this->db->rollBackTransaction();
