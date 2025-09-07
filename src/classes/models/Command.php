@@ -302,21 +302,17 @@ class Command
     }
   }// end function
 
-  public function setCommandStatus($cmd_id, $status, $updater_id = 0)
+  public function setCommandStatus(int $id, int $status, $updater_id = 0)
   {
     /* edits a command, accepts the above parameters, all parameters are mandatory
      status = status of command (0=not exectued yet, 1=successfully executed, 2 = execution error)
      updater_id is the id of the user that does the update (i.E. admin )
     */
-    $cmd_id = intval($cmd_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    $status = intval($status);
-    #
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_commands . ' SET active= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :command_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_commands . ' SET status= :status, last_update= NOW(), updater_id= :updater_id WHERE id= :command_id');
     // bind all VALUES
     $this->db->bind(':status', $status);
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-    $this->db->bind(':command_id', $cmd_id); // command that is updated
+    $this->db->bind(':command_id', $id); // command that is updated
 
     $err = false; // set error variable to false
     $count_datasets = 0; // init row count
@@ -325,12 +321,11 @@ class Command
       $action = $this->db->execute(); // do the query
 
     } catch (Exception $e) {
-
       $err = true;
     }
     if (!$err) {
       $count_datasets = intval($this->db->rowCount());
-      $this->syslog->addSystemEvent(0, "Command status changed for command " . $cmd_id . " to " . $status . " by " . $updater_id, 0, "", 1);
+      $this->syslog->addSystemEvent(0, "Command status changed for command " . $id . " to " . $status . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
       $returnvalue['data'] = $count_datasets; // returned data
