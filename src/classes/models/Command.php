@@ -14,6 +14,7 @@ class Command
 {
 
   private $db;
+  private $responseBuilder;
   # deals with everythin concering system commands
 
   public function __construct($db, $crypt, $syslog)
@@ -24,6 +25,7 @@ class Command
     //$this->syslog = new Systemlog ($db);
     $this->syslog = $syslog;
     $this->converters = new Converters($db);
+    $this->responseBuilder = new ResponseBuilder();
   }// end function
 
   protected function buildCacheHash($key)
@@ -74,57 +76,19 @@ class Command
     }
   }// end function
 
-  public function getDueCommands()
+  public function getDueCommands(): mixed
   {
-    /* returns commands list (associative array) with commands that are due right now 
-
-    */
-
-    // init return array
-    $returnvalue['success'] = false; // success (true) or failure (false)
-    $returnvalue['errorcode'] = 0; // error code
-    $returnvalue['data'] = false; // the actual data
-    $returnvalue['count_data'] = 0; // number of datasets
-
-    $date_now = date('Y-m-d H:i:s');
-
-    $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_commands . ' WHERE active = 1 AND date_start <= :date_now');
-
-    $this->db->bind(':date_now', $date_now); // bind date
-
-    $err = false;
+    /**
+     * @return mixed commands list (associative array) with commands that are due right now
+     */
     try {
-      $commands = $this->db->resultSet();
-
-
+      $this->db->query('SELECT * FROM au_commands WHERE active = 1 AND date_start <= NOW()');
+      return $this->responseBuilder->success($this->db->resultSet());
     } catch (Exception $e) {
-      $err = true;
-      $returnvalue['success'] = false; // set return value to false
-      $returnvalue['error_code'] = 1; // database error while executing query
-      $returnvalue['data'] = false; // returned data is false
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
+      error_log("getDueCommands ERROR {$e->getMessage()}");
+      return $this->responseBuilder->error();
     }
-    $count_datasets = count($commands);
-
-    if ($count_datasets < 1) {
-      $returnvalue['success'] = false; // set success value
-      $returnvalue['error_code'] = 2; // no data found
-      $returnvalue['data'] = false; // returned data is false
-      $returnvalue['count'] = $count_datasets; // returned count of datasets
-
-      return $returnvalue; // nothing found, return 0 code
-    } else {
-      $returnvalue['success'] = true; // set return value to false
-      $returnvalue['error_code'] = 0; // no error code
-      $returnvalue['data'] = $commands; // returned data
-      $returnvalue['count'] = $count_datasets; // returned count of datasets
-
-      return $returnvalue; // return an array (associative) with all the data
-    }
-  }// end function
+  }
 
   public function getCommands($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $active = 1, $updater_id = 0, $extra_where = "", $last_update = 0)
   {
