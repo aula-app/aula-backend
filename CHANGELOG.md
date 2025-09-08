@@ -5,11 +5,12 @@
 
 ## 1.4.3
 
-- fix(csv): import CSV of users and assign them to multiple Rooms
+- ref(cron): system of scheduling commands is refactored for better extensibility
 
 ## 1.4.2
 
 - fix(email): change Reply-To to support email instead of automated email sender address
+- fix(csv): import CSV of users and assign them to multiple Rooms
 
 # 1.4
 
