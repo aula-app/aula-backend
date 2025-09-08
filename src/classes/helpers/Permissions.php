@@ -202,27 +202,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         "open_roles" => ["admin", "tech_admin"]
       ],
 
-      "getCommandBaseData" => [
-        "open_roles" => ["admin", "tech_admin"]
-      ],
-
-      "getDueCommands" => [
-        "open_roles" => ["admin", "tech_admin"]
-      ],
-
       "addCommand" => [
-        "open_roles" => ["admin", "tech_admin"]
-      ],
-
-      "setActiveStatus" => [
-        "open_roles" => ["admin", "tech_admin"]
-      ],
-
-      "setCommandStatus" => [
-        "open_roles" => ["admin", "tech_admin"]
-      ],
-
-      "setCommandDate" => [
         "open_roles" => ["admin", "tech_admin"]
       ],
     ],
