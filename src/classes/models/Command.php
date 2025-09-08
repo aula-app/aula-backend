@@ -8,7 +8,9 @@ if ($allowed_include == 1) {
   exit;
 }
 
-
+require_once(__DIR__ . '/../../../config/base_config.php');
+global $baseHelperDir;
+require_once($baseHelperDir . 'ResponseBuilder.php');
 
 class Command
 {
