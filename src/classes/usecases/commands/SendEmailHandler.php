@@ -5,6 +5,8 @@ require_once "Mail.php";
 
 class SendEmailHandler extends CommandHandler
 {
+  public const CMD_ID = 11;
+
   protected $smtp;
 
   public static function createWith($db, $crypt, $syslog): SendEmailHandler
@@ -70,8 +72,11 @@ class SendEmailHandler extends CommandHandler
     $email_body = str_replace("<CODE>", $this->db->code, $email_body);
 
     $mail = $this->smtp->send($email, $headers, $email_body);
-    echo json_encode($mail);
-    return (new ResponseBuilder())->success($mail);
+    if ($mail != true && (bool) (preg_match('/fail|err|reject|refuse/', $mail->message))) {
+      return (new ResponseBuilder())->error(1, $mail);
+    } else {
+      return (new ResponseBuilder())->success($mail);
+    }
   }
 
   protected function isValid(mixed $command): bool

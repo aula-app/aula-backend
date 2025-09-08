@@ -13,7 +13,8 @@ class CommandDispatcher
   public function __construct($db, $crypt, $syslog)
   {
     $this->commandHandlers = [
-      InstanceOnlineModeHandler::createWith($db, $crypt, $syslog)
+      InstanceOnlineModeHandler::CMD_ID => InstanceOnlineModeHandler::createWith($db, $crypt, $syslog),
+      SendEmailHandler::CMD_ID => SendEmailHandler::createWith($db, $crypt, $syslog)
     ];
   }
 

@@ -1467,7 +1467,7 @@ class User
       $csvUsers = array_map(function($line) use ($separator) {
         $data = str_getcsv($line, $separator);
         $email = strtolower(trim($data[3]));
-        $isValidEmail = (bool) preg_match('/^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/', $email);
+        $isValidEmail = (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
         return [
           'realname' => trim($data[0]),
           'displayname' => trim($data[1]),
@@ -1527,7 +1527,7 @@ class User
       $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($csvUsers), 0, "", 1);
       $this->addChangePasswordForUpdateAndScheduleSendEmail(array_filter($addedUsers, function ($user) {
         return $user['email'] != null;
-      }));
+      }), $updater_id);
       $this->db->commitTransaction();
 
       // @TODO: nikola - return response with warnings and data
@@ -1538,7 +1538,7 @@ class User
     }
   }
 
-  private function addChangePasswordForUpdateAndScheduleSendEmail(array $users)
+  private function addChangePasswordForUpdateAndScheduleSendEmail(array $users, $updater_id = 0)
   {
     $numberOfUsers = count($users);
     if ($numberOfUsers == 0) return ;
@@ -1571,7 +1571,26 @@ class User
     EOD);
     $stmt->execute($values);
 
-    // TODO: schedule email sending Command
+    // Prepare values for bulk insertion
+    $values = array();
+    for ($i = 0; $i < $numberOfUsers; $i++) {
+      $values[] = "userCreated;{$users[$i]['email']};{$users[$i]['realname']};{$users[$i]['username']};{$secrets[$i]}";
+      $values[] = $users[$i]['id'];
+      $values[] = $updater_id;
+      $values[] = $updater_id;
+    }
+
+    // Bulk insert scheduled commands into database
+    // cmd_id = 11 (1 - user, 1 - sendEmail)
+    $placeholders = implode(',', array_fill(0, $numberOfUsers, '(11,"sendEmail",?,NOW(),1,0,?,?,NOW(),NOW(),?)'));
+    $stmt = $this->db->prepareStatement(<<<EOD
+      INSERT INTO au_commands
+        (cmd_id, command, parameters, date_start, active, status, target_id, creator_id, created, last_update, updater_id)
+      VALUES
+        {$placeholders}
+      ON DUPLICATE KEY UPDATE last_update = NOW()
+    EOD);
+    $stmt->execute($values);
   }
 
   private function getUserForUpdate($username, $email)
@@ -2347,6 +2366,9 @@ class User
     $updater_id = intval($updater_id);
     $status = intval($status);
     $userlevel = intval($userlevel);
+
+    // @TODO: validate input, for example Commands can fail if username or realname contains ";" which is used as
+    //   a separator in Command parameters, but also email can be checked against regex
 
     // check if user name is still available
     $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
