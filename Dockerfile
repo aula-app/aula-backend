@@ -35,8 +35,6 @@ RUN a2enmod rewrite expires headers && \
 # This envvar should be injected at runtime, localhost is the fallback value
 ENV APACHE_SERVER_NAME="localhost"
 
-RUN apt-get update && apt-get -y install cron
-
 # Enable crontab
 COPY crontab ./aula-scheduled-commands
 COPY cron.php ./
