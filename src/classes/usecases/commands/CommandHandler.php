@@ -42,6 +42,7 @@ abstract class CommandHandler
         $this->commandModel->setCommandStatus($id, CommandStatus::SUCCESS->value);
         $this->commandModel->setActiveStatus($id, 0);
       } else {
+        error_log("Command execution FAILED " . json_encode($returnValue));
         $this->commandModel->setCommandStatus($id, CommandStatus::EXECUTION_FAILURE->value);
         $this->commandModel->setActiveStatus($id, 0);
       }

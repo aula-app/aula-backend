@@ -6,6 +6,7 @@
 ## 1.4.3
 
 - ref(cron): system of scheduling commands is refactored for better extensibility
+- fix(cron): for CSV imported users, welcome emails should be sent
 
 ## 1.4.2
 

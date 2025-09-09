@@ -2,6 +2,8 @@
 
 class InstanceOnlineModeHandler extends CommandHandler
 {
+  public const CMD_ID = 0;
+
   protected Settings $settingsModel;
 
   public static function createWith($db, $crypt, $syslog): InstanceOnlineModeHandler
