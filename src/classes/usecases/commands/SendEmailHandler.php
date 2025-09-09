@@ -5,8 +5,6 @@ require_once "Mail.php";
 
 class SendEmailHandler extends CommandHandler
 {
-  public const CMD_ID = 11;
-
   protected $smtp;
 
   public static function createWith($db, $crypt, $syslog): SendEmailHandler
