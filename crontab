@@ -1,3 +1,3 @@
 # must be ended with a new line "LF" (Unix) and not "CRLF" (Windows)
-* * * * * php "$PROJECT_PATH/cron.php" >> /var/log/cron.log 2>&1
+* * * * * CRON=running php "$PROJECT_PATH/cron.php" >> /var/log/cron.log 2>&1
 # An empty line is required at the end of this file for a valid cron file.
