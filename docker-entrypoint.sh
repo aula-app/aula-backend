@@ -23,6 +23,9 @@ if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
   exit 1;
 fi
 
+env >> /etc/environment
+service cron start
+
 echo "[✓] Runtime environment prepared. Starting apache2 server."
 # Start the apache server in foreground (so Docker doesn't exit)
 exec /usr/sbin/apache2ctl -D FOREGROUND

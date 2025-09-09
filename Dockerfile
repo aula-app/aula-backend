@@ -14,7 +14,7 @@ USER root
 
 # Utilities, Apache, PHP, and supplementary programs which the application requires
 RUN set -eux; apt update -q && \
-  apt install -yqq curl gosu \
+  apt install -yqq curl cron gosu \
     apache2 libapache2-mod-php php8.3 \
     memcached libmemcached-tools php-cli php-memcached php8.3-memcached \
     php-mysql default-mysql-client \
@@ -34,6 +34,14 @@ RUN a2enmod rewrite expires headers && \
   echo 'ServerName ${APACHE_SERVER_NAME}' | tee /etc/apache2/conf-available/fqdn.conf && a2enconf fqdn
 # This envvar should be injected at runtime, localhost is the fallback value
 ENV APACHE_SERVER_NAME="localhost"
+
+# Enable crontab
+COPY crontab ./aula-scheduled-commands
+COPY cron.php ./
+RUN chmod 0744 ./cron.php && \
+  chmod 0644 ./aula-scheduled-commands && \
+  crontab ./aula-scheduled-commands && \
+  touch /var/log/cron.log
 
 # These are safe fallbacks
 COPY ./apache2-aula-default.conf /etc/apache2/sites-enabled/000-default.conf
