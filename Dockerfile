@@ -40,8 +40,7 @@ COPY crontab ./aula-scheduled-commands
 COPY cron.php ./
 RUN chmod 0744 ./cron.php && \
   chmod 0644 ./aula-scheduled-commands && \
-  crontab ./aula-scheduled-commands && \
-  touch /var/log/cron.log
+  crontab ./aula-scheduled-commands
 
 # These are safe fallbacks
 COPY ./apache2-aula-default.conf /etc/apache2/sites-enabled/000-default.conf

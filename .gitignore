@@ -23,3 +23,5 @@ docker-compose.override.yml
 .env
 
 node_modules/
+*.cache
+*.log

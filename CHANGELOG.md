@@ -3,6 +3,9 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+- fix(cron): redirect logs to docker
+- fix(cron): run every 15 minutes (set instance online status, sending out emails)
+
 ## 1.4.3
 
 - ref(cron): system of scheduling commands is refactored for better extensibility
