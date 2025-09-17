@@ -1552,6 +1552,7 @@ class User
       } else {
         $src = current(array_filter([$user['displayname'], $user['realname']]));
         if ($src == null) {
+          error_log("Cannot derive username from other data " . json_encode($user));
           throw new RuntimeException("Username is missing and cannot be derived from other data");
         }
         $arr = explode(' ', $src);
@@ -1646,7 +1647,7 @@ class User
 
   private function addUserInternal($user, $user_level, $updater_id): int
   {
-    $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
+    $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
     $send_email = $user['email'] != null;
     // if no email is provided, generate a temporary password
     $temp_pw = $send_email ? "" : $this->generate_pass(8);
@@ -1661,9 +1662,6 @@ class User
       ':username' => $this->crypt->encrypt($user['username']), 
       ':email' => $user['email'] != null ? $this->crypt->encrypt($user['email']) : null,
       ':about_me' => $this->crypt->encrypt($user['about_me']),
-      ':o1' => mb_ord(strtolower($user['username'])),
-      ':o2' => mb_ord(strtolower($user['realname'])),
-      ':o3' => mb_ord(strtolower($user['displayname'])),
       ':temp_pw' => $temp_pw,
       ':hash_id' => $hash_id,
       ':updater_id' => $updater_id,
