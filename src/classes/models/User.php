@@ -1485,6 +1485,7 @@ class User
 
       $this->db->beginTransaction("SERIALIZABLE");
       foreach ($csvUsers as $csvUser) {
+        $csvUser = $this->validateOrDeriveUsername($csvUser);
 
         // Check if user exists with row-level locking
         $existingUser = $this->getUserForUpdate($csvUser['username'], $csvUser['email']);
@@ -1540,6 +1541,35 @@ class User
     }
   }
 
+  private function validateOrDeriveUsername(array $user)
+  {
+    /* If username is present, return source object.
+     * Else, try extracting the username from email (part before @).
+     * Else, try extracting it from displayname or realname (first and the last name).
+     * Else, throw an exception */
+    if ($user['username'] === null || strlen($user['username']) == 0) {
+      $newUser = [...$user];
+      if ($user['email'] != null) {
+        $newUser['username'] = strtolower(explode("@", $user['email'])[0]);
+      } else {
+        $src = current(array_filter([$user['displayname'], $user['realname']]));
+        if ($src == null) {
+          error_log("Cannot derive username from other data " . json_encode($user));
+          throw new RuntimeException("Username is missing and cannot be derived from other data");
+        }
+        $arr = explode(' ', $src);
+        if (count($arr) > 1) {
+          $newUser['username'] = strtolower(mb_strimwidth($arr[0], 0, 10) . '.' . mb_strimwidth(end($arr), 0, 10));
+        } else {
+          $newUser['username'] = strtolower(mb_strimwidth($arr[0], 0, 16));;
+        }
+      }
+      return $newUser;
+    }
+
+    return $user;
+  }
+
   private function addChangePasswordForUpdateAndScheduleSendEmail(array $users, $updater_id = 0)
   {
     $numberOfUsers = count($users);
@@ -1576,6 +1606,9 @@ class User
     // Prepare values for bulk insertion
     $values = array();
     for ($i = 0; $i < $numberOfUsers; $i++) {
+      if (!(bool) filter_var($users[$i]['email'], FILTER_VALIDATE_EMAIL)) {
+        throw new RuntimeException("User's email field has invalid value");
+      }
       $values[] = "userCreated;{$users[$i]['email']};{$users[$i]['realname']};{$users[$i]['username']};{$secrets[$i]}";
       $values[] = $users[$i]['id'];
       $values[] = $updater_id;
@@ -1616,7 +1649,7 @@ class User
 
   private function addUserInternal($user, $user_level, $updater_id): int
   {
-    $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, o1, o2, o3, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :o1, :o2, :o3, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
+    $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
     $send_email = $user['email'] != null;
     // if no email is provided, generate a temporary password
     $temp_pw = $send_email ? "" : $this->generate_pass(8);
@@ -1631,9 +1664,6 @@ class User
       ':username' => $this->crypt->encrypt($user['username']), 
       ':email' => $user['email'] != null ? $this->crypt->encrypt($user['email']) : null,
       ':about_me' => $this->crypt->encrypt($user['about_me']),
-      ':o1' => mb_ord(strtolower($user['username'])),
-      ':o2' => mb_ord(strtolower($user['realname'])),
-      ':o3' => mb_ord(strtolower($user['displayname'])),
       ':temp_pw' => $temp_pw,
       ':hash_id' => $hash_id,
       ':updater_id' => $updater_id,
