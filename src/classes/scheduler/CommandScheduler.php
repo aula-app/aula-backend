@@ -59,8 +59,12 @@ class CommandScheduler
   {
     global $instances;
     foreach ($instances as $code => $instance) {
-      $forInstance = new CommandSchedulerForInstance($code);
-      $forInstance->dispatchAllDueCommands();
+      try {
+        $forInstance = new CommandSchedulerForInstance($code);
+        $forInstance->dispatchAllDueCommands();
+      } catch (Exception $exc) {
+        error_log("[{$code}] ERROR Dispatching all due commands for a single instance. " . $exc->getMessage());
+      }
     }
   }
 }
