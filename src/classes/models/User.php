@@ -1514,7 +1514,9 @@ class User
 
         foreach ($rooms as $room) {
           $this->roomRepository->insertOrUpdateUserToRoom($room['id'], $csvUser['id'], $updater_id);
+          $this->addUserRole($csvUser['id'], $user_level, $room['id']);
         }
+        $this->addUserToStandardRoom($csvUser['id']);
         $lineNumber++;
       }
     } catch (Exception $e) {
