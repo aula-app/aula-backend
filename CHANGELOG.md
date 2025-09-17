@@ -3,6 +3,17 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+- feat(cron): deactivate bad commands
+- chore(cron): run scheduled commands every minute
+
+## 1.4.5
+
+- fix(csv): username empty in CSV mitigations (smart naming or fail CSV upload)
+- fix(csv): add user to standard room & other rooms (properly)
+- fix(commands): exception in one instance can stop processing others
+
+## 1.4.4
+
 - fix(cron): redirect logs to docker
 - fix(cron): run every 15 minutes (set instance online status, sending out emails)
 
