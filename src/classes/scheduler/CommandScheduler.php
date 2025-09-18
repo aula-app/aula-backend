@@ -28,7 +28,7 @@ class CommandSchedulerForInstance
     foreach ($commands as $command) {
       try {
         $this->commandDispatcherForInstance->dispatch($command);
-        echo ("[{$this->code}] Success dispatching command id={$command['id']}\n");
+        // trigger_error("[{$this->code}] Success dispatching command id={$command['id']}\n", E_USER_NOTICE);
       } catch (Exception $exc) {
         error_log("[{$this->code}] ERROR Dispatching/Executing command ({$command['id']}): " . $exc->getMessage());
       }
@@ -37,7 +37,6 @@ class CommandSchedulerForInstance
 
   protected function getDueCommands()
   {
-    echo ("[{$this->code}] Getting due commands...\n");
     $dueCommandsResult = $this->commandModelForInstance->getDueCommands();
     if ($dueCommandsResult === null || $dueCommandsResult['error_code'] != 0) {
       error_log("[{$this->code}] ERROR Due commands: " . json_encode($dueCommandsResult));
@@ -45,11 +44,11 @@ class CommandSchedulerForInstance
     }
 
     $commands = $dueCommandsResult['data'];
-    echo ("[{$this->code}] Due commands: " . array_reduce($commands, function ($acc, $cmd) {
-      $acc .= "{'id':'{$cmd['id']}','cmd_id':'{$cmd['cmd_id']}'} ";
-      return $acc;
-    }, "") . "\n");
-    return $dueCommandsResult['data'];
+    // trigger_error("[{$this->code}] Due commands: " . array_reduce($commands, function ($acc, $cmd) {
+    //   $acc .= "{'id':'{$cmd['id']}','cmd_id':'{$cmd['cmd_id']}'} ";
+    //   return $acc;
+    // }, "") . "\n", E_USER_NOTICE);
+    return $commands;
   }
 }
 
