@@ -1,4 +1,6 @@
 name: Release docker image based on (1) commit sha (2) release tag version (3) :latest
+permissions:
+  contents: read
 
 on:
   release:
