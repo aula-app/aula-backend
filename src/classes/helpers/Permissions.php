@@ -410,12 +410,14 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
 
       "addCSV" => [
         "open_roles" => [
-          "admin"
+          "admin",
+          "tech_admin"
         ]
       ],
       "addAllCSV" => [
         "open_roles" => [
-          "admin"
+          "admin",
+          "tech_admin"
         ]
       ],
 
