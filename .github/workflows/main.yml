@@ -1,4 +1,6 @@
 name: Build docker image based on commit sha
+permissions:
+  contents: read
 
 on:
   push:
