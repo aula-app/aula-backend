@@ -10,15 +10,19 @@ class CommandDispatcher
 {
   private $commandHandlers;
 
-  public function __construct($db, $crypt, $syslog)
+  public function __construct(private $db, private $crypt, private $syslog)
   {
     $this->commandHandlers = [
       // 0-9 - instance related
-      0 => InstanceOnlineModeHandler::createWith($db, $crypt, $syslog),
+      0 => function () {
+        return InstanceOnlineModeHandler::createWith($this->db, $this->crypt, $this->syslog);
+      },
       5 => null, # TBD
       // 10-19 - user related
       10 => null, # TBD
-      11 => SendEmailHandler::createWith($db, $crypt, $syslog),
+      11 => function () {
+        return SendEmailHandler::createWith($this->db, $this->crypt, $this->syslog);
+      },
       15 => null, # TBD
       // 20-29 - group related
       20 => null, # TBD
@@ -35,9 +39,12 @@ class CommandDispatcher
 
     $handler = @$this->commandHandlers[$commandType];
     if ($handler === null) {
-      throw new RuntimeException("No Handler found for the Command type (cmd_id = {$commandType}).");
+      error_log("[{$this->db->code}] ERROR No Handler found for the Command type (cmd_id = {$commandType}).");
+      $handler = function () {
+        return DeactivateCommandHandler::createWith($this->db, $this->crypt, $this->syslog);
+      };
     }
 
-    return $handler->executeSafe($command);
+    return ($handler())->executeSafe($command);
   }
 }
