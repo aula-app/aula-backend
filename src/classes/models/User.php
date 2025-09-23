@@ -1436,7 +1436,7 @@ class User
     return $returnvalue;
   } # end function
 
-  public function addAllCSV($csv, $room_ids, $user_level = 20, $updater_id = 0, $separator = ";")
+  public function addAllCSV($csv, $room_ids, $user_level = 20, $updater_id = 0, $separator = ";", $send_emails_at = null)
   {
     /*
       Parses CSV and adds all users to all rooms. If a User already exists with the same fields, its user_id is reused. If a User exists with some of the fields from CSV not matching the ones in the database, this is an error and the whole operation will not be committed.
@@ -1530,7 +1530,7 @@ class User
       $this->syslog->addSystemEvent(0, "Imported CSV users " . json_encode($csvUsers), 0, "", 1);
       $this->addChangePasswordForUpdateAndScheduleSendEmail(array_filter($addedUsers, function ($user) {
         return $user['email'] != null;
-      }), $updater_id);
+      }), $updater_id, $send_emails_at);
       $this->db->commitTransaction();
 
       // @TODO: nikola - return response with warnings and data
@@ -1570,7 +1570,7 @@ class User
     return $user;
   }
 
-  private function addChangePasswordForUpdateAndScheduleSendEmail(array $users, $updater_id = 0)
+  private function addChangePasswordForUpdateAndScheduleSendEmail(array $users, $updater_id = 0, $send_at = null)
   {
     $numberOfUsers = count($users);
     if ($numberOfUsers == 0) return ;
@@ -1610,6 +1610,7 @@ class User
         throw new RuntimeException("User's email field has invalid value");
       }
       $values[] = "userCreated;{$users[$i]['email']};{$users[$i]['realname']};{$users[$i]['username']};{$secrets[$i]}";
+      $values[] = $send_at;
       $values[] = $users[$i]['id'];
       $values[] = $updater_id;
       $values[] = $updater_id;
@@ -1617,7 +1618,7 @@ class User
 
     // Bulk insert scheduled commands into database
     // cmd_id = 11 (1 - user, 1 - sendEmail)
-    $placeholders = implode(',', array_fill(0, $numberOfUsers, '(11,"sendEmail",?,NOW(),1,0,?,?,NOW(),NOW(),?)'));
+    $placeholders = implode(',', array_fill(0, $numberOfUsers, '(11,"sendEmail",?,?,1,0,?,?,NOW(),NOW(),?)'));
     $stmt = $this->db->prepareStatement(<<<EOD
       INSERT INTO au_commands
         (cmd_id, command, parameters, date_start, active, status, target_id, creator_id, created, last_update, updater_id)
