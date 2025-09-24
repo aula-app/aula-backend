@@ -29,7 +29,7 @@ class CommandSchedulerForInstance
       try {
         $this->commandDispatcherForInstance->dispatch($command);
         // trigger_error("[{$this->code}] Success dispatching command id={$command['id']}\n", E_USER_NOTICE);
-      } catch (Exception $exc) {
+      } catch (Throwable $exc) {
         error_log("[{$this->code}] ERROR Dispatching/Executing command ({$command['id']}): " . $exc->getMessage());
       }
     }
@@ -61,7 +61,7 @@ class CommandScheduler
       try {
         $forInstance = new CommandSchedulerForInstance($code);
         $forInstance->dispatchAllDueCommands();
-      } catch (Exception $exc) {
+      } catch (Throwable $exc) {
         error_log("[{$code}] ERROR Dispatching all due commands for a single instance. " . $exc->getMessage());
       }
     }
