@@ -3222,23 +3222,16 @@ class Idea
   {
     // returns how many votes are still available for a certain idea
     // get available votes for idea_id
-    // check if user has delegated votes
+    // @FIXME: nikola - this comment was here, but no implementation to back it up: "check if user has delegated votes"
 
-    $stmt = $this->db->query('SELECT user_id FROM ' . $this->db->au_votes . ' WHERE user_id = :user_id AND idea_id = :idea_id');
+    $this->db->query("SELECT count(1) AS count FROM {$this->db->au_votes} WHERE user_id = :user_id AND idea_id = :idea_id");
     $this->db->bind(':idea_id', $idea_id); // bind idea id
     $this->db->bind(':user_id', $user_id); // bind user id
 
-    $votes = $this->db->resultSet();
+    $result = $this->db->resultSet();
 
-    $actual_votes_available = intval(1 - intval(count($votes))); // return number of total votes for this idea by this user
-
-    if ($actual_votes_available < 0 || $actual_votes_available == 0) {
-      $actual_votes_available = 0;
-    } else {
-      $actual_votes_available = 1;
-    }
-
-    return $actual_votes_available;
+    $votesMade = intval($result[0]['count']);
+    return $votesMade >= 1 ? 0 : 1;
   }
 
   protected function addVoteUser($user_id, $idea_id, $vote_value, $number_of_delegations, $vote_bias_group = 1, $comment = "")
