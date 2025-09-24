@@ -23,7 +23,7 @@ class CommandSchedulerForInstance
 
   public function dispatchAllDueCommands()
   {
-    $commands = $this->getDueCommands();
+    $commands = array_filter($this->getDueCommands());
 
     foreach ($commands as $command) {
       try {
