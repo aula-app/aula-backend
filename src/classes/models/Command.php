@@ -86,7 +86,7 @@ class Command
     try {
       $this->db->query('SELECT * FROM au_commands WHERE active = 1 AND date_start <= NOW()');
       return $this->responseBuilder->success($this->db->resultSet());
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
       error_log("getDueCommands ERROR {$e->getMessage()}");
       return $this->responseBuilder->error();
     }
