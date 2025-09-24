@@ -3,6 +3,14 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+- feat(csv): schedule sending registration emails at a later point
+
+## 1.4.7
+
+- fix(csv): enable csv uploads for tech_admin
+
+## 1.4.6
+
 - feat(cron): deactivate bad commands
 - chore(cron): run scheduled commands every minute
 
