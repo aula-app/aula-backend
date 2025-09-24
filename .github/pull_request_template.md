@@ -12,3 +12,4 @@ After the last update it became apparent that we did fetch the new results, but 
 - [ ] Backward and forward compatible with FE <!-- If not, please describe in detail and include other PR links -->
 - [ ] Doesn't need update in the database <!-- If it does, please describe how to deploy it without downtime -->
 - [ ] Must be deployed ASAP (HOTFIX)
+- [ ] Needs update of [docs.aula.de](https://docs.aula.de/) ([repo](https://github.com/leonard-haas/docs_aula))
