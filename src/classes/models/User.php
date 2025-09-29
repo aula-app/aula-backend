@@ -1607,13 +1607,14 @@ class User
     $stmt->execute($values);
 
     // Prepare values for bulk insertion
+    $sendAtAsMariadbFormat = date_format(date_create($send_at), 'Y-m-d H:i:s');
     $values = array();
     for ($i = 0; $i < $numberOfUsers; $i++) {
       if (!(bool) filter_var($users[$i]['email'], FILTER_VALIDATE_EMAIL)) {
         throw new RuntimeException("User's email field has invalid value");
       }
       $values[] = "userCreated;{$users[$i]['email']};{$users[$i]['realname']};{$users[$i]['username']};{$secrets[$i]}";
-      $values[] = $send_at;
+      $values[] = $sendAtAsMariadbFormat;
       $values[] = $users[$i]['id'];
       $values[] = $updater_id;
       $values[] = $updater_id;
