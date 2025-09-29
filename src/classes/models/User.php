@@ -8,6 +8,7 @@ global $baseHelperDir;
 global $baseClassDir;
 require_once ($baseHelperDir . 'ResponseBuilder.php');
 require_once ($baseClassDir . 'repositories/RoomRepository.php');
+require_once ($baseClassDir . 'usecases/users/ResetPasswordForUserUseCase.php');
 
 if ($allowed_include == 1) {
 
@@ -25,6 +26,9 @@ class User
   private $responseBuilder;
   private $roomRepository;
 
+  // @TODO: temporarily kept in User model, move after Laravel routing impl.
+  private ResetPasswordForUserUseCase $resetPasswordForUserUseCase;
+
   public function __construct($db, $crypt, $syslog)
   {
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
@@ -34,6 +38,8 @@ class User
     $this->converters = new Converters($db); // load converters
     $this->roomRepository = new RoomRepository($db);
     $this->responseBuilder = new ResponseBuilder();
+
+    $this->resetPasswordForUserUseCase = new ResetPasswordForUserUseCase($db, $crypt, $syslog, $this);
 
     global $email_host;
     global $email_port;
@@ -4011,5 +4017,11 @@ class User
       return false;
     }
   }
+
+  // @TODO: temporarily kept in User model, move after Laravel routing impl.
+  public function resetPasswordForUser($user_id, $updater_id)
+  {
+    return $this->resetPasswordForUserUseCase->execute($user_id, $updater_id);
+  }
 }
-?>
+
