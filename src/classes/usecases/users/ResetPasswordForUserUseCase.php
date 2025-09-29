@@ -64,10 +64,4 @@ class ResetPasswordForUserUseCase
       }
     }
   }
-
-  protected function isValid(mixed $command): bool
-  {
-    $newStatus = intval($command['parameters']);
-    return $newStatus >= 0 && $newStatus <= 5;
-  }
 }
