@@ -22,14 +22,13 @@ class User
 {
   # User class provides a collection of methods dealing with everything around the user entity like adding or deleting etc.
 
-  private $db;
   private $responseBuilder;
   private $roomRepository;
 
   // @TODO: temporarily kept in User model, move after Laravel routing impl.
   private ResetPasswordForUserUseCase $resetPasswordForUserUseCase;
 
-  public function __construct($db, $crypt, $syslog)
+  public function __construct(private $db, private $crypt, private $syslog)
   {
     // db = database class, crypt = crypt class, $user_id_editor = user id that calls the methods (i.e. admin)
     $this->db = $db;
@@ -38,8 +37,6 @@ class User
     $this->converters = new Converters($db); // load converters
     $this->roomRepository = new RoomRepository($db);
     $this->responseBuilder = new ResponseBuilder();
-
-    $this->resetPasswordForUserUseCase = new ResetPasswordForUserUseCase($db, $crypt, $syslog, $this);
 
     global $email_host;
     global $email_port;
@@ -4021,7 +4018,7 @@ class User
   // @TODO: temporarily kept in User model, move after Laravel routing impl.
   public function resetPasswordForUser($user_id, $updater_id)
   {
-    return $this->resetPasswordForUserUseCase->execute($user_id, $updater_id);
+    return (new ResetPasswordForUserUseCase($this->db, $this->crypt, $this->syslog, $this))->execute($user_id, $updater_id);
   }
 }
 
