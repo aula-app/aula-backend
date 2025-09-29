@@ -4,6 +4,7 @@
 <!-- to release, assign a version number and move them there -->
 
 - feat(csv): schedule sending registration emails at a later point
+- feat(user): admins can reset password for a given user
 
 ## 1.4.7
 

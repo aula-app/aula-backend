@@ -27,7 +27,7 @@ class ResponseBuilder
     return [
       'success' => false,
       'error_code' => $errorCode,
-      'error' => $errorCode != 1 ? null : $errorDescription,
+      'error' => $errorCode == 1 ? $errorDescription : null,
       'errors' => $errors,
       'data' => $errorCode == 1 ? null : $errors,
       'count' => 0
