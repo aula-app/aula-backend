@@ -1,8 +1,11 @@
 <?php
 
-require_once (__DIR__ . '/../../config/base_config.php'); // load base config with paths to classes etc.
-require_once(__DIR__ . '/../../../config/instances_config.php');
-global $instances;
+require_once(__DIR__ . '/../../config/base_config.php');
+global $baseHelperDir;
+require_once($baseHelperDir . 'InstanceConfig.php');
+if (($instance = InstanceConfig::createFromRequestOrEchoBadRequest()) === null) {
+  return;
+}
 
 require ('../functions.php'); // include Class autoloader (models)
 require_once ($baseHelperDir . 'Crypt.php');
@@ -18,9 +21,6 @@ $auth0 = new \Auth0\SDK\Auth0([
     'redirectUri' => $AUTH0_REDIRECT_URI,
 ]);
 
-$headers = apache_request_headers();
-$code = $headers['aula-instance-code'];
-
 if ($auth0->getExchangeParameters()) {
     // If they're present, we should perform the code exchange.
     $auth0->exchange($AUTH0_REDIRECT_URI);
@@ -28,11 +28,11 @@ if ($auth0->getExchangeParameters()) {
     if ($session->user["email"]) {
       $user_email = $session->user["email"];
       $crypt = new Crypt();
-      $db = new Database($code);
+      $db = new Database($instance);
       $syslog = new Systemlog($db); // systemlog
       $settings = new Settings($db, $crypt, $syslog);
 
-      $jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
+      $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
       $user = new User ($db, $crypt, $syslog);
       
       $current_settings = $settings->getInstanceSettings();

@@ -1,4 +1,10 @@
 <?php
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  return;
+}
+
 /* base configuration file for path definition */
 $baseDir =            "/var/www/html/api/";
 $baseClassDir =       "/var/www/html/api/classes/";

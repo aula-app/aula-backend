@@ -1,4 +1,4 @@
-<?PHP
+<?php
 
 $instances = [];
 $instances["SINGLE"] = [
@@ -9,5 +9,7 @@ $instances["SINGLE"] = [
   "jwt_key" => "CHANGE_ME",
   "instance_api_url" => "CHANGE_ME"
 ];
+
+// END_OF_CONFIG
 
 # vim: set ft=php:
