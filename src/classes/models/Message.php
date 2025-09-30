@@ -834,21 +834,15 @@ class Message
     */
     //sanitize the vars
     $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-    if (!(intval($target_id) == 0)) {
-      // only check for target id if it is not set to 0
-      $target_id = $this->converters->checkUserId($target_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
-    }
-    if (!(intval($target_group) == 0)) {
-      $target_group = $this->converters->checkGroupId($target_group); // check id and converts id to db id if necessary (when hash id was passed)
-    }
+    $target_id = $this->converters->checkUserId($target_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $target_group = $this->converters->checkGroupId($target_group); // check id and converts id to db id if necessary (when hash id was passed)
     $status = intval($status);
-    if (!(intval($room_id) == 0)) {
-      $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
-    }
+    $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)
     $pin_to_top = $this->makeBool($pin_to_top);
     $only_on_dashboard = $this->makebool($only_on_dashboard);
     $level_of_detail = intval($level_of_detail);
     $msg_type = intval($msg_type);
+
     if ($publish_date == 0) {
       $publish_date = date('Y-m-d H:i:s');
     }
