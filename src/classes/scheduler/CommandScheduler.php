@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__ . '/../../config/base_config.php');
+require_once(__DIR__ . '/../../../config/base_config.php');
 require_once(__DIR__ . '/../../functions.php');
 
 global $baseHelperDir;
