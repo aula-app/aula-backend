@@ -3,6 +3,10 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+## 1.5.2
+
+- fix: instance config refactor issue with checking consent
+
 ## 1.5.1
 
 - fix: instance code checks cause failures (ex: user_consent.php)
