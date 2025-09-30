@@ -5,6 +5,7 @@
 
 - feat(csv): schedule sending registration emails at a later point
 - fix(user count in quorum): fix super user roles with voting rights being counted two times
+- feat(user): admins can reset password for a given user
 
 ## 1.4.7
 
