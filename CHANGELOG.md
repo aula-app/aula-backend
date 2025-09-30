@@ -3,6 +3,10 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+## 1.5.1
+
+- fix: instance code checks cause failures (ex: user_consent.php)
+- fix(cron): update example config with safe array access
 - fix(user count in quorum): fix super user roles with voting rights being counted two times
 
 ## 1.5.0
