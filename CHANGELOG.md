@@ -4,6 +4,7 @@
 <!-- to release, assign a version number and move them there -->
 
 - feat(csv): schedule sending registration emails at a later point
+- fix(user count in quorum): fix super user roles with voting rights being counted two times
 
 ## 1.4.7
 
