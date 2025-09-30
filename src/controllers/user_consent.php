@@ -1,25 +1,21 @@
 <?php
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  http_response_code(200);
+require_once (__DIR__ . '/../../config/base_config.php'); // load base config with paths to classes etc.
+global $baseHelperDir;
+require_once($baseHelperDir . 'InstanceConfig.php');
+if (($instance = InstanceConfig::createFromRequestOrEchoBadRequest()) === null) {
   return;
 }
 
-require_once (__DIR__ . '/../../config/base_config.php'); // load base config with paths to classes etc.
-
 require ('../functions.php'); // include Class autoloader (models)
-require ($baseHelperDir.'JWT.php');
+require_once ($baseHelperDir.'JWT.php');
 require_once ($baseHelperDir.'Crypt.php');
-require_once(__DIR__ . '/../../config/instances_config.php');
 
-$headers = apache_request_headers();
-$code = $headers['aula-instance-code'];
-
-$db = new Database($code);
+$db = new Database($instance);
 $crypt = new Crypt();
 $syslog = new Systemlog ($db);
 $user = new User ($db, $crypt, $syslog); 
-$jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
+$jwt = new JWT($instance['jwt_key'], $db, $crypt, $syslog);
 
 $check_jwt = $jwt->check_jwt();
 if ($check_jwt) {

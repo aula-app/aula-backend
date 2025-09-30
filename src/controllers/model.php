@@ -1,25 +1,21 @@
 <?php
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  http_response_code(200);
+require_once(__DIR__ . '/../../config/base_config.php');
+global $baseHelperDir;
+require_once($baseHelperDir . 'InstanceConfig.php');
+if (($instance = InstanceConfig::createFromRequestOrEchoBadRequest()) === null) {
   return;
 }
 
-require_once(__DIR__ . '/../../config/base_config.php');
-
 require('../functions.php');
-require($baseHelperDir . 'Permissions.php');
+require_once($baseHelperDir . 'Permissions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
-require_once(__DIR__ . '/../../config/instances_config.php');
-global $instances;
 
-$headers = apache_request_headers();
-$code = $headers['aula-instance-code'];
-$db = new Database($code);
+$db = new Database($instance);
 $crypt = new Crypt();
 $syslog = new Systemlog($db);
-$jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
+$jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
 
 $json = file_get_contents('php://input');
