@@ -9,6 +9,7 @@ try {
   error_log($t->getMessage());
   http_response_code(400);
   echo json_encode(['success' => false, 'error_code' => 1, 'error' => $t->getMessage()]);
+  exit(0);
 }
 
 if ($code !== null) {
