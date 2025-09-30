@@ -1,3 +1,7 @@
+networks:
+  aula_local:
+    driver: bridge
+
 services:
   aula-backend:
     image: aulaapp/aula-backend:latest
@@ -26,6 +30,8 @@ services:
         target: /etc/php/8.3/apache2/php.ini
         bind:
           create_host_path: true
+    networks:
+      - aula_local
 
   # a mariadb instance is included here as a docker service, in case you need it
   mariadb:
@@ -40,3 +46,5 @@ services:
     volumes:
       # use the inital data in the application to populate the db
       - ./init/aula_db_content.sql:/docker-entrypoint-initdb.d/aula_db_content.sql
+    networks:
+      - aula_local
