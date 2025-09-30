@@ -2,7 +2,7 @@
 
 if (array_key_exists('REQUEST_METHOD', $_SERVER) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   http_response_code(200);
-  return;
+  exit(0);
 }
 
 /* base configuration file for path definition */
