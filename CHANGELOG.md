@@ -3,6 +3,10 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+- fix(user count in quorum): fix super user roles with voting rights being counted two times
+
+## 1.5.0
+
 - feat(csv): schedule sending registration emails at a later point
 - feat(user): admins can reset password for a given user
 

@@ -119,6 +119,7 @@ class Idea
       SELECT id 
       FROM {$this->db->au_users_basedata}
       WHERE
+        userlevel NOT IN (41,45) AND
         id in (SELECT user_id FROM {$this->db->au_rel_rooms_users} WHERE room_id = :room_id)
         AND EXISTS (
           SELECT 1
