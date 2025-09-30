@@ -1,9 +1,12 @@
 <?php
 
-require_once(__DIR__ . '/../../../config/base_config.php');
-require_once(__DIR__ . '/../../../config/instances_config.php');
-require(__DIR__ . '/../../functions.php');
+require_once(__DIR__ . '/../../config/base_config.php');
+require_once(__DIR__ . '/../../functions.php');
+
+global $baseHelperDir;
+require_once($baseHelperDir . 'InstanceConfig.php');
 require_once($baseHelperDir . 'Crypt.php');
+
 global $baseClassDir;
 require_once($baseClassDir . 'scheduler/CommandDispatcher.php');
 
@@ -12,9 +15,10 @@ class CommandSchedulerForInstance
   private $commandModelForInstance;
   private $commandDispatcherForInstance;
 
-  public function __construct(protected $code)
+  public function __construct(protected string $code)
   {
-    $db = new Database($code);
+    $instance = InstanceConfig::createFromCode($code);
+    $db = new Database($instance);
     $crypt = new Crypt();
     $syslog = new Systemlog($db);
     $this->commandModelForInstance = new Command($db, $crypt, $syslog);

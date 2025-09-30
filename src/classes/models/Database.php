@@ -1,5 +1,4 @@
 <?php
-    require_once(__DIR__ . '/../../../config/instances_config.php');
     # db provides helper functions and db connection for the system
     class Database {
 
@@ -46,16 +45,13 @@
     public string $au_rel_users_services = 'au_rel_users_services';
     public string $au_userlevel_methods = 'au_userlevel_methods';
 
-    public function __construct($code) {
-        // Load the database configuration from db config
-        global $instances;
-
+    public function __construct(InstanceConfig $instance) {
         //base config
-        $this->host = $instances[$code]['host'];
-        $this->user = $instances[$code]['user'];
-        $this->pass = $instances[$code]['pass'];
-        $this->dbname = $instances[$code]['dbname'];
-        $this->code = $code;
+        $this->host = $instance->host;
+        $this->user = $instance->user;
+        $this->pass = $instance->pass;
+        $this->dbname = $instance->dbname;
+        $this->code = $instance->code;
 
         // Set up a PDO connection
         $dsn = "mysql:host=$this->host;dbname=$this->dbname";

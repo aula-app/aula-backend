@@ -1,29 +1,20 @@
 <?php
 
 require_once(__DIR__ . '/../../config/base_config.php');
+global $baseHelperDir;
+require_once($baseHelperDir . 'InstanceConfig.php');
+if (($instance = InstanceConfig::createFromRequestOrEchoBadRequest()) === null) {
+  return;
+}
 
 require('../functions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
-require_once(__DIR__ . '/../../config/instances_config.php');
-global $instances;
 
-$headers = apache_request_headers();
-
-if (array_key_exists('aula-instance-code', $headers)) {
-  $code = $headers['aula-instance-code'];
-} else {
-  if (array_key_exists('code', $_GET)) {
-    $code = $_GET['code'];
-  } else {
-    echo json_encode(["success" => false, "message" => "Fail to get instance code."]);
-    return;
-  }
-}
-$db = new Database($code);
+$db = new Database($instance);
 $crypt = new Crypt();
 $syslog = new Systemlog($db);
-$jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
+$jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $secret = $_GET["secret"];

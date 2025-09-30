@@ -1,36 +1,28 @@
 <?php
 
 require_once(__DIR__ . '/../../config/base_config.php');
-global $filesDir;
+global $baseHelperDir;
+require_once($baseHelperDir . 'InstanceConfig.php');
+if (($instance = InstanceConfig::createFromRequestOrEchoBadRequest()) === null) {
+  return;
+}
 
 require('../functions.php');
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
-require_once(__DIR__ . '/../../config/instances_config.php');
-global $instances;
 
-$headers = apache_request_headers();
-$instanceCode = $headers['aula-instance-code'];
-$instanceDir = $filesDir . '/' . $instanceCode;
-preg_match('/^[0-9a-zA-Z]{5}|SINGLE$/', $instanceCode, $matches);
-if (!isset($matches[0])) {
-  throw new RuntimeException('Invalid instance code');
-}
-
-$db = new Database($instanceCode);
+$db = new Database($instance);
 $crypt = new Crypt();
 $syslog = new Systemlog($db);
-$jwt = new JWT($instances[$instanceCode]['jwt_key'], $db, $crypt, $syslog);
+$jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
+
+global $filesDir;
+$instanceDir = $filesDir . '/' . $instance->code;
 $media = new Media($db, $crypt, $syslog, $instanceDir);
 
 $check_jwt = $jwt->check_jwt();
 
 header('Content-Type: application/json; charset=utf-8');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  http_response_code(200);
-  return;
-}
 
 if ($check_jwt) {
   $file_type = $_POST['fileType'];

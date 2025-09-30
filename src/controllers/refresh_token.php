@@ -1,21 +1,24 @@
 <?PHP
 
-require_once(__DIR__ . '/../../config/base_config.php'); // load base config with paths to classes etc.
+require_once(__DIR__ . '/../../config/base_config.php');
+global $baseHelperDir;
+require_once($baseHelperDir . 'InstanceConfig.php');
+if (($instance = InstanceConfig::createFromRequestOrEchoBadRequest()) === null) {
+  return;
+}
 
 require('../functions.php'); // include Class autoloader (models)
 require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
 require_once(__DIR__ . '/../../config/instances_config.php');
 
-$headers = apache_request_headers();
-$code = $headers['aula-instance-code'];
-$db = new Database($code);
+$db = new Database($instance);
 $crypt = new Crypt(); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
 $syslog = new Systemlog($db); // systemlog
 $user = new User($db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
 
-$jwt = new JWT($instances[$code]['jwt_key'], $db, $crypt, $syslog);
+$jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 $check_jwt = $jwt->check_jwt(true);
 
 if ($check_jwt["success"]) {
