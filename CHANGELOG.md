@@ -3,6 +3,8 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+- fix: Message->addMessage not working when using user hash id on target
+
 ## 1.5.2
 
 - fix: instance config refactor issue with checking consent
