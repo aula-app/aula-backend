@@ -628,7 +628,24 @@ class Message
 
     $count_datasets = 0; // number of datasets retrieved
 
-    $stmt = $this->db->query('SELECT au_messages.*, au_users_basedata.hash_id as user_hash_id FROM ' . $this->db->au_messages . ' LEFT JOIN au_users_basedata ON au_users_basedata.id = au_messages.target_id WHERE au_messages.id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $query_statement = <<<EOD
+
+        SELECT
+          au_messages.*,
+          users_target.hash_id as user_hash_id,
+          users_creator.hash_id as creator_hash_id
+        FROM {$this->db->au_messages} 
+        LEFT JOIN 
+          au_users_basedata users_target 
+            ON users_target.id = au_messages.target_id 
+        LEFT JOIN 
+          au_users_basedata users_creator
+            ON users_creator.id = au_messages.creator_id 
+        WHERE au_messages.id > 0 {$extra_where} ORDER BY {$orderby_field} {$asc_field} {$limit_string}
+
+    EOD;
+
+    $stmt = $this->db->query($query_statement);
 
     if ($limit) {
       // only bind if limit is set
