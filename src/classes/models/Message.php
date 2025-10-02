@@ -635,10 +635,10 @@ class Message
           users_target.hash_id as user_hash_id,
           users_creator.hash_id as creator_hash_id
         FROM {$this->db->au_messages} 
-        INNER JOIN 
+        LEFT JOIN 
           au_users_basedata users_target 
             ON users_target.id = au_messages.target_id 
-        INNER JOIN 
+        LEFT JOIN 
           au_users_basedata users_creator
             ON users_creator.id = au_messages.creator_id 
         WHERE au_messages.id > 0 {$extra_where} ORDER BY {$orderby_field} {$asc_field} {$limit_string}
