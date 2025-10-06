@@ -2589,13 +2589,11 @@ class User
 
     $err = false; // set error variable to false
 
-    // TODO: Check why this was being done
-    // try {
-    //   $action = $this->db->execute(); // do the query
-    //   $this->downgradeUserRoles($user_id, $userlevel);
-    // } catch (Exception $e) {
-    //   $err = true;
-    // }
+    try {
+       $action = $this->db->execute(); // do the query
+    } catch (Exception $e) {
+       $err = true;
+    }
 
     if (!$err) {
       $this->syslog->addSystemEvent(0, "Edited user " . $user_id . " by " . $updater_id, 0, "", 1);
