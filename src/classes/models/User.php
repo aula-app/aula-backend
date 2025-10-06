@@ -2589,12 +2589,13 @@ class User
 
     $err = false; // set error variable to false
 
-    try {
-      $action = $this->db->execute(); // do the query
-      $this->downgradeUserRoles($user_id, $userlevel);
-    } catch (Exception $e) {
-      $err = true;
-    }
+    // TODO: Check why this was being done
+    // try {
+    //   $action = $this->db->execute(); // do the query
+    //   $this->downgradeUserRoles($user_id, $userlevel);
+    // } catch (Exception $e) {
+    //   $err = true;
+    // }
 
     if (!$err) {
       $this->syslog->addSystemEvent(0, "Edited user " . $user_id . " by " . $updater_id, 0, "", 1);
@@ -3138,7 +3139,7 @@ class User
     $new_roles = array_values(array_filter($roles, fn($r) => $r->room != $room_hash));
     array_push($new_roles, ["role" => $role, "room" => $room_hash]);
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW() WHERE id = :user_id');
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = :roles, last_update= NOW() WHERE id = :user_id');
     $this->db->bind(':user_id', $user_id);
     $this->db->bind(':roles', json_encode($new_roles));
 
