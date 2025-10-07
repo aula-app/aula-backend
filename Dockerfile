@@ -36,21 +36,21 @@ RUN a2enmod rewrite expires headers && \
 ENV APACHE_SERVER_NAME="localhost"
 
 # Enable crontab
-COPY crontab ./aula-scheduled-commands
-COPY cron.php ./
+COPY legacy/crontab ./aula-scheduled-commands
+COPY legacy/cron.php ./
 RUN chmod 0744 ./cron.php && \
   chmod 0644 ./aula-scheduled-commands && \
   crontab ./aula-scheduled-commands
 
 # These are safe fallbacks
 COPY ./apache2-aula-default.conf /etc/apache2/sites-enabled/000-default.conf
-COPY ./config/base_config.php-example ./config/base_config.php
+COPY ./legacy/config/base_config.php-example ./config/base_config.php
 
 # instances_config should be omitted so we force the docker image users to add it
-# COPY ./config/instances_config.php-example ./config/instances_config.php
+# COPY ./legacy/config/instances_config.php-example ./config/instances_config.php
 
 COPY ./docker-entrypoint.sh ./
-COPY ./src ./api
+COPY ./legacy/src ./api
 
 # Grab encryption keys from envvars and start apache2
 CMD ["./docker-entrypoint.sh"]

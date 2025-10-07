@@ -16,12 +16,12 @@ services:
       - mariadb
     volumes:
       - type: bind
-        source: ./config/base_config.php
+        source: ./legacy/config/base_config.php
         target: /var/www/html/config/base_config.php
         bind:
           create_host_path: false
       - type: bind
-        source: ./config/instances_config.php
+        source: ./legacy/config/instances_config.php
         target: /var/www/html/config/instances_config.php
         bind:
           create_host_path: false
@@ -45,6 +45,6 @@ services:
       MARIADB_PASSWORD: example
     volumes:
       # use the inital data in the application to populate the db
-      - ./init/aula_db_content.sql:/docker-entrypoint-initdb.d/aula_db_content.sql
+      - ./legacy/init/aula_db_content.sql:/docker-entrypoint-initdb.d/aula_db_content.sql
     networks:
       - aula_local

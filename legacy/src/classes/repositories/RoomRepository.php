@@ -50,7 +50,7 @@ class RoomRepository
    */
   public function insertOrUpdateUserToRoom($room_id, $user_id, $updater_id): void
   {
-    $upsertRelUserRoomStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_rel_rooms_users} (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = 1, last_update = NOW(), updater_id = :updater_id");
+    $upsertRelUserRoomStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_rel_rooms_users} (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, 1, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE status = 1, last_update = NOW(), updater_id = :updater_id");
     $upsertRelUserRoomStmt->execute([
       ':room_id' => $room_id,
       ':user_id' => $user_id,

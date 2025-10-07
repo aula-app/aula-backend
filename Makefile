@@ -14,10 +14,10 @@ clean:
 	rm docker-compose.override.yml
 
 build-release:
-	docker build -t "aulaapp/aula-backend:latest" -t "aulaapp/aula-backend:$(DATE)" .
+	docker build -t "aulaapp/aula-backend:latest" -t "aulaapp/aula-backend:$(git rev-parse --short HEAD)" .
 
 publish-release: build-release
-	docker image push "aulaapp/aula-backend:$(DATE)"
+	docker image push "aulaapp/aula-backend:$(git rev-parse --short HEAD)"
 	docker image push "aulaapp/aula-backend:latest"
 
 run-release:
