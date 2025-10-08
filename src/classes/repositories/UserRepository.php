@@ -14,8 +14,8 @@ class UserRepository
 
   public function patchUserBaseData($partialUser)
   {
-    $setters = [];
-    $settersValues = [];
+    $setters = ['last_update = ?'];
+    $settersValues = [date("Y-m-d H:i:s")];
     $conditionsValues = [];
     $conditions = [];
     foreach ($partialUser as $key => $value) {
