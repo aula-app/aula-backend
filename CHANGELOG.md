@@ -3,7 +3,17 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+- feat(user): admins can reset password for users with email, too
+
+## 1.5.4
+
+- fix: editUser not working
+
+## 1.5.3
+
 - fix: Message->addMessage not working when using user hash id on target
+- fix: CORS preflight requests (OPTIONS) failing
+- fix: forgot password email doesn't contain instance code
 
 ## 1.5.2
 
@@ -18,7 +28,7 @@
 ## 1.5.0
 
 - feat(csv): schedule sending registration emails at a later point
-- feat(user): admins can reset password for a given user
+- feat(user): admins can reset password for a given user (users without email only)
 
 ## 1.4.7
 
