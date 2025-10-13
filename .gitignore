@@ -29,10 +29,10 @@ Thumbs.db
 
 info.php
 
-docker-local/_generated_mariadb_data/*
-!docker-local/_generated_mariadb_data/.gitkeep
-docker-local/_generated_files_data/*
-!docker-local/_generated_files_data/.gitkeep
+**/docker-local/_generated_mariadb_data/*
+**/!docker-local/_generated_mariadb_data/.gitkeep
+**/docker-local/_generated_files_data/*
+**/!docker-local/_generated_files_data/.gitkeep
 
 docker-compose.override.yml
 
