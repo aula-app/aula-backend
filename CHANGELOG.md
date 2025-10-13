@@ -3,6 +3,7 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+- fix: forgot_password email body missing username
 - feat(user): admins can reset password for users with email, too
 
 ## 1.5.4
