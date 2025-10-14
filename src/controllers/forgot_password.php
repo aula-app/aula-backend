@@ -19,18 +19,21 @@ $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $email =  $_GET["email"];
-  $stmt = $db->query('SELECT id, realname FROM au_users_basedata WHERE email = :email');
-  $db->bind(':email', $email); 
-  
-  if (count($db->resultSet()) > 0) {
-    $user_id = $db->resultSet()[0]["id"];
-    $realname = $db->resultSet()[0]["realname"];
+  $stmt = $db->query('SELECT id,username,realname FROM au_users_basedata WHERE email = :email');
+  $db->bind(':email', $email);
+
+  $results = $db->resultSet();
+
+  if (count($results) > 0) {
+    $user_id = $results[0]["id"];
+    $username = $results[0]["username"];
+    $realname = $results[0]["realname"];
 
     $not_created = true;
     while ($not_created) {
       $secret = bin2hex(random_bytes(32));
       $stmt = $db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
-      $db->bind(':secret', $secret); 
+      $db->bind(':secret', $secret);
 
       if (count($db->resultSet()) == 0) {
         $not_created = false;
@@ -41,14 +44,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $db->bind(':user_id', $user_id);
     $db->bind(':secret', $secret);
 
-    $db->resultSet();
+    $db->execute();
 
-    $params = array  ('host' => $email_host,
-    	'port' => $email_port,
-    	'auth' => true,
-    	'username' => $email_username,
-    	'password' => $email_password);
-    
+    $params = [
+      'host' => $email_host,
+      'port' => $email_port,
+      'auth' => true,
+      'username' => $email_username,
+      'password' => $email_password
+    ];
+
     $smtp = Mail::factory ('smtp', $params);
     $content = "text/html; charset=utf-8";
     $mime = "1.0";
@@ -59,11 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     	'Reply-To' => $email_address_support,
     	'MIME-Version' => $mime,
     	'Content-type' => $content);
-    
-    // @TODO: remove the sprintf call after the next deployment, it will be noop once the template is updated
-    $email_body = sprintf($email_forgot_password_body, $realname, $secret, $secret);
+
+    $email_body = $email_forgot_password_body;
     $email_body = str_replace("<CODE>", $instance->code, $email_body);
     $email_body = str_replace("<NAME>", $realname, $email_body);
+    $email_body = str_replace("<USERNAME>", $username, $email_body);
     $email_body = str_replace("<SECRET_KEY>", $secret, $email_body);
 
     $mail = $smtp->send($email, $headers, $email_body);
