@@ -24,6 +24,7 @@ class Idea
     $this->group = new Group($db, $crypt, $syslog); // init group class
     $this->user = new User($db, $crypt, $syslog);
     $this->room = new Room($db, $crypt, $syslog);
+    $this->topic = new Topic($db, $crypt, $syslog);
     $this->converters = new Converters($db); // load converters
   }// end function
 
@@ -2067,7 +2068,7 @@ class Idea
     }
   }
 
-  public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $type = 0)
+  public function addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $topic_id = "", $type = 0)
   {
     /* adds a new idea and returns insert id (idea id) if successful, accepts the above parameters
      content = actual content of the idea,
@@ -2085,6 +2086,21 @@ class Idea
     $title = trim($title);
     $info = trim($info);
     $type = intval($type);
+
+    if ($topic_id != "") {
+      $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
+      $topic_phase = $this->topic->getTopicPhase($topic_id);
+
+      if ($topic_phase["data"] != 10) {
+        $this->syslog->addSystemEvent(1, "Error adding new idea to topic " . $topic_id, 0, "", 1);
+        $returnvalue['success'] = false; // set return value
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue['data'] = false; // returned data
+        $returnvalue['count'] = 0; // returned count of datasets
+  
+        return $returnvalue;
+      }
+    }
 
     $stmt = $this->db->query('INSERT INTO ' . $this->db->au_ideas . ' (type, custom_field1, custom_field2, is_winner, approved, info, votes_available_per_user, sum_votes, sum_likes, number_of_votes, title, content, user_id, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:type, :custom_field1, :custom_field2, 0, 0, :info, :votes_available_per_user, 0, 0, 0, :title, :content, :user_id, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
     // bind all VALUES
@@ -2113,11 +2129,20 @@ class Idea
     try {
       $action = $this->db->execute(); // do the query
 
+ 
     } catch (Exception $e) {
       $err = true;
     }
 
     $insertid = intval($this->db->lastInsertId());
+
+    if ($topic_id != "") {
+      try {
+        $this->addIdeaToTopic($topic_id, $insertid, $updater_id); 
+      } catch (Exception $e) {
+        $err = true;
+      }
+    }
 
     $data = []; # init return array
 
