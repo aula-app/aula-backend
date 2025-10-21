@@ -571,6 +571,8 @@ class Room
   }
 
   public function getUsersInRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0)
+
+    
   {
     /* returns users (associative array)
     $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
@@ -824,6 +826,19 @@ class Room
     }
   }
 
+  public function canEditMainRoom($user_id, $userlevel, $arguments) {
+    if ($userlevel != 60) {
+      return false;
+    }
+
+    try {
+      $room = $this->getRoomBaseData($arguments["room_id"])["data"];
+      if ($room["type"] == 1)
+        return true;
+    } catch(Exception $e) {
+      return false;
+    }
+  }
 
   public function editRoom($room_id, $room_name, $description_public = "", $description_internal = "", $internal_info = "", $status = 1, $access_code = "", $order_importance = 10, $updater_id = 0, $phase_duration_0 = 0, $phase_duration_1 = 0, $phase_duration_2 = 0, $phase_duration_3 = 0, $phase_duration_4 = 0)
   {
