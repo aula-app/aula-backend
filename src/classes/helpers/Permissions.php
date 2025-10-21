@@ -319,7 +319,8 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       ],
 
       "editRoom" => [
-        "roles" => ["admin"]
+        "open_roles" => ["admin"],
+        "checks" => ["method:canEditMainRoom"]
       ],
 
       "getRooms" => [
@@ -1374,8 +1375,16 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           $total_checks = 0;
           foreach ($checks as $c) {
             $cparts = explode(":", $c);
-            if (${$cparts[0]} == $arguments[$cparts[1]]) {
-              $total_checks += 1;
+            if ($cparts[0] != "method") {
+              if (${$cparts[0]} == $arguments[$cparts[1]]) {
+                $total_checks += 1;
+              }
+            } else {
+              $check_method = $cparts[1];
+              $passed_check = $model->$check_method($user_id, $userlevel, $arguments);
+              if ($passed_check) {
+                 $total_checks += 1;
+              }
             }
           }
           if (count($checks) == $total_checks) {
