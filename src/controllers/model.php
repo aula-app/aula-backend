@@ -51,6 +51,9 @@ if (!!$check_jwt && $check_jwt["success"]) {
   $method = $input["method"];
 
   if (array_key_exists("arguments", $input)) {
+    if (array_key_exists("extra_where", $input["arguments"])) {
+      unset($input["arguments"]["extra_where"]) ;
+    }
     $arguments = $input["arguments"];
   } else {
     $arguments = [];
