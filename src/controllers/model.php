@@ -24,7 +24,7 @@ $check_jwt = $jwt->check_jwt();
 
 header('Content-Type: application/json; charset=utf-8');
 
-if ($check_jwt["success"]) {
+if (!!$check_jwt && $check_jwt["success"]) {
   $jwt_payload = $jwt->payload();
   $user_id = $jwt_payload->user_id;
   $userlevel = $jwt_payload->user_level;
@@ -115,5 +115,5 @@ if ($check_jwt["success"]) {
 } else {
 
   http_response_code(401);
-  echo json_encode(['success' => false, 'error' => $check_jwt["error"]]);
+  echo json_encode(['success' => false, 'error' => $check_jwt ? $check_jwt["error"] : 'JWT token is invalid']);
 }
