@@ -2018,7 +2018,13 @@ class User
       }
     }
 
-    $stmt = $this->db->query('SELECT roles, realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw FROM ' . $this->db->au_users_basedata . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query(<<<EOD
+      SELECT roles, realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw
+      FROM au_users_basedata
+      WHERE id > 0 {$extra_where}
+      ORDER BY {$orderby_field} {$asc_field}
+      {$limit_string}
+    EOD);
 
     if ($limit) {
       // only bind if limit is set
@@ -2112,11 +2118,11 @@ class User
   {
     /* returns users (associative array)for a specific room + extra parameters (for further filtering)
      */
+    $status = intval($status);
     $offset = intval($offset);
     $limit = intval($limit);
     $orderby = intval($orderby);
     $asc = intval($asc);
-    $status = intval($status);
     $userlevel = intval($userlevel);
 
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
@@ -2134,12 +2140,11 @@ class User
     if ($offset == 0 && $limit == 0) {
       $limit_string = "";
       $limit_active = false;
-
     }
+
     if ($offset > 0 && $limit == 0) {
       $limit_string = " LIMIT " . $offset . " , 9999999999999999";
     }
-
 
     if ($status > -1) {
       // specific status selected / -1 = get all status values
