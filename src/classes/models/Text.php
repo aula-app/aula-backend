@@ -233,28 +233,16 @@ class Text
     }
   }// end function
 
-
-  public function searchInTexts($searchstring, $status = 1)
-  {
-    // searches for a term / string in texts and returns all texts
-    $extra_where = " AND (headline LIKE '%" . searchstring . "%' OR body LIKE '%" . searchstring . "%') ";
-    $ret_value = getTexts(0, 0, 3, 0, $status, $extra_where);
-
-    return $ret_value;
-  }
-
-  public function getTexts($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $last_update = 0, $location = 0, $creator_id = 0, $user_needs_to_consent = -1, $service_id_consent = -1, $search_field = "", $search_text = "")
+  public function getTexts($offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $creator_id = 0, $user_needs_to_consent = -1, $search_field = "", $search_text = "")
   {
     /* returns text list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 5= in review defaults to active (1)
-    last_update = date that specifies texts younger than last_update date (if set to 0, gets all texts)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
     creator_id = specifies a certain user that wrote the text (author), if set to 0, all texts are displayed
     user_needs_to_consent specifies texts that need (1) or dont need (0) a consent by the user (set to -1, if all texts shoud be shown)
-    service_id_consent refer to a certain service that this text is for (set to -1 if no service is linked)
     */
 
     // sanitize
@@ -277,18 +265,10 @@ class Text
       $limit_active = false;
     }
 
-    if ($location > 0) {
-      // if a location id is set then add to where clause
-      if ($extra_where == "") {
-        $extra_where = " WHERE ";
-      }
-      $extra_where .= "location = " . $location; // get specific texts for a certain page (page id)
-    }
-
     // check if a status was set (status > -1 default value)
     if ($status > -1) {
       // specific status selected / -1 = get all status values
-      $extra_where .= " AND status = " . $status;
+      $extra_where .= " AND status = :status";
     }
 
     $search_field_valid = false;
@@ -300,23 +280,12 @@ class Text
     }
 
     if ($creator_id > 0) {
-      $extra_where .= " AND creator_id = " . $creator_id; // get specific texts for a creator / moderator / admin
+      $extra_where .= " AND creator_id = :creator_id"; // get specific texts for a creator / moderator / admin
     }
 
     if ($user_needs_to_consent > -1) {
       // if a target user id is set then add to where clause
-      $extra_where .= " AND user_needs_to_consent = " . $user_needs_to_consent; // get only texts that need (1)/dont need (0) consent
-    }
-
-    if ($service_id_consent > -1) {
-      // if a target user id is set then add to where clause
-      $extra_where .= " AND service_id_consent = " . $service_id_consent; // get only texts that are linked to a certain service
-    }
-
-
-    if (!(intval($last_update) == 0)) {
-      // if a publish date is set then add to where clause
-      $extra_where .= " AND last_update > \'" . $last_update . "\'";
+      $extra_where .= " AND user_needs_to_consent = :user_needs_to_consent"; // get only texts that need (1)/dont need (0) consent
     }
 
     $orderby_field = $this->getTextOrderId($orderby);
@@ -332,16 +301,28 @@ class Text
         $asc_field = "DESC";
     }
 
-    $count_datasets = 0; // number of datasets retrieved
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_texts . ' WHERE id > 0 ' . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
-    if ($limit_active) {
-      // only bind if limit is set
-      $this->db->bind(':offset', $offset); // bind limit
-      $this->db->bind(':limit', $limit); // bind limit
-    }
+    $stmt = $this->db->query(<<<EOD
+      SELECT * FROM au_texts
+      WHERE id > 0 {$extra_where}
+      ORDER BY {$orderby_field} {$asc_field}
+      {$limit_string}
+    EOD);
 
+    if ($limit_active) {
+      $this->db->bind(':offset', $offset);
+      $this->db->bind(':limit', $limit);
+    }
     if ($search_field_valid) {
       $this->db->bind(':search_text', '%' . $search_text . '%');
+    }
+    if ($status > -1) {
+      $this->db->bind(':status', $status);
+    }
+    if ($creator_id > 0) {
+      $this->db->bind(':creator_id', $creator_id);
+    }
+    if ($user_needs_to_consent > -1) {
+      $this->db->bind(':user_needs_to_consent', $user_needs_to_consent);
     }
 
     $err = false;
@@ -356,6 +337,7 @@ class Text
 
       return $returnvalue;
     }
+
     $count_datasets = count($texts);
     if ($limit_active) {
       // only newly calculate datasets if limits are active
