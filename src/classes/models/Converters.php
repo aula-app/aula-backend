@@ -97,20 +97,6 @@ class Converters
     }
   } // end function
 
-  public function checkServiceId($service_id)
-  {
-    /* helper function that checks if a service id is a standard db id (int) or if a hash id was passed
-    if a hash was passed, function returns db id
-    */
-
-    if (is_int(($service_id))) {
-      return $service_id;
-    } else {
-
-      return $this->getServiceIdByHashId($service_id);
-    }
-  } // end function
-
   public function checkCommandId($command_id)
   {
     /* helper function that checks if a command id is a standard db id (int) or if a hash id was passed
@@ -194,34 +180,6 @@ class Converters
       $this->cache->set($check_hash, $commands[0]['id'], $this->long_caching_time);
 
       return $commands[0]['id']; // return command id
-    }
-  } // end function
-
-  public function getServiceIdByHashId($hash_id)
-  {
-    /* Returns Database ID of service when hash_id is provided
-     */
-    $check_hash = $this->buildCacheHash("getServiceIdByHashId" . $hash_id);
-    // check if hash is in cache
-    try {
-      if ($this->cache->get($check_hash) != null) {
-        $data = $this->cache->get($check_hash);
-        // echo ("Using cache for ".$hash_id." data = ".$data);
-        return $data;
-      }
-    } catch (Exception $e) {
-      // cache error
-    }
-    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_services . ' WHERE hash_id = :hash_id');
-    $this->db->bind(':hash_id', $hash_id); // bind service id
-    $services = $this->db->resultSet();
-    if (count($services) < 1) {
-      $this->cache->set($check_hash, 0, $this->long_caching_time);
-      return 0; // nothing found, return 0 code
-    } else {
-      $this->cache->set($check_hash, $services[0]['id'], $this->long_caching_time);
-
-      return $services[0]['id']; // return service id
     }
   } // end function
 
