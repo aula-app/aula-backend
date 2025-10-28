@@ -2202,15 +2202,6 @@ class User
         ru.room_id = :room_id {$extra_where}
     EOD;
 
-    $total_query = <<<EOD
-        {$this->db->au_rel_rooms_users} ru
-      INNER JOIN {$this->db->au_users_basedata} u
-      ON
-        (ru.user_id = u.id)
-      WHERE
-        ru.room_id = :room_id
-    EOD;
-
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
     //$this->db->bind(':status', $status); // bind status
@@ -2244,6 +2235,15 @@ class User
     } else {
       // get count
       if ($limit_active) {
+        $total_query = <<<EOD
+            {$this->db->au_rel_rooms_users} ru
+          INNER JOIN {$this->db->au_users_basedata} u
+          ON
+            (ru.user_id = u.id)
+          WHERE
+            ru.room_id = :room_id
+        EOD;
+
         // only newly calculate datasets if limits are active
         if ($search_field_valid) {
           $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query), "", $search_field, $search_text);
