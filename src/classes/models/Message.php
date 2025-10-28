@@ -117,14 +117,14 @@ class Message
     }
   }// end function
 
-  public function getMessagesByUser($user_id, $publish_date = 0, $search_field = "", $search_text = "", $msg_type = -1, $status = 1)
+  public function getMessagesByUser($user_id, $search_field = "", $search_text = "", $msg_type = -1, $status = 1)
   {
     // returns all messages for this specific user
     $user_id = $this->converters->checkUserId($user_id);
-    return $this->getMessages($msg_type, 0, 0, 3, 1, $status, "", $publish_date, 0, 0, $user_id, 0, $search_field, $search_text);
+    return $this->getMessages($msg_type, 0, 0, 3, 1, $status, "", 0, 0, $user_id, 0, $search_field, $search_text);
   }
 
-  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $publish_date = 0, $target_group = 0, $target_id = 0, $room_id = 0, $user_id = 0, $creator_id = 0, $search_field = "", $search_text = "")
+  public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $target_group = 0, $target_id = 0, $room_id = 0, $user_id = 0, $creator_id = 0, $search_field = "", $search_text = "")
   {
     /* returns message list (associative array) with start and limit provided
     msg_type (int) specifies the type of message (1=system message, 2= message from admin, 3=message from user, 4=report )
@@ -132,7 +132,6 @@ class Message
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     status (int) 0=inactive, 1=active, 2=suspended, 3=archived, 4= in review defaults to active (1)
-    publish_date = date that specifies messages younger than publish date (if set to 0, gets all messages)
     extra_where = extra parameters for where clause, synthax " AND XY=4"
     user_id = specifies a certain user (for private messages) if set to 0 all users are included
     creator_id specifies contentt that was created by a certain user
@@ -144,7 +143,6 @@ class Message
     $returnvalue['data'] = false; // the actual data
     $returnvalue['count_data'] = 0; // number of datasets
 
-    $date_now = date('Y-m-d H:i:s');
     // init vars
     $orderby_field = "";
     $asc_field = "";
@@ -200,11 +198,6 @@ class Message
     if ($room_id > 0) {
       // if a room id is set then add to where clause
       $extra_where .= " AND room_id = " . $room_id;
-    }
-
-    if (!(intval($publish_date) == 0)) {
-      // if a publish date is set then add to where clause
-      $extra_where .= " AND publish_date > \'" . $publish_date . "\'";
     }
 
     // check if a status was set (status > -1 default value)
@@ -340,30 +333,11 @@ class Message
     */
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $date_now = date('Y-m-d H:i:s');
-
-    $stmt = $this->db->query('SELECT last_login FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id LIMIT 1');
-
-    $this->db->bind(':user_id', $user_id); // bind user id
-
-    $last_login = '1972-01-30 00:00:00';
-
-    $extra_where = "";
-
-    $search_field_valid = false;
-
-    if ($search_field != "") {
-      if ($this->validSearchField($search_field)) {
-        $search_field_valid = true;
-        $extra_where .= " AND " . $search_field . " LIKE :search_text";
-      }
-    }
-
-
     try {
+      $stmt = $this->db->query('SELECT last_login FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id LIMIT 1');
+      $this->db->bind(':user_id', $user_id); // bind user id
       $user_data = $this->db->resultSet();
       $last_login = $user_data[0]['last_login'];
-
     } catch (Exception $e) {
       $err = true;
       $returnvalue['success'] = false; // set return value
@@ -374,7 +348,14 @@ class Message
       return $returnvalue;
     }
 
-
+    $extra_where = "";
+    $search_field_valid = false;
+    if ($search_field != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $extra_where .= " AND " . $search_field . " LIKE :search_text";
+      }
+    }
 
     if ($mode == 1) {
       // if mode is set to 1 then use last login date from user for selection
@@ -383,8 +364,6 @@ class Message
       // get all messages
       $target_date = '1972-01-30 00:00:00';
     }
-
-    $count_datasets = 0; // number of datasets retrieved
 
     $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_messages . ' WHERE (target_id = :user_id OR target_group IN (SELECT group_id FROM ' . $this->db->au_rel_groups_users . ' WHERE user_id = :user_id)) AND publish_date > :target_date AND status = :status ' . $extra_where . ' ORDER BY publish_date DESC');
     $this->db->bind(':user_id', $user_id); // bind user id
@@ -395,12 +374,9 @@ class Message
       $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
-
     $err = false;
     try {
       $messages = $this->db->resultSet();
-
-
     } catch (Exception $e) {
       $err = true;
       $returnvalue['success'] = false; // set return value
@@ -410,8 +386,8 @@ class Message
 
       return $returnvalue;
     }
-    $count_datasets = count($messages);
 
+    $count_datasets = count($messages);
     if ($count_datasets < 1) {
       $returnvalue['success'] = true; // set success value
       $returnvalue['error_code'] = 2; // no data found
