@@ -1426,7 +1426,7 @@ class Idea
 
     if (strlen($info) > 0) {
       // if a info param is set then add to where clause
-      $extra_where .= " AND info = " . $info; // get specific info / status
+      $extra_where .= " AND info = :info"; // get specific info / status
     }
 
     if ($wild_idea) {
@@ -1465,6 +1465,10 @@ class Idea
 
     if ($search_field_valid) {
       $this->db->bind(':search_text', '%' . $search_text . '%');
+    }
+
+    if (strlen($info) > 0) {
+      $this->db->bind(':info', $info);
     }
 
     $err = false;
