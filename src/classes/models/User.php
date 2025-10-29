@@ -2523,7 +2523,8 @@ class User
           'Reply-To' => $email_address_support,
           'MIME-Version' => $mime,
           'Content-type' => $content,
-          'message-id' => time() .'-' . md5($email_from . $email) . '@' . $_SERVER['SERVER_NAME']
+          'message-id' => time() .'-' . md5($email_from . $email) . '@' . $_SERVER['SERVER_NAME'],
+          'Date' => date('r')
         );
 
         $email_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
