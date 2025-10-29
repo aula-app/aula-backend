@@ -2479,6 +2479,11 @@ class User
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $status = intval($status);
 
+    $validEmail = count($email) > 3 && (bool) filter_var($email, FILTER_VALIDATE_EMAIL));
+    if (!$validEmail) {
+      return $this->responseBuilder->error(errorDescription: "Invalid email address");
+    }
+
     $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
     // if there's more users with the new email/username, or if the new email/username belongs to another user
     if ($temp_user['count'] > 1 || ($temp_user['count'] == 1 && $temp_user['data'] != $user_id)) {
@@ -2490,8 +2495,8 @@ class User
       return $returnvalue;
     }
 
-    /* if ($temp_user['data'].email != $email && not validated) { */
-    /*   send email to validate */
+    /* if ($temp_user['data'].email != $email && not verified) { */
+    /*   send change password email to verify */
     /* } */
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET userlevel = :userlevel, realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id, status= :status WHERE id= :userid');
@@ -3472,24 +3477,25 @@ class User
      email = email address of the user
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    
+    $validEmail = count($email) > 3 && (bool) filter_var($email, FILTER_VALIDATE_EMAIL));
+    if (!$validEmail) {
+      return $this->responseBuilder->error(errorDescription: "Invalid email address");
+    }
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET email= :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
+    $stmt = $this->db->query('UPDATE au_users_basedata SET email= :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
     // bind all VALUES
     $this->db->bind(':email', $this->crypt->encrypt($email));
-    $this->db->bind(':userid', $user_id); // user that is updated
-    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-
-    $err = false; // set error variable to false
+    $this->db->bind(':userid', $user_id);
+    $this->db->bind(':updater_id', $updater_id);
 
     try {
-      $action = $this->db->execute(); // do the query
-
+      $success = $this->db->execute();
     } catch (Exception $e) {
-
-      $err = true;
+      $success = false;
     }
-    if (!$err) {
+
+    if ($success) {
       $this->syslog->addSystemEvent(0, "User email changed " . $user_id . " by " . $updater_id, 0, "", 1);
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 0; // error code
