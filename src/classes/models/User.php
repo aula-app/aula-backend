@@ -2301,12 +2301,6 @@ class User
 
   public function addUser($realname, $displayname, $username, $email = "", $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10, $nomail = false)
   {
-    $send_email = false;
-
-    if ($email != '' && !$nomail) {
-      $send_email = true;
-    }
-
     /* adds a user and returns insert id (userid) if successful, accepts the above parameters
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
      userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin 60 = tech admin
@@ -2324,11 +2318,15 @@ class User
     $userlevel = intval($userlevel);
 
     // @TODO: validate input, for example Commands can fail if username or realname contains ";" which is used as
-    //   a separator in Command parameters, but also email can be checked against regex
+    //   a separator in Command parameters
+
+    $validEmail = count($email) > 3 && (bool) filter_var($email, FILTER_VALIDATE_EMAIL));
+    if (!$validEmail) {
+      return $this->responseBuilder->error(errorDescription: "Invalid email address");
+    }
 
     // check if user name is still available
     $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
-
     if ($temp_user['count'] > 0) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // db error code
@@ -2340,6 +2338,7 @@ class User
 
     // generate hash password
     $hash = password_hash($password, PASSWORD_DEFAULT);
+    $send_email = $validEmail && !$nomail;
     $temp_pw = $send_email ? "" : $this->generate_pass(8); # if no email is provided, generate a temporary password
 
     $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata
