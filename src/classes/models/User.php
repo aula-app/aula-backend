@@ -1041,91 +1041,6 @@ class User
 
   } // end function
 
-
-  public function moveUserBetweenRooms($user_id, $room_id1, $room_id2, $updater_id)
-  {
-    // moves a user (user_id) from room 1 to room 2
-    $user_id = $this->converters->checkUserId($user_id); // auto convert
-    $room_id1 = $this->converters->checkRoomId($room_id1); // auto convert
-    $room_id2 = $this->converters->checkRoomId($room_id2); // auto convert
-
-    $ret_value = removeUserFromRoom($room_id1, $user_id);
-
-    if ($ret_value['success']) {
-      // only if removal was successful add to room 2
-      $ret_value = $this->addUserToRoom($room_id2, $user_id);
-
-      if ($ret_value['success']) {
-        $returnvalue['success'] = true; // set return value
-        $returnvalue['error_code'] = 0; // error code
-        $returnvalue['data'] = false; // returned data
-        $returnvalue['count'] = 1; // returned count of datasets
-
-        return $returnvalue;
-      } else {
-        // error occured while adding to room 2
-        $returnvalue['success'] = false; // set return value
-        $returnvalue['error_code'] = 1; // error code
-        $returnvalue['data'] = false; // returned data
-        $returnvalue['count'] = 0; // returned count of datasets
-
-        return $returnvalue;
-
-      }
-
-    } else {
-      // error occured while removing from room 1
-      $returnvalue['success'] = false; // set return value
-      $returnvalue['error_code'] = 1; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    } // end else
-  } // end function
-
-  public function moveUserBetweenGroups($user_id, $group_id1, $group_id2, $updater_id)
-  {
-    // moves a user from group 1 to group 2
-    $user_id = $this->converters->checkUserId($user_id); // auto convert
-    $group_id1 = $this->converters->checkGroupId($group_id1); // auto convert
-    $group_id2 = $this->converters->checkGroupId($group_id2); // auto convert
-
-    $ret_value = removeUserFromGroup($group_id1, $user_id);
-
-    if ($ret_value['success']) {
-      // only if removal was successful add to group 2
-      $ret_value = addUserToGroup($group_id2, $user_id);
-
-      if ($ret_value['success']) {
-        $returnvalue['success'] = true; // set return value
-        $returnvalue['error_code'] = 0; // error code
-        $returnvalue['data'] = false; // returned data
-        $returnvalue['count'] = 1; // returned count of datasets
-
-        return $returnvalue;
-      } else {
-        // error occured while adding to group 2
-        $returnvalue['success'] = false; // set return value
-        $returnvalue['error_code'] = 1; // error code
-        $returnvalue['data'] = false; // returned data
-        $returnvalue['count'] = 0; // returned count of datasets
-
-        return $returnvalue;
-
-      }
-
-    } else {
-      // error occured while removing from group 1
-      $returnvalue['success'] = false; // set return value
-      $returnvalue['error_code'] = 1; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    } // end else
-  } // end function
-
   public function removeUserFromRoom($room_id, $user_id)
   {
     /* deletes a user from a room
@@ -1494,7 +1409,7 @@ class User
         $existingUser = $this->getUserForUpdate($csvUser['username'], $csvUser['email']);
 
         if (!$existingUser) {
-          $csvUser['id'] = $this->addUserInternal($csvUser, $user_level, $updater_id);
+          $csvUser['id'] = $this->addUserInternal($csvUser, $updater_id);
           $addedUsers[] = $csvUser;
         } else {
           if ($this->isSameUser($csvUser, $existingUser)) {
@@ -1652,9 +1567,9 @@ class User
     return $fieldsMatch;
   }
 
-  private function addUserInternal($user, $user_level, $updater_id): int
+  private function addUserInternal($user, $updater_id): int
   {
-    $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, :userlevel)");
+    $insertUserStmt = $this->db->prepareStatement("INSERT INTO {$this->db->au_users_basedata} (realname, displayname, username, email, about_me, temp_pw, hash_id, pw_changed, status, created, last_update, creator_id, updater_id, userlevel) VALUES (:realname, :displayname, :username, :email, :about_me, :temp_pw, :hash_id, 0, 1, NOW(), NOW(), :updater_id, :updater_id, 20)");
     $send_email = $user['email'] != null;
     // if no email is provided, generate a temporary password
     $temp_pw = $send_email ? "" : $this->generate_pass(8);
@@ -1672,7 +1587,6 @@ class User
       ':temp_pw' => $temp_pw,
       ':hash_id' => $hash_id,
       ':updater_id' => $updater_id,
-      ':userlevel' => $user_level,
     ]);
     return $this->db->lastInsertId();
   }
