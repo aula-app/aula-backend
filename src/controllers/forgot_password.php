@@ -76,8 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $email_body = str_replace("<SECRET_KEY>", $secret, $email_body);
 
     $mail = $smtp->send($email, $headers, $email_body);
-
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(["success" => true]);
   };
+
+  header('Content-Type: application/json; charset=utf-8');
+  echo json_encode(["success" => true]);
 }
