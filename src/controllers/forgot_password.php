@@ -58,12 +58,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $content = "text/html; charset=utf-8";
     $mime = "1.0";
 
-    $headers = array ('From' => $email_from,
-    	'To' => $email,
-    	'Subject' => 	$email_forgot_password_subject,
+    $headers = array (
+      'From' => $email_from,
+      'To' => $email,
+      'Subject' => 	$email_forgot_password_subject,
     	'Reply-To' => $email_address_support,
-    	'MIME-Version' => $mime,
-    	'Content-type' => $content);
+      'MIME-Version' => $mime,
+      'Content-type' => $content,
+      'Message-Id' => time() .'-' . md5($email_from . $email) . '@' . $_SERVER['SERVER_NAME'],
+      'Date' => date('r')
+    );
 
     $email_body = $email_forgot_password_body;
     $email_body = str_replace("<CODE>", $instance->code, $email_body);

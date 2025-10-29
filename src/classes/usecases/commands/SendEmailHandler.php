@@ -61,7 +61,9 @@ class SendEmailHandler extends CommandHandler
       'Subject' => $email_subject,
       'Reply-To' => $email_address,
       'MIME-Version' => $mime,
-      'Content-type' => $content
+      'Content-type' => $content,
+      'Message-Id' => time() .'-' . md5($email_from . $email) . '@' . $_SERVER['SERVER_NAME'],
+      'Date' => date('r')
     );
 
     $email_body = str_replace("<SECRET_KEY>", $secret, $email_body);
