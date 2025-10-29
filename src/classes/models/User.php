@@ -2295,11 +2295,11 @@ class User
     $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     */
 
+    $status = intval($status);
     $offset = intval($offset);
     $limit = intval($limit);
     $orderby = intval($orderby);
     $asc = intval($asc);
-    $status = intval($status);
 
     $group_id = $this->converters->checkGroupId($group_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -2522,7 +2522,8 @@ class User
           'Subject' => $email_creation_subject,
           'Reply-To' => $email_address_support,
           'MIME-Version' => $mime,
-          'Content-type' => $content
+          'Content-type' => $content,
+          'message-id' => time() .'-' . md5($email_from . $email) . '@' . $_SERVER['SERVER_NAME']
         );
 
         $email_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
