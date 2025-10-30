@@ -1941,6 +1941,290 @@ class User
     }
   }// end function
 
+  public function addUser($realname, $displayname, $username, $email = "", $password = "", $status = 1, $about_me = "", $updater_id = 0, $userlevel = 10, $nomail = false)
+  {
+    /* adds a user and returns insert id (userid) if successful, accepts the above parameters
+     realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
+     userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin 60 = tech admin
+    */
+
+    // sanitize vars
+    $realname = trim($realname);
+    $displayname = trim($displayname);
+    $username = trim($username);
+    $email = strtolower(trim($email));
+    $about_me = trim($about_me);
+    $password = trim($password);
+    $updater_id = intval($updater_id);
+    $status = intval($status);
+    $userlevel = intval($userlevel);
+
+    // @TODO: validate input, for example Commands can fail if username or realname contains ";" which is used as
+    //   a separator in Command parameters
+
+    if (strlen($email) > 0) {
+      if (!(bool) filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return $this->responseBuilder->error(errorDescription: "Invalid email address");
+      }
+    }
+
+    // check if user name is still available
+    $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
+    if ($temp_user['count'] > 0) {
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 2; // db error code
+      $returnvalue['data'] = $temp_user['data']; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+    }
+
+    // generate hash password
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $send_email = strlen($email) > 0 && !$nomail;
+    $temp_pw = $send_email ? "" : $this->generate_pass(8); # if no email is provided, generate a temporary password
+
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_users_basedata
+      . ' ( temp_pw,  pw_changed,  o1,  o2,  o3,  about_me, presence, auto_delegation, realname,  displayname,  username,  email,  pw,        status,  hash_id, created, last_update,  updater_id,  userlevel) VALUES '
+      . ' (:temp_pw, :pw_changed, :o1, :o2, :o3, :about_me, 1,        0,              :realname, :displayname, :username, :email, :password, :status, :hash_id, NOW(),   NOW(),       :updater_id, :userlevel)');
+    // bind all VALUES
+    $this->db->bind(':temp_pw', $temp_pw);
+    $this->db->bind(':pw_changed', 0); # set flag so user has to change the temporary password
+    $this->db->bind(':o1', mb_ord(strtolower(trim($username))));
+    $this->db->bind(':o2', mb_ord(strtolower(trim($realname))));
+    $this->db->bind(':o3', mb_ord(strtolower(trim($displayname))));
+    $this->db->bind(':about_me', $this->crypt->encrypt($about_me));
+    $this->db->bind(':realname', $this->crypt->encrypt($realname));
+    $this->db->bind(':displayname', $this->crypt->encrypt($displayname));
+    $this->db->bind(':username', $this->crypt->encrypt($username));
+    $this->db->bind(':email', $email == '' ? null : $this->crypt->encrypt($email));
+    $this->db->bind(':password', $hash);
+    $this->db->bind(':status', $status);
+    // generate unique hash for this user
+    $testrand = rand(100, 10000000);
+    $appendix = microtime(true) . $testrand;
+    $hash_id = md5($username . $appendix); // create hash id for this user
+    $this->db->bind(':hash_id', $hash_id);
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+    $this->db->bind(':userlevel', $userlevel);
+    #set flag so user has to change pw
+    $this->db->bind(':pw_changed', 0);
+
+    $data = []; # init return array
+
+    $err = false; // set error variable to false
+
+    $insertid = 0;
+
+    try {
+      $action = $this->db->execute(); // do the query
+      $insertid = intval($this->db->lastInsertId());
+
+      # add user to default standard room  (aula)
+      $this->addUserToStandardRoom($insertid);
+
+    } catch (Exception $e) {
+
+      print_r($e);
+      $err = true;
+    }
+
+    # set output array
+    $data['insert_id'] = $insertid;
+    $data['hash_id'] = $hash_id;
+    $data['temp_pw'] = $temp_pw;
+
+
+    if (!$err) {
+      if ($send_email) {
+        // Send email to new user
+        $not_created = true;
+        $secret = bin2hex(random_bytes(32));
+
+        while ($not_created) {
+          $stmt = $this->db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
+          $this->db->bind(':secret', $secret);
+
+          if (count($this->db->resultSet()) == 0) {
+            $not_created = false;
+          } else {
+            $secret = bin2hex(random_bytes(32));
+          }
+        }
+
+        $stmt = $this->db->query('SELECT id, realname FROM au_users_basedata WHERE email = :email');
+        $this->db->bind(':email', $email);
+        $user_id = $this->db->resultSet()[0]["id"];
+        $realname = $this->db->resultSet()[0]["realname"];
+
+
+        $stmt = $this->db->query('INSERT INTO au_change_password (user_id, secret) values (:user_id, :secret)');
+        $this->db->bind(':user_id', $user_id);
+        $this->db->bind(':secret', $secret);
+
+        $this->db->resultSet();
+
+        $content = "text/html; charset=utf-8";
+        $mime = "1.0";
+
+        global $email_from;
+        global $email_creation_subject;
+        global $email_address_support;
+        global $email_creation_body;
+
+        $headers = array(
+          'From' => $email_from,
+          'To' => $email,
+          'Subject' => $email_creation_subject,
+          'Reply-To' => $email_address_support,
+          'MIME-Version' => $mime,
+          'Content-type' => $content,
+          'message-id' => time() .'-' . md5($email_from . $email) . '@' . $_SERVER['SERVER_NAME'],
+          'Date' => date('r')
+        );
+
+        $email_body = str_replace("<SECRET_KEY>", $secret, $email_creation_body);
+        $email_body = str_replace("<NAME>", $realname, $email_body);
+        $email_body = str_replace("<USERNAME>", $username, $email_body);
+        $email_body = str_replace("<CODE>", $this->db->code, $email_body);
+
+        $mail = $this->smtp->send($email, $headers, $email_body);
+
+      }
+
+      $this->syslog->addSystemEvent(0, "Added new user " . $insertid, 0, "", 1);
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = $data; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+
+
+    } else {
+      $this->syslog->addSystemEvent(1, "Error adding user ", 0, "", 1);
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // db error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
+
+    }
+  }// end function
+
+  public function editUser($user_id, $realname, $displayname, $username, $email, $userlevel, $about_me = "", $position = "", $updater_id = 0, $status = 1)
+  {
+    /* edits a user and returns number of rows if successful, accepts the above parameters, all parameters are mandatory
+     realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
+    */
+
+    $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $status = intval($status);
+    $email = strtolower(trim($email));
+
+    if (strlen($email) > 0) {
+      if (!(bool) filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return $this->responseBuilder->error(errorDescription: "Invalid email address");
+      }
+    }
+
+    $temp_user = $this->checkUserExistsByUsername($username, $email); // check username in db
+    // if there's more users with the new email/username, or if the new email/username belongs to another user
+    if ($temp_user['count'] > 1 || ($temp_user['count'] == 1 && $temp_user['data'] != $user_id)) {
+      $this->syslog->addSystemEvent(1, "Error (username or email already exists) while editing user ".$user_id." by ".$updater_id, 0, "", 1);
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 2; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+      return $returnvalue;
+    }
+
+    /* if ($temp_user['data'].email != $email && not verified) { */
+    /*   send change password email to verify */
+    /* } */
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET userlevel = :userlevel, realname = :realname , displayname= :displayname, username= :username, about_me= :about_me, position= :position, email = :email, last_update= NOW(), updater_id= :updater_id, status= :status WHERE id= :userid');
+    // bind all VALUES
+    $this->db->bind(':username', trim($username));
+    $this->db->bind(':realname', trim($realname));
+    $this->db->bind(':about_me', trim($about_me));
+    $this->db->bind(':displayname', trim($displayname));
+    $this->db->bind(':position', trim($position));
+    $this->db->bind(':email', $email);
+    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
+    $this->db->bind(':userlevel', $userlevel); // user level (10 default)
+    $this->db->bind(':status', $status); // user level (10 default)
+    $this->db->bind(':userid', $user_id); // user that is updated
+
+    $err = false; // set error variable to false
+
+    try {
+       $action = $this->db->execute(); // do the query
+    } catch (Exception $e) {
+       $err = true;
+    }
+
+    if (!$err) {
+      $this->syslog->addSystemEvent(0, "Edited user " . $user_id . " by " . $updater_id, 0, "", 1);
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // error code
+      $returnvalue['data'] = intval($this->db->rowCount()); // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+      return $returnvalue;
+    } else {
+      //$this->syslog->addSystemEvent(1, "Error while editing user ".$user_id." by ".$updater_id, 0, "", 1);
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // error code
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+      return $returnvalue;
+    }
+  }// end function
+
+  public function addUserRole($user_id, $role, $room_id)
+  {
+    $user_id = $this->converters->checkUserId($user_id);
+    $room_id = $this->converters->checkRoomId($room_id);
+
+    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rooms . ' WHERE id = :room_id');
+    $this->db->bind(':room_id', $room_id);
+    $room_hash = $this->db->resultSet()[0]["hash_id"];
+
+    $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+    $this->db->bind(':user_id', $user_id);
+
+    $roles = json_decode($this->db->resultSet()[0]["roles"]);
+
+    if (is_null($roles)) {
+      $roles = [];
+    }
+
+    $new_roles = array_values(array_filter($roles, fn($r) => $r->room != $room_hash));
+    array_push($new_roles, ["role" => $role, "room" => $room_hash]);
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = :roles, last_update= NOW() WHERE id = :user_id');
+    $this->db->bind(':user_id', $user_id);
+    $this->db->bind(':roles', json_encode($new_roles));
+
+    try {
+      $action = $this->db->execute(); // do the query
+      $this->setRefresh($user_id, true);
+
+      $returnvalue['success'] = true; // set return value
+      $returnvalue['error_code'] = 0; // db error code
+      $returnvalue['data'] = 1; // returned data
+      $returnvalue['count'] = 1; // returned count of datasets
+
+      return $returnvalue;
+    } catch (Exception $e) {
+      $returnvalue['success'] = false; // set return value
+      $returnvalue['error_code'] = 1; // db error code
+      $returnvalue['data'] = 0; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+    }
+  }
+
   public function getUserRooms($user_id, $type = -1)
   {
     /* returns rooms where user is member of for a certain user id
@@ -2265,10 +2549,12 @@ class User
      email = email address of the user
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $email = strtolower(trim($email));
     
-    $validEmail = count($email) > 3 && (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
-    if (!$validEmail) {
-      return $this->responseBuilder->error(errorDescription: "Invalid email address");
+    if (strlen($email) > 0) {
+      if (!(bool) filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return $this->responseBuilder->error(errorDescription: "Invalid email address");
+      }
     }
 
     $stmt = $this->db->query('UPDATE au_users_basedata SET email= :email, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');

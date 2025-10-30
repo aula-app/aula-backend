@@ -746,4 +746,3 @@ class Topic
   }// end function
 
 } // end class
-?>
