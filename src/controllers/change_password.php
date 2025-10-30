@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $db->bind(':user_id', $user_id); // blind index
     $users = $db->resultSet();
   } catch (Exception $e) {
-    error_log('Error occured while changing password for user ' . $user_id . ': ' . $e->getMessage());
+    error_log('Error occurred while changing password for user ' . $user_id . ': ' . $e->getMessage());
   }
 
   if (!$temp_pw) {

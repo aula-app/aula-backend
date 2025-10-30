@@ -44,7 +44,7 @@ if ($auth0->getExchangeParameters()) {
         $db->bind(':email', $user_email); 
         $user_result = $db->resultSet();
       } catch (Exception $e) {
-        error_log('Error occured while checking existence of user ' . $user_id . ': ' . $e->getMessage());
+        error_log('Error occurred while checking existence of user ' . $user_id . ': ' . $e->getMessage());
       }
 
       $user_exist = $user_result;
@@ -74,7 +74,7 @@ if ($auth0->getExchangeParameters()) {
         $db->bind(':id', $user_id); // blind index
         $users = $db->resultSet();
       } catch (Exception $e) {
-        error_log('Error occured in auth0 while getting data for user ' . $user_id . ': ' . $e->getMessage());
+        error_log('Error occurred in auth0 while getting data for user ' . $user_id . ': ' . $e->getMessage());
       }
 
       $jwt_token = $jwt->gen_jwt($users[0]);

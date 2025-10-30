@@ -463,7 +463,7 @@ class Room
       $delegations_count = $this->db->rowCount();
 
     } catch (Exception $e) {
-      $this->syslog->addSystemEvent("Error occured while deleting delegations in room: " . $room_id, 0, "", 1);
+      $this->syslog->addSystemEvent("Error occurred while deleting delegations in room: " . $room_id, 0, "", 1);
       $err = true;
       return "0,0";
     }
@@ -487,7 +487,7 @@ class Room
       $delegations_count = $this->db->rowCount();
 
     } catch (Exception $e) {
-      $this->syslog->addSystemEvent("Error occured while deleting delegations for user " . $user_id . " in room: " . $room_id, 0, "", 1);
+      $this->syslog->addSystemEvent("Error occurred while deleting delegations for user " . $user_id . " in room: " . $room_id, 0, "", 1);
       $err = true;
       return "0,0";
     }

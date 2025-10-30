@@ -262,7 +262,7 @@ class Topic
       $topics = $this->db->resultSet();
 
     } catch (Exception $e) {
-      //error_log('Error occured while getting topics: ' . $e->getMessage()); // display error
+      //error_log('Error occurred while getting topics: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value to false
       $returnvalue['error_code'] = 1; // error code - db error
@@ -685,7 +685,7 @@ class Topic
       $topics = $this->db->resultSet();
 
     } catch (Exception $e) {
-      error_log('Error occured while deleting all ideas from topic: ' . $e->getMessage()); // display error
+      error_log('Error occurred while deleting all ideas from topic: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
