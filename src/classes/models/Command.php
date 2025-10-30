@@ -53,31 +53,6 @@ class Command
     }
   }// end function
 
-  public function getCommandBaseData($command_id)
-  {
-    /* returns command base data for a specified db id */
-    $command_id = intval($command_id);
-
-    $stmt = $this->db->query('SELECT * FROM ' . $this->db->au_commands . ' WHERE id = :id');
-    $this->db->bind(':id', $command_id); // bind command id
-    $commands = $this->db->resultSet();
-    if (count($commands) < 1) {
-      $returnvalue['success'] = false; // set return value to false
-      $returnvalue['error_code'] = 2; //  error code
-      $returnvalue['data'] = 1; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue; // nothing found, return 0 code
-    } else {
-      $returnvalue['success'] = true; // set return value to false
-      $returnvalue['error_code'] = 0; // no error code
-      $returnvalue['data'] = $commands[0]; // returned data
-      $returnvalue['count'] = 1; // returned count of datasets
-
-      return $returnvalue; // return an array (associative) with all the data
-    }
-  }// end function
-
   public function getDueCommands(): mixed
   {
     /**
@@ -344,53 +319,6 @@ class Command
       return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
     }
   }// end function
-
-  public function setCommandDate($cmd_id, $date, $updater_id = 0)
-  {
-    /* edits a command, accepts the above parameters, all parameters are mandatory
-     date = date when command is executed (0=inactive, 1=active)
-     updater_id is the id of the user that does the update (i.E. admin )
-    */
-    $cmd_id = intval($cmd_id); // checks id and converts id to db id if necessary (when hash id was passed)
-    $date = trim($date);
-    #
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_commands . ' SET date_start= :date_start, last_update= NOW(), updater_id= :updater_id WHERE id= :command_id');
-    // bind all VALUES
-    $this->db->bind(':date_start', $date);
-    $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-    $this->db->bind(':command_id', $cmd_id); // command that is updated
-
-    $err = false; // set error variable to false
-    $count_datasets = 0; // init row count
-
-    try {
-      $action = $this->db->execute(); // do the query
-
-    } catch (Exception $e) {
-
-      $err = true;
-    }
-    if (!$err) {
-      $count_datasets = intval($this->db->rowCount());
-      $this->syslog->addSystemEvent(0, "Command date changed for command " . $cmd_id . " to " . $date . " by " . $updater_id, 0, "", 1);
-      $returnvalue['success'] = true; // set return value
-      $returnvalue['error_code'] = 0; // error code
-      $returnvalue['data'] = $count_datasets; // returned data
-      $returnvalue['count'] = $count_datasets; // returned count of datasets
-
-
-      return $returnvalue; // return number of affected rows to calling script
-    } else {
-      $returnvalue['success'] = false; // set return value
-      $returnvalue['error_code'] = 1; // error code
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
-    }
-  }// end function
-
 
 
   public function deleteCommand($command_id, $updater_id = 0)

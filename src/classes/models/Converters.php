@@ -68,21 +68,6 @@ class Converters
     }
   }
 
-
-  public function getIdeaHashId($idea_id)
-  {
-    /* returns hash_id of an idea for a integer idea id
-     */
-    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_ideas . ' WHERE id = :id');
-    $this->db->bind(':id', $idea_id); // bind idea id
-    $ideas = $this->db->resultSet();
-    if (count($ideas) < 1) {
-      return "0,0"; // nothing found, return 0 code
-    } else {
-      return "1," . $ideas[0]['hash_id']; // return hash id for the idea
-    }
-  } // end function
-
   public function checkUserId($user_id)
   {
     /* helper function that checks if a user id is a standard db id (int) or if a hash userid was passed
@@ -94,20 +79,6 @@ class Converters
     } else {
 
       return $this->getUserIdByHashId($user_id);
-    }
-  } // end function
-
-  public function checkCommandId($command_id)
-  {
-    /* helper function that checks if a command id is a standard db id (int) or if a hash id was passed
-    if a hash was passed, function returns db id
-    */
-
-    if (is_int(($command_id))) {
-      return $command_id;
-    } else {
-
-      return $this->getCommandIdByHashId($command_id);
     }
   } // end function
 
@@ -560,22 +531,6 @@ class Converters
     $this->db->bind(':id', $topic_id); // bind topic id
     $topic_id = $this->db->resultSet();
     if (count($topic_id) < 1) {
-      return 0; // nothing found, return 0 code
-    } else {
-      return 1; // topic found, return 1
-    }
-  } // end function
-
-  public function checkCategoryExist($category_id)
-  {
-    /* returns 0 if category does not exist, 1 if category exists, accepts database id (int)
-     */
-    $category_id = $this->checkCategoryId($category_id); // checks topic id and converts topic id to db topic id if necessary (when topic hash id was passed)
-
-    $stmt = $this->db->query('SELECT status FROM ' . $this->db->au_categories . ' WHERE id = :id');
-    $this->db->bind(':id', $category_id); // bind topic id
-    $categories = $this->db->resultSet();
-    if (count($categories) < 1) {
       return 0; // nothing found, return 0 code
     } else {
       return 1; // topic found, return 1
