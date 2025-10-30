@@ -1435,12 +1435,10 @@ class User
       $res = $this->db->resultSet();
       $reactivation_date = $res[0]['date_start'];
     } catch (Exception $e) {
-      print_r($e);
+      error_log('Error occured while getting reactivation date for user ' . $user_id . ': ' . $e->getMessage());
     }
 
     return $reactivation_date;
-
-
   }
 
   public function setRefresh($user_id, $refresh_value = true)
@@ -1454,9 +1452,8 @@ class User
 
       $users = $this->db->execute();
     } catch (Exception $e) {
-      print_r($e);
+      error_log('Error occured while setting refresh toke for user ' . $user_id . ' to ' . $refresh_value . ': ' . $e->getMessage());
     }
-
   }
 
   public function getUserPayload($user_id)
@@ -1472,7 +1469,7 @@ class User
       $user_id = $users[0]['id'];
 
     } catch (Exception $e) {
-      print_r($e);
+      error_log('Error occured while getting user payload for user ' . $user_id . ': ' . $e->getMessage());
     }
 
     $reactivation_date = false; // init
@@ -1524,7 +1521,7 @@ class User
       $user_id = $users[0]['id'];
 
     } catch (Exception $e) {
-      print_r($e);
+      error_log('Error occured while checking credentials for user ' . $user_id . ': ' . $e->getMessage());
     }
 
     $reactivation_date = false; // init
@@ -2024,8 +2021,7 @@ class User
       $this->addUserToStandardRoom($insertid);
 
     } catch (Exception $e) {
-
-      print_r($e);
+      error_log('Error occured while adding user ' . $user_id . ' to standard room: ' . $e->getMessage());
       $err = true;
     }
 
