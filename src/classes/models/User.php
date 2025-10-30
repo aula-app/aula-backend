@@ -2266,7 +2266,7 @@ class User
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     
-    $validEmail = count($email) > 3 && (bool) filter_var($email, FILTER_VALIDATE_EMAIL));
+    $validEmail = count($email) > 3 && (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
     if (!$validEmail) {
       return $this->responseBuilder->error(errorDescription: "Invalid email address");
     }
