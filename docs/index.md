@@ -52,12 +52,6 @@ Triggers an email with an unique link to the user that can be used to reset a pa
 
 Used for the first password setup for an user. When an user is created on the aula admin's interface, the users receives an unique URL with a secret and a link to set_password.php
 
-## Check if user has consent necessary agreements to use the system
-
-controllers/get_necessary_consents.php is called by the interface before every request, to check if there are new terms that must be read and confirmed or refused by the user.
-
-The method controllers/give_consent.php records in the database the user response for each agreements requirements.
-
 ## Upload files
 
 controllers/upload.php is responsible for manging the media upload as user avatars to the filesystem of aula's server.
