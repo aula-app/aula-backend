@@ -83,33 +83,6 @@ class Settings
     }
   }// end function
 
-
-  public function getCustomfields()
-  {
-    /* helper method that returns custom fields 1 & 2 */
-
-    $stmt = $this->db->query('SELECT custom_field1_name, custom_field2_name FROM ' . $this->db->au_system_global_config . ' LIMIT 1');
-
-    $settings = $this->db->resultSet();
-
-    if (count($settings) < 1) {
-      $returnvalue['success'] = true; // set return value to false
-      $returnvalue['error_code'] = 2; // error code - db error
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    } else {
-      $returnvalue['success'] = true; // set return value to false
-      $returnvalue['error_code'] = 0; // error code - db error
-      $returnvalue['data'] = $settings[0]; // returned data
-      $returnvalue['count'] = 1; // returned count of datasets
-
-      return $returnvalue;
-
-    }
-  }// end function
-
   public function getQuorum()
   {
     /* helper method that returns custom fields 1 & 2 */
@@ -368,62 +341,6 @@ class Settings
 
   } // end function
 
-  public function setDefaultRoleForRegistration($role, $updater_id = 0)
-  {
-    // sets default role (int) 10 = guest, 20 = student etc. for the instance
-
-    // sanitize
-    $role = intval($role);
-
-    if ($role > -1) {
-      $updater_id = $this->converters->checkUserId($updater_id);
-
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET default_role_for_registration = :role, last_update = NOW(), updater_id = :updater_id ');
-
-      // bind all VALUES
-      $this->db->bind(':role', $role);
-      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-      $err = false; // set error variable to false
-
-      try {
-        $action = $this->db->execute(); // do the query
-
-      } catch (Exception $e) {
-
-        $err = true;
-      }
-
-      if (!$err) {
-        $this->syslog->addSystemEvent(0, "Default role set to " . $role, 0, "", 1);
-        $returnvalue['success'] = true; // set return value to false
-        $returnvalue['error_code'] = 0; // error code - db error
-        $returnvalue['data'] = 1; // returned data
-        $returnvalue['count'] = 1; // returned count of datasets
-
-        return $returnvalue;
-
-
-      } else {
-        $returnvalue['success'] = false; // set return value to false
-        $returnvalue['error_code'] = 1; // error code - db error
-        $returnvalue['data'] = false; // returned data
-        $returnvalue['count'] = 0; // returned count of datasets
-
-        return $returnvalue;
-      }
-    } else {
-      $returnvalue['success'] = false; // set return value to false
-      $returnvalue['error_code'] = 3; // error code - status out of range error
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    }
-
-  } // end function
-
-
   public function setOauthStatus($status = 0, $updater_id = 0)
   {
     // enables (1) / disables (0) OAuth for the instance
@@ -512,62 +429,6 @@ class Settings
 
       if (!$err) {
         $this->syslog->addSystemEvent(0, "Working days set to first: " . $first_day . " and last: " . $last_day, 0, "", 1);
-        $returnvalue['success'] = true; // set return value to false
-        $returnvalue['error_code'] = 0; // error code - db error
-        $returnvalue['data'] = 1; // returned data
-        $returnvalue['count'] = 1; // returned count of datasets
-
-        return $returnvalue;
-
-
-      } else {
-        $returnvalue['success'] = false; // set return value to false
-        $returnvalue['error_code'] = 1; // error code - db error
-        $returnvalue['data'] = false; // returned data
-        $returnvalue['count'] = 0; // returned count of datasets
-
-        return $returnvalue;
-      }
-    } else {
-      $returnvalue['success'] = false; // set return value to false
-      $returnvalue['error_code'] = 3; // error code - status out of range error
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    }
-
-  } // end function
-
-
-  public function setDefaultEmail($email, $updater_id = 0)
-  {
-    // sets default e-mail address for the instance
-
-    // sanitize
-    $email = trim($email);
-
-    if (strlen($email) > 1) {
-      $updater_id = $this->converters->checkUserId($updater_id);
-
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET default_email_address = :email, last_update = NOW(), updater_id = :updater_id ');
-
-      // bind all VALUES
-      $this->db->bind(':email', $email);
-      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-      $err = false; // set error variable to false
-
-      try {
-        $action = $this->db->execute(); // do the query
-
-      } catch (Exception $e) {
-
-        $err = true;
-      }
-
-      if (!$err) {
-        $this->syslog->addSystemEvent(0, "Default email set to " . $email, 0, "", 1);
         $returnvalue['success'] = true; // set return value to false
         $returnvalue['error_code'] = 0; // error code - db error
         $returnvalue['data'] = 1; // returned data
@@ -706,66 +567,6 @@ class Settings
     }
 
   } // end function
-
-  public function setCustomFields($custom_field1_name, $custom_field2_name = "", $updater_id = 0)
-  {
-    // sets names for the custom fields (1 & 2)
-
-    // sanitize
-    $custom_field1_name = trim($custom_field1_name);
-    $custom_field2_name = trim($custom_field2_name);
-
-    if (strlen($custom_field1_name) > 0) {
-      $updater_id = $this->converters->checkUserId($updater_id);
-
-      $stmt = $this->db->query('UPDATE ' . $this->db->au_system_global_config . ' SET custom_field1_name = :custom_field1_name, custom_field2_name = :custom_field2_name, last_update = NOW(), updater_id = :updater_id ');
-
-      // bind all VALUES
-      $this->db->bind(':custom_field1_name', $custom_field1_name);
-      $this->db->bind(':custom_field2_name', $custom_field2_name);
-
-      $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
-
-      $err = false; // set error variable to false
-
-      try {
-        $action = $this->db->execute(); // do the query
-
-      } catch (Exception $e) {
-
-        $err = true;
-      }
-
-      if (!$err) {
-        $this->syslog->addSystemEvent(0, "Custom field names set to " . $custom_field1_name . " and " . $custom_field2_name, 0, "", 1);
-        $returnvalue['success'] = true; // set return value to false
-        $returnvalue['error_code'] = 0; // error code - db error
-        $returnvalue['data'] = 1; // returned data
-        $returnvalue['count'] = 1; // returned count of datasets
-
-        return $returnvalue;
-
-
-      } else {
-        //$this->syslog->addSystemEvent(1, "Error editing topic ".$name, 0, "", 1);
-        $returnvalue['success'] = false; // set return value to false
-        $returnvalue['error_code'] = 1; // error code - db error
-        $returnvalue['data'] = false; // returned data
-        $returnvalue['count'] = 0; // returned count of datasets
-
-        return $returnvalue;
-      }
-    } else {
-      $returnvalue['success'] = false; // set return value to false
-      $returnvalue['error_code'] = 3; // error code - status out of range error
-      $returnvalue['data'] = false; // returned data
-      $returnvalue['count'] = 0; // returned count of datasets
-
-      return $returnvalue;
-    }
-
-  } // end function
-
 
 } // end class
 ?>
