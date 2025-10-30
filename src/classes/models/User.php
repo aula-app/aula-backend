@@ -2673,4 +2673,3 @@ class User
     return (new ResetPasswordForUserUseCase($this->db, $this->crypt, $this->syslog, $this))->execute($user_id, $updater_id);
   }
 }
-
