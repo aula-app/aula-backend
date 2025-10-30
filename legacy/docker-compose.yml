@@ -36,6 +36,8 @@ services:
   # a mariadb instance is included here as a docker service, in case you need it
   mariadb:
     image: mariadb:11.7
+    ports:
+      - 3306:3306
     environment:
       # @NOTE: if you use this container, these
       #  values need to be reflected in ./config/instances_config.php

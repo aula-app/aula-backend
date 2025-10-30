@@ -12,6 +12,5 @@ info.php
 **/docker-local/
 **/docker-compose.*
 
-config/
 **/base_config.php
 **/instances_config.php
