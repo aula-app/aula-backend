@@ -3,7 +3,24 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
-- fix: forgot_password email body missing username
+fix: validate email when creating a new User
+
+## v1.7.1
+- fix(email): add extra email headers to battle SPAM filters
+- fix(csv): on CSV import, Role of the Users should always be "User", the Role should be specifically set only for the room(s) the Users are imported into
+
+## v1.7.0
+- fix(security): sanitize various params
+- fix(security): prevent the use of extra_where by the frontend
+
+## v1.6.0
+- feat: allow tech admin to edit main room
+
+## v1.5.6
+- feat: add idea directly to a idea box
+
+## v1.5.5
+- fix(email): forgot password email template missing username
 - feat(user): admins can reset password for users with email, too
 
 ## 1.5.4
