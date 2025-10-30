@@ -808,7 +808,7 @@ class User
       $this->deleteUserRole($user_id, $room_id);
       $this->setRefresh($user_id, true);
     } catch (Exception $e) {
-      error_log('Error occured while deleting user ' . $user_id . ' from room: ' . $room_id . ': ' . $e->getMessage()); // display error
+      error_log('Error occurred while deleting user ' . $user_id . ' from room: ' . $room_id . ': ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // error code
@@ -922,7 +922,7 @@ class User
       $users = $this->db->execute();
       $rowcount = $this->db->rowCount();
     } catch (Exception $e) {
-      error_log('Error occured while removing relation between user ' . $user_id . ' and user ' . $user_id_target . ': ' . $e->getMessage()); // display error
+      error_log('Error occurred while removing relation between user ' . $user_id . ' and user ' . $user_id_target . ': ' . $e->getMessage()); // display error
       //$this->syslog->addSystemEvent(0, "Error while removing user relation (delete from db) ".$user_id."-".$user_id_target, 0, "", 1);
       $err = true;
       $returnvalue['success'] = false; // set return value
@@ -955,7 +955,7 @@ class User
     try {
       $groups = $this->db->resultSet();
     } catch (Exception $e) {
-      error_log('Error occured while removing user from group: ' . $e->getMessage()); // display error
+      error_log('Error occurred while removing user from group: ' . $e->getMessage()); // display error
       $err = true;
 
       $returnvalue['success'] = false; // set return value
@@ -1435,12 +1435,10 @@ class User
       $res = $this->db->resultSet();
       $reactivation_date = $res[0]['date_start'];
     } catch (Exception $e) {
-      print_r($e);
+      error_log('Error occurred while getting reactivation date for user ' . $user_id . ': ' . $e->getMessage());
     }
 
     return $reactivation_date;
-
-
   }
 
   public function setRefresh($user_id, $refresh_value = true)
@@ -1454,9 +1452,8 @@ class User
 
       $users = $this->db->execute();
     } catch (Exception $e) {
-      print_r($e);
+      error_log('Error occurred while setting refresh toke for user ' . $user_id . ' to ' . $refresh_value . ': ' . $e->getMessage());
     }
-
   }
 
   public function getUserPayload($user_id)
@@ -1472,7 +1469,7 @@ class User
       $user_id = $users[0]['id'];
 
     } catch (Exception $e) {
-      print_r($e);
+      error_log('Error occurred while getting user payload for user ' . $user_id . ': ' . $e->getMessage());
     }
 
     $reactivation_date = false; // init
@@ -1524,7 +1521,7 @@ class User
       $user_id = $users[0]['id'];
 
     } catch (Exception $e) {
-      print_r($e);
+      error_log('Error occurred while checking credentials for user ' . $user_id . ': ' . $e->getMessage());
     }
 
     $reactivation_date = false; // init
@@ -1676,7 +1673,7 @@ class User
       $users = $this->db->resultSet();
 
     } catch (Exception $e) {
-      error_log('Error occured while getting users: ' . $e->getMessage()); // display error
+      error_log('Error occurred while getting users: ' . $e->getMessage()); // display error
       $err = true;
       $returnvalue['success'] = false; // set return value
       $returnvalue['error_code'] = 1; // db error code
@@ -2024,8 +2021,7 @@ class User
       $this->addUserToStandardRoom($insertid);
 
     } catch (Exception $e) {
-
-      print_r($e);
+      error_log('Error occurred while adding user ' . $user_id . ' to standard room: ' . $e->getMessage());
       $err = true;
     }
 

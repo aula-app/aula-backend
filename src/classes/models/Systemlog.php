@@ -25,7 +25,7 @@ class Systemlog {
       /* adds an event to the system php_log
       $type (int) 0=standard, 1=warning, 2=error 3=nuke error
       $msg (text) entry message / error message
-      $url (text) url where event occured (i.e. error)
+      $url (text) url where event occurred (i.e. error)
       $id_type 0=id is a user id 1= id is a group id
       */
 
@@ -44,7 +44,7 @@ class Systemlog {
         $action = $this->db->execute(); // do the query
 
       } catch (Exception $e) {
-          error_log('Error occured: ' . $e->getMessage()); // display error
+          error_log('Error occurred: ' . $e->getMessage()); // display error
           $err=true;
       }
       if (!$err)
