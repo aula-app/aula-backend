@@ -25,3 +25,12 @@ jobs:
 
       - name: Push Docker image tag
         run: docker push $IMAGE_TAG_SHORT_SHA
+
+      - name: '[legacy] Add IMAGE_TAG_LEGACY_SHORT_SHA env property with commit short sha'
+        run: echo "IMAGE_TAG_LEGACY_SHORT_SHA=aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: '[legacy] Build and tag legacy Docker image'
+        run: docker build -f legacy/Dockerfile -t $IMAGE_TAG_LEGACY_SHORT_SHA
+
+      - name: '[legacy] Push Docker legacy image tags'
+        run: docker push $IMAGE_TAG_LEGACY_SHORT_SHA

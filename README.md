@@ -29,8 +29,16 @@ Please reach out to `dev [at] aula.de` if you're interested in self-hosting. Ins
 
 ## Development
 
-- `./src` contains all PHP source files that are served by Apache2.
-- `./config` has templates for configuration. You can manually edit them.
+### Legacy part of API
+
+- `./legacy/src` contains all PHP source files that are served by Apache2.
+- `./legacy/config` has templates for configuration. You can manually edit them.
+- `./legacy/init` has SQL scripts to init the legacy DB structure, for local development use only.
+- `./legacy/docker-local` is local-only folder bound to Docker volumes storing database and uploaded files.
+
+### Current API
+
+We're rewriting parts of existing API into Laravel, following the default Laravel [Directory Structure](https://laravel.com/docs/12.x/structure).
 
 ## License
 
