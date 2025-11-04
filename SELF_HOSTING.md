@@ -5,9 +5,9 @@ We have looked into different options of enabling self-hosting of aula-Software.
 
 They vary in these dimensions:
 1. Ease of use for you, the self-hoster
-1. Functional parity (there might be features missing in some self-hosted options)
-1. Dependency on aula-Hosted services (in some options we provide limited API)
-1. Full ownership of users' data (in some options we process some users' data)
+2. Functional parity (there might be features missing in some self-hosted options)
+3. Dependency on aula-Hosted services (in some options we provide limited API)
+4. Full ownership of users' data (in some options we process some users' data)
 
 **Our recommendation is to self-host everything** on your own, which means [aula-backend](https://github.com/aula-app/aula-backend) (BE API), [aula-frontend](https://github.com/aula-app/aula-frontend/) (FE for web and Mobile Apps for Apple/Android) and database and other services. This is the most difficult solution for the self-hoster because it involves managing your own aula Mobile App (you'll need infrastructure for doing regular builds, configuration of the repository, management of Apple APNS and Google Push Notification accounts, etc.). However, this is the only solution that provides (2) full Functional parity, (3) no dependency on aula-Hosted services and (4) full ownership of users' data. You will write your own Privacy Policy, and there will be no need to have any contract between aula and your organisation.
 
@@ -15,7 +15,7 @@ They vary in these dimensions:
 
 There are a couple of other options in between these two extremes, but we would need to invest remarkable effort into supporting them, and they would still mean we'd need to have a DPA contract and you'd use some services provided by aula, just in a different way:
 1. **We** could **process even more user data** to enable Push Notifications. This would be a lot of work for us, and you'd have to share even more data of your users with aula.
-1. We could change the way we determine your BE API URL to use DNS. This would slightly improve Data Privacy, but wouldn't eliminate the need for contracts, and you'd still depend on aula's control of that service.
+2. We could change the way we determine your BE API URL to use DNS. This would slightly improve Data Privacy, but wouldn't eliminate the need for contracts, and you'd still depend on aula's control of that service.
 
 _Note: At the moment, we haven't yet released aula version with the usage of Push Notifications, but it's planned for soon. Once we release this functionality, we will include instructions on how to configure [aula-frontend](https://github.com/aula-app/aula-frontend/) (containing source code for Mobile Apps) with your Google/APNS account data for Push Notifications and perform builds and releases._
 
