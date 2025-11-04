@@ -23,9 +23,9 @@ There are a couple of other options in between these two extremes, but we would 
 | benefits per type of self-hosting    | BE+DB (no Push, status quo) | BE+DB (no Push, with DNS) | BE+DB (aula Push API)           | BE+DB+Mobile Apps         |
 | ---------                            | ---------------             | ---------------           | ---------------                 | ---------------           |
 | technical complexity of self-hosting | ✅ (low)                    | ✅ (low)                  | ✅ (low)                        | ⚠️ (Google/APNS, for now) |
-| functional parity                    | ❌                          | ❌                        | ⚠️ (for now)                    | ✅                        |
+| functional parity                    | ❌                          | ❌                        | ✅ (for now)                    | ✅                        |
 | independent of aula-Hosted services  | ❌                          | ❌                        | ❌                              | ✅                        |
-| types of user data shared with aula  | ❌ (IP address)             | ⚠️ (0, for now)           | ❌ (IP address, device token)   | ✅ (0)                    |
+| types of user data shared with aula  | ⚠️ (IP address)             | ✅ (nothing, for now)     | ❌ (IP address, device token)   | ✅ (nothing)              |
 | no legal contracts necessary         | ❌                          | ❌                        | ❌                              | ✅                        |
 | ready to use                         | ✅ (soon)                   | ⚠️ (changes necessary)    | ❌ (lack of funding to develop) | ✅ (soon)                 |
 
