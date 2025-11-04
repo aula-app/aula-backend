@@ -20,6 +20,14 @@ There are a couple of other options in between these two extremes, but we would 
 1. **We** could **process even more user data** to enable Push Notifications. This would be a lot of work for us, and you'd have to share even more data of your users with aula.
 2. We could change the way we determine your BE API URL to use DNS. This would slightly improve Data Privacy, but wouldn't eliminate the need for contracts, and you'd still depend on aula's control of that service.
 
+| benefits per type of self-hosting    | BE+DB (no Push, status quo) | BE+DB (no Push, with DNS) | BE+DB (aula Push API)         | BE+DB+Mobile Apps |
+| ---------                            | ---------------             | ---------------           | ---------------               | ---------------   |
+| technical complexity of self-hosting | ✅ (low)                    | ✅ (low)                  | ✅ (low)                      | ⚠️ (Google, APNS) |
+| functional parity                    | ❌                          | ❌                        | ⚠️ (for now)                  | ✅                |
+| independent of aula-Hosted services  | ❌                          | ❌                        | ❌                            | ✅                |
+| types of user data shared with aula  | ❌ (IP address)             | ⚠️ (0, for now)           | ❌ (IP address, device token) | ✅ (0)            |
+| no legal contracts necessary         | ❌                          | ❌                        | ❌                            | ✅                |
+
 _Note: At the moment, we haven't yet released aula version with the usage of Push Notifications, but it's planned for soon. Once we release this functionality, we will include instructions on how to configure [aula-frontend](https://github.com/aula-app/aula-frontend/) (containing source code for Mobile Apps) with your Google/APNS account data for Push Notifications and perform builds and releases._
 
 _Note: At the moment, we haven't yet released [aula-selfhosted](https://github.com/aula-app/aula-selfhosted) which will be easy-to-use Docker Compose based solution. We will update this notice as soon as that repository is ready for you use._
