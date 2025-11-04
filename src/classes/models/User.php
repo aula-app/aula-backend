@@ -2235,7 +2235,25 @@ class User
       $extra_where .= " AND type = " . $type;
     }
 
-    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_rooms_users . ' LEFT JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_rooms . '.id = ' . $this->db->au_rel_rooms_users . '.room_id) WHERE user_id = :user_id' . $extra_where);
+    $query_rooms = <<<EOD
+      SELECT
+        rooms.hash_id
+      FROM
+        au_rel_rooms_users rel_rooms_users
+      JOIN
+        au_rooms rooms
+      ON
+        rel_rooms_users.room_id = rooms.id
+      INNER JOIN
+        au_users_basedata users_basedata
+      ON
+        rel_rooms_users.user_id = users_basedata.id
+      WHERE
+        rel_rooms_users.user_id = :user_id AND
+        JSON_SEARCH(users_basedata.roles, 'one', rooms.hash_id, NULL, '$[*].room') IS NOT NULL
+    EOD;
+
+    $stmt = $this->db->query($query_rooms . $extra_where);
     $this->db->bind(':user_id', $user_id); // bind userid
     $rooms = $this->db->resultSet();
 
