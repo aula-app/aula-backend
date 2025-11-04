@@ -17,20 +17,23 @@ They vary in these dimensions:
 **If you want to simplify your technical work** at cost of all other mentioned dimensions, and have (2) incomplete functional parity (for now this would mean you'd miss out on Push Notifications), (3) some dependency on aula-Hosted services and (4) aula gGmbH would process some limited data of your users, we have an alternative. You would host only [aula-backend](https://github.com/aula-app/aula-backend) (BE API) and the database, while your users will use our existing Mobile Apps for Android/Apple and our existing website. However, to redirect the App to communicate with your BE API, we'll need to let the Mobile Apps use aula's Central Registry of all instances to resolve your BE API URL. This means we will temporarily have access to the IP addresses of your users, therefore we'd process their Personally Identifiable Information. This means you as self-hoster and us as aula will need to establish a Data Processing Agreement where we outline which data is processed by whom. We'd also need to let the Mobile Apps show multiple Privacy Policies in an understandable way for our users.
 
 There are a couple of other options in between these two extremes, but we would need to invest remarkable effort into supporting them, and they would still mean we'd need to have a DPA contract and you'd use some services provided by aula, just in a different way:
-1. **We** could **process even more user data** to enable Push Notifications. This would be a lot of work for us, and you'd have to share even more data of your users with aula.
-2. We could change the way we determine your BE API URL to use DNS. This would slightly improve Data Privacy, but wouldn't eliminate the need for contracts, and you'd still depend on aula's control of that service.
+* **We** could **process even more user data** to enable Push Notifications. This would be a lot of work for us, and you'd have to share even more data of your users with aula.
+* We could change the way we determine your BE API URL to use DNS. This would slightly improve Data Privacy, but wouldn't eliminate the need for contracts, and you'd still depend on aula's control of that service.
 
-| benefits per type of self-hosting    | BE+DB (no Push, status quo) | BE+DB (no Push, with DNS) | BE+DB (aula Push API)         | BE+DB+Mobile Apps |
-| ---------                            | ---------------             | ---------------           | ---------------               | ---------------   |
-| technical complexity of self-hosting | ✅ (low)                    | ✅ (low)                  | ✅ (low)                      | ⚠️ (Google, APNS) |
-| functional parity                    | ❌                          | ❌                        | ⚠️ (for now)                  | ✅                |
-| independent of aula-Hosted services  | ❌                          | ❌                        | ❌                            | ✅                |
-| types of user data shared with aula  | ❌ (IP address)             | ⚠️ (0, for now)           | ❌ (IP address, device token) | ✅ (0)            |
-| no legal contracts necessary         | ❌                          | ❌                        | ❌                            | ✅                |
+| benefits per type of self-hosting    | BE+DB (no Push, status quo) | BE+DB (no Push, with DNS) | BE+DB (aula Push API)           | BE+DB+Mobile Apps         |
+| ---------                            | ---------------             | ---------------           | ---------------                 | ---------------           |
+| technical complexity of self-hosting | ✅ (low)                    | ✅ (low)                  | ✅ (low)                        | ⚠️ (Google/APNS, for now) |
+| functional parity                    | ❌                          | ❌                        | ⚠️ (for now)                    | ✅                        |
+| independent of aula-Hosted services  | ❌                          | ❌                        | ❌                              | ✅                        |
+| types of user data shared with aula  | ❌ (IP address)             | ⚠️ (0, for now)           | ❌ (IP address, device token)   | ✅ (0)                    |
+| no legal contracts necessary         | ❌                          | ❌                        | ❌                              | ✅                        |
+| ready to use                         | ✅ (soon)                   | ⚠️ (changes necessary)    | ❌ (lack of funding to develop) | ✅ (soon)                 |
 
 _Note: At the moment, we haven't yet released aula version with the usage of Push Notifications, but it's planned for soon. Once we release this functionality, we will include instructions on how to configure [aula-frontend](https://github.com/aula-app/aula-frontend/) (containing source code for Mobile Apps) with your Google/APNS account data for Push Notifications and perform builds and releases._
 
 _Note: At the moment, we haven't yet released [aula-selfhosted](https://github.com/aula-app/aula-selfhosted) which will be easy-to-use Docker Compose based solution. We will update this notice as soon as that repository is ready for you use._
+
+To use our aula-Hosted solution, please visit [aula.de](https://aula.de).
 
 If you have any further questions, please reach out to `dev [at] aula [dot] de`
 
