@@ -115,4 +115,5 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    'reply-to' => env('MAIL_REPLY_TO_ADDRESS', 'feedback@example.com'),
 ];
