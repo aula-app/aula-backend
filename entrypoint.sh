@@ -10,7 +10,7 @@ echo "Generating app key..."
 php artisan key:generate --force
 echo "App key generated."
 
-php artisan migrate
+php artisan migrate --force
 php artisan optimize:clear
 php artisan storage:link
 

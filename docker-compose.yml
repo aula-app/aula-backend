@@ -1,0 +1,35 @@
+networks:
+  aula_local:
+    driver: bridge
+
+services:
+  aula-backend:
+    image: aulaapp/aula-backend:latest
+    build:
+      context: ./
+    ports:
+      - "8080:80"
+    depends_on:
+      - mariadb
+    networks:
+      - aula_local
+
+  # a mariadb instance is included here as a docker service, in case you need it
+  mariadb:
+    image: mariadb:11.7
+    environment:
+      # @NOTE: if you use this container, these
+      #  values need to be reflected in .env
+      MARIADB_DATABASE: aula_database
+      MARIADB_ROOT_PASSWORD: example
+      MARIADB_USER: aula_user
+      MARIADB_PASSWORD: example
+    networks:
+      - aula_local
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - aula_local
