@@ -1748,6 +1748,14 @@ class User
     $asc = intval($asc);
     $userlevel = intval($userlevel);
 
+    $room_model = new Room($this->db, $this->crypt, $this->syslog);
+
+    if (is_int($room_id)) {
+      $room_hash = $room_model->getRoomHashId($room_id)["data"];
+    } else {
+      $room_hash = $room_id;
+    }
+
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
 
@@ -1823,10 +1831,21 @@ class User
         (ru.user_id = u.id)
       WHERE
         ru.room_id = :room_id {$extra_where}
+      AND
+        EXISTS (
+          SELECT 1
+          FROM JSON_TABLE(
+              u.roles,
+              '$[*]' COLUMNS(room VARCHAR(50) PATH '$.room')
+          ) AS jt
+          WHERE jt.room = :room_hash
+        )
     EOD;
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
+    $this->db->bind(':room_hash', $room_hash); // bind room id
+
     //$this->db->bind(':status', $status); // bind status
 
     if ($search_field_valid) {
