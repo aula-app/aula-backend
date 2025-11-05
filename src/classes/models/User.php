@@ -1832,14 +1832,7 @@ class User
       WHERE
         ru.room_id = :room_id {$extra_where}
       AND
-        EXISTS (
-          SELECT 1
-          FROM JSON_TABLE(
-              u.roles,
-              '$[*]' COLUMNS(room VARCHAR(50) PATH '$.room')
-          ) AS jt
-          WHERE jt.room = :room_hash
-        )
+        JSON_SEARCH(u.roles, 'one', :room_hash, NULL, '$[*].room') IS NOT NULL
     EOD;
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
