@@ -39,7 +39,7 @@ _Note: At the moment, we haven't yet released [aula-selfhosted](https://github.c
 
 To use our aula-Hosted solution, please visit [aula.de](https://aula.de).
 
-In case you want to modify our solution, please bear in mind we release our open source aula repositories with EUPL v1.2-or-later license, which requires you to contribute back any modifications to us. We will make sure the configuration of aula-Software is simple for you and flexible enough to avoid any need to modify the code itself. In case you have a very specific need to change the code and not contribute back, we can decide on case-by-case basis and draft a special license agreement between us.
+In case you want to modify our solution, please bear in mind we release our open source aula repositories with EUPL v1.2-or-later license, which requires you to contribute back any modifications to us. Any modifications that you submit to us will by default be licensed under the same terms. We will make sure the configuration of aula-Software is simple for you and flexible enough to avoid any need to modify the code itself. In case you have a very specific need to change the code and not contribute back the changes to our code repositories, please reach out to us and we will decide on case-by-case basis whether to draft a special license agreement between us.
 
 If you have any further questions, please reach out to `dev [at] aula [dot] de`
 
@@ -53,6 +53,6 @@ _Note: At the moment, we haven't yet released [aula-selfhosted](https://github.c
 
 _Note: At the moment, we haven't yet released [aula-manager](https://github.com/aula-app/aula-manager), which will be necessary for you to manage multiple instances._
 
-In case you want to modify our solution, please bear in mind we release our open source aula repositories with EUPL v1.2-or-later license, which requires you to contribute back any modifications to us. We will make sure the configuration of aula-Software is simple for you and flexible enough to avoid any need to modify the code itself. In case you have a very specific need to change the code and not contribute back, we can decide on case-by-case basis and draft a special license agreement between us.
+In case you want to modify our solution, please bear in mind we release our open source aula repositories with EUPL v1.2-or-later license, which requires you to contribute back any modifications to us. Any modifications that you submit to us will by default be licensed under the same terms. We will make sure the configuration of aula-Software is simple for you and flexible enough to avoid any need to modify the code itself. In case you have a very specific need to change the code and not contribute back the changes to our code repositories, please reach out to us and we will decide on case-by-case basis whether to draft a special license agreement between us.
 
 If you have any further questions, please reach out to `dev [at] aula [dot] de`
