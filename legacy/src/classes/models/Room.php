@@ -295,11 +295,29 @@ class Room
         $asc_field = "DESC";
     }
 
-    $query = 'SELECT DISTINCT ' . $this->db->au_rooms . '.id, ' . $this->db->au_rooms . '.hash_id, ' . $this->db->au_rooms . '.room_name, ' . $this->db->au_rooms . '.description_public, ' . $this->db->au_rooms . '.description_internal, ' . $this->db->au_rooms . '.description_public, ' . $this->db->au_rooms . '.last_update, ' . $this->db->au_rooms . '.created FROM ' . $this->db->au_rooms . ' INNER JOIN ' . $this->db->au_rel_rooms_users . ' ON (' . $this->db->au_rooms . '.id = ' . $this->db->au_rel_rooms_users . '.room_id) WHERE (' . $this->db->au_rel_rooms_users . '.user_id = :user_id OR ' . $this->db->au_rooms . '.restrict_to_roomusers_only = 0) ';
+    $query_rooms = <<<EOD
 
-    $stmt = $this->db->query($query . $extra_where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+      SELECT
+        rooms.id,
+        rooms.hash_id,
+        rooms.room_name
+      FROM
+        au_rel_rooms_users rel_rooms_users
+      JOIN
+        au_rooms rooms
+      ON
+        rel_rooms_users.room_id = rooms.id
+      INNER JOIN
+        au_users_basedata users_basedata
+      ON
+        rel_rooms_users.user_id = users_basedata.id
+      WHERE
+        rel_rooms_users.user_id = :user_id AND
+        JSON_SEARCH(users_basedata.roles, 'one', rooms.hash_id, NULL, '$[*].room') IS NOT NULL
+    EOD;
 
-    //$this->db->bind(':status', $status); // bind status
+    $stmt = $this->db->query($query_rooms . $extra_where . ' ORDER BY rooms.' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+
     $this->db->bind(':user_id', $user_id); // bind user id
 
     $err = false;

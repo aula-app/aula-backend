@@ -1748,6 +1748,14 @@ class User
     $asc = intval($asc);
     $userlevel = intval($userlevel);
 
+    $room_model = new Room($this->db, $this->crypt, $this->syslog);
+
+    if (is_int($room_id)) {
+      $room_hash = $room_model->getRoomHashId($room_id)["data"];
+    } else {
+      $room_hash = $room_id;
+    }
+
     $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
 
@@ -1823,10 +1831,14 @@ class User
         (ru.user_id = u.id)
       WHERE
         ru.room_id = :room_id {$extra_where}
+      AND
+        JSON_SEARCH(u.roles, 'one', :room_hash, NULL, '$[*].room') IS NOT NULL
     EOD;
 
     $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
+    $this->db->bind(':room_hash', $room_hash); // bind room id
+
     //$this->db->bind(':status', $status); // bind status
 
     if ($search_field_valid) {
@@ -2235,7 +2247,25 @@ class User
       $extra_where .= " AND type = " . $type;
     }
 
-    $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rel_rooms_users . ' LEFT JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_rooms . '.id = ' . $this->db->au_rel_rooms_users . '.room_id) WHERE user_id = :user_id' . $extra_where);
+    $query_rooms = <<<EOD
+      SELECT
+        rooms.hash_id
+      FROM
+        au_rel_rooms_users rel_rooms_users
+      JOIN
+        au_rooms rooms
+      ON
+        rel_rooms_users.room_id = rooms.id
+      INNER JOIN
+        au_users_basedata users_basedata
+      ON
+        rel_rooms_users.user_id = users_basedata.id
+      WHERE
+        rel_rooms_users.user_id = :user_id AND
+        JSON_SEARCH(users_basedata.roles, 'one', rooms.hash_id, NULL, '$[*].room') IS NOT NULL
+    EOD;
+
+    $stmt = $this->db->query($query_rooms . $extra_where);
     $this->db->bind(':user_id', $user_id); // bind userid
     $rooms = $this->db->resultSet();
 
