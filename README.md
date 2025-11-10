@@ -25,7 +25,7 @@ make publish-release
 
 ## Self-Hosting
 
-Please reach out to `dev [at] aula.de` if you're interested in self-hosting. Instructions will soon be published in [aula-selfhosted](https://github.com/aula-app/aula-selfhosted). At the moment, running aula-backend and aula-frontend docker images is NOT enough.
+See [SELF_HOSTING.md](https://github.com/aula-app/aula-backend/blob/main/SELF_HOSTING.md) for up-to-date information. At the moment, running aula-backend and aula-frontend docker images is NOT enough.
 
 ## Development
 
