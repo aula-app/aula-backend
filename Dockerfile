@@ -4,14 +4,14 @@ EXPOSE 80
 
 # Install additional packages
 RUN apk --no-cache add supervisor nginx mariadb-client \
-    && docker-php-ext-install pdo pdo_mysql
+    && docker-php-ext-install pdo pdo_mysql \
+    && docker-php-ext-enable opcache
 
 COPY conf.d/supervisor/supervisord.conf /etc/supervisord.conf
 COPY conf.d/php-fpm/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 COPY conf.d/php/php.ini /usr/local/etc/php/conf.d/php.ini
 COPY conf.d/nginx/default.conf /etc/nginx/nginx.conf
-# docker-php-ext-enable opcache sodium
-# COPY conf.d/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY conf.d/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Fetch composer from its docker image, and run it
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
