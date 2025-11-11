@@ -1,56 +1,41 @@
-FROM ubuntu:24.04
-
-# Environment variables
-ENV PROJECT_PATH=/var/www/html \
-  DEBIAN_FRONTEND=noninteractive \
-  APACHE_RUN_USER=www-data \
-  APACHE_RUN_GROUP=www-data \
-  APACHE_LOCK_DIR=/var/lock/apache2 \
-  PHP_INI=/etc/php/8.3/apache2/php.ini \
-  TERM=xterm
+FROM php:8.4-fpm-alpine
+WORKDIR /opt/laravel
 EXPOSE 80
-WORKDIR $PROJECT_PATH
-USER root
 
-# Utilities, Apache, PHP, and supplementary programs which the application requires
-RUN set -eux; apt update -q && \
-  apt install -yqq curl cron gosu \
-    apache2 libapache2-mod-php php8.3 \
-    memcached libmemcached-tools php-cli php-memcached php8.3-memcached \
-    php-mysql default-mysql-client \
-    php8.3-bcmath php8.3-curl php8.3-dom php8.3-mbstring php8.3-intl \
-    sendmail libphp-phpmailer php-mail && \
-  apt purge -yq patch software-properties-common && \
-  apt autoremove -yqq && \
-  apt clean && \
-  rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+# Install additional packages
+RUN apk --no-cache add supervisor nginx mariadb-client \
+    && docker-php-ext-install pdo pdo_mysql
 
-# Apache mods & conf (logs should be forwarded to stdout & stderr for docker; ServerName fqdn)
-RUN a2enmod rewrite expires headers && \
-  rm -f /var/log/apache2/access.log /var/log/apache2/error.log && \
-  ln -sf /dev/stdout /var/log/apache2/access.log && \
-  ln -sf /dev/stderr /var/log/apache2/error.log && \
-  rm -f /etc/logrotate.d/apache2 && \
-  echo 'ServerName ${APACHE_SERVER_NAME}' | tee /etc/apache2/conf-available/fqdn.conf && a2enconf fqdn
-# This envvar should be injected at runtime, localhost is the fallback value
-ENV APACHE_SERVER_NAME="localhost"
+COPY conf.d/supervisor/supervisord.conf /etc/supervisord.conf
+COPY conf.d/php-fpm/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+COPY conf.d/php/php.ini /usr/local/etc/php/conf.d/php.ini
+COPY conf.d/nginx/default.conf /etc/nginx/nginx.conf
+# docker-php-ext-enable opcache sodium
+# COPY conf.d/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
-# Enable crontab
-COPY crontab ./aula-scheduled-commands
-COPY cron.php ./
-RUN chmod 0744 ./cron.php && \
-  chmod 0644 ./aula-scheduled-commands && \
-  crontab ./aula-scheduled-commands
+# Fetch composer from its docker image, and run it
+COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
+COPY composer.json ./
+COPY composer.lock ./
+RUN composer install --no-interaction --no-scripts --optimize-autoloader --no-dev
 
-# These are safe fallbacks
-COPY ./apache2-aula-default.conf /etc/apache2/sites-enabled/000-default.conf
-COPY ./config/base_config.php-example ./config/base_config.php
+# Copy everything (respects .dockerignore)
+COPY . .
+RUN chown -R www-data:www-data ./ \
+    && chmod -R 755 ./storage
 
-# instances_config should be omitted so we force the docker image users to add it
-# COPY ./config/instances_config.php-example ./config/instances_config.php
+# Scheduler setup
+# @TODO: nikola - https://dev.to/spiechu/how-to-run-laravel-scheduler-in-docker-container-d1p
+RUN touch /var/log/cron.log
+RUN echo "* * * * * /usr/local/bin/php /opt/laravel/artisan schedule:run >> /var/log/cron.log 2>&1" | crontab -
 
-COPY ./docker-entrypoint.sh ./
-COPY ./src ./api
+# Declare image volumes
+VOLUME /opt/laravel/storage
 
-# Grab encryption keys from envvars and start apache2
-CMD ["./docker-entrypoint.sh"]
+# Define a health check
+HEALTHCHECK --interval=30s --timeout=15s --start-period=15s --retries=3 CMD curl -f http://localhost/internal/up || exit 1
+
+# Add the entrypoint
+ADD entrypoint.sh /root/entrypoint.sh
+RUN chmod +x /root/entrypoint.sh
+ENTRYPOINT ["/root/entrypoint.sh"]

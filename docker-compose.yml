@@ -7,29 +7,10 @@ services:
     image: aulaapp/aula-backend:latest
     build:
       context: ./
-    environment:
-      SUPERKEY: CHANGE_ME
-      APACHE_SERVER_NAME: localhost
     ports:
       - "8080:80"
     depends_on:
       - mariadb
-    volumes:
-      - type: bind
-        source: ./config/base_config.php
-        target: /var/www/html/config/base_config.php
-        bind:
-          create_host_path: false
-      - type: bind
-        source: ./config/instances_config.php
-        target: /var/www/html/config/instances_config.php
-        bind:
-          create_host_path: false
-      - type: bind
-        source: ./docker-local/php.ini-development
-        target: /etc/php/8.3/apache2/php.ini
-        bind:
-          create_host_path: true
     networks:
       - aula_local
 
@@ -38,13 +19,17 @@ services:
     image: mariadb:11.7
     environment:
       # @NOTE: if you use this container, these
-      #  values need to be reflected in ./config/instances_config.php
+      #  values need to be reflected in .env
       MARIADB_DATABASE: aula_database
       MARIADB_ROOT_PASSWORD: example
       MARIADB_USER: aula_user
       MARIADB_PASSWORD: example
-    volumes:
-      # use the inital data in the application to populate the db
-      - ./init/aula_db_content.sql:/docker-entrypoint-initdb.d/aula_db_content.sql
+    networks:
+      - aula_local
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
     networks:
       - aula_local
