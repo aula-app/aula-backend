@@ -15,7 +15,7 @@ return [
 
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'api'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'aula_users'), // or 'users' ? what's a broker anyways - is it a provider?
     ],
 
     /*
@@ -36,9 +36,13 @@ return [
     */
 
     'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'aula_manager_users',
+        ],
         'api' => [
-            'driver' => 'passport',
-            'provider' => 'users',
+            'driver' => 'passport', // 'session', // @TODO: nikola - use 'passport' driver
+            'provider' => 'aula_users',
         ],
     ],
 
@@ -60,7 +64,11 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        'aula_manager_users' => [
+            'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+        'aula_users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
@@ -92,7 +100,7 @@ return [
 
     'passwords' => [
         'users' => [
-            'provider' => 'users',
+            'provider' => 'aula_users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,
