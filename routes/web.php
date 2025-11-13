@@ -14,3 +14,9 @@ Route::middleware('auth')->group(function () {
   });
 });
 */
+Route::middleware(['universal'])->group(function () {
+    Route::get('/', function () {
+        /* dd(\App\Models\User::first()->email); */
+        return response()->json(\App\Models\User::all()->toArray(), 200);
+    });
+});

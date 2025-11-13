@@ -4,13 +4,14 @@
 use Illuminate\Support\Facades\Route;
 
 Route::name('internal.')
+    ->middleware(['universal'])
     ->prefix('/internal/')
     ->group(base_path('routes/api/internal.php'));
 
 Route::name('aula.')
+    ->middleware(['auth:api']) // , 'can:is-admin'
     ->prefix('/api/v2/')
-    ->group(base_path('routes/api/aula.php'))
-    ->middleware(['auth:api']); // , 'can:is-admin'
+    ->group(base_path('routes/api/aula.php'));
 /*
 
 Route::get('/user', function (Request $request) {
