@@ -29,11 +29,11 @@ docker compose up --build -d
 docker compose down \
   && make run-legacy-local
 
-# Run both legacy aula-backend:v1 and current Laravel-based aula-backend:v2
+# Run both legacy aula-backend:v1 (:8080) and current Laravel-based aula-backend:v2 (:???)
 docker build -f Dockerfile . \
   && docker compose down \
   && make run-legacy-local \
-  && docker run --name 'aula-backend' -d --network legacy_aula_local $(docker build -f Dockerfile -q .)
+  && docker compose up --build -d aula-backend
 ```
 
 ## Legacy aula-backend code

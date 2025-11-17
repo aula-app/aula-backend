@@ -1,6 +1,9 @@
+name: aula-v2
+
 networks:
   aula_local:
     driver: bridge
+    external: true
 
 services:
   aula-backend:
@@ -8,9 +11,20 @@ services:
     build:
       context: ./
     ports:
-      - "8080:80"
+      - "8000:80"
     depends_on:
       - mariadb
+    volumes:
+      - type: bind
+        source: ./storage/oauth-private.key
+        target: /opt/laravel/storage/oauth-private.key
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./storage/oauth-public.key
+        target: /opt/laravel/storage/oauth-public.key
+        bind:
+          create_host_path: false
     networks:
       - aula_local
 
@@ -24,6 +38,12 @@ services:
       MARIADB_ROOT_PASSWORD: example
       MARIADB_USER: aula_user
       MARIADB_PASSWORD: example
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - aula_local
 
