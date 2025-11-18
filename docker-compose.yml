@@ -11,9 +11,7 @@ services:
     build:
       context: ./
     ports:
-      - "8000:80"
-    depends_on:
-      - mariadb
+      - "8080:80"
     volumes:
       - type: bind
         source: ./storage/oauth-private.key
@@ -46,6 +44,7 @@ services:
       retries: 3
     networks:
       - aula_local
+    profiles: ["v2-only"]
 
   redis:
     image: redis:latest
@@ -53,3 +52,4 @@ services:
       - 6379:6379
     networks:
       - aula_local
+    profiles: ["v2-only"]
