@@ -22,7 +22,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and tag Docker images
-        run: docker build -f legacy/Dockerfile -t $IMAGE_TAG_VERSION
+        run: docker build -f legacy/Dockerfile -t $IMAGE_TAG_VERSION .
 
       - name: Push Docker image tags
         run: docker push $IMAGE_TAG_VERSION
@@ -37,7 +37,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and tag Docker images
-        run: docker build -f ./Dockerfile -t $IMAGE_TAG_VERSION -t $IMAGE_TAG_LATEST
+        run: docker build -f ./Dockerfile -t $IMAGE_TAG_VERSION -t $IMAGE_TAG_LATEST .
 
       - name: Push Docker image tags
         run: |
