@@ -2,15 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
-/*
-// Protected routes
-Route::middleware('auth')->group(function () {
-  Route::controller(UserController::class)->group(function () {
-    Route::get('/users', 'list');
-    Route::post('/users', 'add');
-    Route::get('/users/{user}', 'get');
-    Route::put('/users/{user}', 'update');
-    Route::delete('/users/{user}', 'remove');
-  });
+Route::middleware(['universal'])->group(function () {
+    Route::get('/web/users', function () {
+        /* dd(\App\Models\User::first()->email); */
+        return response()->json(\App\Models\User::all()->toArray(), 200);
+    });
 });
-*/
