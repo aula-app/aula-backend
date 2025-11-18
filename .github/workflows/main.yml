@@ -30,7 +30,8 @@ jobs:
         run: echo "IMAGE_TAG_LEGACY_SHORT_SHA=aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: "[legacy] Build and tag legacy Docker image"
-        run: docker build -f legacy/Dockerfile -t $IMAGE_TAG_LEGACY_SHORT_SHA .
+        working-directory: ./legacy
+        run: docker build -t $IMAGE_TAG_LEGACY_SHORT_SHA .
 
       - name: "[legacy] Push Docker legacy image tags"
         run: docker push $IMAGE_TAG_LEGACY_SHORT_SHA
