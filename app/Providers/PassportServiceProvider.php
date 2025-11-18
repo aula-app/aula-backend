@@ -15,8 +15,6 @@ class PassportServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // we're only using Passport for tenants (for now)
-        /* Passport::ignoreMigrations(); */
         Passport::ignoreRoutes();
     }
 
