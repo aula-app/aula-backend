@@ -3,18 +3,21 @@
 # 	  2. locally building the image and running it on your machine
 #   Neither of these is a production setup.
 
-.PHONY: publish-release build-release run-local run-release prepare clean
+.PHONY: publish-legacy-release build-legacy-release run-legacy-local run-legacy-release prepare-legacy-local clean-legacy-local
 
 DATE := $(shell date "+%Y-%m-%d")
 
-prepare-legacy:
+prepare-legacy-local:
 	cd ./legacy && ./docker-prepare-local.sh
 
-clean-legacy:
+clean-legacy-local:
 	rm ./legacy/docker-compose.override.yml
 
+run-legacy-local: prepare-legacy-local
+	docker compose -f ./legacy/docker-compose.yml -f ./legacy/docker-compose.override.yml up --build -d
+
 build-legacy-release:
-	docker build -t -t "aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)" .
+	docker build -t "aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)" .
 
 publish-legacy-release: build-legacy-release
 	docker image push "aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)"
@@ -22,6 +25,3 @@ publish-legacy-release: build-legacy-release
 run-legacy-release:
 	docker compose -f ./legacy/docker-compose.yml pull
 	docker compose -f ./legacy/docker-compose.yml up -d
-
-run-legacy-local: prepare-legacy
-	docker compose -f ./legacy/docker-compose.yml -f ./legacy/docker-compose.override.yml up --build -d
