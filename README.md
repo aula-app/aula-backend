@@ -23,17 +23,17 @@ Choose one of the following:
 
 ```bash
 # Run aula-backend:v2 locally (doesn't include the legacy aula-backend:v1)
-docker compose up --build -d
+docker compose --profile v2-only up --build -d
 
 # Stop aula-backend:v2 and run legacy aula-backend:v1
-docker compose down \
+docker compose --profile v2-only down \
   && make run-legacy-local
 
-# Run both legacy aula-backend:v1 and current Laravel-based aula-backend:v2
+# Run both legacy aula-backend:v1 (:8080) and current Laravel-based aula-backend:v2 (:???)
 docker build -f Dockerfile . \
-  && docker compose down \
+  && docker compose --profile v2-only down \
   && make run-legacy-local \
-  && docker run --name 'aula-backend' -d --network legacy_aula_local $(docker build -f Dockerfile -q .)
+  && docker compose up --build -d aula-backend
 ```
 
 ## Legacy aula-backend code

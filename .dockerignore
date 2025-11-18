@@ -1,5 +1,9 @@
-.git
-.github
+/.git
+/.github
+/.ide_helpers
+_ide_helper.php
+/.idea
+/.junie
 
 .DS_Store
 
@@ -7,8 +11,10 @@ info.php
 *.md
 *.log
 
-vendor/
-bootstrap/cache/*.php
+/vendor/
+/bootstrap/cache/*.php
+
+/storage/oauth-*.key
 
 **/docker-local/
 **/docker-compose.*

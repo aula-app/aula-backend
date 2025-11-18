@@ -7,6 +7,9 @@
 .phpunit.result.cache
 /.fleet
 /.idea
+/.ide_helpers
+_ide_helper.php
+/.junie
 /.nova
 /.phpunit.cache
 /.vscode

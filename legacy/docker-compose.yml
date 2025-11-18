@@ -1,10 +1,12 @@
+name: legacy
+
 networks:
   aula_local:
     driver: bridge
+    external: true
 
 services:
   aula-backend:
-    image: aulaapp/aula-backend:latest
     build:
       context: ./
     environment:
