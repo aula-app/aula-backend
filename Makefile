@@ -7,23 +7,21 @@
 
 DATE := $(shell date "+%Y-%m-%d")
 
-prepare:
-	./docker-prepare-local.sh
+prepare-legacy:
+	cd ./legacy && ./docker-prepare-local.sh
 
-clean:
-	rm docker-compose.override.yml
+clean-legacy:
+	rm ./legacy/docker-compose.override.yml
 
-build-release:
-	docker build -t "aulaapp/aula-backend:latest" -t "aulaapp/aula-backend:$(DATE)" .
+build-legacy-release:
+	docker build -t -t "aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)" .
 
-publish-release: build-release
-	docker image push "aulaapp/aula-backend:$(DATE)"
-	docker image push "aulaapp/aula-backend:latest"
+publish-legacy-release: build-legacy-release
+	docker image push "aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)"
 
-run-release:
-	docker compose -f docker-compose.yml pull
-	docker compose -f docker-compose.yml up -d
+run-legacy-release:
+	docker compose -f ./legacy/docker-compose.yml pull
+	docker compose -f ./legacy/docker-compose.yml up -d
 
-run-local: prepare
-	docker build -t "aulaapp/aula-backend:latest" .
-	docker compose up -d
+run-legacy-local: prepare-legacy
+	docker compose -f ./legacy/docker-compose.yml -f ./legacy/docker-compose.override.yml up --build -d

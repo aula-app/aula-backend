@@ -1,0 +1,111 @@
+<?php
+
+if (array_key_exists('REQUEST_METHOD', $_SERVER) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  exit(0);
+}
+
+/* base configuration file for path definition */
+$baseDir =            "/var/www/html/api/";
+$baseClassDir =       "/var/www/html/api/classes/";
+$baseHelperDir =      "/var/www/html/api/classes/helpers/";
+$baseClassModelDir =  "/var/www/html/api/classes/models/";
+
+# Here mount directories for runtime uploads
+$filesDir =           "/var/www/html/files";
+
+# Here mount your config files
+$baseConfigDir =      "/var/www/html/config/";
+
+# This will be created by docker-entrypoint.sh from envvar
+$cryptFile =          "/var/www/html/config/superkey.ini";
+
+$oauth_redirect = "";
+
+# Your Auth0 application's Client ID
+$AUTH0_CLIENT_ID = "AUTH0-CLIENT-ID";
+
+# The URL of your Auth0 tenant domain
+$AUTH0_DOMAIN = "AUTH0-DOMAIN";
+
+# Your Auth0 application's Client Secret
+$AUTH0_CLIENT_SECRET = "AUTH0-CLIENT-SECRET";
+
+# A long, secret value used to encrypt the session cookie.
+# This can be generated using `openssl rand -hex 32` from your shell.
+$AUTH0_COOKIE_SECRET = "AUTH0-COOKIE-SECRET";
+
+# A url your application is accessible from. Update this as appropriate.
+$AUTH0_BASE_URL = "https://devel.aula.de";
+
+$AUTH0_REDIRECT_URI = "https://devel.aula.de/api/controllers/auth0.php";
+
+$AUTH0_FRONTEND_REDIRECT = "https://devel.aula.de/oauth-login/";
+
+# Email configuration
+$email_host = "CHANGE_ME";
+$email_username = "CHANGE_ME";
+$email_password = "CHANGE_ME";
+$email_port = "CHANGE_ME";
+
+$email_address = "CHANGE_ME";
+$email_from = "CHANGE_ME";
+$email_creation_subject = "Willkommen bei aula!";
+$email_creation_body = "Hallo <NAME>,
+<p>
+herzlich willkommen auf der Beteiligungsplattform aula! Wir freuen uns, dass du dabei bist. Bei Aula kannst du aktiv an Entscheidungen mitwirken und deine Ideen einbringen.
+<p>
+Benutzername: <USERNAME>
+<p>
+Um loszulegen, kannst du hier dein Passwort erstellen: <a href='https://devel.aula.de/password/<SECRET_KEY>'>https://devel.aula.de/password/<SECRET_KEY></a>
+<p>
+<ul>
+        <li>Link (siehe oben) öffnen</li>
+        <li>Instanzcode eingeben (den bekommst du von deiner Schule/Einrichtung)</li>
+        <li>Link (siehe oben) wieder in die Adresszeile eingeben</li>
+        <li>Passwort festlegen</li>
+        <li>einloggen!</li>
+</ul>
+<p>
+Nach der Anmeldung kannst du:
+<p>
+<ul>
+    <li>Neue Ideen und Verbesserungsvorschläge posten</li>
+    <li>An Diskussionen und Abstimmungen teilnehmen</li>
+</ul>
+<p>
+Wenn du mehr über aula und das Konzept erfahren möchtest, schau doch mal auf unserer
+ E-Learning-Plattform (<a href='https://learning.aula.de'>learning.aula.de</a>) oder unserer
+ Website (<a href='https://www.aula.de'>aula.de</a>) vorbei.
+<p>
+Alle Infos zu den Funktionen und Möglichkeiten auf unserer Plattform findest du in unserem Docs (<a href='https://docs.aula.de'>docs.aula.de</a>).
+Wenn du Hilfe brauchst oder Fragen hast, ist unser Support-Team immer für dich da. Schick uns einfach eine E-Mail an <a href='mailto:support@aula.de'>support@aula.de</a>.
+<p>
+Nochmals ein herzliches Willkommen und viel Spaß beim Mitgestalten!
+<p>
+Viele Grüße,
+<p>
+Dein aula-Team
+";
+
+$email_forgot_password_subject = "Change your Aula password";
+$email_forgot_password_body = "Liebe*r <NAME>,
+<p>
+wir haben eine Anfrage zum Zurücksetzen deines Passworts für dein Konto auf der Beteiligungsplattform Aula erhalten. Um dein Passwort zurückzusetzen und den Zugang zu deinem Konto wiederherzustellen, klick bitte auf den folgenden Link:
+<p>
+<a href='https://devel.aula.de/password/<SECRET_KEY>?code=<CODE>'>https://devel.aula.de/password/<SECRET_KEY?code=<CODE></a>
+<p>
+Falls der obige Link nicht funktioniert, kopieren ihn bitte und fügen ihn in die Adressleiste deines Browsers ein.
+<p>
+Wenn du diese Anfrage nicht gestellt haben oder wenn du Fragen haben, wenden dich bitte an unser Team: support@aula.de .
+<p>
+Bitte beachte, dass dieser Link aus Sicherheitsgründen nur für eine begrenzte Zeit gültig ist.
+<p>
+Mit freundlichen Grüßen,
+<p>
+Ihr Aula-Team
+<p>
+<a href='https://www.aula.de'>Aula</a>
+";
+
+# vim: set ft=php:
