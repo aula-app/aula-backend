@@ -64,7 +64,7 @@
         } catch(PDOException $e) {
             error_log("ERROR occurred: ".$e->getMessage());
         }
-        
+
     }
 
     public function prepareStatement($query) {
@@ -72,7 +72,7 @@
     }
 
     public function query($query) {
-        # prepares a statement 
+        # prepares a statement
         $this->stmt = $this->dbh->prepare($query);
         return $this->stmt;
     }
@@ -116,7 +116,7 @@
     }
 
     public function resultSet() {
-        # returns a result set 
+        # returns a result set
         $this->execute();
         return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -165,5 +165,10 @@
 
     public function getDbname() {
         return $this->dbname;
+    }
+
+    public function closeConnection() {
+        $this->dbh = null;
+        $this->stmt = null;
     }
 }
