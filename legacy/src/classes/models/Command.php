@@ -64,6 +64,8 @@ class Command
     } catch (Throwable $e) {
       error_log("getDueCommands ERROR {$e->getMessage()}");
       return $this->responseBuilder->error();
+    } finally {
+      $this->db->closeConnection();
     }
   }
 
