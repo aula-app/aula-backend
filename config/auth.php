@@ -44,6 +44,10 @@ return [
             'driver' => 'passport', // 'session', // @TODO: nikola - use 'passport' driver
             'provider' => 'aula_users',
         ],
+        'api_manager' => [
+            'driver' => 'passport',
+            'provider' => 'aula_manager_users',
+        ],
     ],
 
     /*

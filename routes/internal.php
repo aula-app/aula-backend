@@ -15,4 +15,18 @@ Route::name('internal.')
         Route::get('/health', function () {
             return response()->json(['TODO' => 'gather health information'], 200);
         });
+
+        Route::name('manager.')
+            ->middleware(['auth:api_manager']) // , 'can:is-admin'])
+            ->prefix('/manager/')
+            ->group(function () {
+                return response()->json(['TODO' => 'manager stuff'], 200);
+                Route::post(
+                    '/tenants',
+                    function () {
+                        return response()->json(['TODO' => 'manager stuff'], 200);
+                        /* [App\Http\Controllers\TenantController::class, 'create'] */
+                    }
+                );
+            });
     });
