@@ -23,4 +23,4 @@ Route::name('aula.')
         'auth:api', // our 'api' guard should be configured to use 'passport'
     ]) // , 'can:is-admin'
     ->prefix('/api/v2/')
-    ->group(base_path('routes/api/v2/aula.php'));
+    ->group(base_path('routes/tenant/api/v2/aula.php'));

@@ -19,6 +19,9 @@ COPY composer.json ./
 COPY composer.lock ./
 RUN composer install --no-interaction --no-scripts --optimize-autoloader --no-dev
 
+ARG DOCKER_TAG
+ENV APP_VERSION=$DOCKER_TAG
+
 # Copy everything (respects .dockerignore)
 COPY . .
 RUN chown -R www-data:www-data ./ \
@@ -33,7 +36,7 @@ RUN echo "* * * * * /usr/local/bin/php /opt/laravel/artisan schedule:run >> /var
 VOLUME /opt/laravel/storage
 
 # Define a health check
-HEALTHCHECK --interval=30s --timeout=15s --start-period=15s --retries=3 CMD curl -f http://localhost/internal/up || exit 1
+HEALTHCHECK --interval=30s --timeout=15s --start-period=15s --retries=3 CMD curl -f http://localhost/public/up || exit 1
 
 # Add the entrypoint
 ADD entrypoint.sh /root/entrypoint.sh
