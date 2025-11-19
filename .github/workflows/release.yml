@@ -1,4 +1,4 @@
-name: Release docker image based on (1) commit sha (2) release tag version (3) :latest
+name: Release docker image based on release tag version and :latest
 permissions:
   contents: read
 
@@ -7,11 +7,20 @@ on:
     types: [published]
 
 env:
-  IMAGE_TAG_LATEST: "aulaapp/aula-backend:latest"
-  IMAGE_TAG_VERSION: "aulaapp/aula-backend:${{ github.event.release.tag_name }}"
+  IMAGE_TAG_LATEST: "${{ github.event.repository.name }}:latest"
 
 jobs:
+  sanitize_tag:
+    runs-on: [self-hosted, cicd]
+    steps:
+      - name: Substitute illegal Docker image tag characters
+        run: |
+          echo "${{ github.event.release.tag_name }}" | \
+            sed 's/[^a-zA-Z0-9_.-]/_/g' | \
+            (echo -n "IMAGE_TAG_VERSION=${{ github.event.repository.name }}:" && cat) \
+          >> $GITHUB_ENV
   build_v1:
+    needs: sanitize_tag
     if: ${{ startsWith(github.event.release.tag_name, 'v1') }}
     runs-on: [self-hosted, cicd]
     steps:
@@ -28,6 +37,7 @@ jobs:
       - name: Push Docker image tags
         run: docker push $IMAGE_TAG_VERSION
   build_v2:
+    needs: sanitize_tag
     if: ${{ startsWith(github.event.release.tag_name, 'v2') }}
     runs-on: [self-hosted, cicd]
     steps:

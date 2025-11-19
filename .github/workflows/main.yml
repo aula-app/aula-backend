@@ -1,4 +1,4 @@
-name: Build docker image based on commit sha
+name: Build and push docker images based on git commit sha
 permissions:
   contents: read
 
@@ -18,7 +18,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Add IMAGE_TAG_SHORT_SHA env property with commit short sha
-        run: echo "IMAGE_TAG_SHORT_SHA=aulaapp/aula-backend:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        run: echo "IMAGE_TAG_SHORT_SHA=${{ github.event.repository.name }}:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Build and tag Docker image
         run: docker build -t $IMAGE_TAG_SHORT_SHA .
@@ -27,7 +27,7 @@ jobs:
         run: docker push $IMAGE_TAG_SHORT_SHA
 
       - name: "[legacy] Add IMAGE_TAG_LEGACY_SHORT_SHA env property with commit short sha"
-        run: echo "IMAGE_TAG_LEGACY_SHORT_SHA=aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        run: echo "IMAGE_TAG_LEGACY_SHORT_SHA=${{ github.event.repository.name }}:legacy-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: "[legacy] Build and tag legacy Docker image"
         working-directory: ./legacy
