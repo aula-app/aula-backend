@@ -7,7 +7,7 @@ on:
     types: [published]
 
 env:
-  IMAGE_TAG_LATEST: "${{ github.event.repository.name }}:latest"
+  IMAGE_TAG_LATEST: "aulaapp/${{ github.event.repository.name }}:latest"
 
 jobs:
   sanitize_tag:
@@ -17,7 +17,7 @@ jobs:
         run: |
           echo "${{ github.event.release.tag_name }}" | \
             sed 's/[^a-zA-Z0-9_.-]/_/g' | \
-            (echo -n "IMAGE_TAG_VERSION=${{ github.event.repository.name }}:" && cat) \
+            (echo -n "IMAGE_TAG_VERSION=aulaapp/${{ github.event.repository.name }}:" && cat) \
           >> $GITHUB_ENV
   build_v1:
     needs: sanitize_tag
