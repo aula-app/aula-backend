@@ -36,11 +36,15 @@ class ResetPasswordForUserUseCase
 
     $this->db->beginTransaction("SERIALIZABLE");
     try {
+      $new_temp_password = null;
+      if (empty($user['email'])) {
+          $new_temp_password = $this->userModel->generate_pass();
+      }
       $patchedUser = $this->userRepo->patchUserBaseData([
         'hash_id' => $user['hash_id'],
         'updater_id' => $updaterId,
         # temp_pw is part of the JWT, so we will need to ask the user to renew the token
-        'temp_pw' => empty($user['email']) ? $this->userModel->generate_pass() : null,
+        'temp_pw' => $new_temp_password,
         # refresh_token flag atm means "you need to renew your JWT", and it's checked in check_jwt
         'refresh_token' => true,
         # user never changed their password (at the moment completely unused)
