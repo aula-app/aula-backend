@@ -51,7 +51,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and tag Docker images
-        run: docker build -t "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}" -t $IMAGE_TAG_LATEST .
+        run: docker build --build-arg DOCKER_TAG=$IMAGE_TAG_VERSION -t "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}"  -t $IMAGE_TAG_LATEST .
 
       - name: Push Docker image tags
         run: |
