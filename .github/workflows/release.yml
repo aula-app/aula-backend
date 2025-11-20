@@ -13,12 +13,15 @@ jobs:
   sanitize_tag:
     runs-on: [self-hosted, cicd]
     steps:
-      - name: Substitute illegal Docker image tag characters
+      - id: sanitize
+        name: Substitute illegal Docker image tag characters
         run: |
           echo "${{ github.event.release.tag_name }}" | \
             sed 's/[^a-zA-Z0-9_.-]/_/g' | \
             (echo -n "IMAGE_TAG_VERSION=aulaapp/${{ github.event.repository.name }}:" && cat) \
-          >> $GITHUB_ENV
+          >> $GITHUB_OUTPUT
+    outputs:
+      IMAGE_TAG_VERSION: ${{ steps.sanitize.outputs.IMAGE_TAG_VERSION }}
   build_v1:
     needs: sanitize_tag
     if: ${{ startsWith(github.event.release.tag_name, 'v1') }}
@@ -32,10 +35,10 @@ jobs:
 
       - name: Build and tag Docker images
         working-directory: ./legacy
-        run: docker build -t $IMAGE_TAG_VERSION .
+        run: docker build -t "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}" .
 
       - name: Push Docker image tags
-        run: docker push $IMAGE_TAG_VERSION
+        run: docker push "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}"
   build_v2:
     needs: sanitize_tag
     if: ${{ startsWith(github.event.release.tag_name, 'v2') }}
@@ -48,9 +51,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and tag Docker images
-        run: docker build --build-arg DOCKER_TAG=$IMAGE_TAG_VERSION -t $IMAGE_TAG_VERSION -t $IMAGE_TAG_LATEST .
+        run: docker build --build-arg DOCKER_TAG=$IMAGE_TAG_VERSION -t "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}"  -t $IMAGE_TAG_LATEST .
 
       - name: Push Docker image tags
         run: |
-          docker push $IMAGE_TAG_VERSION && \
+          docker push "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}" && \
           docker push $IMAGE_TAG_LATEST
