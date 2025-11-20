@@ -42,6 +42,6 @@ class UserRepository
     EOF;
     $stmt = $this->db->prepareStatement($query);
     $stmt->execute(array_merge($settersValues, $conditionsValues));
-    return $stmt->fetch();
+    return $partialUser;
   }
 }
