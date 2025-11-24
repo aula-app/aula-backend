@@ -24,6 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $input = json_decode($json, true);
   $password = $input['password'];
   $new_password = $input['new_password'];
+  
+  // Validate minimum password length for new password
+  $min_password_length = 12; // Configure minimum password length here
+  if (strlen($new_password) < $min_password_length) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(["success" => false, "error" => "Password must be at least {$min_password_length} characters long"]);
+    return;
+  }
 
   $stmt = $db->query('SELECT id, hash_id, roles, username, pw, temp_pw, userlevel FROM ' . $db->au_users_basedata . ' WHERE id = :user_id');
   try {
