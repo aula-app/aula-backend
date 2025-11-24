@@ -18,6 +18,8 @@ class UserRepository
     $settersValues = [date("Y-m-d H:i:s")];
     $conditionsValues = [];
     $conditions = [];
+    $partialUserUpdate = array_diff_key($partialUser, ['id', 'hash_id']);
+
     foreach ($partialUser as $key => $value) {
       if ($key === 'id' || $key === 'hash_id') {
         $conditions[] = "{$key} = ?";
@@ -42,6 +44,6 @@ class UserRepository
     EOF;
     $stmt = $this->db->prepareStatement($query);
     $stmt->execute(array_merge($settersValues, $conditionsValues));
-    return $partialUser;
+    return $partialUserUpdate;
   }
 }
