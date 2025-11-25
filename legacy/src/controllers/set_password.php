@@ -37,6 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   if (count($db->resultSet()) > 0) {
     $user_id = $db->resultSet()[0]["user_id"];
     $password = $input['password'];
+    
+    // Validate minimum password length
+    $min_password_length = 12; // Configure minimum password length here
+    if (strlen($password) < $min_password_length) {
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode(["success" => false, "error" => "Password must be at least {$min_password_length} characters long"]);
+      return;
+    }
+    
     $user = new User($db, $crypt, $syslog);
     $user->setUserPW($user_id, $password);
     // Delete secret from db
