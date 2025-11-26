@@ -371,7 +371,7 @@ class Room
 
   public function getUsersInRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0)
 
-    
+
   {
     /* returns users (associative array)
     $status (int) relates to the status of the users => 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
@@ -585,11 +585,11 @@ class Room
     $this->db->bind(':internal_info', $internal_info); // extra internal info, only visible in backend
     $this->db->bind(':status', $status); // status of the room (0=inactive, 1=active, 4=archived)
 
-    $this->db->bind(':phase_duration_0', $phase_duration_0); // phase_duration of the room 
-    $this->db->bind(':phase_duration_1', $phase_duration_1); // phase_duration of the room 
-    $this->db->bind(':phase_duration_2', $phase_duration_2); // phase_duration of the room 
-    $this->db->bind(':phase_duration_3', $phase_duration_3); // phase_duration of the room 
-    $this->db->bind(':phase_duration_4', $phase_duration_4); // phase_duration of the room 
+    $this->db->bind(':phase_duration_0', $phase_duration_0); // phase_duration of the room
+    $this->db->bind(':phase_duration_1', $phase_duration_1); // phase_duration of the room
+    $this->db->bind(':phase_duration_2', $phase_duration_2); // phase_duration of the room
+    $this->db->bind(':phase_duration_3', $phase_duration_3); // phase_duration of the room
+    $this->db->bind(':phase_duration_4', $phase_duration_4); // phase_duration of the room
 
     $this->db->bind(':access_code', $access_code); // optional access code for room access
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
@@ -742,11 +742,43 @@ class Room
   public function deleteRoom($room_id, $mode = 0, $msg = "", $updater_id = 0)
   {
     /* deletes room and returns the number of rows (int) accepts room id or room hash id //
-    $mode defines what is to be done. 
+    $mode defines what is to be done.
     0 = room is deleted only (including relations) 1 = room is deleted and users of this room are notified
 
     */
+
+    $room_hash_id = '';
+    if (is_string($room_id)) {
+        $room_hash_id = $room_id;
+    } else {
+        $room_hash_id = $this->getRoomHashId($room_id)['data'];
+    }
+
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
+
+    $remove_roles_in_room_query = <<<EOD
+        UPDATE au_users_basedata u1
+        LEFT JOIN (
+            SELECT
+                u.id,
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('room', jt.room_val, 'role', jt.role_val)
+                ) AS new_roles
+            FROM au_users_basedata u
+            JOIN JSON_TABLE(
+                u.roles,
+                '$[*]' COLUMNS(
+                    room_val VARCHAR(255) PATH '$.room',
+                    role_val VARCHAR(255) PATH '$.role'
+                )
+            ) AS jt
+            WHERE jt.room_val != :room_hash_id
+            GROUP BY u.id
+        ) u2 ON u1.id = u2.id
+        SET u1.roles = COALESCE(u2.new_roles, JSON_ARRAY())
+        WHERE JSON_SEARCH(u1.roles, 'one', :room_hash_id, NULL, '$[*].room') IS NOT NULL;
+
+    EOD;
 
     $room_id = intval($room_id);
 
@@ -782,10 +814,28 @@ class Room
       }
       // remove all delegations in this room
       $this->deleteRoomDelegations($room_id);
-      $returnvalue['success'] = true; // set return value to false
-      $returnvalue['error_code'] = 0; // error code - db error
-      $returnvalue['data'] = 1; // returned data
-      $returnvalue['count'] = $rowCount; // returned count of datasets
+
+      // remove roles from users in the deleted room
+      $stmt = $this->db->query($remove_roles_in_room_query);
+      $this->db->bind(':room_hash_id', $room_hash_id);
+
+      $err = false;
+      try {
+        $action = $this->db->execute(); // do the query
+      } catch (Exception $e) {
+        $err = true;
+      }
+
+      if (!$err) {
+        $returnvalue['success'] = true; // set return value to false
+        $returnvalue['error_code'] = 0; // error code - db error
+        $returnvalue['data'] = 1; // returned data
+        $returnvalue['count'] = $rowCount; // returned count of datasets
+      } else {
+        $returnvalue['success'] = false; // set return value to false
+        $returnvalue['error_code'] = -1; // error code - db error
+        $returnvalue['data'] = "error removing roles from deleted room"; // returned data
+      }
 
       return $returnvalue;
 
