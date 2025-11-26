@@ -3,7 +3,18 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
-fix: validate email when creating a new User
+## v1.7.6
+
+- fix(roles): delete lingering roles from users table when a room is deleted.
+- fix(roles): fix race condition when multiple requests to update an user roles where being submitted.
+- fix(password): prevent the creation of password with less than 12 characters.
+- fix(password): User->resetPassword now return in the response the new temporary password created.
+
+<!-- fix: validate email when creating a new User -->
+
+## v1.7.5
+
+- fix(roles): don't return rooms when the user has no roles on them. 
 
 ## v1.7.1
 - fix(email): add extra email headers to battle SPAM filters
