@@ -706,7 +706,7 @@ class User
   public function getStandardRoom()
   {
     // returns the id for the standard room (AULA room)
-    $room_id = 0; // default to 0 
+    $room_id = 0; // default to 0
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_rooms . ' WHERE type = 1 LIMIT 1');
     $room = $this->db->resultSet();
 
@@ -1134,7 +1134,7 @@ class User
             $collisionKeys = array_filter(['username', 'email'], function ($key) use ($csvUser, $existingUser) {
               return $csvUser[$key] === $existingUser[$key] && !is_null($csvUser[$key]);
             });
-            $errors[] = [ 
+            $errors[] = [
               'collision_keys' => $collisionKeys,
               'line_number' => $lineNumber,
             ];
@@ -1293,7 +1293,7 @@ class User
     $insertUserStmt->execute([
       ':realname' => $this->crypt->encrypt($user['realname']),
       ':displayname' => $this->crypt->encrypt($user['displayname']),
-      ':username' => $this->crypt->encrypt($user['username']), 
+      ':username' => $this->crypt->encrypt($user['username']),
       ':email' => $user['email'] != null ? $this->crypt->encrypt($user['email']) : null,
       ':about_me' => $this->crypt->encrypt($user['about_me']),
       ':temp_pw' => $temp_pw,
@@ -1504,7 +1504,7 @@ class User
 
   public function checkCredentials($username, $pw)
   {
-    /* helper for method checkLogin () 
+    /* helper for method checkLogin ()
     checks credentials and returns database user id (credentials correct) or 0 (credentials not correct)
     username is clear text
     pw is clear text
@@ -1905,7 +1905,7 @@ class User
 
   function generate_pass($length = 8)
   {
-    // pw generator 
+    // pw generator
 
     $j = 1;
     $allowedCharacters = '23456789abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ_!@';
@@ -2199,10 +2199,12 @@ class User
     $this->db->bind(':room_id', $room_id);
     $room_hash = $this->db->resultSet()[0]["hash_id"];
 
-    $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+    $this->db->beginTransaction();
+    $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id FOR UPDATE');
     $this->db->bind(':user_id', $user_id);
 
-    $roles = json_decode($this->db->resultSet()[0]["roles"]);
+    $results = $this->db->resultSet();
+    $roles = json_decode($results[0]["roles"]);
 
     if (is_null($roles)) {
       $roles = [];
@@ -2217,6 +2219,7 @@ class User
 
     try {
       $action = $this->db->execute(); // do the query
+      $this->db->commitTransaction();
       $this->setRefresh($user_id, true);
 
       $returnvalue['success'] = true; // set return value
@@ -2324,8 +2327,8 @@ class User
     $this->db->bind(':room_id', $room_id);
     $room_hash = $this->db->resultSet()[0]["hash_id"];
 
-
-    $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id');
+    $this->db->beginTransaction();
+    $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id FOR UPDATE');
     $this->db->bind(':user_id', $user_id);
 
     $roles = json_decode($this->db->resultSet()[0]["roles"]);
@@ -2336,6 +2339,7 @@ class User
     $this->db->bind(':roles', json_encode($new_roles));
 
     $this->db->execute();
+    $this->db->commitTransaction();
 
   }
 
@@ -2576,7 +2580,7 @@ class User
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $email = strtolower(trim($email));
-    
+
     if (strlen($email) > 0) {
       if (!(bool) filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return $this->responseBuilder->error(errorDescription: "Invalid email address");
@@ -2936,7 +2940,7 @@ class User
             {$this->db->au_rel_rooms_users}.user_id IN
             (SELECT user_id_original FROM {$this->db->au_delegation} WHERE user_id_target = :user_id AND topic_id = :topic_id)
              as 'is_delegate'
-        FROM  {$this->db->au_rel_rooms_users}  
+        FROM  {$this->db->au_rel_rooms_users}
         INNER JOIN {$this->db->au_users_basedata} ON ({$this->db->au_rel_rooms_users}.user_id = {$this->db->au_users_basedata}.id)
         WHERE {$this->db->au_rel_rooms_users}.room_id = :room_id AND
         {$this->db->au_users_basedata}.userlevel in (20, 31) AND
