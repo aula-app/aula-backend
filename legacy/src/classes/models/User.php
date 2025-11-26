@@ -2195,11 +2195,11 @@ class User
     $user_id = $this->converters->checkUserId($user_id);
     $room_id = $this->converters->checkRoomId($room_id);
 
-    $this->db->beginTransaction();
     $stmt = $this->db->query('SELECT hash_id FROM ' . $this->db->au_rooms . ' WHERE id = :room_id');
     $this->db->bind(':room_id', $room_id);
     $room_hash = $this->db->resultSet()[0]["hash_id"];
 
+    $this->db->beginTransaction();
     $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id FOR UPDATE');
     $this->db->bind(':user_id', $user_id);
 
