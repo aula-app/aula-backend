@@ -716,7 +716,7 @@ class User
 
   }
 
-  public function addUserToStandardRoom($user_id, $status = 1, $updater_id = 0)
+  public function addUserToStandardRoom($user_id, $status = 1, $updater_id = 0, $use_transaction = true)
   {
     /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
     returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
@@ -735,7 +735,7 @@ class User
       // add relation to database
 
       $userlevel = 20; // $this->getDefaultRole($user_id);
-      $this->addUserRole($user_id, $userlevel, $room_id);
+      $this->addUserRole($user_id, $userlevel, $room_id, $use_transaction);
 
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_rel_rooms_users . ' (room_id, user_id, status, created, last_update, updater_id) VALUES (:room_id, :user_id, :status, NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE room_id = :room_id, user_id = :user_id, status = :status, last_update = NOW(), updater_id = :updater_id');
 
@@ -1145,12 +1145,13 @@ class User
 
         foreach ($rooms as $room) {
           $this->roomRepository->insertOrUpdateUserToRoom($room['id'], $csvUser['id'], $updater_id);
-          $this->addUserRole($csvUser['id'], $user_level, $room['id']);
+          $this->addUserRole($csvUser['id'], $user_level, $room['id'], false);
         }
-        $this->addUserToStandardRoom($csvUser['id']);
+        $this->addUserToStandardRoom($csvUser['id'], 1, 0, false);
         $lineNumber++;
       }
     } catch (Exception $e) {
+      echo $e;
       $this->db->rollBackTransaction();
       error_log("Error parsing CSV: " . $e->getMessage() . "\n" . $e->getTraceAsString());
       return $this->responseBuilder->error(2);
@@ -2190,7 +2191,7 @@ class User
     }
   }// end function
 
-  public function addUserRole($user_id, $role, $room_id)
+  public function addUserRole($user_id, $role, $room_id, $use_transaction = true)
   {
     $user_id = $this->converters->checkUserId($user_id);
     $room_id = $this->converters->checkRoomId($room_id);
@@ -2199,7 +2200,9 @@ class User
     $this->db->bind(':room_id', $room_id);
     $room_hash = $this->db->resultSet()[0]["hash_id"];
 
-    $this->db->beginTransaction();
+    if ($use_transaction) {
+        $this->db->beginTransaction();
+    }
     $stmt = $this->db->query('SELECT roles FROM ' . $this->db->au_users_basedata . ' WHERE id = :user_id FOR UPDATE');
     $this->db->bind(':user_id', $user_id);
 
@@ -2219,7 +2222,9 @@ class User
 
     try {
       $action = $this->db->execute(); // do the query
-      $this->db->commitTransaction();
+      if ($use_transaction) {
+        $this->db->commitTransaction();
+      }
       $this->setRefresh($user_id, true);
 
       $returnvalue['success'] = true; // set return value
