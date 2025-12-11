@@ -54,7 +54,8 @@ return [
          * @see \Stancl\Tenancy\UniqueIdentifierGenerators\RandomIntGenerator
          * @see \Stancl\Tenancy\UniqueIdentifierGenerators\RandomStringGenerator
          */
-        'id_generator' => UniqueIdentifierGenerators\UUIDGenerator::class,
+        /* 'id_generator' => UniqueIdentifierGenerators\UUIDGenerator::class, */
+        'id_generator' => null,
     ],
 
     'identification' => [
@@ -192,8 +193,6 @@ return [
         // Integration bootstrappers
         // Bootstrappers\Integrations\FortifyRouteBootstrapper::class,
         // Bootstrappers\Integrations\ScoutPrefixBootstrapper::class,
-
-        // Bootstrappers\PostgresRLSBootstrapper::class,
     ],
 
     /**
@@ -230,11 +229,10 @@ return [
             'pgsql' => Stancl\Tenancy\Database\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
             'sqlsrv' => Stancl\Tenancy\Database\TenantDatabaseManagers\MicrosoftSQLDatabaseManager::class,
 
-        /**
-         * Use these database managers to have a DB user created for each tenant database.
-         * You can customize the grants given to these users by changing the $grants property.
-         */
-            // 'mysql' => Stancl\Tenancy\Database\TenantDatabaseManagers\PermissionControlledMySQLDatabaseManager::class,
+            /**
+             * Use these database managers to have a DB user created for each tenant database.
+             * You can customize the grants given to these users by changing the $grants property.
+             */
             'mariadb' => Stancl\Tenancy\Database\TenantDatabaseManagers\PermissionControlledMySQLDatabaseManager::class,
             // 'pgsql' => Stancl\Tenancy\Database\TenantDatabaseManagers\PermissionControlledPostgreSQLDatabaseManager::class,
             // 'sqlsrv' => Stancl\Tenancy\TenantDatabaseManagers\PermissionControlledMicrosoftSQLServerDatabaseManager::class,
@@ -257,35 +255,6 @@ return [
          */
         /* 'drop_tenant_databases_on_migrate_fresh' => false, */
         'drop_tenant_databases_on_migrate_fresh' => true,
-    ],
-
-    /**
-     * Requires PostgreSQL with single-database tenancy.
-     */
-    'rls' => [
-        /**
-         * The RLS manager responsible for generating queries for creating policies.
-         *
-         * @see Stancl\Tenancy\RLS\PolicyManagers\TableRLSManager
-         * @see Stancl\Tenancy\RLS\PolicyManagers\TraitRLSManager
-         */
-        'manager' => Stancl\Tenancy\RLS\PolicyManagers\TableRLSManager::class,
-
-        /**
-         * Credentials for the tenant database user (one user for *all* tenants, not for each tenant).
-         */
-        'user' => [
-            'username' => env('TENANCY_RLS_USERNAME'),
-            'password' => env('TENANCY_RLS_PASSWORD'),
-        ],
-
-        /**
-         * Postgres session variable used to store the current tenant key.
-         *
-         * The variable name has to include a namespace – for example, 'my.'.
-         * The namespace is required because the global one is reserved for the server configuration
-         */
-        'session_variable_name' => 'my.current_tenant',
     ],
 
     /**

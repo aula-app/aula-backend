@@ -28,7 +28,6 @@ return [
     | is supported by Laravel. You're free to add / remove connections.
     |
     */
-
     'connections' => [
 
         'sqlite' => [
