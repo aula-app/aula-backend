@@ -13,17 +13,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $clientRepo = new ClientRepository();
+        $clientRepo = new ClientRepository;
         // when confidential:false is set, we don't need client_secret
         $client = $clientRepo->createPasswordGrantClient('password_central_manager', 'aula_manager_users', false);
         $this->command->info("Client ID:     {$client->id}");
         $this->command->info('Client Secret: N/A');
 
-        $user = User::factory()->create([
-            'name' => 'aula devs test',
-            'email' => 'dev@aula.de',
-            'password' => 'password',
-        ]);
+        $this->call([TenantsFromAulaManagerSeeder::class]);
+
+        $user = User::firstOrCreate(
+            ['email' => 'dev@aula.de'],
+            [
+                'name' => 'aula devs test',
+                'email' => 'dev@aula.de',
+                'password' => 'password',
+            ]
+        );
         $this->command->info("User Email:    {$user->email}");
         $this->command->info('User Password: password');
     }

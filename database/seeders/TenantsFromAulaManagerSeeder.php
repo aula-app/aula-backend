@@ -11,7 +11,7 @@ class TenantsFromAulaManagerSeeder extends Seeder
      */
     public function run(): void
     {
-        $file_path = resource_path('sql/2025_12_09_113800_insert_tenants.sql');
+        $file_path = database_path('seeders/sql/2025_12_09_113800_insert_tenants.sql');
 
         \DB::unprepared(
             file_get_contents($file_path)

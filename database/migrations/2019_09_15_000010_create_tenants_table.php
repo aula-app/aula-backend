@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tenants', function (Blueprint $table) {
-            $table->string('id')->primary();
+            $table->uuid('id')->primary()->default(DB::raw('UUID_v4()'));
 
             // your custom columns may go here
 
@@ -23,13 +23,14 @@ return new class extends Migration
             $table->string('contact_info', 255)->nullable();
 
             $table->string('admin1_name', 255)->nullable();
-            $table->string('admin1_username', 255)->nullable();
+            $table->string('admin1_username', 255);
             $table->string('admin1_email', 255);
             $table->string('admin1_init_pass_url')->nullable();
 
+            // admin2 can have all fields nullable
             $table->string('admin2_name', 255)->nullable();
             $table->string('admin2_username', 255)->nullable();
-            $table->string('admin2_email', 255);
+            $table->string('admin2_email', 255)->nullable();
             $table->string('admin2_init_pass_url')->nullable();
 
             $table->string('instance_code', 10)->unique();
