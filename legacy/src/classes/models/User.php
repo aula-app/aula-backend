@@ -1738,21 +1738,76 @@ class User
     return $returnvalue;
   }
 
-  public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $userlevel = -1)
+  public function getUsersByRoom($room_id, $status = -1, $offset = 0, $limit = 0, $orderby = 3, $asc = 0, $search_field = "", $search_text = "", $userlevel = -1)
   {
     /* returns users (associative array)for a specific room + extra parameters (for further filtering)
      */
+    $status = intval($status);
+    $offset = intval($offset);
+    $limit = intval($limit);
+    $orderby = intval($orderby);
+    $asc = intval($asc);
+    $userlevel = intval($userlevel);
+
+    $room_model = new Room($this->db, $this->crypt, $this->syslog);
+
     if (is_int($room_id)) {
-      $room_model = new Room($this->db, $this->crypt, $this->syslog);
       $room_hash = $room_model->getRoomHashId($room_id)["data"];
     } else {
       $room_hash = $room_id;
-      $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
     }
 
-    // sort by creator_id, i have no idea why though
-    $orderby_field = "u." . $this->getUserOrderId(3);
-    $asc_field = "DESC";
+    $room_id = $this->converters->checkRoomId($room_id); // checks id and converts id to db id if necessary (when hash id was passed)
+
+
+    $orderby_field = "";
+    $asc_field = "";
+    $extra_where = "";
+
+    $limit_string = " LIMIT " . $offset . " , " . $limit;
+    $limit_active = true; // default limit to true
+
+
+    // check if offset an limit are both set to 0, then show whole list (exclude limit clause)
+    if ($offset == 0 && $limit == 0) {
+      $limit_string = "";
+      $limit_active = false;
+    }
+
+    if ($offset > 0 && $limit == 0) {
+      $limit_string = " LIMIT " . $offset . " , 9999999999999999";
+    }
+
+    if ($status > -1) {
+      // specific status selected / -1 = get all status values
+      $extra_where .= " AND u.status = " . $status;
+    }
+
+    if ($userlevel > -1) {
+      // specific level selected / -1 = get all levels
+      $extra_where .= " AND u.userlevel = " . $userlevel;
+    }
+
+    $search_field_valid = false;
+    if ($search_field != "" && $search_text != "") {
+      if ($this->validSearchField($search_field)) {
+        $search_field_valid = true;
+        $extra_where .= " AND u." . $search_field . " LIKE :search_text ";
+      }
+    }
+
+    $orderby_field = "u." . $this->getUserOrderId($orderby);
+
+    switch (intval($asc)) {
+      case 0:
+        $asc_field = "DESC";
+        break;
+      case 1:
+        $asc_field = "ASC";
+        break;
+      default:
+        $asc_field = "DESC";
+    }
 
     $query = <<<EOD
       SELECT
@@ -1776,27 +1831,69 @@ class User
       ON
         (ru.user_id = u.id)
       WHERE
-        ru.room_id = :room_id
+        ru.room_id = :room_id {$extra_where}
       AND
         JSON_SEARCH(u.roles, 'one', :room_hash, NULL, '$[*].room') IS NOT NULL
     EOD;
 
-    $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field);
+    $stmt = $this->db->query($query . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     $this->db->bind(':room_id', $room_id); // bind room id
     $this->db->bind(':room_hash', $room_hash); // bind room id
 
+    //$this->db->bind(':status', $status); // bind status
+
+    if ($search_field_valid) {
+      $this->db->bind(':search_text', '%' . $search_text . '%');
+    }
+
+    $err = false;
     try {
       $rooms = $this->db->resultSet();
     } catch (Exception $e) {
       error_log('Error ocurred when getUsersByRoom: ' . $e->getMessage());
-      return $this->responseBuilder->error(1, "Error fetching data");
-    }
+      $err = true;
+      $returnvalue['success'] = false; // set return value to false
+      $returnvalue['error_code'] = 1; // error code - db error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
 
+      return $returnvalue;
+    }
     $total_datasets = count($rooms);
+
     if ($total_datasets < 1) {
-      return $this->responseBuilder->error(2, "No data found");
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 2; // error code - db error
+      $returnvalue['data'] = false; // returned data
+      $returnvalue['count'] = 0; // returned count of datasets
+
+      return $returnvalue;
     } else {
-      return $this->responseBuilder->success($rooms);
+      // get count
+      if ($limit_active) {
+        $total_query = <<<EOD
+            {$this->db->au_rel_rooms_users} ru
+          INNER JOIN {$this->db->au_users_basedata} u
+          ON
+            (ru.user_id = u.id)
+          WHERE
+            ru.room_id = :room_id
+        EOD;
+
+        // only newly calculate datasets if limits are active
+        if ($search_field_valid) {
+          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query), "", $search_field, $search_text);
+        } else {
+          $total_datasets = $this->converters->getTotalDatasets(str_replace(":room_id", $room_id, $total_query));
+        }
+      }
+
+      $returnvalue['success'] = true; // set return value to false
+      $returnvalue['error_code'] = 0; // error code - db error
+      $returnvalue['data'] = $rooms; // returned data
+      $returnvalue['count'] = $total_datasets; // returned count of datasets
+
+      return $returnvalue;
     }
   }// end function
 
