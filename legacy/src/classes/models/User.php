@@ -1812,7 +1812,6 @@ class User
     $query = <<<EOD
       SELECT
         u.hash_id,
-        u.id,
         u.status,
         u.creator_id,
         u.created,
