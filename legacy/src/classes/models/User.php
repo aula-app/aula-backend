@@ -1577,7 +1577,7 @@ class User
   }// end function
 
 
-  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $both_names = "", $search_field = "", $search_text = "", $extra_where = "", $status = -1, $userlevel = -1, $room_id = -1)
+  public function getUsers($offset, $limit, $orderby = 0, $asc = 0, $both_names = "", $search_field = "", $search_text = "", $extra_where = "", $status = -1, $userlevel = -1, $room_id = '')
   {
     /* returns userlist (associative array) with start and limit provided
     extra_where = SQL Clause that can be added to where in the query like AND status = 1
@@ -1617,7 +1617,7 @@ class User
       $extra_where .= " AND userlevel = " . $userlevel;
     }
 
-    if ($room_id != -1) {
+    if (isset($room_id) && $room_id !== '') {
       $extra_where .= " AND JSON_SEARCH(u.roles, 'one', :room_id, NULL, '$[*].room') IS NOT NULL";
     }
 
@@ -1661,7 +1661,7 @@ class User
       $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
-    if ($room_id != -1) {
+    if (isset($room_id) && $room_id !== '') {
       $this->db->bind(":room_id", $room_id);
     }
 
@@ -1813,14 +1813,12 @@ class User
       SELECT
         u.hash_id,
         u.status,
-        u.creator_id,
         u.created,
         u.displayname,
         u.realname,
         u.username,
         u.email,
         u.userlevel,
-        u.about_me,
         u.temp_pw,
         u.last_update
       FROM
