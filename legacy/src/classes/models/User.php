@@ -1819,6 +1819,7 @@ class User
         u.username,
         u.email,
         u.userlevel,
+        u.about_me,
         u.temp_pw,
         u.last_update
       FROM
