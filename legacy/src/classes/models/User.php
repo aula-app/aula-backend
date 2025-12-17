@@ -1757,6 +1757,18 @@ class User
     $query = <<<EOD
       SELECT
         u.hash_id,
+        u.id,
+        u.status,
+        u.creator_id,
+        u.created,
+        u.displayname,
+        u.realname,
+        u.username,
+        u.email,
+        u.userlevel,
+        u.about_me,
+        u.temp_pw,
+        u.last_update
       FROM
         {$this->db->au_rel_rooms_users} ru
       INNER JOIN
