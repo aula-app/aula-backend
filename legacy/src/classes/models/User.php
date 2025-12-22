@@ -1756,7 +1756,7 @@ class User
 
     $query = <<<EOD
       SELECT
-        u.hash_id,
+        u.hash_id
       FROM
         {$this->db->au_rel_rooms_users} ru
       INNER JOIN

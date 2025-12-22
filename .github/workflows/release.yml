@@ -35,7 +35,7 @@ jobs:
 
       - name: Build and tag Docker images
         working-directory: ./legacy
-        run: docker build -t "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}" .
+        run: docker build --build-arg DOCKER_TAG=$IMAGE_TAG_VERSION -t "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}" .
 
       - name: Push Docker image tags
         run: docker push "${{ needs.sanitize_tag.outputs.IMAGE_TAG_VERSION }}"

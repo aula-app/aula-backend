@@ -49,6 +49,9 @@ COPY ./config/base_config.php-example ./config/base_config.php
 # instances_config should be omitted so we force the docker image users to add it
 # COPY ./config/instances_config.php-example ./config/instances_config.php
 
+ARG DOCKER_TAG
+ENV APP_VERSION=$DOCKER_TAG
+
 COPY ./docker-entrypoint.sh ./
 COPY ./src ./api
 
