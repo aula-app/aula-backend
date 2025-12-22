@@ -3,11 +3,19 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+## v1.7.9
+
+- fix(versions): github release workflow
+
+## v1.7.8
+
 - feat(versions): add API to get current running version of BE
+- fix: getUsers filter by room hash id
 
 ## v1.7.7
 
 - fix: CSV import failing
+- fix: don't use transaction in addUserRole when importing from CSV
 
 ## v1.7.6
 
