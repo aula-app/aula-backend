@@ -6,6 +6,7 @@
 .PHONY: publish-legacy-release build-legacy-release run-legacy-local run-legacy-release prepare-legacy-local clean-legacy-local
 
 DATE := $(shell date "+%Y-%m-%d")
+DOCKER_TAG := $(shell git rev-parse --short HEAD)
 
 prepare-legacy-local:
 	cd ./legacy && ./docker-prepare-local.sh
@@ -14,7 +15,8 @@ clean-legacy-local:
 	rm ./legacy/docker-compose.override.yml
 
 run-legacy-local: prepare-legacy-local
-	docker compose -f ./legacy/docker-compose.yml -f ./legacy/docker-compose.override.yml up --build -d
+	docker compose -f ./legacy/docker-compose.yml build --build-arg DOCKER_TAG=$(DOCKER_TAG)
+	docker compose -f ./legacy/docker-compose.yml -f ./legacy/docker-compose.override.yml up -d
 
 build-legacy-release:
 	docker build -t "aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)" .
