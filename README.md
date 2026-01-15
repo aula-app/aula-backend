@@ -36,6 +36,24 @@ docker build -f Dockerfile . \
   && docker compose up --build -d aula-backend
 ```
 
+### Testing - basic setup
+
+The following will refresh your database and create one tenant and seed it with OAuth client.
+
+```bash
+# php artisan migrate:fresh # WARNING - this will drop all data in the database
+
+# this will run as your user, so if running in Docker container, you might need to adjust permissions afterwards: chown -R www-data:www-data ./storage/tenant_*
+php artisan tinker
+$ App\Models\Tenant::create(['name' => 'test11', 'api_base_url' => 'https://neu.aula.de', 'admin1_email' => 'dev@aula.de', 'admin1_username' => 'dev', 'instance_code' => '11111']);
+
+php artisan tenant:seed
+# note the generated OAuth client ID, and use it in this command
+curl -H 'Content-Type: application/x-www-form-urlencoded' -H 'aula-instance-code: 11111' -H 'Accept: application/json' localhost:8080/api/v2/oauth/token -XPOST -d 'grant_type=password&client_id=$GENERATED_OAUTH_CLIENT_ID&username=test@example.com&password=password'
+
+# now you have access_token you can use to explore the API.. start by reading ./routes/tenant.php file
+```
+
 ## Legacy aula-backend code
 
 We're currently rewriting the API to use Laravel and be RESTful. New feature development using code in the `./legacy/` folder is stopped since 2025-11-15. Security patches and bugs are welcome. As parts of the system get refactored, and API clients updated, we will remove the related code from the legacy codebase.
