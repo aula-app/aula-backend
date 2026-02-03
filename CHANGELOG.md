@@ -3,10 +3,14 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
-## v1.7.10
+## v1.8.1
 
 - fix: broken roles of user when one of their rooms is deleted
+
+## v1.8.0
+
 - fix: put getUserGDPRData back to legacy User class
+- test: generate random rooms and import users to the rooms using addAllCSV method
 
 ## v1.7.9
 
