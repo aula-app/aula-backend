@@ -769,7 +769,7 @@ class Room
                 u.roles,
                 '$[*]' COLUMNS(
                     room_val VARCHAR(255) PATH '$.room',
-                    role_val VARCHAR(255) PATH '$.role'
+                    role_val INT(11) PATH '$.role'
                 )
             ) AS jt
             WHERE jt.room_val != :room_hash_id

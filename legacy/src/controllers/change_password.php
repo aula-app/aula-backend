@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $input = json_decode($json, true);
   $password = $input['password'];
   $new_password = $input['new_password'];
-  
+
   // Validate minimum password length for new password
   $min_password_length = 12; // Configure minimum password length here
   if (strlen($new_password) < $min_password_length) {
