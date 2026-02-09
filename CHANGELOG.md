@@ -3,6 +3,10 @@
 <!-- here add all issues that haven't been released yet -->
 <!-- to release, assign a version number and move them there -->
 
+## v1.8.2
+
+- feat: accept aula-frontend-version header
+
 ## v1.8.1
 
 - fix: broken roles of user when one of their rooms is deleted
