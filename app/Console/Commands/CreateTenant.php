@@ -96,12 +96,12 @@ class CreateTenant extends Command
                 'api_base_url' => $apiBaseUrl,
                 'instance_code' => $instanceCode,
                 'jwt_key' => $jwtKey,
-                'admin_name' => $adminFullName,
-                'admin_username' => $adminUsername,
-                'admin_email' => $adminEmail,
-                'tech_admin_name' => $secondAdminFullName,
-                'tech_admin_username' => $secondAdminUsername,
-                'tech_admin_email' => $secondAdminEmail,
+                'admin1_name' => $adminFullName,
+                'admin1_username' => $adminUsername,
+                'admin1_email' => $adminEmail,
+                'admin2_name' => $secondAdminFullName,
+                'admin2_username' => $secondAdminUsername,
+                'admin2_email' => $secondAdminEmail,
             ]);
 
             $this->info("Tenant created with ID: {$tenant->id}");
@@ -188,8 +188,8 @@ class CreateTenant extends Command
 
             // Store init password URLs on the tenant record
             $tenant->update([
-                'admin_init_pass_url' => 'pending',
-                'tech_admin_init_pass_url' => 'pending',
+                'admin1_init_pass_url' => 'pending',
+                'admin2_init_pass_url' => 'pending',
             ]);
 
         } catch (\Exception $e) {
