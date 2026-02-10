@@ -22,17 +22,18 @@ return new class extends Migration
             $table->string('api_base_url', 255)->nullable(false);
             $table->string('contact_info', 255)->nullable();
 
-            $table->string('admin_name', 255)->nullable();
-            $table->string('admin_username', 255)->nullable();
-            $table->string('admin_email', 255);
-            $table->string('admin_init_pass_url')->nullable();
+            $table->string('admin1_name', 255)->nullable();
+            $table->string('admin1_username', 255)->nullable();
+            $table->string('admin1_email', 255);
+            $table->string('admin1_init_pass_url')->nullable();
 
-            $table->string('tech_admin_name', 255)->nullable();
-            $table->string('tech_admin_username', 255)->nullable();
-            $table->string('tech_admin_email', 255);
-            $table->string('tech_admin_init_pass_url')->nullable();
+            $table->string('admin2_name', 255)->nullable();
+            $table->string('admin2_username', 255)->nullable();
+            $table->string('admin2_email', 255);
+            $table->string('admin2_init_pass_url')->nullable();
 
             $table->string('instance_code', 10)->unique();
+            $table->string('jwt_key')->nullable();
 
             $table->timestamps();
             $table->json('data')->nullable();
