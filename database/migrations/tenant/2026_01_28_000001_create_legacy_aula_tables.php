@@ -25,7 +25,7 @@ return new class extends Migration
             $table->integer('group')->nullable()->comment('group type of user that triggered the activity');
             $table->integer('target')->default(0)->comment('target of the activity (i.E. vote for a specific idea id)');
             $table->dateTime('created')->nullable()->comment('Date time of the activity');
-            $table->dateTime('last_update')->nullable()->comment('last update is saved if dataset is altered');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update is saved if dataset is altered');
         });
 
         // au_categories
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->text('description_internal')->nullable()->comment('only seen by admins');
             $table->integer('status')->nullable()->comment('0=inactive, 1=active 2=archived');
             $table->dateTime('created')->nullable()->comment('create date');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of the updater');
             $table->string('hash_id', 1024)->nullable()->comment('hash id of the category');
         });
@@ -62,7 +62,7 @@ return new class extends Migration
             $table->integer('target_id')->nullable()->comment('id of target that the command relates to - i.E. user id, group id, organisation');
             $table->integer('creator_id')->nullable()->comment('id of user who created the command');
             $table->dateTime('created')->nullable()->comment('create date of the command');
-            $table->dateTime('last_update')->nullable()->comment('last update of command');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of command');
             $table->integer('updater_id')->nullable()->comment('user id of the updater');
         });
 
@@ -74,7 +74,7 @@ return new class extends Migration
             $table->integer('user_id')->nullable()->comment('id of user that created comment');
             $table->integer('status')->nullable()->comment('0=inactive, 1=active, 2=suspended, 3=reported, 4=archived');
             $table->dateTime('created')->nullable()->comment('datetime of creation');
-            $table->dateTime('last_update')->nullable()->comment('last update of comment');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of comment');
             $table->integer('updater_id')->nullable()->comment('user_id of the updater');
             $table->string('hash_id', 1024)->nullable()->comment('hash id of the comment');
             $table->integer('language_id')->nullable()->comment('Language_id');
@@ -90,7 +90,7 @@ return new class extends Migration
             $table->dateTime('date_consent')->nullable()->comment('date of consent to terms');
             $table->dateTime('date_revoke')->nullable()->comment('date of revocation');
             $table->dateTime('created')->nullable()->comment('create time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of the updater');
             $table->integer('status')->default(1)->comment('status of consent');
             $table->primary(['user_id', 'text_id']);
@@ -105,7 +105,7 @@ return new class extends Migration
             $table->integer('status')->nullable()->comment('0=inactive, 1=active, 2=suspended');
             $table->integer('updater_id')->default(0)->comment('id of the updating user');
             $table->dateTime('created')->nullable()->comment('created date');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->primary(['user_id_original', 'user_id_target', 'topic_id']);
         });
 
@@ -118,7 +118,7 @@ return new class extends Migration
             $table->integer('status')->nullable()->comment('0=inactive, 1=active, 2=suspended, 3=archived');
             $table->string('internal_info', 2048)->nullable()->comment('internal info, only visible to admins');
             $table->dateTime('created')->nullable()->comment('datetime of creation');
-            $table->dateTime('last_update')->nullable()->comment('last update of group');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of group');
             $table->integer('updater_id')->nullable()->comment('user id of the updater');
             $table->string('hash_id', 1024)->nullable()->comment('hash id of the group');
             $table->string('access_code', 1024)->nullable()->comment('if set then access code is needed to join group');
@@ -139,7 +139,7 @@ return new class extends Migration
             $table->integer('status')->nullable()->comment('0=inactive, 1=active, 2=suspended, 3=reported, 4=archived 5= in review');
             $table->integer('language_id')->default(0)->comment('id of the language 0=default');
             $table->dateTime('created')->nullable()->comment('create date');
-            $table->dateTime('last_update')->nullable()->comment('last update of idea');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of idea');
             $table->string('hash_id', 1024)->nullable()->comment('hash id for this id');
             $table->integer('order_importance')->nullable()->comment('order of appearance / importance');
             $table->text('info')->nullable()->comment('free text field, can be used to add extra information');
@@ -162,7 +162,7 @@ return new class extends Migration
             $table->integer('object_id')->nullable()->comment('id of liked object (idea or comment)');
             $table->integer('status')->nullable()->comment('0=inactive, 1=active, temporarily 2=suspended');
             $table->dateTime('created')->nullable()->comment('create date');
-            $table->dateTime('last_update')->nullable()->comment('update date');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('update date');
             $table->string('hash_id', 1024)->nullable()->comment('hash id of the like');
             $table->integer('object_type')->nullable()->comment('type of liked object 1=idea, 2=comment');
         });
@@ -179,7 +179,7 @@ return new class extends Migration
             $table->string('name', 1024)->nullable()->comment('name of medium (other than filename)');
             $table->string('filename', 2048)->nullable()->comment('filename with extension (without path)');
             $table->dateTime('created')->nullable()->comment('creation date');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->string('hash_id', 1024)->nullable()->comment('hash_id of the media');
             $table->integer('updater_id')->nullable()->comment('id of the user that uploaded');
         });
@@ -196,7 +196,7 @@ return new class extends Migration
             $table->integer('status')->nullable()->comment('0=inactive 1=active 2=archive');
             $table->boolean('only_on_dashboard')->nullable()->comment('0=no 1= only displayed on dashboard, no active sending');
             $table->dateTime('created')->nullable()->comment('date when news were created');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of the updater');
             $table->string('hash_id', 1024)->nullable()->comment('hash_id for news post');
             $table->integer('language_id')->nullable()->comment('id of language 0=default');
@@ -218,7 +218,7 @@ return new class extends Migration
             $table->boolean('status')->default(false)->comment('0=inactive, 1=active');
             $table->integer('type')->nullable()->comment('phase type, 0=voting enabled, 1=voting+likes enabled, 2=likes enabled, 3=no votes, no likes etc.)');
             $table->dateTime('created')->nullable()->comment('time of creation');
-            $table->dateTime('last_update')->nullable()->comment('time of last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('time of last update');
             $table->integer('updater_id')->nullable();
         });
 
@@ -227,7 +227,7 @@ return new class extends Migration
             $table->integer('category_id')->comment('id of category');
             $table->integer('idea_id')->comment('id of idea');
             $table->dateTime('created')->nullable()->comment('creation time of relation');
-            $table->dateTime('last_update')->nullable()->comment('last update of dataset');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of dataset');
             $table->integer('updater_id')->nullable();
             $table->primary(['category_id', 'idea_id']);
         });
@@ -238,7 +238,7 @@ return new class extends Migration
             $table->integer('media_id')->comment('id of media in mediatable');
             $table->integer('type')->nullable()->comment('position where media is used within category');
             $table->dateTime('created')->nullable()->comment('create time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable();
             $table->primary(['category_id', 'media_id']);
         });
@@ -248,7 +248,7 @@ return new class extends Migration
             $table->integer('category_id')->comment('id of category');
             $table->integer('room_id')->comment('id of room');
             $table->dateTime('created')->nullable()->comment('creation time of relation');
-            $table->dateTime('last_update')->nullable()->comment('last update of dataset');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of dataset');
             $table->integer('updater_id')->nullable()->comment('id of updater');
             $table->primary(['category_id', 'room_id']);
         });
@@ -260,7 +260,7 @@ return new class extends Migration
             $table->integer('type')->nullable()->comment('position of media within group');
             $table->integer('status')->nullable()->comment('0=inactive 1=active');
             $table->dateTime('created')->nullable();
-            $table->dateTime('last_update')->nullable();
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate();
             $table->integer('updater_id')->nullable();
             $table->primary(['group_id', 'media_id']);
         });
@@ -271,7 +271,7 @@ return new class extends Migration
             $table->integer('user_id')->comment('id of user');
             $table->integer('status')->nullable()->comment('0=inactive 1=active 2=suspended 3=archive');
             $table->dateTime('created')->nullable()->comment('creation time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('id of the user who did the update');
             $table->primary(['group_id', 'user_id']);
         });
@@ -282,7 +282,7 @@ return new class extends Migration
             $table->integer('comment_id')->comment('id of the comment');
             $table->integer('status')->nullable()->comment('0=inactive 1=active 2=suspended 3=archive');
             $table->dateTime('created')->nullable()->comment('time of creation');
-            $table->dateTime('last_update')->nullable()->comment('last update of dataset');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of dataset');
             $table->integer('updater_id')->nullable();
             $table->primary(['idea_id', 'comment_id']);
         });
@@ -292,7 +292,7 @@ return new class extends Migration
             $table->integer('idea_id');
             $table->integer('media_id');
             $table->dateTime('created')->nullable();
-            $table->dateTime('last_update')->nullable();
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate();
             $table->integer('updater_id')->nullable();
             $table->primary(['idea_id', 'media_id']);
         });
@@ -304,7 +304,7 @@ return new class extends Migration
             $table->integer('type')->nullable()->comment('position within the room');
             $table->integer('status')->nullable()->comment('0=inactive 1=active');
             $table->dateTime('created')->nullable();
-            $table->dateTime('last_update')->nullable();
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate();
             $table->integer('updater_id')->nullable();
             $table->primary(['room_id', 'media_id']);
         });
@@ -315,7 +315,7 @@ return new class extends Migration
             $table->integer('user_id')->comment('id of the user');
             $table->integer('status')->nullable()->comment('0=inactive, 1=active, 2= temporarily suspended, 3= historic');
             $table->dateTime('created')->nullable()->comment('create time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of updater');
             $table->primary(['room_id', 'user_id']);
         });
@@ -324,7 +324,7 @@ return new class extends Migration
         Schema::create('au_rel_topics_ideas', function (Blueprint $table) {
             $table->integer('topic_id')->comment('id of the topic');
             $table->integer('idea_id')->comment('id of the idea');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->dateTime('created')->nullable();
             $table->integer('updater_id')->nullable();
             $table->primary(['topic_id', 'idea_id']);
@@ -336,7 +336,7 @@ return new class extends Migration
             $table->integer('media_id')->comment('id of the media in media table');
             $table->integer('type')->nullable()->comment('position within the topic');
             $table->dateTime('created')->nullable()->comment('creation date');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable();
             $table->primary(['topic_id', 'media_id']);
         });
@@ -348,7 +348,7 @@ return new class extends Migration
             $table->integer('type')->nullable()->comment('type of relation 0=associated 1=associated and following / subscribed');
             $table->integer('status')->nullable()->comment('0=inactive, 1=active, 2=suspended 3= archived');
             $table->dateTime('created')->nullable()->comment('create date');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('id of user who did the update');
             $table->primary(['user_id1', 'user_id2']);
         });
@@ -359,7 +359,7 @@ return new class extends Migration
             $table->integer('media_id')->comment('id of the media in the media table');
             $table->integer('type')->nullable()->comment('position within the user');
             $table->dateTime('created')->nullable()->comment('create time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable();
             $table->primary(['user_id', 'media_id']);
         });
@@ -370,7 +370,7 @@ return new class extends Migration
             $table->integer('trigger_id')->comment('id of the trigger');
             $table->boolean('user_consent')->nullable()->comment('0=no 1=yes');
             $table->dateTime('created')->nullable()->comment('create time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of the updater');
             $table->primary(['user_id', 'trigger_id']);
         });
@@ -382,7 +382,7 @@ return new class extends Migration
             $table->integer('object_id')->comment('id of reported object');
             $table->integer('status')->nullable()->comment('0=new 1=acknowledged by admin');
             $table->dateTime('created')->nullable()->comment('create date');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->text('reason')->nullable()->comment('reason for reporting');
             $table->text('internal_info')->nullable()->comment('internal notes on this reporting');
             $table->primary(['user_id', 'object_id', 'type']);
@@ -398,7 +398,7 @@ return new class extends Migration
             $table->integer('rights_level')->nullable()->comment('0=view_only, 10=std_user, 20=privileged user1, 30=privileged user 2, 40=privileged user 5, 50=admin, 60=tech admin');
             $table->boolean('status')->nullable()->comment('0=inactive, 1=active 2=suspended 3=archived');
             $table->dateTime('created')->nullable()->comment('time of creation');
-            $table->dateTime('last_update')->nullable()->comment('last update of dataset');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of dataset');
             $table->string('hash_id', 1024)->nullable()->comment('hash id of the role');
             $table->integer('updater_id')->nullable();
         });
@@ -413,7 +413,7 @@ return new class extends Migration
             $table->boolean('restrict_to_roomusers_only')->nullable()->comment('1=yes, only users that are part of this room can view and vote');
             $table->integer('order_importance')->nullable()->comment('order - useable for display purposes or logical operations');
             $table->dateTime('created')->nullable()->comment('Date time when room was created');
-            $table->dateTime('last_update')->nullable()->comment('Last update of room');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('Last update of room');
             $table->integer('updater_id')->nullable()->comment('user_id of the updater');
             $table->string('hash_id', 1024)->nullable()->comment('hashed id of the room');
             $table->string('access_code', 1024)->nullable()->comment('if set, user needs access code to access room');
@@ -447,7 +447,7 @@ return new class extends Migration
             $table->boolean('status')->nullable()->comment('0=inactive, 1=active');
             $table->integer('order')->nullable()->comment('order for frontend display');
             $table->dateTime('created')->nullable()->comment('time of creation');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of the updater');
             $table->string('hash_id', 1024)->nullable()->comment('hash_id of the service');
         });
@@ -459,7 +459,7 @@ return new class extends Migration
             $table->boolean('revert_to_on_active')->nullable()->comment('auto turn back on active (1) or inactive (0)');
             $table->dateTime('revert_to_on_date')->nullable()->comment('date and time, when system gets back online');
             $table->dateTime('created')->nullable()->comment('create time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable();
         });
 
@@ -482,7 +482,7 @@ return new class extends Migration
             $table->boolean('allow_registration')->comment('0=no 1=yes');
             $table->integer('default_role_for_registration')->nullable()->comment('role id for new self registered users');
             $table->string('default_email_address', 1024)->nullable()->comment('default fallback e-mail address');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of updater');
             $table->integer('archive_after')->nullable()->comment('number of days after which content is automatically archived');
             $table->integer('organisation_type')->nullable()->comment('0=school, 1=other organisation - for term set');
@@ -501,7 +501,7 @@ return new class extends Migration
             $table->integer('usergroup')->nullable()->comment('group that caused the error / activity');
             $table->string('url', 2048)->nullable()->comment('url where event occurred');
             $table->dateTime('created')->nullable()->comment('creation of log entry');
-            $table->dateTime('last_update')->nullable()->comment('last update of this entry');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of this entry');
             $table->integer('updater_id')->nullable();
         });
 
@@ -517,7 +517,7 @@ return new class extends Migration
             $table->integer('language_id')->nullable()->comment('id of the language (0=default)');
             $table->integer('location')->nullable()->comment('location (page) where the text is shown');
             $table->dateTime('created')->nullable()->comment('create time');
-            $table->dateTime('last_update')->nullable()->comment('last_update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last_update');
             $table->integer('updater_id')->nullable()->comment('user_id of updater');
             $table->string('hash_id', 1024)->nullable()->comment('hash_id of the text');
             $table->integer('status')->nullable()->comment('0=inactive');
@@ -532,7 +532,7 @@ return new class extends Migration
             $table->integer('status')->nullable()->comment('0=inactive, 1=active 2=archived');
             $table->integer('order_importance')->nullable()->comment('order bias for displaying in frontend');
             $table->dateTime('created')->nullable()->comment('creation time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->string('hash_id', 1024)->nullable()->comment('hash id of the topic');
             $table->integer('updater_id')->default(0)->comment('id of the user that does the update');
             $table->integer('room_id')->default(0)->comment('id of the room the topic is in');
@@ -557,7 +557,7 @@ return new class extends Migration
             $table->text('description_internal')->nullable()->comment('internal description');
             $table->integer('status')->nullable()->comment('0=inactive, 1=active 2=suspended');
             $table->dateTime('created')->nullable()->comment('create time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of the last updater');
         });
 
@@ -583,7 +583,7 @@ return new class extends Migration
             $table->integer('registration_status')->nullable()->comment('Registration status 0=new, 1=in registration 2=completed');
             $table->integer('status')->nullable()->comment('0=inactive 1=active 2=suspended 3=archive');
             $table->dateTime('created')->nullable()->comment('created time');
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->dateTime('last_update_retrieval')->nullable()->comment('last update_retrieval');
             $table->integer('updater_id')->nullable()->comment('user_id of the updater');
             $table->integer('creator_id')->nullable()->comment('user_id of the creator');
@@ -612,7 +612,7 @@ return new class extends Migration
             $table->integer('user_id')->nullable()->comment('id of the user');
             $table->integer('external_service_login')->nullable()->comment('SSO / OAuth2 login 0=no 1=yes');
             $table->dateTime('created')->nullable();
-            $table->dateTime('last_update')->nullable()->comment('last update');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of the updater');
             $table->integer('external_service_id')->nullable()->comment('id of the used service for authentication');
         });
@@ -625,7 +625,7 @@ return new class extends Migration
             $table->integer('vote_value')->nullable()->comment('value of the vote (-1, 0, +1)');
             $table->integer('status')->nullable()->comment('0=inactive, 1=active, 2= temporarily suspended');
             $table->dateTime('created')->nullable()->comment('time of first creation');
-            $table->dateTime('last_update')->nullable()->comment('last update on this dataset');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update on this dataset');
             $table->string('hash_id', 1024)->nullable()->comment('hash id of the vote');
             $table->integer('vote_weight')->nullable()->comment('absolute value for given votes');
             $table->integer('number_of_delegations')->nullable()->comment('number of delegated votes included');
