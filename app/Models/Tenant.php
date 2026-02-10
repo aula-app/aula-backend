@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
@@ -9,6 +11,8 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase;
+    use HasFactory;
+    use HasUuids;
 
     public static function getCustomColumns(): array
     {
@@ -16,14 +20,14 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'name',
             'api_base_url',
             'contact_info',
-            'admin_name',
-            'admin_username',
-            'admin_email',
-            'admin_init_pass_url',
-            'tech_admin_name',
-            'tech_admin_username',
-            'tech_admin_email',
-            'tech_admin_init_pass_url',
+            'admin1_name',
+            'admin1_username',
+            'admin1_email',
+            'admin1_init_pass_url',
+            'admin2_name',
+            'admin2_username',
+            'admin2_email',
+            'admin2_init_pass_url',
             'instance_code',
         ]);
     }
