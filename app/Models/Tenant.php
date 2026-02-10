@@ -25,6 +25,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'tech_admin_email',
             'tech_admin_init_pass_url',
             'instance_code',
+            'jwt_key',
         ]);
     }
 }
