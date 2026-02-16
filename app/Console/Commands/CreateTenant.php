@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Keygen\Keygen;
 
 class CreateTenant extends Command
 {
@@ -123,6 +124,8 @@ class CreateTenant extends Command
             ) {
                 $now = now();
 
+                $this->insertInitialSystemData();
+
                 // Create first admin user
                 $adminId = DB::table('au_users_basedata')->insertGetId([
                     'realname' => $adminFullName,
@@ -207,7 +210,7 @@ class CreateTenant extends Command
     private function generateUniqueInstanceCode(): string
     {
         do {
-            $code = strtolower(Str::random(5));
+            $code = Keygen::alphanum(5)->generate();
 
             // Ensure only alphabetical characters
             $code = preg_replace('/[^a-z]/', '', $code);
@@ -230,5 +233,28 @@ class CreateTenant extends Command
 
             return $code;
         } while (true);
+    }
+
+    private function insertInitialSystemData(): void
+    {
+        $now = now();
+
+        DB::table('au_rooms')->insert([
+            'room_name' => 'Schule',
+            'description_internal' => null,
+            'status' => 1,
+            'type' => 1,
+        ]);
+
+        DB::table('au_system_current_state')->insert([
+            'created' => $now,
+            'last_update' => $now,
+            'updater_id' => 2,
+        ]);
+
+        DB::table('au_system_global_config')->insert([
+            'allow_registration' => 0,
+            'default_email_address' => null,
+        ]);
     }
 }
