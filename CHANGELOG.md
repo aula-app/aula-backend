@@ -10,6 +10,7 @@
 ## v1.8.1
 
 - fix: broken roles of user when one of their rooms is deleted
+- feat(tenants): add basic commands to create a new tenant, list current tenants and add an new user in a tenant
 
 ## v1.8.0
 
