@@ -418,11 +418,11 @@ return new class extends Migration
             $table->string('hash_id', 1024)->nullable()->comment('hashed id of the room');
             $table->string('access_code', 1024)->nullable()->comment('if set, user needs access code to access room');
             $table->text('internal_info')->nullable()->comment('internal info and notes on this room');
-            $table->integer('phase_duration_0')->default(0)->comment('phase duration 0');
-            $table->integer('phase_duration_1')->default(0)->comment('phase_duration_1');
-            $table->integer('phase_duration_2')->default(0)->comment('phase_duration_2');
-            $table->integer('phase_duration_3')->default(0)->comment('phase_duration_3');
-            $table->integer('phase_duration_4')->default(0)->comment('phase_duration_4');
+            $table->integer('phase_duration_0')->nullable()->comment('phase duration 0');
+            $table->integer('phase_duration_1')->nullable()->comment('phase_duration_1');
+            $table->integer('phase_duration_2')->nullable()->comment('phase_duration_2');
+            $table->integer('phase_duration_3')->nullable()->comment('phase_duration_3');
+            $table->integer('phase_duration_4')->nullable()->comment('phase_duration_4');
             $table->integer('type')->default(0)->comment('0 = standard room 1 = MAIN ROOM (aula)');
         });
 
@@ -539,11 +539,11 @@ return new class extends Migration
             $table->integer('phase_id')->default(1)->comment('Number of phase the topic is in');
             $table->integer('wild_ideas_enabled')->default(1)->comment('1=enabled 0=disabled');
             $table->dateTime('publishing_date')->nullable()->comment('Date, when the topic is active');
-            $table->integer('phase_duration_0')->default(0)->comment('Duration of phase 0');
-            $table->integer('phase_duration_1')->default(0)->comment('Duration of phase 1');
-            $table->integer('phase_duration_2')->default(0)->comment('Duration of phase 2');
-            $table->integer('phase_duration_3')->default(0)->comment('Duration of phase 3');
-            $table->integer('phase_duration_4')->default(0)->comment('Duration of phase 4');
+            $table->integer('phase_duration_0')->nullable()->comment('Duration of phase 0');
+            $table->integer('phase_duration_1')->nullable()->comment('Duration of phase 1');
+            $table->integer('phase_duration_2')->nullable()->comment('Duration of phase 2');
+            $table->integer('phase_duration_3')->nullable()->comment('Duration of phase 3');
+            $table->integer('phase_duration_4')->nullable()->comment('Duration of phase 4');
             $table->integer('type')->default(0)->comment('type of box (0=std, 1= special)');
         });
 
