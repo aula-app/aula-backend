@@ -489,8 +489,8 @@ return new class extends Migration
             $table->integer('enable_oauth')->default(0)->comment('0 = disable, 1 = enable');
             $table->text('custom_field1_name')->nullable()->comment('Name custom field 1');
             $table->text('custom_field2_name')->nullable()->comment('Name custom field 2');
-            $table->integer('quorum_wild_ideas')->default(80)->comment('percentage for wild idea quorum');
-            $table->integer('quorum_votes')->default(80)->comment('percentage for votes');
+            $table->integer('quorum_wild_ideas')->default(10)->comment('percentage for wild idea quorum');
+            $table->integer('quorum_votes')->default(10)->comment('percentage for votes');
         });
 
         // au_systemlog
