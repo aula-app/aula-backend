@@ -30,7 +30,7 @@ services:
   mariadb:
     image: mariadb:11.7
     ports:
-      - "3307:3306"
+      - "3306:3306"
     environment:
       # @NOTE: if you use this container, these
       #  values need to be reflected in .env
