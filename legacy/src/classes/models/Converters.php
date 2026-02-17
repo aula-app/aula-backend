@@ -11,7 +11,7 @@ if ($allowed_include == 1) {
 class Converters
 {
   # The converters class is a collection of useful methods for the system. An example is the conversion of entity hash ids (like user id) to int ids.
-  # please see the description in the methods 
+  # please see the description in the methods
 
   private $db;
 
@@ -283,7 +283,6 @@ class Converters
     } catch (Exception $e) {
       // cache error
     }
-    error_log('convesion base:' . $hash_id);
 
     $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_messages . ' WHERE hash_id = :hash_id');
     $this->db->bind(':hash_id', $hash_id); // bind hash id
@@ -460,7 +459,6 @@ class Converters
     try {
       if ($this->cache->get($check_hash) != null) {
         $data = $this->cache->get($check_hash);
-        error_log("Using cache for " . $hash_id . " data = " . $data);
         return $data;
       }
     } catch (Exception $e) {
