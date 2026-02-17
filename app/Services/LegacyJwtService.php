@@ -26,7 +26,7 @@ class LegacyJwtService
             'user_hash' => $user->hash_id,
             'user_level' => $user->userlevel,
             'roles' => json_decode($user->roles ?? '[]'),
-            'temp_pw' => !empty($user->temp_pw) && $user->temp_pw !== '',
+            'temp_pw' => !empty($user->temp_pw),
         ];
 
         $payloadEncoded = $this->base64UrlEncode(json_encode($payload));
