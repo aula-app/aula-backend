@@ -19,7 +19,13 @@ Thank you for your interest. See contribution guidelines at [`CONTRIBUTION.md`](
 
 ### Running
 
-Choose one of the following:
+First time setup:
+
+```bash
+php artisan passport:keys -q
+```
+
+Then, choose one of the following:
 
 ```bash
 # Run aula-backend:v2 locally (doesn't include the legacy aula-backend:v1)
