@@ -94,7 +94,7 @@ class LegacyUser extends Model implements Authenticatable
             'hash_id' => $this->hash_id,
             'userlevel' => $this->userlevel,
             'roles' => $this->roles,
-            'temp_pw' => !empty($this->temp_pw) && $this->temp_pw !== '',
+            'temp_pw' => !empty($this->temp_pw),
         ];
     }
 
