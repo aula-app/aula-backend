@@ -54,8 +54,7 @@ return [
          * @see \Stancl\Tenancy\UniqueIdentifierGenerators\RandomIntGenerator
          * @see \Stancl\Tenancy\UniqueIdentifierGenerators\RandomStringGenerator
          */
-        /* 'id_generator' => UniqueIdentifierGenerators\UUIDGenerator::class, */
-        'id_generator' => null,
+        'id_generator' => UniqueIdentifierGenerators\UUIDGenerator::class,
     ],
 
     'identification' => [
