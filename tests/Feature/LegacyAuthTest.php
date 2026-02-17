@@ -159,7 +159,7 @@ class LegacyAuthTest extends TestCase
             $user->save();
         });
 
-        $response = $this->postJson('/api/v2/auth/login', [
+        $response = $this->postJson('/api/v2/legacy-auth/login', [
             'username' => 'phpunit_testuser',
             'password' => $password,
         ], [
@@ -212,7 +212,7 @@ class LegacyAuthTest extends TestCase
             $user->save();
         });
 
-        $response = $this->postJson('/api/v2/auth/login', [
+        $response = $this->postJson('/api/v2/legacy-auth/login', [
             'username' => 'phpunit_testuser',
             'password' => 'wrongpassword',
         ], [
@@ -240,7 +240,7 @@ class LegacyAuthTest extends TestCase
         $tenant = \App\Models\Tenant::where('instance_code', 'TEST001')->first();
         $this->assertNotNull($tenant);
 
-        $response = $this->postJson('/api/v2/auth/login', [
+        $response = $this->postJson('/api/v2/legacy-auth/login', [
             'username' => 'nonexistent_user_xyz',
             'password' => 'anypassword',
         ], [
@@ -276,7 +276,7 @@ class LegacyAuthTest extends TestCase
             $user->save();
         });
 
-        $response = $this->postJson('/api/v2/auth/login', [
+        $response = $this->postJson('/api/v2/legacy-auth/login', [
             'username' => 'phpunit_inactive',
             'password' => 'testpass',
         ], [

@@ -21,7 +21,7 @@ Route::name('auth.')
         'api',
         InitializeTenancyByRequestData::class,
     ])
-    ->prefix('/api/v2/auth')
+    ->prefix('/api/v2/legacy-auth')
     ->group(base_path('routes/tenant/api/v2/auth.php'));
 
 // Passport-authenticated routes (existing)
