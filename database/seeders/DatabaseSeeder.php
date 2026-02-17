@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info("Client ID:     {$client->id}");
         $this->command->info('Client Secret: N/A');
 
+        $this->call([TenantsFromAulaManagerSeeder::class]);
+
         $user = User::firstOrCreate(
             ['email' => 'dev@aula.de'],
             [

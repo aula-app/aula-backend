@@ -14,11 +14,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tenants', function (Blueprint $table) {
-            // use mariadb-specific UUID_v4() function to initialize id field
             $table->uuid('id')->primary()->default(DB::raw('UUID_v4()'));
 
+            // your custom columns may go here
+
             $table->string('name', 255)->nullable(false)->unique();
-            $table->string('api_base_url', 255)->nullable(false)->default('https://neu.aula.de');
+            $table->string('api_base_url', 255)->nullable(false);
             $table->string('contact_info', 255)->nullable();
 
             $table->string('admin1_name', 255)->nullable();
