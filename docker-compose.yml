@@ -23,6 +23,9 @@ services:
         target: /opt/laravel/storage/oauth-public.key
         bind:
           create_host_path: false
+    depends_on:
+      mariadb:
+        condition: service_healthy
     networks:
       - aula_local
 
@@ -39,7 +42,7 @@ services:
       MARIADB_USER: aula_user
       MARIADB_PASSWORD: example
     volumes:
-      - ./docker/mariadb/init-user-privileges.sh:/docker-entrypoint-initdb.d/init-user-privileges.sh
+      - ./docker/mariadb/:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 10s
