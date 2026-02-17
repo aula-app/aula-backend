@@ -143,15 +143,8 @@ class LegacyJwtService
             return $tenant->jwt_key;
         }
 
-        // Fallback to environment variable
-        $envKey = env('JWT_KEY');
+        throw new Error("JWT secret key is not configured for the Tenant");
 
-        if (!empty($envKey)) {
-            return $envKey;
-        }
-
-        // Final fallback (should be changed in production)
-        return 'default_jwt_key_change_me';
     }
 
     /**
