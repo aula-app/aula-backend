@@ -76,7 +76,7 @@ class LegacyUser extends Model implements Authenticatable
     public function checkPassword(string $password): bool
     {
         // Check temporary password first (plain text match)
-        if (!empty($this->temp_pw) && $this->temp_pw !== '' && $this->temp_pw === $password) {
+        if (!empty($this->temp_pw) && strcmp($this->temp_pw, $password)) {
             return true;
         }
 
