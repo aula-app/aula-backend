@@ -14,6 +14,7 @@
   "license": "EUPL v1.2-or-later",
   "require": {
     "php": "^8.3",
+    "gladcodes/keygen": "^1.1.2",
     "laravel/framework": "^12.0",
     "laravel/passport": "^13",
     "laravel/tinker": "^2.10.1",
