@@ -23,6 +23,11 @@ services:
         target: /opt/laravel/storage/oauth-public.key
         bind:
           create_host_path: false
+      - type: bind
+        source: ./legacy/config/
+        target: /mnt/aula-backend-legacy/config
+        bind:
+          create_host_path: false
     depends_on:
       mariadb:
         condition: service_healthy

@@ -110,6 +110,22 @@ class CreateTenant extends Command
 
             $this->info("Tenant created with ID: {$tenant->id}");
             $this->info('Database created and migrations executed.');
+
+            $config = <<<END
+
+              \$instances["$instanceCode"] = [
+                "host" => "mariadb",
+                "user" => "{$tenant->getInternal('db_username')}",
+                "pass" => "{$tenant->getInternal('db_password')}",
+                "dbname" => "{$tenant->getInternal('db_name')}",
+                "jwt_key" => "{$jwtKey}",
+                "instance_api_url" => "{$apiBaseUrl}"
+              ];
+
+            END;
+            $this->info('Appending instance config to legacy instances_config.php for interoperability...');
+            $this->appendLegacyConfigInplace('/mnt/aula-backend-legacy/config/instances_config.php', $config);
+            $this->info('Legacy instances_config.php updated.');
         } catch (\Exception $e) {
             $this->error("Failed to create tenant: {$e->getMessage()}");
 
@@ -208,6 +224,35 @@ class CreateTenant extends Command
         $this->info('Tenant created successfully!');
 
         return self::SUCCESS;
+    }
+
+    protected function appendLegacyConfigInplace($configFile, $newConfig)
+    {
+        $reading = fopen($configFile, 'r');
+        if (! $reading) {
+            $this->error("Failed to open file {$configFile} for reading.");
+            throw new \RuntimeException("Failed to open file {$configFile} for reading.");
+        }
+        $writing = fopen("{$configFile}.tmp", 'w');
+
+        $placeholder = '// END_OF_CONFIG';
+        while (! feof($reading)) {
+            $line = fgets($reading);
+            if (! $line) {
+                break;
+            }
+            if (stristr($line, $placeholder)) {
+                $line = "{$newConfig}\n$placeholder\n";
+            }
+            fwrite($writing, $line);
+        }
+        fclose($reading);
+        fclose($writing);
+
+        $date = date('Y-m-d H:i:s');
+        copy($configFile, "{$configFile}.{$date}.bak");
+
+        return rename("{$configFile}.tmp", $configFile);
     }
 
     private function generateUniqueInstanceCode(): string
