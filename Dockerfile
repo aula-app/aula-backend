@@ -38,6 +38,10 @@ VOLUME /opt/laravel/storage
 # Define a health check
 HEALTHCHECK --interval=30s --timeout=15s --start-period=15s --retries=3 CMD curl -f http://localhost/public/up || exit 1
 
+ENV TARGET_USER_ID=1000
+RUN addgroup --gid 1000 legacy-docker \
+    && adduser -u $TARGET_USER_ID -D -H -G legacy-docker legacy-ansible
+
 # Add the entrypoint
 ADD entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh

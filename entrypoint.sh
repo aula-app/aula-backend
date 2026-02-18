@@ -21,4 +21,8 @@ chmod 660 ./storage/oauth-public.key
 chmod 600 ./storage/oauth-private.key
 echo "✅ Passport keys"
 
+# @TODO: nikola - this is too permissive, as we want legacy queue to be able to write there
+#   after we get rid of legacy interoperability, we should go back to 755 or whatever
+chmod -R 777 ./storage/logs/laravel.log
+
 exec /usr/bin/supervisord -c /etc/supervisord.conf

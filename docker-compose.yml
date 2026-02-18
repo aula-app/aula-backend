@@ -28,6 +28,11 @@ services:
         target: /mnt/aula-backend-legacy/config
         bind:
           create_host_path: false
+      - type: bind
+        source: ./legacy/docker-local/_generated_files_data/
+        target: /mnt/aula-backend-legacy/files
+        bind:
+          create_host_path: false
     depends_on:
       mariadb:
         condition: service_healthy

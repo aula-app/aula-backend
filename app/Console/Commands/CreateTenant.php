@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Jobs\LegacyMkdir;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -126,6 +127,9 @@ class CreateTenant extends Command
             $this->info('Appending instance config to legacy instances_config.php for interoperability...');
             $this->appendLegacyConfigInplace('/mnt/aula-backend-legacy/config/instances_config.php', $config);
             $this->info('Legacy instances_config.php updated.');
+            $this->info('Creating legacy folder for the instance file uploads...');
+            LegacyMkdir::dispatch($instanceCode)->onQueue('legacy-mkdir');
+            $this->info('Created legacy folder for the instance file uploads.');
         } catch (\Exception $e) {
             $this->error("Failed to create tenant: {$e->getMessage()}");
 
