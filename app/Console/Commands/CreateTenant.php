@@ -8,7 +8,6 @@ use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Keygen\Keygen;
 
 class CreateTenant extends Command
 {
@@ -22,37 +21,41 @@ class CreateTenant extends Command
         $this->newLine();
 
         // Collect tenant information
-        $tenantName = $this->ask('Tenant name');
-        if (empty($tenantName)) {
-            $this->error('Tenant name is required.');
+        do {
+            $tenantName = $this->ask('Tenant name');
+            if (empty($tenantName)) {
+                $this->warn('Tenant has to have a name, maybe a school name?');
 
-            return self::FAILURE;
-        }
+                continue;
+            }
+            if (Tenant::firstWhere('name', $tenantName) !== null) {
+                $this->warn('Tenant\'s name has to be unique. Try choosing another name.');
+
+                continue;
+            }
+            break;
+        } while (true);
 
         // Admin user information
         $this->info('--- Admin User ---');
-        $adminUsername = $this->ask('Admin username');
-        $adminFullName = $this->ask('Admin full name');
-        $adminEmail = $this->ask('Admin email');
-
-        if (empty($adminUsername) || empty($adminFullName) || empty($adminEmail)) {
-            $this->error('All admin user fields are required.');
-
-            return self::FAILURE;
-        }
+        do {
+            $adminUsername = $this->ask('Admin username');
+        } while (empty($adminUsername));
+        $adminFullName = $this->ask('Admin full name', 'admin1');
+        do {
+            $adminEmail = $this->ask('Admin email');
+        } while (empty($adminEmail));
 
         // Second admin user information
         $this->newLine();
         $this->info('--- Second Admin User ---');
-        $secondAdminUsername = $this->ask('Second admin username');
-        $secondAdminFullName = $this->ask('Second admin full name');
-        $secondAdminEmail = $this->ask('Second admin email');
-
-        if (empty($secondAdminUsername) || empty($secondAdminFullName) || empty($secondAdminEmail)) {
-            $this->error('All second admin user fields are required.');
-
-            return self::FAILURE;
-        }
+        do {
+            $secondAdminUsername = $this->ask('Second admin username');
+        } while (empty($secondAdminUsername));
+        $secondAdminFullName = $this->ask('Second admin full name', 'admin2');
+        do {
+            $secondAdminEmail = $this->ask('Second admin email');
+        } while (empty($secondAdminEmail));
 
         // Generate and confirm instance code
         $instanceCode = $this->generateUniqueInstanceCode();
@@ -210,18 +213,8 @@ class CreateTenant extends Command
     private function generateUniqueInstanceCode(): string
     {
         do {
-            $code = Keygen::alphanum(5)->generate();
-
-            // Ensure only alphabetical characters
-            $code = preg_replace('/[^a-z]/', '', $code);
-            while (strlen($code) < 5) {
-                $code .= chr(random_int(97, 122));
-            }
-            $code = substr($code, 0, 5);
-
-            $exists = Tenant::where('instance_code', $code)->exists();
-
-            if ($exists) {
+            $code = strtolower(Str::random(5));
+            if (Tenant::firstWhere('instance_code', $code) !== null) {
                 $this->warn("Instance code '{$code}' already exists, generating a new one...");
 
                 continue;
