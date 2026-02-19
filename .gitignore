@@ -40,3 +40,4 @@ info.php
 docker-compose.override.yml
 
 *.cache
+*.bak

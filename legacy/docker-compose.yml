@@ -18,13 +18,8 @@ services:
       - mariadb
     volumes:
       - type: bind
-        source: ./config/base_config.php
-        target: /var/www/html/config/base_config.php
-        bind:
-          create_host_path: false
-      - type: bind
-        source: ./config/instances_config.php
-        target: /var/www/html/config/instances_config.php
+        source: ./config/
+        target: /var/www/html/config
         bind:
           create_host_path: false
       - type: bind
