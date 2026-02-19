@@ -42,6 +42,10 @@ docker build -f Dockerfile . \
   && docker compose up --build -d aula-backend
 ```
 
+<!-- @TODO: nikola - should we make it possible to create a tenant with instance_code SINGLE? -->
+
+And initialize your first Tenant Instance from within the v2 container with `php artisan tenant:create`.
+
 ## Legacy aula-backend code
 
 We're currently rewriting the API to use Laravel and be RESTful. New feature development using code in the `./legacy/` folder is stopped since 2025-11-15. Security patches and bugs are welcome. As parts of the system get refactored, and API clients updated, we will remove the related code from the legacy codebase.
