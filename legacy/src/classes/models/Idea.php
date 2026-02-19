@@ -12,7 +12,7 @@ class Idea
 {
 
   # Idea provides a collection of methods dealing with all functions around ideas. Thes include actions like add idea, delete idea etc.
-  # For details please check the decsirptions within the methods 
+  # For details please check the decsirptions within the methods
 
   private $db; # database connection and methods
 
@@ -87,7 +87,7 @@ class Idea
 
   public function getCategoryOrderId($orderby)
   {
-    # helper function that converts int id into db column / field 
+    # helper function that converts int id into db column / field
     switch (intval($orderby)) {
       case 1:
         return "id";
@@ -117,7 +117,7 @@ class Idea
     // We can't use the information from the au_rel_rooms_users because we don't have the user role information
     // in this table.
     $get_voting_users_query = <<<EOD
-      SELECT id 
+      SELECT id
       FROM {$this->db->au_users_basedata}
       WHERE
         userlevel NOT IN (41,45) AND
@@ -170,7 +170,7 @@ class Idea
 
       return $returnvalue;
     } else {
-      # now get the quorum / number of users in room -> now frontend can calculate the quorum by dividing the number of votes / likes 
+      # now get the quorum / number of users in room -> now frontend can calculate the quorum by dividing the number of votes / likes
       # by the number of total users in this room (potential likers / voters)
 
       $room_id = $ideas[0]['room_id'];
@@ -616,7 +616,7 @@ class Idea
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-    
+
     */
     //sanitize
     $offset = intval($offset);
@@ -735,14 +735,13 @@ class Idea
   }// end function
 
 
-  public function getCategories($status = -1, $type = -1, $room_id = -1, $idea_id = -1, $limit = -1, $orderby = 0, $asc = 0, $offset = 0, $extra_where = "")
+  public function getCategories($status = -1, $type = -1, $idea_id = -1, $limit = -1, $orderby = 0, $asc = 0, $offset = 0, $extra_where = "")
   {
     /* returns category list (associative array) with start and limit provided
     if start and limit are set to 0, then the whole list is read (without limit)
     orderby is the field (int, see switch), defaults to last_update (0)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
-    $room_id is the id of the room
     */
     // sanitize
     $offset = intval($offset);
@@ -751,7 +750,6 @@ class Idea
     $asc = intval($asc);
     $status = intval($status);
     $idea_id = $this->converters->checkIdeaId($idea_id); // auto convert
-    $room_id = $this->converters->checkRoomId($room_id); // auto convert
 
     // init vars
     $orderby_field = "";
@@ -778,15 +776,8 @@ class Idea
     }
 
     if ($idea_id > -1) {
-      // specific status selected / -1 = get all status values / only activate where clause and binding if room_id > -1
       $join = 'LEFT JOIN ' . $this->db->au_rel_categories_ideas . ' ON (' . $this->db->au_rel_categories_ideas . '.category_id = ' . $this->db->au_categories . '.id)';
       $extra_where .= ' AND ' . $this->db->au_rel_categories_ideas . '.idea_id= ' . $idea_id;
-    }
-
-    if ($room_id > -1) {
-      // specific status selected / -1 = get all status values / only activate where clause and binding if room_id > -1
-      $join = 'LEFT JOIN ' . $this->db->au_rel_categories_rooms . ' ON (' . $this->db->au_rel_categories_rooms . '.category_id = ' . $this->db->au_categories . '.id)';
-      $extra_where .= " AND " . $this->db->au_rel_categories_rooms . ".room_id = " . $room_id;
     }
 
     $orderby_field = $this->getCategoryOrderId($orderby);
@@ -906,7 +897,7 @@ class Idea
     $status = intval($status);
 
     if ($user_id > 0) {
-      // auto convert user id 
+      // auto convert user id
       $user_id = $this->converters->checkUserId($user_id);
 
       // check user level first
@@ -1072,7 +1063,7 @@ class Idea
     orderby is the field (int, see switch), defaults to creation_date (4)
     asc (smallint), is either ascending (1) or descending (0), defaults to descending
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1) -1 = get all datasets with status values 0-4
-   
+
     */
     // sanitize
     $offset = intval($offset);
@@ -1422,7 +1413,7 @@ class Idea
         $returnvalue['error_code'] = 2; // error code
         $returnvalue['data'] = false; // returned data
         $returnvalue['count'] = 0; // returned count of datasets
-  
+
         return $returnvalue;
       }
     }
@@ -1432,8 +1423,8 @@ class Idea
 
     $this->db->bind(':content', $this->crypt->encrypt($content)); // encrypt the content
     $this->db->bind(':title', $title); // title of idea
-    $this->db->bind(':custom_field1', $custom_field1); // custom field 1 
-    $this->db->bind(':custom_field2', $custom_field2); // custom field 2 
+    $this->db->bind(':custom_field1', $custom_field1); // custom field 1
+    $this->db->bind(':custom_field2', $custom_field2); // custom field 2
 
     $this->db->bind(':status', $status);
     $this->db->bind(':type', $type);
@@ -1454,7 +1445,7 @@ class Idea
     try {
       $action = $this->db->execute(); // do the query
 
- 
+
     } catch (Exception $e) {
       $err = true;
     }
@@ -1463,7 +1454,7 @@ class Idea
 
     if ($topic_id != "") {
       try {
-        $this->addIdeaToTopic($topic_id, $insertid, $updater_id); 
+        $this->addIdeaToTopic($topic_id, $insertid, $updater_id);
       } catch (Exception $e) {
         $err = true;
       }
@@ -1701,7 +1692,7 @@ class Idea
     /* adds a new survey (auto creates topic/box and idea) and returns insert id (box id) if successful, accepts the above parameters
      name = name of the topic, description_internal = shown only to admins for internal use
      description_public = shown in frontend, order_importance = order bias for sorting in the frontend
-     
+
     */
 
     $description_internal = "survey"; # human readable hint
@@ -1748,7 +1739,7 @@ class Idea
       $insertid = intval($this->db->lastInsertId()); # get insert id for box / topic
 
       if ($insertid > -1) {
-        #add idea 
+        #add idea
         $idea_data = []; #init
         #addIdea($content, $title, $user_id, $status = 1, $room_id = 0, $order_importance = 10, $updater_id = 0, $votes_available_per_user = 1, $info = "", $custom_field1 = "", $custom_field2 = "", $type = 0)
         $idea_data = $this->addIdea($idea_content, $idea_headline, $updater_id, 1, $room_id, 10, $updater_id, 1, "survey", "", "", 1);
@@ -2888,8 +2879,8 @@ class Idea
       // activity since last login of the user
       $where = <<<EOD
          WHERE
-          {$this->db->au_ideas}.user_id = :user_id 
-          AND {$this->db->au_comments}.last_update > (SELECT 
+          {$this->db->au_ideas}.user_id = :user_id
+          AND {$this->db->au_comments}.last_update > (SELECT
               {$this->db->au_users_basedata}.last_update_retrieval
               FROM
                 {$this->db->au_users_basedata}
@@ -2966,7 +2957,7 @@ class Idea
 
   public function getUserIdeasByPhase($user_id, $phase_id)
   {
-  
+
     $user_id = $this->converters->checkUserId($user_id);
 
     if ($phase_id != 0) {
@@ -2980,13 +2971,13 @@ class Idea
     }
 
     $select_part = <<<EOD
-        SELECT 
-          {$this->db->au_ideas}.hash_id, 
-          {$this->db->au_ideas}.title, 
-          {$this->db->au_ideas}.content, 
-          {$this->db->au_ideas}.created, 
-          {$this->db->au_ideas}.last_update, 
-          {$this->db->au_ideas}.sum_likes, 
+        SELECT
+          {$this->db->au_ideas}.hash_id,
+          {$this->db->au_ideas}.title,
+          {$this->db->au_ideas}.content,
+          {$this->db->au_ideas}.created,
+          {$this->db->au_ideas}.last_update,
+          {$this->db->au_ideas}.sum_likes,
           {$this->db->au_ideas}.sum_votes,
           {$this->db->au_users_basedata}.displayname,
           {$this->db->au_users_basedata}.hash_id as user_hash_id,
@@ -3007,16 +2998,16 @@ class Idea
     if ($phase_id != 0) {
 
       $where_part = <<<EOD
-        LEFT JOIN 
-            {$this->db->au_rel_topics_ideas} 
-        ON 
-            ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id) 
         LEFT JOIN
-            {$this->db->au_topics} 
+            {$this->db->au_rel_topics_ideas}
+        ON
+            ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id)
+        LEFT JOIN
+            {$this->db->au_topics}
         ON
             ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
         WHERE
-            {$this->db->au_ideas}.id > 0 AND 
+            {$this->db->au_ideas}.id > 0 AND
             {$this->db->au_ideas}.user_id = :user_id AND
             {$this->db->au_topics}.phase_id = :phase_id
       EOD;
@@ -3068,8 +3059,8 @@ class Idea
     */
 
     $select_part = <<<EOD
-        SELECT 
-          count({$this->db->au_ideas}.id) as count 
+        SELECT
+          count({$this->db->au_ideas}.id) as count
         FROM {$this->db->au_ideas}
         LEFT JOIN
             {$this->db->au_rooms}
@@ -3112,16 +3103,16 @@ class Idea
 
     $total_ideas_num = $count_by_phase[0];
     $where_part = <<<EOD
-      LEFT JOIN 
-          {$this->db->au_rel_topics_ideas} 
-      ON 
-          ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id) 
       LEFT JOIN
-          {$this->db->au_topics} 
+          {$this->db->au_rel_topics_ideas}
+      ON
+          ({$this->db->au_rel_topics_ideas}.idea_id = {$this->db->au_ideas}.id)
+      LEFT JOIN
+          {$this->db->au_topics}
       ON
           ({$this->db->au_rel_topics_ideas}.topic_id = {$this->db->au_topics}.id)
       WHERE
-          {$this->db->au_ideas}.id > 0 AND 
+          {$this->db->au_ideas}.id > 0 AND
           {$this->db->au_ideas}.user_id = :user_id AND
           {$this->db->au_topics}.phase_id = :phase_id
     EOD;
@@ -3149,7 +3140,7 @@ class Idea
 
         return $returnvalue;
       }
-    
+
     }
 
     $data = [];
