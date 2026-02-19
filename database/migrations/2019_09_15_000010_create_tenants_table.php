@@ -23,13 +23,13 @@ return new class extends Migration
             $table->string('contact_info', 255)->nullable();
 
             $table->string('admin1_name', 255)->nullable();
-            $table->string('admin1_username', 255)->nullable();
+            $table->string('admin1_username', 255);
             $table->string('admin1_email', 255);
             $table->string('admin1_init_pass_url')->nullable();
 
             $table->string('admin2_name', 255)->nullable();
             $table->string('admin2_username', 255)->nullable();
-            $table->string('admin2_email', 255);
+            $table->string('admin2_email', 255)->nullable();
             $table->string('admin2_init_pass_url')->nullable();
 
             $table->string('instance_code', 10)->unique();

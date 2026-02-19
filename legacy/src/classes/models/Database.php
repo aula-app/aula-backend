@@ -17,7 +17,6 @@
     public string $au_likes = 'au_likes';
     public string $au_topics = 'au_topics';
     public string $au_consent = 'au_consent';
-    public string $au_services = 'au_services';
     public string $au_delegation = 'au_delegation';
     public string $au_media = 'au_media';
     public string $au_messages = 'au_messages';
@@ -25,19 +24,13 @@
     public string $au_commands = 'au_commands';
     public string $au_systemlog = 'au_systemlog';
     public string $au_texts = 'au_texts';
-    public string $au_reported = 'au_reported';
     public string $au_categories = 'au_categories';
-    public string $au_activitylog = 'au_activitylog';
     public string $au_users_basedata = 'au_users_basedata';
-    public string $au_users_settings = 'au_users_settings';
-    public string $au_user_levels = 'au_user_levels';
     public string $au_system_current_state = 'au_system_current_state';
     public string $au_system_global_config = 'au_system_global_config';
     public string $au_phases_global_config = 'au_phases_global_config';
-    public string $au_rel_user_user = 'au_rel_user_user';
     public string $au_rel_rooms_users = 'au_rel_rooms_users';
     public string $au_rel_topics_ideas = 'au_rel_topics_ideas';
-    public string $au_rel_topics_media = 'au_rel_topics_media';
     public string $au_rel_groups_users = 'au_rel_groups_users';
     public string $au_rel_categories_ideas = 'au_rel_categories_ideas';
     public string $au_rel_categories_rooms = 'au_rel_categories_rooms';
@@ -64,7 +57,7 @@
         } catch(PDOException $e) {
             error_log("ERROR occurred: ".$e->getMessage());
         }
-        
+
     }
 
     public function prepareStatement($query) {
@@ -72,7 +65,7 @@
     }
 
     public function query($query) {
-        # prepares a statement 
+        # prepares a statement
         $this->stmt = $this->dbh->prepare($query);
         return $this->stmt;
     }
@@ -116,7 +109,7 @@
     }
 
     public function resultSet() {
-        # returns a result set 
+        # returns a result set
         $this->execute();
         return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
     }

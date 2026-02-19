@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Stancl\JobPipeline\JobPipeline;
 use Stancl\Tenancy\Actions\CloneRoutesAsTenant;
+use Stancl\Tenancy\Database\Contracts\TenantWithDatabase as Tenant;
 use Stancl\Tenancy\Database\DatabaseConfig;
 use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
@@ -182,8 +184,8 @@ class TenancyServiceProvider extends ServiceProvider
     public function boot()
     {
         // Override default TenantDB username and password generators
-        DatabaseConfig::$usernameGenerator = function () {
-            return 'aula_'.Str::random(16);
+        DatabaseConfig::$usernameGenerator = function (Tenant&Model $tenant, $self) {
+            return "aula_{$self->tenant->instance_code}";
         };
         DatabaseConfig::$passwordGenerator = function () {
             return Str::random(63);
