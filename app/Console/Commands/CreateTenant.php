@@ -52,7 +52,19 @@ class CreateTenant extends Command
         $this->info('--- Second Admin User ---');
         do {
             $secondAdminUsername = $this->ask('Second admin username');
-        } while (empty($secondAdminUsername));
+            if (empty($secondAdminUsername)) {
+                $this->warn('Second admin has to have a username.');
+
+                continue;
+            }
+            if ($adminUsername === $secondAdminUsername) {
+                $this->warn('Second admin username has to be different from the first admin username.');
+
+                continue;
+            }
+
+            break;
+        } while (true);
         $secondAdminFullName = $this->ask('Second admin full name', 'admin2');
         do {
             $secondAdminEmail = $this->ask('Second admin email');
