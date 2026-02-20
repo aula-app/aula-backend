@@ -14,6 +14,17 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 | These routes are loaded by the TenantRouteServiceProvider.
 |
 */
+
+// Legacy JWT Authentication routes (public + protected)
+Route::name('auth.')
+    ->middleware([
+        'api',
+        InitializeTenancyByRequestData::class,
+    ])
+    ->prefix('/api/v2/legacy-auth')
+    ->group(base_path('routes/tenant/api/v2/auth.php'));
+
+// Passport-authenticated routes (existing)
 Route::name('aula.')
     ->middleware([
         'api', // 'api' is including parameter substitution
