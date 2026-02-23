@@ -5,13 +5,15 @@ networks:
     driver: bridge
     external: true
 
+include:
+  - ./legacy/docker-compose.yml
+
 services:
-  aula-backend:
-    image: aulaapp/aula-backend:latest
+  aula-backend.v2:
     build:
       context: ./
     ports:
-      - "8080:80"
+      - "8000:80"
     volumes:
       - type: bind
         source: ./storage/oauth-private.key
@@ -62,7 +64,6 @@ services:
       retries: 3
     networks:
       - aula_local
-    profiles: ["v2-only"]
 
   redis:
     image: redis:latest
@@ -70,4 +71,3 @@ services:
       - 6379:6379
     networks:
       - aula_local
-    profiles: ["v2-only"]

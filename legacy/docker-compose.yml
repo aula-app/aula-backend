@@ -1,20 +1,24 @@
-name: legacy
-
 networks:
   aula_local:
     driver: bridge
     external: true
 
 services:
-  aula-backend:
+  aula-backend-legacy:
     build:
       context: ./
     environment:
-      SUPERKEY: CHANGE_ME
       APACHE_SERVER_NAME: localhost
+      APP_ENV: local
     ports:
       - "8080:80"
     volumes:
+      - ./docker-local/_generated_files_data:/var/www/html/files:rw
+      - type: bind
+        source: ./src
+        target: /var/www/html/api
+        bind:
+          create_host_path: false
       - type: bind
         source: ./config/
         target: /var/www/html/config
