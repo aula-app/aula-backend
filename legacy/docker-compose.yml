@@ -1,7 +1,7 @@
 networks:
   aula_local:
-    driver: bridge
     external: true
+    name: aula_local
 
 services:
   aula-backend-legacy:
