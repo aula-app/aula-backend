@@ -56,6 +56,7 @@
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch(PDOException $e) {
             error_log("ERROR occurred: ".$e->getMessage());
+            throw new RuntimeException("Database connection couldn't be established");
         }
 
     }

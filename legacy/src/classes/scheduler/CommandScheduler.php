@@ -27,8 +27,11 @@ class CommandSchedulerForInstance
 
   public function dispatchAllDueCommands()
   {
-    $commands = array_filter($this->getDueCommands());
-
+    $dueCommands = $this->getDueCommands();
+    if (!$dueCommands) {
+      error_log("[{$this->code}] No due commands found. Skipping dispatch.");
+    }
+    $commands = array_filter($dueCommands);
     foreach ($commands as $command) {
       try {
         $this->commandDispatcherForInstance->dispatch($command);
