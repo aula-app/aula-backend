@@ -105,12 +105,16 @@ class InstanceConfig
 
     $data = json_decode($tenant['data'] ?? '{}', true);
 
+    if (empty($data['tenancy_db_name']) || empty($data['tenancy_db_username']) || empty($data['tenancy_db_password'])) {
+      throw new RuntimeException("Tenant '{$code}' is missing database credentials. Ensure the tenant was fully provisioned.");
+    }
+
     return new InstanceConfig(
       code: $code,
       host: getenv('CENTRAL_DB_HOST') ?: 'localhost',
-      user: $data['tenancy_db_username'] ?? '',
-      pass: $data['tenancy_db_password'] ?? '',
-      dbname: $data['tenancy_db_name'] ?? '',
+      user: $data['tenancy_db_username'],
+      pass: $data['tenancy_db_password'],
+      dbname: $data['tenancy_db_name'],
       jwt_key: $tenant['jwt_key'] ?? '',
       instance_api_url: $tenant['api_base_url'] ?? '',
     );
