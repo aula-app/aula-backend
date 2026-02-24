@@ -12,12 +12,6 @@ services:
   aula-backend.v2:
     build:
       context: ./
-    environment:
-      CENTRAL_DB_HOST: ${CENTRAL_DB_HOST:-mariadb}
-      CENTRAL_DB_PORT: ${CENTRAL_DB_PORT:-3306}
-      CENTRAL_DB_NAME: ${CENTRAL_DB_NAME:-aula_database}
-      CENTRAL_DB_USER: ${CENTRAL_DB_USER:-aula_user}
-      CENTRAL_DB_PASS: ${CENTRAL_DB_PASS:-example}
     ports:
       - "8000:80"
     volumes:
