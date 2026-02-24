@@ -22,11 +22,6 @@ services:
         bind:
           create_host_path: false
       - type: bind
-        source: ./legacy/config/
-        target: /mnt/aula-backend-legacy/config
-        bind:
-          create_host_path: false
-      - type: bind
         source: ./legacy/docker-local/_generated_files_data/
         target: /mnt/aula-backend-legacy/files
         bind:
