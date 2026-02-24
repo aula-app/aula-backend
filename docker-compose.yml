@@ -4,6 +4,9 @@ include:
   # aula-backend-legacy service & aula_local network
   - ./legacy/docker-compose.yml
 
+include:
+  - ./legacy/docker-compose.yml
+
 services:
   aula-backend.v2:
     build:
