@@ -96,10 +96,6 @@ class AddAllCSVTest extends TestCase
             ');
         }
 
-        // Load instances config first to set up the global $instances variable
-        global $instances;
-        require_once base_path('legacy/config/instances_config.php');
-
         // Load required files in order
         // Note: We need to load classes carefully to avoid conflicts with Laravel facades
         if (!class_exists('InstanceConfig', false)) {
