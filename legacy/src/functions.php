@@ -1,7 +1,6 @@
 <?php
 
 require_once(__DIR__ . '/../config/base_config.php'); // load base config with paths to classes etc.
-require_once(__DIR__ . '/../config/instances_config.php');
 
 function load_model($class_name)
 {

@@ -123,21 +123,6 @@ class CreateTenant extends Command
             $this->info("Tenant created with ID: {$tenant->id}");
             $this->info('Database created and migrations executed.');
 
-            $config = <<<END
-
-              \$instances["$instanceCode"] = [
-                "host" => "mariadb",
-                "user" => "{$tenant->getInternal('db_username')}",
-                "pass" => "{$tenant->getInternal('db_password')}",
-                "dbname" => "{$tenant->getInternal('db_name')}",
-                "jwt_key" => "{$jwtKey}",
-                "instance_api_url" => "{$apiBaseUrl}"
-              ];
-
-            END;
-            $this->info('Appending instance config to legacy instances_config.php for interoperability...');
-            $this->appendLegacyConfigInplace('/mnt/aula-backend-legacy/config/instances_config.php', $config);
-            $this->info('Legacy instances_config.php updated.');
         } catch (\Exception $e) {
             $this->error("Failed to create tenant: {$e->getMessage()}");
 

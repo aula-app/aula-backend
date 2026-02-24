@@ -1,9 +1,8 @@
 name: aula-v2
 
-networks:
-  aula_local:
-    driver: bridge
-    external: true
+include:
+  # aula-backend-legacy service & aula_local network
+  - ./legacy/docker-compose.yml
 
 include:
   - ./legacy/docker-compose.yml
@@ -23,11 +22,6 @@ services:
       - type: bind
         source: ./storage/oauth-public.key
         target: /opt/laravel/storage/oauth-public.key
-        bind:
-          create_host_path: false
-      - type: bind
-        source: ./legacy/config/
-        target: /mnt/aula-backend-legacy/config
         bind:
           create_host_path: false
       - type: bind

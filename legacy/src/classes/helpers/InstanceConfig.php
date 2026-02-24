@@ -1,7 +1,5 @@
 <?php
 
-require_once(__DIR__ . '/../../../config/instances_config.php');
-
 class InstanceConfig
 {
   public string $code;
@@ -12,18 +10,79 @@ class InstanceConfig
   public string $jwt_key;
   public string $instance_api_url;
 
-  /**
-   * @param array<string,string> $instance
-   */
-  public function __construct(string $code, array $instance)
-  {
+  private static ?PDO $centralDb = null;
+
+  public function __construct(
+    string $code,
+    string $host,
+    string $user,
+    string $pass,
+    string $dbname,
+    string $jwt_key,
+    string $instance_api_url
+  ) {
     $this->code = $code;
-    $this->host = $instance['host'];
-    $this->user = $instance['user'];
-    $this->pass = $instance['pass'];
-    $this->dbname = $instance['dbname'];
-    $this->jwt_key = $instance['jwt_key'];
-    $this->instance_api_url = $instance['instance_api_url'];
+    $this->host = $host;
+    $this->user = $user;
+    $this->pass = $pass;
+    $this->dbname = $dbname;
+    $this->jwt_key = $jwt_key;
+    $this->instance_api_url = $instance_api_url;
+  }
+
+  private static function getCentralDb(): PDO
+  {
+    if (self::$centralDb !== null) {
+      return self::$centralDb;
+    }
+    $host   = getenv('CENTRAL_DB_HOST') ?: 'localhost';
+    $port   = getenv('CENTRAL_DB_PORT') ?: '3306';
+    $dbname = getenv('CENTRAL_DB_NAME') ?: 'aula_database';
+    $user   = getenv('CENTRAL_DB_USER') ?: '';
+    $pass   = getenv('CENTRAL_DB_PASS') ?: '';
+    $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+    self::$centralDb = new PDO($dsn, $user, $pass, [
+      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ]);
+    return self::$centralDb;
+  }
+
+  private static function findTenantByCode(string $code): ?array
+  {
+    $stmt = self::getCentralDb()->prepare(
+      'SELECT instance_code, jwt_key, api_base_url, data FROM tenants WHERE instance_code = ? LIMIT 1'
+    );
+    $stmt->execute([$code]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+  }
+
+  public static function findAll(): ?array {
+    $stmt = self::getCentralDb()->prepare('SELECT instance_code, jwt_key, api_base_url, data FROM tenants');
+    $stmt->execute();
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $tenants = [];
+    foreach ($rows as $tenant) {
+      $data = json_decode($tenant['data'] ?? '{}', true);
+
+      if (empty($data['tenancy_db_name']) || empty($data['tenancy_db_username']) || empty($data['tenancy_db_password'])) {
+        error_log("Tenant '{$tenant['instance_code']}' is missing database credentials. Ensure the tenant was fully provisioned.");
+        continue;
+      }
+
+      $tenants[$tenant['instance_code']] = new InstanceConfig(
+        code: $tenant['instance_code'],
+        host: getenv('CENTRAL_DB_HOST') ?: 'localhost',
+        user: $data['tenancy_db_username'],
+        pass: $data['tenancy_db_password'],
+        dbname: $data['tenancy_db_name'],
+        jwt_key: $tenant['jwt_key'] ?? '',
+        instance_api_url: $tenant['api_base_url'] ?? '',
+      );
+    }
+
+    return $tenants;
   }
 
   public static function validateInstanceCodeFromRequest(bool $searchInPostBodyContent): ?string
@@ -42,16 +101,11 @@ class InstanceConfig
     }
 
     // check if provided code is alphanumeric(5) // could also be "SINGLE", so length 6 is allowed
-    if ($code === null || !((bool) preg_match('/^[0-9a-zA-Z]{5}|SINGLE$/', $code))) {
+    if ($code === null || !((bool) preg_match('/^[0-9a-zA-Z]{5}$|^SINGLE$/', $code))) {
       throw new RuntimeException("Please provide a valid aula-instance-code header");
     }
 
-    global $instances;
-    if (!array_key_exists($code, $instances)) {
-      return null;
-    }
-
-    return $code;
+    return self::findTenantByCode($code) !== null ? $code : null;
   }
 
   public static function createFromRequestOrEchoBadRequest(bool $searchInPostBodyContent = false): InstanceConfig | null
@@ -72,7 +126,25 @@ class InstanceConfig
 
   public static function createFromCode(string $code): InstanceConfig
   {
-    global $instances;
-    return new InstanceConfig($code, $instances[$code]);
+    $tenant = self::findTenantByCode($code);
+    if ($tenant === null) {
+      throw new RuntimeException("No instance with provided instance code found.");
+    }
+
+    $data = json_decode($tenant['data'] ?? '{}', true);
+
+    if (empty($data['tenancy_db_name']) || empty($data['tenancy_db_username']) || empty($data['tenancy_db_password'])) {
+      throw new RuntimeException("Tenant '{$code}' is missing database credentials. Ensure the tenant was fully provisioned.");
+    }
+
+    return new InstanceConfig(
+      code: $code,
+      host: getenv('CENTRAL_DB_HOST') ?: 'localhost',
+      user: $data['tenancy_db_username'],
+      pass: $data['tenancy_db_password'],
+      dbname: $data['tenancy_db_name'],
+      jwt_key: $tenant['jwt_key'] ?? '',
+      instance_api_url: $tenant['api_base_url'] ?? '',
+    );
   }
 }
