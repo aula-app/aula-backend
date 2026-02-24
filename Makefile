@@ -16,7 +16,7 @@ clean-legacy-local:
 
 run-legacy-local: prepare-legacy-local
 	docker compose -f ./legacy/docker-compose.yml build --build-arg DOCKER_TAG=$(DOCKER_TAG)
-	docker compose -f ./legacy/docker-compose.yml -f ./legacy/docker-compose.override.yml up -d
+	docker compose -f ./legacy/docker-compose.yml up -d
 
 build-legacy-release:
 	docker build -t "aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)" .

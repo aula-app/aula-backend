@@ -25,22 +25,17 @@ First time setup:
 php artisan passport:keys -q
 ```
 
-Then, choose one of the following:
+Then, to start aula-backend(s), run:
 
 ```bash
-# Run aula-backend:v2 locally (doesn't include the legacy aula-backend:v1)
-docker compose --profile v2-only up --build -d
-
-# Stop aula-backend:v2 and run legacy aula-backend:v1
-docker compose --profile v2-only down \
-  && make run-legacy-local
-
-# Run both legacy aula-backend:v1 (:8080) and current Laravel-based aula-backend:v2 (:???)
-docker build -f Dockerfile . \
-  && docker compose --profile v2-only down \
-  && make run-legacy-local \
-  && docker compose up --build -d aula-backend
+# Run both legacy aula-backend:v1 (:8080) and current Laravel-based aula-backend:v2 (:8000)
+make prepare-legacy-local \
+  && docker compose up --build -d
 ```
+
+<!-- @TODO: nikola - should we make it possible to create a tenant with instance_code SINGLE? -->
+
+And initialize your first Tenant Instance from within the v2 container with `php artisan tenant:create`.
 
 ## Legacy aula-backend code
 
