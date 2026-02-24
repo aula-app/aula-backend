@@ -22,6 +22,9 @@ Thank you for your interest. See contribution guidelines at [`CONTRIBUTION.md`](
 First time setup:
 
 ```bash
+# Copy example configs for legacy
+make prepare-legacy-local
+# Generate keypair for oauth
 php artisan passport:keys -q
 ```
 
@@ -29,8 +32,7 @@ Then, to start aula-backend(s), run:
 
 ```bash
 # Run both legacy aula-backend:v1 (:8080) and current Laravel-based aula-backend:v2 (:8000)
-make prepare-legacy-local \
-  && docker compose up --build -d
+docker compose up --build -d
 ```
 
 <!-- @TODO: nikola - should we make it possible to create a tenant with instance_code SINGLE? -->

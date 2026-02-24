@@ -1,11 +1,7 @@
 name: aula-v2
 
-networks:
-  aula_local:
-    driver: bridge
-    external: true
-
 include:
+  # aula-backend-legacy service & aula_local network
   - ./legacy/docker-compose.yml
 
 services:

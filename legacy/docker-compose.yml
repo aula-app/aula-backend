@@ -1,7 +1,5 @@
 networks:
   aula_local:
-    external: true
-    name: aula_local
 
 services:
   aula-backend-legacy:
