@@ -12,7 +12,7 @@ require_once($baseHelperDir . 'Crypt.php');
 require_once($baseHelperDir . 'JWT.php');
 
 $db = new Database($instance);
-$crypt = new Crypt(); // path to $cryptFile is currently known from base_config.php -> will be changed later to be secure
+$crypt = new Crypt();
 $syslog = new Systemlog($db); // systemlog
 $user = new User($db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);

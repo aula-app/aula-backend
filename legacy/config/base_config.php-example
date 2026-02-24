@@ -17,9 +17,6 @@ $filesDir =           "/var/www/html/files";
 # Here mount your config files
 $baseConfigDir =      "/var/www/html/config/";
 
-# This will be created by docker-entrypoint.sh from envvar
-$cryptFile =          "/var/www/html/config/superkey.ini";
-
 $oauth_redirect = "";
 
 # Your Auth0 application's Client ID

@@ -63,7 +63,7 @@ class CommandScheduler
 {
   public function dispatchDueCommands()
   {
-    global $instances;
+    $instances = InstanceConfig::findAll();
     foreach ($instances as $code => $instance) {
       try {
         $forInstance = new CommandSchedulerForInstance($code);

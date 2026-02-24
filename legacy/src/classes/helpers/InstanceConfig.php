@@ -57,6 +57,13 @@ class InstanceConfig
     return $row ?: null;
   }
 
+  public static function findAll(): ?array {
+    $stmt = self::getCentralDb()->prepare('SELECT instance_code, jwt_key, api_base_url, data FROM tenants');
+    $stmt->execute();
+    $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $row ?: null;
+  }
+
   public static function validateInstanceCodeFromRequest(bool $searchInPostBodyContent): ?string
   {
     $headers = apache_request_headers();
