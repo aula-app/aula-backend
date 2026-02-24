@@ -14,13 +14,14 @@ class CommandSchedulerForInstance
 {
   private $commandModelForInstance;
   private $commandDispatcherForInstance;
+  private $code;
 
-  public function __construct(protected string $code)
+  public function __construct(protected InstanceConfig $instance)
   {
-    $instance = InstanceConfig::createFromCode($code);
     $db = new Database($instance);
     $crypt = new Crypt();
     $syslog = new Systemlog($db);
+    $this->code = $instance->code;
     $this->commandModelForInstance = new Command($db, $crypt, $syslog);
     $this->commandDispatcherForInstance = new CommandDispatcher($db, $crypt, $syslog);
   }
@@ -66,7 +67,7 @@ class CommandScheduler
     $instances = InstanceConfig::findAll();
     foreach ($instances as $code => $instance) {
       try {
-        $forInstance = new CommandSchedulerForInstance($code);
+        $forInstance = new CommandSchedulerForInstance($instance);
         $forInstance->dispatchAllDueCommands();
       } catch (Throwable $exc) {
         error_log("[{$code}] ERROR Dispatching all due commands for a single instance. " . $exc->getMessage());

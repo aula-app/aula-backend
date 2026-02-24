@@ -60,8 +60,29 @@ class InstanceConfig
   public static function findAll(): ?array {
     $stmt = self::getCentralDb()->prepare('SELECT instance_code, jwt_key, api_base_url, data FROM tenants');
     $stmt->execute();
-    $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $row ?: null;
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $tenants = [];
+    foreach ($rows as $tenant) {
+      $data = json_decode($tenant['data'] ?? '{}', true);
+
+      if (empty($data['tenancy_db_name']) || empty($data['tenancy_db_username']) || empty($data['tenancy_db_password'])) {
+        error_log("Tenant '{$tenant['instance_code']}' is missing database credentials. Ensure the tenant was fully provisioned.");
+        continue;
+      }
+
+      $tenants[$tenant['instance_code']] = new InstanceConfig(
+        code: $tenant['instance_code'],
+        host: getenv('CENTRAL_DB_HOST') ?: 'localhost',
+        user: $data['tenancy_db_username'],
+        pass: $data['tenancy_db_password'],
+        dbname: $data['tenancy_db_name'],
+        jwt_key: $tenant['jwt_key'] ?? '',
+        instance_api_url: $tenant['api_base_url'] ?? '',
+      );
+    }
+
+    return $tenants;
   }
 
   public static function validateInstanceCodeFromRequest(bool $searchInPostBodyContent): ?string
