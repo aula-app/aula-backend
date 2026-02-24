@@ -7,8 +7,10 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Stancl\JobPipeline\JobPipeline;
 use Stancl\Tenancy\Actions\CloneRoutesAsTenant;
+use Stancl\Tenancy\Database\DatabaseConfig;
 use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
 use Stancl\Tenancy\Listeners;
@@ -179,6 +181,14 @@ class TenancyServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        // Override default TenantDB username and password generators
+        DatabaseConfig::$usernameGenerator = function () {
+            return 'aula_'.Str::random(16);
+        };
+        DatabaseConfig::$passwordGenerator = function () {
+            return Str::random(63);
+        };
+
         $this->bootEvents();
         $this->mapRoutes();
 

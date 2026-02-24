@@ -8,7 +8,6 @@ use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Keygen\Keygen;
 
 class CreateTenant extends Command
 {
@@ -22,37 +21,41 @@ class CreateTenant extends Command
         $this->newLine();
 
         // Collect tenant information
-        $tenantName = $this->ask('Tenant name');
-        if (empty($tenantName)) {
-            $this->error('Tenant name is required.');
+        do {
+            $tenantName = $this->ask('Tenant name');
+            if (empty($tenantName)) {
+                $this->warn('Tenant has to have a name, maybe a school name?');
 
-            return self::FAILURE;
-        }
+                continue;
+            }
+            if (Tenant::firstWhere('name', $tenantName) !== null) {
+                $this->warn('Tenant\'s name has to be unique. Try choosing another name.');
+
+                continue;
+            }
+            break;
+        } while (true);
 
         // Admin user information
         $this->info('--- Admin User ---');
-        $adminUsername = $this->ask('Admin username');
-        $adminFullName = $this->ask('Admin full name');
-        $adminEmail = $this->ask('Admin email');
-
-        if (empty($adminUsername) || empty($adminFullName) || empty($adminEmail)) {
-            $this->error('All admin user fields are required.');
-
-            return self::FAILURE;
-        }
+        do {
+            $adminUsername = $this->ask('Admin username');
+        } while (empty($adminUsername));
+        $adminFullName = $this->ask('Admin full name', 'admin1');
+        do {
+            $adminEmail = $this->ask('Admin email');
+        } while (empty($adminEmail));
 
         // Second admin user information
         $this->newLine();
         $this->info('--- Second Admin User ---');
-        $secondAdminUsername = $this->ask('Second admin username');
-        $secondAdminFullName = $this->ask('Second admin full name');
-        $secondAdminEmail = $this->ask('Second admin email');
-
-        if (empty($secondAdminUsername) || empty($secondAdminFullName) || empty($secondAdminEmail)) {
-            $this->error('All second admin user fields are required.');
-
-            return self::FAILURE;
-        }
+        do {
+            $secondAdminUsername = $this->ask('Second admin username');
+        } while (empty($secondAdminUsername));
+        $secondAdminFullName = $this->ask('Second admin full name', 'admin2');
+        do {
+            $secondAdminEmail = $this->ask('Second admin email');
+        } while (empty($secondAdminEmail));
 
         // Generate and confirm instance code
         $instanceCode = $this->generateUniqueInstanceCode();
@@ -107,6 +110,22 @@ class CreateTenant extends Command
 
             $this->info("Tenant created with ID: {$tenant->id}");
             $this->info('Database created and migrations executed.');
+
+            $config = <<<END
+
+              \$instances["$instanceCode"] = [
+                "host" => "mariadb",
+                "user" => "{$tenant->getInternal('db_username')}",
+                "pass" => "{$tenant->getInternal('db_password')}",
+                "dbname" => "{$tenant->getInternal('db_name')}",
+                "jwt_key" => "{$jwtKey}",
+                "instance_api_url" => "{$apiBaseUrl}"
+              ];
+
+            END;
+            $this->info('Appending instance config to legacy instances_config.php for interoperability...');
+            $this->appendLegacyConfigInplace('/mnt/aula-backend-legacy/config/instances_config.php', $config);
+            $this->info('Legacy instances_config.php updated.');
         } catch (\Exception $e) {
             $this->error("Failed to create tenant: {$e->getMessage()}");
 
@@ -207,21 +226,40 @@ class CreateTenant extends Command
         return self::SUCCESS;
     }
 
+    protected function appendLegacyConfigInplace($configFile, $newConfig)
+    {
+        $reading = fopen($configFile, 'r');
+        if (! $reading) {
+            $this->error("Failed to open file {$configFile} for reading.");
+            throw new \RuntimeException("Failed to open file {$configFile} for reading.");
+        }
+        $writing = fopen("{$configFile}.tmp", 'w');
+
+        $placeholder = '// END_OF_CONFIG';
+        while (! feof($reading)) {
+            $line = fgets($reading);
+            if (! $line) {
+                break;
+            }
+            if (stristr($line, $placeholder)) {
+                $line = "{$newConfig}\n$placeholder\n";
+            }
+            fwrite($writing, $line);
+        }
+        fclose($reading);
+        fclose($writing);
+
+        $date = date('Y-m-d H:i:s');
+        copy($configFile, "{$configFile}.{$date}.bak");
+
+        return rename("{$configFile}.tmp", $configFile);
+    }
+
     private function generateUniqueInstanceCode(): string
     {
         do {
-            $code = Keygen::alphanum(5)->generate();
-
-            // Ensure only alphabetical characters
-            $code = preg_replace('/[^a-z]/', '', $code);
-            while (strlen($code) < 5) {
-                $code .= chr(random_int(97, 122));
-            }
-            $code = substr($code, 0, 5);
-
-            $exists = Tenant::where('instance_code', $code)->exists();
-
-            if ($exists) {
+            $code = strtolower(Str::random(5));
+            if (Tenant::firstWhere('instance_code', $code) !== null) {
                 $this->warn("Instance code '{$code}' already exists, generating a new one...");
 
                 continue;

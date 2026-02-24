@@ -27,7 +27,8 @@ class ListTenants extends Command
         $this->info("Found {$tenants->count()} tenant(s).");
         $this->newLine();
 
-        foreach ($tenants as $tenant) {
+        $tenants_sorted = $tenants->sortBy('created_at');
+        foreach ($tenants_sorted as $tenant) {
             $this->info("=== {$tenant->name} ===");
             $this->table(
                 ['Field', 'Value'],

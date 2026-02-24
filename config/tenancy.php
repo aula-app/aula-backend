@@ -149,8 +149,7 @@ return [
             Resolvers\RequestDataTenantResolver::class => [
                 // Set any of these to null to disable that method of identification
                 'header' => 'aula-instance-code',
-                // @TODO: nikola - testing only, to be disabled
-                'cookie' => 'aula-instance-code',
+                'cookie' => null,
                 'query_parameter' => null,
 
                 'tenant_model_column' => 'instance_code', // null = tenant key
@@ -257,6 +256,7 @@ return [
          */
         /* 'drop_tenant_databases_on_migrate_fresh' => false, */
         'drop_tenant_databases_on_migrate_fresh' => true,
+
     ],
 
     /**
@@ -318,7 +318,7 @@ return [
          */
         'scope_sessions' => in_array(env('SESSION_DRIVER'), ['redis', 'memcached', 'dynamodb', 'apc'], true),
 
-        'tag_base' => 'tenant', // This tag_base, followed by the tenant_id, will form a tag that will be applied on each cache call.
+        'tag_base' => 'tenant_', // This tag_base, followed by the tenant_id, will form a tag that will be applied on each cache call.
     ],
 
     /**
