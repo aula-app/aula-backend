@@ -28,9 +28,9 @@ class SendTenantStatisticsReport extends Command
         $recipients = $this->getRecipients();
 
         if (empty($recipients)) {
-            $this->error('No recipients configured. Set STATISTICS_REPORT_RECIPIENTS in .env.');
+            $this->info('No recipients configured. Set STATISTICS_REPORT_RECIPIENTS in .env.');
 
-            return self::FAILURE;
+            return self::SUCCESS;
         }
 
         $this->info('Collecting statistics for all tenants...');
