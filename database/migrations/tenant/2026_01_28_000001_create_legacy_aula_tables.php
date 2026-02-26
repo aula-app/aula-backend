@@ -302,14 +302,8 @@ return new class extends Migration
             $table->increments('id');
             $table->string('name', 1024)->nullable()->comment('name of organisation');
             $table->text('description_public')->nullable()->comment('text that is publicly displayed on the frontend');
-            $table->integer('first_workday_week')->nullable()->comment('id for the first workday');
-            $table->integer('last_workday_week')->nullable()->comment('id for the last workday');
-            $table->dateTime('start_time')->nullable()->comment('regular starting time');
-            $table->dateTime('daily_end_time')->nullable()->comment('regular end_time');
-            $table->boolean('allow_registration')->comment('0=no 1=yes');
             $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of updater');
-            $table->integer('enable_oauth')->default(0)->comment('0 = disable, 1 = enable');
             $table->integer('quorum_wild_ideas')->default(10)->comment('percentage for wild idea quorum');
             $table->integer('quorum_votes')->default(10)->comment('percentage for votes');
         });
