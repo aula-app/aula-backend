@@ -134,13 +134,13 @@ class CreateTenant extends Command
 
         try {
             $tenant->run(function () use (
-                $adminUsername, $adminFullName, $adminEmail,
+                $tenantName, $adminUsername, $adminFullName, $adminEmail,
                 $secondAdminUsername, $secondAdminFullName, $secondAdminEmail,
                 $instanceCode
             ) {
                 $now = now();
 
-                $this->insertInitialSystemData();
+                $this->insertInitialSystemData($tenantName);
 
                 // Create first admin user
                 $adminId = DB::table('au_users_basedata')->insertGetId([
@@ -270,7 +270,7 @@ class CreateTenant extends Command
         } while (true);
     }
 
-    private function insertInitialSystemData(): void
+    private function insertInitialSystemData($name): void
     {
         $now = now();
         $testrand = rand(100, 10000000);
@@ -286,14 +286,14 @@ class CreateTenant extends Command
         ]);
 
         DB::table('au_system_current_state')->insert([
+            'online_mode' => 1,
             'created' => $now,
             'last_update' => $now,
             'updater_id' => 2,
         ]);
 
         DB::table('au_system_global_config')->insert([
-            'allow_registration' => 0,
-            'default_email_address' => null,
+            'name' => $name,
         ]);
     }
 }
