@@ -23,6 +23,8 @@ class AulaManagerUser extends Authenticatable implements FilamentUser
      *
      * @var list<string>
      */
+    protected $table = 'users';
+
     protected $fillable = [
         'name',
         'email',
