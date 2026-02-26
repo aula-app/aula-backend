@@ -117,13 +117,6 @@ class Message
     }
   }// end function
 
-  public function getMessagesByUser($user_id, $search_field = "", $search_text = "", $msg_type = -1, $status = 1)
-  {
-    // returns all messages for this specific user
-    $user_id = $this->converters->checkUserId($user_id);
-    return $this->getMessages($msg_type, 0, 0, 3, 1, $status, "", 0, 0, $user_id, 0, $search_field, $search_text);
-  }
-
   public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $target_group = 0, $target_id = 0, $room_id = 0, $user_id = 0, $creator_id = 0, $search_field = "", $search_text = "")
   {
     /* returns message list (associative array) with start and limit provided
