@@ -274,13 +274,13 @@ class CreateTenant extends Command
     {
         $now = now();
         $testrand = rand(100, 10000000);
-        $appendix = microtime(true) . $testrand;
-        $hash_id = md5('Schule' . $appendix);
+        $appendix = microtime(true).$testrand;
+        $hash_id = md5('Schule'.$appendix);
 
         DB::table('au_rooms')->insert([
             'room_name' => 'Schule',
             'description_internal' => null,
-            'hash_id' => hash_id,
+            'hash_id' => $hash_id,
             'status' => 1,
             'type' => 1,
         ]);
