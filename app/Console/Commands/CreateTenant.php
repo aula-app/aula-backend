@@ -140,7 +140,7 @@ class CreateTenant extends Command
 
         try {
             $tenant->run(function () use (
-                $tenantName, $instanceCode,
+                $tenantName, $instanceCode, $baseUrl,
                 $adminUsername, $adminFullName, $adminEmail, $adminSecret,
                 $secondAdminUsername, $secondAdminFullName, $secondAdminEmail, $secondAdminSecret
             ) {
@@ -219,6 +219,10 @@ class CreateTenant extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * @param  mixed  $configFile
+     * @param  mixed  $newConfig
+     */
     protected function appendLegacyConfigInplace($configFile, $newConfig): bool
     {
         $reading = fopen($configFile, 'r');
@@ -266,7 +270,10 @@ class CreateTenant extends Command
         } while (true);
     }
 
-    private function insertInitialSystemData($name): void
+    /**
+     * @param  string  $name  - tenant name (school name)
+     */
+    private function insertInitialSystemData(string $name): void
     {
         $now = now();
         $testrand = rand(100, 10000000);
