@@ -2719,16 +2719,6 @@ class Idea
     }
   }// end function
 
-  private function sendMessage($user_id, $msg)
-  {
-    /* send a message to the dashboard of the user
-    yet to be written
-    */
-
-    $success = 0;
-    return $success;
-  }
-
   public function deleteIdea($idea_id, $updater_id = 0)
   {
     /* deletes idea and returns the number of rows (int) accepts idea id or idea hash id - only deletes idea from idea table

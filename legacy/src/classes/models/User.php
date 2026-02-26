@@ -818,7 +818,6 @@ class User
     $room_id = $room[0]['id']; // get room id from db
 
     return $room_id;
-
   }
 
   public function addUserToStandardRoom($user_id, $status = 1, $updater_id = 0, $use_transaction = true)
@@ -829,15 +828,8 @@ class User
 
     // check if user and room exist
     $user_exist = $this->converters->checkUserExist($user_id);
-
-    // get the id for the standard room
     $room_id = $this->getStandardRoom();
-    // check if the room actually exists
-    $room_exist = $this->converters->checkRoomExist($room_id);
-
-    if ($user_exist == 1 && $room_exist == 1) {
-      // everything ok, user and room exists
-      // add relation to database
+    if ($user_exist == 1 && $room_id > 0) {
 
       $userlevel = 20; // $this->getDefaultRole($user_id);
       $this->addUserRole($user_id, $userlevel, $room_id, $use_transaction);
@@ -1518,27 +1510,28 @@ class User
     try {
       $this->db->bind(':username', $username);
       $users = $this->db->resultSet();
-      $user_status = $users[0]['status'];
-      $user_id = $users[0]['id'];
+      if (count($users) < 1) {
+        $returnvalue['success'] = true; // set return value
+        $returnvalue['error_code'] = 2; // error code
+        $returnvalue['data'] = false; // returned data
+        $returnvalue['count'] = count($users); // returned count of datasets
 
-    } catch (Exception $e) {
+        return $returnvalue;
+      } // nothing found
+
+      $user_id = $users[0]['id'];
+    } catch (\Exception $e) {
       error_log('Error occurred while checking credentials for user ' . $user_id . ': ' . $e->getMessage());
     }
 
-    $reactivation_date = false; // init
-
-    if ($user_status != 1) {
-      # get the reactivation date (if there is one) when the user is suspended (status = 2)
-      $reactivation_date = $this->getReactivationDate($user_id);
-    }
-
-    if (count($users) < 1 || $user_status != 1) {
-      # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
+    # user is either non-existent or not active (status = 0) or suspended (status = 2) or archived (status > 2)
+    if ($users[0]['status'] != 1) {
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; // error code
-      $returnvalue['user_status'] = $user_status; // error code
+      $returnvalue['user_status'] = count($users) >= 1 ? $users[0]['status'] : null;
       $returnvalue['user_id'] = $user_id;
-      $returnvalue['data'] = $reactivation_date; // returned data
+      # get the reactivation date (if there is one) when the user is suspended (status = 2)
+      $returnvalue['data'] = $this->getReactivationDate($user_id); // returned data
       $returnvalue['count'] = count($users); // returned count of datasets
 
       return $returnvalue;
@@ -1573,7 +1566,6 @@ class User
       return $returnvalue;
 
     }
-
   }// end function
 
 
