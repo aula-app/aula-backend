@@ -729,16 +729,6 @@ class Room
   }// end function
 
 
-  private function sendMessage($user_id, $msg)
-  {
-    /* send a message to the dashboard of the user
-    yet to be written
-    */
-
-    $success = 0;
-    return $success;
-  }
-
   public function deleteRoom($room_id, $mode = 0, $msg = "", $updater_id = 0)
   {
     /* deletes room and returns the number of rows (int) accepts room id or room hash id //

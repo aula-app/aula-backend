@@ -106,6 +106,10 @@ class CreateTenant extends Command
         // Create the tenant
         $this->info('Creating tenant...');
 
+        $baseUrl = config('app.url');
+        $adminSecret = Str::random(64);
+        $secondAdminSecret = Str::random(64);
+
         try {
             $tenant = Tenant::create([
                 'name' => $tenantName,
@@ -118,6 +122,8 @@ class CreateTenant extends Command
                 'admin2_name' => $secondAdminFullName,
                 'admin2_username' => $secondAdminUsername,
                 'admin2_email' => $secondAdminEmail,
+                'admin1_init_pass_url' => "{$baseUrl}/password/{$adminSecret}?code={$instanceCode}",
+                'admin2_init_pass_url' => "{$baseUrl}/password/{$secondAdminSecret}?code={$instanceCode}",
             ]);
 
             $this->info("Tenant created with ID: {$tenant->id}");
@@ -134,13 +140,13 @@ class CreateTenant extends Command
 
         try {
             $tenant->run(function () use (
-                $adminUsername, $adminFullName, $adminEmail,
-                $secondAdminUsername, $secondAdminFullName, $secondAdminEmail,
-                $instanceCode
+                $tenantName, $instanceCode,
+                $adminUsername, $adminFullName, $adminEmail, $adminSecret,
+                $secondAdminUsername, $secondAdminFullName, $secondAdminEmail, $secondAdminSecret
             ) {
                 $now = now();
 
-                $this->insertInitialSystemData();
+                $this->insertInitialSystemData($tenantName);
 
                 // Create first admin user
                 $adminId = DB::table('au_users_basedata')->insertGetId([
@@ -161,7 +167,6 @@ class CreateTenant extends Command
                 ]);
 
                 // Create password reset entry for first admin
-                $adminSecret = Str::random(64);
                 DB::table('au_change_password')->insert([
                     'user_id' => $adminId,
                     'secret' => $adminSecret,
@@ -187,14 +192,11 @@ class CreateTenant extends Command
                 ]);
 
                 // Create password reset entry for second admin
-                $secondAdminSecret = Str::random(64);
                 DB::table('au_change_password')->insert([
                     'user_id' => $secondAdminId,
                     'secret' => $secondAdminSecret,
                     'created_at' => $now,
                 ]);
-
-                $baseUrl = config('app.url');
 
                 $this->newLine();
                 $this->info('=== Password Reset URLs ===');
@@ -204,12 +206,6 @@ class CreateTenant extends Command
                 $this->line("Second Admin ({$secondAdminUsername}):");
                 $this->line("  {$baseUrl}/password/{$secondAdminSecret}?code={$instanceCode}");
             });
-
-            // Store init password URLs on the tenant record
-            $tenant->update([
-                'admin1_init_pass_url' => 'pending',
-                'admin2_init_pass_url' => 'pending',
-            ]);
 
         } catch (\Exception $e) {
             $this->error("Failed to create admin users: {$e->getMessage()}");
@@ -223,7 +219,7 @@ class CreateTenant extends Command
         return self::SUCCESS;
     }
 
-    protected function appendLegacyConfigInplace($configFile, $newConfig)
+    protected function appendLegacyConfigInplace($configFile, $newConfig): bool
     {
         $reading = fopen($configFile, 'r');
         if (! $reading) {
@@ -270,7 +266,7 @@ class CreateTenant extends Command
         } while (true);
     }
 
-    private function insertInitialSystemData(): void
+    private function insertInitialSystemData($name): void
     {
         $now = now();
         $testrand = rand(100, 10000000);
@@ -286,14 +282,14 @@ class CreateTenant extends Command
         ]);
 
         DB::table('au_system_current_state')->insert([
+            'online_mode' => 1,
             'created' => $now,
             'last_update' => $now,
             'updater_id' => 2,
         ]);
 
         DB::table('au_system_global_config')->insert([
-            'allow_registration' => 0,
-            'default_email_address' => null,
+            'name' => $name,
         ]);
     }
 }

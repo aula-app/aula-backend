@@ -117,13 +117,6 @@ class Message
     }
   }// end function
 
-  public function getMessagesByUser($user_id, $search_field = "", $search_text = "", $msg_type = -1, $status = 1)
-  {
-    // returns all messages for this specific user
-    $user_id = $this->converters->checkUserId($user_id);
-    return $this->getMessages($msg_type, 0, 0, 3, 1, $status, "", 0, 0, $user_id, 0, $search_field, $search_text);
-  }
-
   public function getMessages($msg_type = -1, $offset = 0, $limit = 0, $orderby = 0, $asc = 0, $status = 1, $extra_where = "", $target_group = 0, $target_id = 0, $room_id = 0, $user_id = 0, $creator_id = 0, $search_field = "", $search_text = "")
   {
     /* returns message list (associative array) with start and limit provided
@@ -233,13 +226,13 @@ class Message
           au_messages.*,
           users_target.hash_id as user_hash_id,
           users_creator.hash_id as creator_hash_id
-        FROM {$this->db->au_messages} 
-        LEFT JOIN 
-          au_users_basedata users_target 
-            ON users_target.id = au_messages.target_id 
-        LEFT JOIN 
+        FROM {$this->db->au_messages}
+        LEFT JOIN
+          au_users_basedata users_target
+            ON users_target.id = au_messages.target_id
+        LEFT JOIN
           au_users_basedata users_creator
-            ON users_creator.id = au_messages.creator_id 
+            ON users_creator.id = au_messages.creator_id
         WHERE au_messages.id > 0 {$extra_where} ORDER BY {$orderby_field} {$asc_field} {$limit_string}
 
     EOD;
@@ -329,7 +322,7 @@ class Message
     /* returns message list (associative array) of messages that are for this user (specified by $user_id)
     user_id = specifies a certain user
     $mode = 0 gets all messages, = 1 gets messages since last login of user
-    
+
     */
     $user_id = $this->converters->checkUserId($user_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
@@ -642,16 +635,6 @@ class Message
       return $returnvalue; // return 0,2 to indicate that there was an db error executing the statement
     }
   }// end function
-
-  private function sendMessage($user_id, $msg)
-  {
-    /* send a message to the dashboard of the user
-    yet to be written => currently use addMessage with a specific target_id
-    */
-
-    $success = 0;
-    return $success;
-  }
 
   public function deleteMessage($message_id, $updater_id = 0)
   {

@@ -296,34 +296,6 @@ class Converters
     }
   } // end function
 
-  public function getMediaIdByHashId($hash_id)
-  {
-    /* Returns Database ID of medium when hash_id is provided
-     */
-    $check_hash = $this->buildCacheHash("getMediaIdByHashId" . $hash_id);
-    // check if hash is in cache
-    try {
-      if ($this->cache->get($check_hash) != null) {
-        $data = $this->cache->get($check_hash);
-        // echo ("Using cache for ".$hash_id." data = ".$data);
-        return $data;
-      }
-    } catch (Exception $e) {
-      // cache error
-    }
-
-    $stmt = $this->db->query('SELECT id FROM ' . $this->db->au_media . ' WHERE hash_id = :hash_id');
-    $this->db->bind(':hash_id', $hash_id); // bind hash id
-    $media = $this->db->resultSet();
-    if (count($media) < 1) {
-      $this->cache->set($check_hash, 0, $this->long_caching_time);
-      return 0; // nothing found, return 0 code
-    } else {
-      $this->cache->set($check_hash, $media[0]['id'], $this->long_caching_time);
-      return $media[0]['id']; // return media id
-    }
-  } // end function
-
 
   public function checkGroupId($group_id)
   {
@@ -434,19 +406,6 @@ class Converters
     } else {
 
       return $this->getMessageIdByHashId($message_id);
-    }
-  } // end function
-
-  public function checkMediaId($media_id)
-  {
-    /* helper function that checks if a medium id is a standard db id (int) or if a hash id was passed
-    if a hash was passed, function returns db id
-    */
-
-    if (is_int(($media_id))) {
-      return $media_id;
-    } else {
-      return $this->getMediaIdByHashId($media_id);
     }
   } // end function
 

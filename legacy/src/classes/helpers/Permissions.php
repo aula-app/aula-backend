@@ -213,20 +213,8 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "roles" => ["principal", "principal_v", "admin", "tech_admin"]
         ],
 
-        "setDailyStartTime" => [
-          "roles" => ["principal", "principal_v", "admin", "tech_admin"]
-        ],
-
-        "setDailyEndTime" => [
-          "roles" => ["principal", "principal_v", "admin", "tech_admin"]
-        ],
-
         "setQuorum" => [
           "roles" => ["principal", "principal_v", "admin", "tech_admin"]
-        ],
-
-        "getGlobalConfig" => [
-          "roles" => ["all"]
         ],
 
         "getInstanceSettings" => [
@@ -237,21 +225,9 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "roles" => ["all"]
         ],
 
-        "setOauthStatus" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
-
-        "setAllowRegistration" => [
-          "open_roles" => ["admin", "tech_admin"]
-        ],
-
         "setInstanceOnlineMode" => [
           "open_roles" => ["admin", "tech_admin"]
         ],
-
-        "setInstanceInfo" => [
-          "roles" => ["admin", "tech_admin"]
-        ]
       ],
     "Converters" => [
       "getGlobalPhaseDurations" => [
