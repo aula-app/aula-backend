@@ -232,6 +232,17 @@ return new class extends Migration
             $table->primary(['category_id', 'idea_id']);
         });
 
+        // au_rel_categories_media
+        Schema::create('au_rel_categories_media', function (Blueprint $table) {
+            $table->integer('category_id')->comment('id of category');
+            $table->integer('media_id')->comment('id of media in mediatable');
+            $table->integer('type')->nullable()->comment('position where media is used within category');
+            $table->dateTime('created')->nullable()->comment('create time');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->integer('updater_id')->nullable();
+            $table->primary(['category_id', 'media_id']);
+        });
+
         // au_rel_categories_rooms
         Schema::create('au_rel_categories_rooms', function (Blueprint $table) {
             $table->integer('category_id')->comment('id of category');
@@ -240,6 +251,18 @@ return new class extends Migration
             $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of dataset');
             $table->integer('updater_id')->nullable()->comment('id of updater');
             $table->primary(['category_id', 'room_id']);
+        });
+
+        // au_rel_groups_media
+        Schema::create('au_rel_groups_media', function (Blueprint $table) {
+            $table->integer('group_id')->comment('id of group');
+            $table->integer('media_id')->comment('id of media');
+            $table->integer('type')->nullable()->comment('position of media within group');
+            $table->integer('status')->nullable()->comment('0=inactive 1=active');
+            $table->dateTime('created')->nullable();
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate();
+            $table->integer('updater_id')->nullable();
+            $table->primary(['group_id', 'media_id']);
         });
 
         // au_rel_groups_users
@@ -251,6 +274,39 @@ return new class extends Migration
             $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('id of the user who did the update');
             $table->primary(['group_id', 'user_id']);
+        });
+
+        // au_rel_ideas_comments
+        Schema::create('au_rel_ideas_comments', function (Blueprint $table) {
+            $table->integer('idea_id')->comment('id of the idea');
+            $table->integer('comment_id')->comment('id of the comment');
+            $table->integer('status')->nullable()->comment('0=inactive 1=active 2=suspended 3=archive');
+            $table->dateTime('created')->nullable()->comment('time of creation');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of dataset');
+            $table->integer('updater_id')->nullable();
+            $table->primary(['idea_id', 'comment_id']);
+        });
+
+        // au_rel_ideas_media
+        Schema::create('au_rel_ideas_media', function (Blueprint $table) {
+            $table->integer('idea_id');
+            $table->integer('media_id');
+            $table->dateTime('created')->nullable();
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate();
+            $table->integer('updater_id')->nullable();
+            $table->primary(['idea_id', 'media_id']);
+        });
+
+        // au_rel_rooms_media
+        Schema::create('au_rel_rooms_media', function (Blueprint $table) {
+            $table->integer('room_id')->comment('id of the room');
+            $table->integer('media_id')->comment('id of the medium in media table');
+            $table->integer('type')->nullable()->comment('position within the room');
+            $table->integer('status')->nullable()->comment('0=inactive 1=active');
+            $table->dateTime('created')->nullable();
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate();
+            $table->integer('updater_id')->nullable();
+            $table->primary(['room_id', 'media_id']);
         });
 
         // au_rel_rooms_users
