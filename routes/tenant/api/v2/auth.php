@@ -23,15 +23,14 @@ Route::middleware('legacy.jwt')->group(function () {
         $user = request()->attributes->get('authenticated_user');
 
         return response()->json([
-        return response()->json([
-                'id' => $user->id,
-                'hash_id' => $user->hash_id,
-                'username' => $user->username,
-                'email' => $user->email,
-                'displayname' => $user->displayname,
-                'realname' => $user->realname,
-                'userlevel' => $user->userlevel,
-                'roles' => json_decode($user->roles ?? '[]'),
+            'id' => $user->id,
+            'hash_id' => $user->hash_id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'displayname' => $user->displayname,
+            'realname' => $user->realname,
+            'userlevel' => $user->userlevel,
+            'roles' => json_decode($user->roles ?? '[]'),
         ]);
     })->name('me');
 });
