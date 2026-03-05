@@ -17,6 +17,17 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // au_activitylog
+        Schema::create('au_activitylog', function (Blueprint $table) {
+            $table->increments('id');
+            $table->smallInteger('type')->nullable()->comment('Which type of activity (i.e. 1=login, 2=logout, 3=vote, 4= new idea etc.)');
+            $table->string('info', 1024)->nullable()->comment('comment or activity as clear text');
+            $table->integer('group')->nullable()->comment('group type of user that triggered the activity');
+            $table->integer('target')->default(0)->comment('target of the activity (i.E. vote for a specific idea id)');
+            $table->dateTime('created')->nullable()->comment('Date time of the activity');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update is saved if dataset is altered');
+        });
+
         // au_categories
         Schema::create('au_categories', function (Blueprint $table) {
             $table->increments('id');
@@ -263,6 +274,79 @@ return new class extends Migration
             $table->primary(['topic_id', 'idea_id']);
         });
 
+        // au_rel_topics_media
+        Schema::create('au_rel_topics_media', function (Blueprint $table) {
+            $table->integer('topic_id')->comment('id of the topic');
+            $table->integer('media_id')->comment('id of the media in media table');
+            $table->integer('type')->nullable()->comment('position within the topic');
+            $table->dateTime('created')->nullable()->comment('creation date');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->integer('updater_id')->nullable();
+            $table->primary(['topic_id', 'media_id']);
+        });
+
+        // au_rel_user_user
+        Schema::create('au_rel_user_user', function (Blueprint $table) {
+            $table->integer('user_id1')->comment('id of first user');
+            $table->integer('user_id2')->comment('id of second user');
+            $table->integer('type')->nullable()->comment('type of relation 0=associated 1=associated and following / subscribed');
+            $table->integer('status')->nullable()->comment('0=inactive, 1=active, 2=suspended 3= archived');
+            $table->dateTime('created')->nullable()->comment('create date');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->integer('updater_id')->nullable()->comment('id of user who did the update');
+            $table->primary(['user_id1', 'user_id2']);
+        });
+
+        // au_rel_users_media
+        Schema::create('au_rel_users_media', function (Blueprint $table) {
+            $table->integer('user_id')->comment('id of the user');
+            $table->integer('media_id')->comment('id of the media in the media table');
+            $table->integer('type')->nullable()->comment('position within the user');
+            $table->dateTime('created')->nullable()->comment('create time');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->integer('updater_id')->nullable();
+            $table->primary(['user_id', 'media_id']);
+        });
+
+        // au_rel_users_triggers
+        Schema::create('au_rel_users_triggers', function (Blueprint $table) {
+            $table->integer('user_id')->comment('id of the user');
+            $table->integer('trigger_id')->comment('id of the trigger');
+            $table->boolean('user_consent')->nullable()->comment('0=no 1=yes');
+            $table->dateTime('created')->nullable()->comment('create time');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->integer('updater_id')->nullable()->comment('user id of the updater');
+            $table->primary(['user_id', 'trigger_id']);
+        });
+
+        // au_reported
+        Schema::create('au_reported', function (Blueprint $table) {
+            $table->integer('user_id')->comment('id of the reporting user');
+            $table->integer('type')->comment('type of reported object 0=idea, 1=comment, 2=user');
+            $table->integer('object_id')->comment('id of reported object');
+            $table->integer('status')->nullable()->comment('0=new 1=acknowledged by admin');
+            $table->dateTime('created')->nullable()->comment('create date');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->text('reason')->nullable()->comment('reason for reporting');
+            $table->text('internal_info')->nullable()->comment('internal notes on this reporting');
+            $table->primary(['user_id', 'object_id', 'type']);
+        });
+
+        // au_roles
+        Schema::create('au_roles', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('name')->nullable()->comment('name of role');
+            $table->text('description_public')->nullable()->comment('description useable in frontend');
+            $table->text('description_internal')->nullable()->comment('description only seen by admins');
+            $table->integer('order')->nullable()->comment('used for sorting in display in frontend');
+            $table->integer('rights_level')->nullable()->comment('0=view_only, 10=std_user, 20=privileged user1, 30=privileged user 2, 40=privileged user 5, 50=admin, 60=tech admin');
+            $table->boolean('status')->nullable()->comment('0=inactive, 1=active 2=suspended 3=archived');
+            $table->dateTime('created')->nullable()->comment('time of creation');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update of dataset');
+            $table->string('hash_id', 1024)->nullable()->comment('hash id of the role');
+            $table->integer('updater_id')->nullable();
+        });
+
         // au_rooms
         Schema::create('au_rooms', function (Blueprint $table) {
             $table->increments('id');
@@ -284,6 +368,32 @@ return new class extends Migration
             $table->integer('phase_duration_3')->nullable()->comment('phase_duration_3');
             $table->integer('phase_duration_4')->nullable()->comment('phase_duration_4');
             $table->integer('type')->default(0)->comment('0 = standard room 1 = MAIN ROOM (aula)');
+        });
+
+        // au_services
+        Schema::create('au_services', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name', 1024)->nullable()->comment('name of the service');
+            $table->integer('type')->nullable()->comment('type of service (0=authentication, 1=push notification etc.)');
+            $table->text('url')->nullable()->comment('URL to service');
+            $table->text('return_url')->nullable()->comment('return url to main system');
+            $table->string('api_secret', 4096)->nullable()->comment('secret used for service');
+            $table->text('api_key')->nullable()->comment('public key used');
+            $table->text('api_tok')->nullable()->comment('token for api if necessary');
+            $table->text('parameter1')->nullable()->comment('miscellaneous parameter');
+            $table->text('parameter2')->nullable()->comment('miscellaneous parameter');
+            $table->text('parameter3')->nullable()->comment('miscellaneous parameter');
+            $table->text('parameter4')->nullable()->comment('miscellaneous parameter');
+            $table->text('parameter5')->nullable()->comment('miscellaneous parameter');
+            $table->text('parameter6')->nullable()->comment('miscellaneous parameter');
+            $table->text('description_public')->nullable()->comment('Description for public view');
+            $table->text('description_internal')->nullable()->comment('Description for internal view only');
+            $table->boolean('status')->nullable()->comment('0=inactive, 1=active');
+            $table->integer('order')->nullable()->comment('order for frontend display');
+            $table->dateTime('created')->nullable()->comment('time of creation');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->integer('updater_id')->nullable()->comment('user id of the updater');
+            $table->string('hash_id', 1024)->nullable()->comment('hash_id of the service');
         });
 
         // au_system_current_state
@@ -381,6 +491,28 @@ return new class extends Migration
             $table->integer('type')->default(0)->comment('type of box (0=std, 1= special)');
         });
 
+        // au_triggers
+        Schema::create('au_triggers', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('trigger_id')->nullable()->comment('id of the trigger');
+            $table->string('name_public', 512)->nullable()->comment('public name of the trigger');
+            $table->string('name_internal', 512)->nullable()->comment('internal name of the trigger');
+            $table->text('description_public')->nullable()->comment('description of the trigger');
+            $table->text('description_internal')->nullable()->comment('internal description');
+            $table->integer('status')->nullable()->comment('0=inactive, 1=active 2=suspended');
+            $table->dateTime('created')->nullable()->comment('create time');
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->integer('updater_id')->nullable()->comment('user id of the last updater');
+        });
+
+        // au_user_levels
+        Schema::create('au_user_levels', function (Blueprint $table) {
+            $table->integer('level')->primary()->comment('id of level');
+            $table->string('name', 1024)->nullable()->comment('name of level');
+            $table->text('description')->nullable()->comment('description of userlevel / rights');
+            $table->integer('status')->nullable()->comment('0=inactive 1=active');
+        });
+
         // au_users_basedata
         Schema::create('au_users_basedata', function (Blueprint $table) {
             $table->increments('id');
@@ -418,6 +550,17 @@ return new class extends Migration
             $table->json('roles')->default('[]')->comment('roles of the user');
         });
 
+        // au_users_settings
+        Schema::create('au_users_settings', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('user_id')->nullable()->comment('id of the user');
+            $table->integer('external_service_login')->nullable()->comment('SSO / OAuth2 login 0=no 1=yes');
+            $table->dateTime('created')->nullable();
+            $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
+            $table->integer('updater_id')->nullable()->comment('user id of the updater');
+            $table->integer('external_service_id')->nullable()->comment('id of the used service for authentication');
+        });
+
         // au_votes
         Schema::create('au_votes', function (Blueprint $table) {
             $table->increments('id');
@@ -440,17 +583,32 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('au_votes');
+        Schema::dropIfExists('au_users_settings');
         Schema::dropIfExists('au_users_basedata');
+        Schema::dropIfExists('au_user_levels');
+        Schema::dropIfExists('au_triggers');
         Schema::dropIfExists('au_topics');
         Schema::dropIfExists('au_texts');
         Schema::dropIfExists('au_systemlog');
         Schema::dropIfExists('au_system_global_config');
         Schema::dropIfExists('au_system_current_state');
+        Schema::dropIfExists('au_services');
         Schema::dropIfExists('au_rooms');
+        Schema::dropIfExists('au_roles');
+        Schema::dropIfExists('au_reported');
+        Schema::dropIfExists('au_rel_users_triggers');
+        Schema::dropIfExists('au_rel_users_media');
+        Schema::dropIfExists('au_rel_user_user');
+        Schema::dropIfExists('au_rel_topics_media');
         Schema::dropIfExists('au_rel_topics_ideas');
         Schema::dropIfExists('au_rel_rooms_users');
+        Schema::dropIfExists('au_rel_rooms_media');
+        Schema::dropIfExists('au_rel_ideas_media');
+        Schema::dropIfExists('au_rel_ideas_comments');
         Schema::dropIfExists('au_rel_groups_users');
+        Schema::dropIfExists('au_rel_groups_media');
         Schema::dropIfExists('au_rel_categories_rooms');
+        Schema::dropIfExists('au_rel_categories_media');
         Schema::dropIfExists('au_rel_categories_ideas');
         Schema::dropIfExists('au_phases_global_config');
         Schema::dropIfExists('au_messages');
@@ -464,5 +622,6 @@ return new class extends Migration
         Schema::dropIfExists('au_commands');
         Schema::dropIfExists('au_change_password');
         Schema::dropIfExists('au_categories');
+        Schema::dropIfExists('au_activitylog');
     }
 };
