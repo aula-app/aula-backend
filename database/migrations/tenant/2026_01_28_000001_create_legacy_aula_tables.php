@@ -301,9 +301,28 @@ return new class extends Migration
         Schema::create('au_system_global_config', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name', 1024)->nullable()->comment('name of organisation');
+            $table->string('internal_hash_id', 2048)->nullable()->comment('hash id within the organisation');
+            $table->string('external_hash_id', 2048)->nullable()->comment('hash id of the organisation to the outside world');
             $table->text('description_public')->nullable()->comment('text that is publicly displayed on the frontend');
+            $table->string('base_url', 2048)->nullable()->comment('base url of the organisation instance');
+            $table->string('media_url', 2048)->nullable()->comment('url for media contents');
+            $table->integer('preferred_language')->nullable()->comment('id for the default language');
+            $table->integer('date_format')->nullable()->comment('id for the date format');
+            $table->integer('time_format')->nullable()->comment('id for the time format');
+            $table->integer('first_workday_week')->nullable()->comment('id for the first workday');
+            $table->integer('last_workday_week')->nullable()->comment('id for the last workday');
+            $table->dateTime('start_time')->nullable()->comment('regular starting time');
+            $table->dateTime('daily_end_time')->nullable()->comment('regular end_time');
+            $table->boolean('allow_registration')->comment('0=no 1=yes');
+            $table->integer('default_role_for_registration')->nullable()->comment('role id for new self registered users');
+            $table->string('default_email_address', 1024)->nullable()->comment('default fallback e-mail address');
             $table->dateTime('last_update')->nullable()->useCurrentOnUpdate()->comment('last update');
             $table->integer('updater_id')->nullable()->comment('user id of updater');
+            $table->integer('archive_after')->nullable()->comment('number of days after which content is automatically archived');
+            $table->integer('organisation_type')->nullable()->comment('0=school, 1=other organisation - for term set');
+            $table->integer('enable_oauth')->default(0)->comment('0 = disable, 1 = enable');
+            $table->text('custom_field1_name')->nullable()->comment('Name custom field 1');
+            $table->text('custom_field2_name')->nullable()->comment('Name custom field 2');
             $table->integer('quorum_wild_ideas')->default(10)->comment('percentage for wild idea quorum');
             $table->integer('quorum_votes')->default(10)->comment('percentage for votes');
         });
