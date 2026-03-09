@@ -15,7 +15,7 @@ class AuthServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(LegacyJwtService::class, function ($app) {
-            return new LegacyJwtService();
+            return new LegacyJwtService;
         });
     }
 

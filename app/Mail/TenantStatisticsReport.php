@@ -24,7 +24,7 @@ class TenantStatisticsReport extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Tenant Statistics Report — '.now()->format('Y-m-d'),
+            subject: 'Tenant Statistics Report - '.now()->format('Y-m-d'),
         );
     }
 

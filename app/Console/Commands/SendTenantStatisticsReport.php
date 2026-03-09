@@ -9,6 +9,7 @@ use App\Services\TenantStatisticsService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Log;
 use Throwable;
 
 class SendTenantStatisticsReport extends Command
@@ -103,8 +104,11 @@ class SendTenantStatisticsReport extends Command
             try {
                 Mail::to($recipient)->send($mailable);
                 $this->info("Report sent to: {$recipient}");
+                Log::debug("Report sent to: {$recipient}");
             } catch (Throwable $e) {
-                $this->error("Failed to send report to {$recipient}: {$e->getMessage()}");
+                $errorMsg = "Failed to send report to {$recipient}: {$e->getMessage()}";
+                $this->error($errorMsg);
+                Log::warning($errorMsg);
             }
         }
     }

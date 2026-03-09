@@ -3,6 +3,12 @@
 
 # v2
 
+## v2.0.1
+
+- fix: CreateTenant command
+- feat: logging for statistics and reporting
+- fix: failing migrations due to duplicate column jwt_key
+
 ## v2.0.0
 
 - feat: CreateTenant command: `php artisan tenant:create`
