@@ -297,6 +297,7 @@ class CreateTenant extends Command
 
         DB::table('au_system_global_config')->insert([
             'name' => $name,
+            'allow_registration' => 0,
         ]);
     }
 }
