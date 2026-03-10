@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\DB;
  */
 class AddAllCSVTest extends TestCase
 {
+    use CreatesTestTenant;
     private $user;
     private $db;
     private $testRooms = [];
@@ -32,6 +34,9 @@ class AddAllCSVTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Ensure TEST001 tenant exists before legacy code tries to connect to it
+        $this->ensureTestTenantExists();
 
         // Get instance code from environment variable, default to 'SINGLE'
         $this->instanceCode = env('AULA_TEST_INSTANCE', 'SINGLE');
@@ -60,6 +65,14 @@ class AddAllCSVTest extends TestCase
     {
         global $allowed_include;
         $allowed_include = 1;
+
+        // Pre-load base_config.php so that subsequent require_once calls inside
+        // legacy files are no-ops (PHP caches the path). Then immediately override
+        // the path globals so they point to the correct location for this environment.
+        $legacyBaseConfig = base_path('legacy/config/base_config.php');
+        if (file_exists($legacyBaseConfig)) {
+            require_once $legacyBaseConfig;
+        }
 
         global $baseHelperDir, $baseClassDir;
         $baseHelperDir = base_path('legacy/src/classes/helpers/');
