@@ -274,7 +274,7 @@ class Room
     }
     if ($status > -1) {
       // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_users_basedata . ".status = :status";
+      $extra_where .= " AND users_basedata.status = :status";
     }
 
     if ($type > -1) {
