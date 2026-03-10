@@ -15,15 +15,16 @@ class LegacyJwtServiceTest extends TestCase
     {
         parent::setUp();
 
-        // Set a known JWT key for testing
-        putenv('JWT_KEY=test_jwt_secret_key');
-
-        $this->jwtService = new LegacyJwtService();
+        $this->jwtService = new class extends LegacyJwtService {
+            protected function getJwtKey(): string
+            {
+                return 'test_jwt_secret_key';
+            }
+        };
     }
 
     protected function tearDown(): void
     {
-        putenv('JWT_KEY');
         Mockery::close();
         parent::tearDown();
     }

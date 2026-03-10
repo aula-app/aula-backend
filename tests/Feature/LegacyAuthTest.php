@@ -4,19 +4,28 @@ namespace Tests\Feature;
 
 use App\Models\LegacyUser;
 use App\Services\LegacyJwtService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 class LegacyAuthTest extends TestCase
 {
-    /**
-     * Test that the JWT service can generate and validate tokens.
-     */
+    use CreatesTestTenant;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->ensureTestTenantExists();
+    }
+
+    // -------------------------------------------------------------------------
+    // JWT service tests (no DB needed)
+    // -------------------------------------------------------------------------
+
     public function test_jwt_service_generates_valid_tokens(): void
     {
-        putenv('JWT_KEY=test_secret');
-
-        $service = new LegacyJwtService();
+        $service = new class extends LegacyJwtService {
+            protected function getJwtKey(): string { return 'test_secret'; }
+        };
 
         $user = new LegacyUser();
         $user->id = 1;
@@ -27,31 +36,19 @@ class LegacyAuthTest extends TestCase
 
         $token = $service->generateToken($user);
 
-        // Token should be 3 parts
         $parts = explode('.', $token);
         $this->assertCount(3, $parts);
 
-        // Validate the token
         $validation = $service->validateToken($token);
         $this->assertTrue($validation['success']);
         $this->assertEquals(1, $validation['payload']->user_id);
-
-        putenv('JWT_KEY');
     }
 
-    /**
-     * Test that legacy middleware validates tokens correctly.
-     */
     public function test_middleware_rejects_missing_token(): void
     {
-        // This test would require a running application with routes
-        // For now, we test the service layer
         $this->assertTrue(true);
     }
 
-    /**
-     * Test password verification with bcrypt hash.
-     */
     public function test_legacy_user_password_verification_bcrypt(): void
     {
         $user = new LegacyUser();
@@ -62,28 +59,17 @@ class LegacyAuthTest extends TestCase
         $this->assertFalse($user->checkPassword('wrong_password'));
     }
 
-    /**
-     * Test password verification with temporary password.
-     */
     public function test_legacy_user_password_verification_temp_pw(): void
     {
         $user = new LegacyUser();
         $user->pw = password_hash('hashed_password', PASSWORD_DEFAULT);
         $user->temp_pw = 'temp123';
 
-        // Temp password should work
         $this->assertTrue($user->checkPassword('temp123'));
-
-        // Hashed password should also still work
         $this->assertTrue($user->checkPassword('hashed_password'));
-
-        // Wrong password should fail
         $this->assertFalse($user->checkPassword('wrong'));
     }
 
-    /**
-     * Test user status checks.
-     */
     public function test_legacy_user_status_checks(): void
     {
         $user = new LegacyUser();
@@ -101,9 +87,6 @@ class LegacyAuthTest extends TestCase
         $this->assertFalse($user->isActive());
     }
 
-    /**
-     * Test refresh token flag.
-     */
     public function test_legacy_user_refresh_token_flag(): void
     {
         $user = new LegacyUser();
@@ -115,9 +98,6 @@ class LegacyAuthTest extends TestCase
         $this->assertTrue($user->needsRefresh());
     }
 
-    /**
-     * Test JWT payload generation.
-     */
     public function test_legacy_user_jwt_payload(): void
     {
         $user = new LegacyUser();
@@ -135,15 +115,15 @@ class LegacyAuthTest extends TestCase
         $this->assertFalse($payload['temp_pw']);
     }
 
-    /**
-     * Test successful login via the legacy login endpoint with tenancy.
-     */
+    // -------------------------------------------------------------------------
+    // Integration tests (require TEST001 tenant)
+    // -------------------------------------------------------------------------
+
     public function test_successful_login(): void
     {
-        $tenant = \App\Models\Tenant::where('instance_code', 'TEST001')->first();
-        $this->assertNotNull($tenant, 'Tenant TEST001 must exist. Run tenant setup first.');
+        $tenant = self::$testTenant;
+        $this->assertNotNull($tenant);
 
-        // Create a test user within the tenant context
         $password = 'testpass123';
         $tenant->run(function () use ($password) {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
@@ -167,15 +147,9 @@ class LegacyAuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-            ])
-            ->assertJsonStructure([
-                'success',
-                'JWT',
-            ]);
+            ->assertJson(['success' => true])
+            ->assertJsonStructure(['success', 'JWT']);
 
-        // Verify the JWT is valid
         $jwt = $response->json('JWT');
         $parts = explode('.', $jwt);
         $this->assertCount(3, $parts);
@@ -184,18 +158,14 @@ class LegacyAuthTest extends TestCase
         $this->assertEquals(20, $payload['user_level']);
         $this->assertFalse($payload['temp_pw']);
 
-        // Clean up
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
         });
     }
 
-    /**
-     * Test login with wrong password returns error.
-     */
     public function test_login_wrong_password(): void
     {
-        $tenant = \App\Models\Tenant::where('instance_code', 'TEST001')->first();
+        $tenant = self::$testTenant;
         $this->assertNotNull($tenant);
 
         $tenant->run(function () {
@@ -220,25 +190,17 @@ class LegacyAuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => false,
-                'error_code' => 2,
-            ])
+            ->assertJson(['success' => false, 'error_code' => 2])
             ->assertJsonMissing(['JWT']);
 
-        // Clean up
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
         });
     }
 
-    /**
-     * Test login with non-existent user returns error.
-     */
     public function test_login_nonexistent_user(): void
     {
-        $tenant = \App\Models\Tenant::where('instance_code', 'TEST001')->first();
-        $this->assertNotNull($tenant);
+        $this->assertNotNull(self::$testTenant);
 
         $response = $this->postJson('/api/v2/legacy-auth/login', [
             'username' => 'nonexistent_user_xyz',
@@ -248,18 +210,12 @@ class LegacyAuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => false,
-                'error_code' => 2,
-            ]);
+            ->assertJson(['success' => false, 'error_code' => 2]);
     }
 
-    /**
-     * Test login with inactive user returns status info.
-     */
     public function test_login_inactive_user(): void
     {
-        $tenant = \App\Models\Tenant::where('instance_code', 'TEST001')->first();
+        $tenant = self::$testTenant;
         $this->assertNotNull($tenant);
 
         $tenant->run(function () {
@@ -291,20 +247,16 @@ class LegacyAuthTest extends TestCase
             ])
             ->assertJsonMissing(['JWT']);
 
-        // Clean up
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_inactive')->delete();
         });
     }
 
-    /**
-     * Test that tokens generated match legacy format.
-     */
     public function test_token_matches_legacy_format(): void
     {
-        putenv('JWT_KEY=test_key');
-
-        $service = new LegacyJwtService();
+        $service = new class extends LegacyJwtService {
+            protected function getJwtKey(): string { return 'test_key'; }
+        };
 
         $user = new LegacyUser();
         $user->id = 1;
@@ -315,16 +267,13 @@ class LegacyAuthTest extends TestCase
 
         $token = $service->generateToken($user);
 
-        // Decode and verify structure matches legacy
         $parts = explode('.', $token);
         $header = json_decode(base64_decode($parts[0]), true);
         $payload = json_decode(base64_decode($parts[1]), true);
 
-        // Header structure
         $this->assertEquals('HS512', $header['alg']);
         $this->assertEquals('JWT', $header['typ']);
 
-        // Payload structure
         $this->assertArrayHasKey('exp', $payload);
         $this->assertArrayHasKey('user_id', $payload);
         $this->assertArrayHasKey('user_hash', $payload);
@@ -332,12 +281,9 @@ class LegacyAuthTest extends TestCase
         $this->assertArrayHasKey('roles', $payload);
         $this->assertArrayHasKey('temp_pw', $payload);
 
-        // Values
         $this->assertEquals(0, $payload['exp']);
         $this->assertEquals(1, $payload['user_id']);
         $this->assertEquals('hash123', $payload['user_hash']);
         $this->assertEquals(20, $payload['user_level']);
-
-        putenv('JWT_KEY');
     }
 }
