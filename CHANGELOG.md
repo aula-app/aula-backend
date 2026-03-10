@@ -3,6 +3,14 @@
 
 # v2
 
+## v2.0.3
+
+- fix: Room->getRoomsByUser not returning rooms when status argument is passed
+
+## v2.0.2
+
+- fix: getIdeasByRoom not returning ideas when status argument is passed
+
 ## v2.0.1
 
 - fix: CreateTenant command
