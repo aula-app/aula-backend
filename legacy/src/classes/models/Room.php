@@ -274,7 +274,7 @@ class Room
     }
     if ($status > -1) {
       // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_users_basedata . ".status = " . $status;
+      $extra_where .= " AND " . $this->db->au_users_basedata . ".status = :status";
     }
 
     if ($type > -1) {
@@ -319,6 +319,10 @@ class Room
     $stmt = $this->db->query($query_rooms . $extra_where . ' ORDER BY rooms.' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     $this->db->bind(':user_id', $user_id); // bind user id
+
+    if ($status > -1) {
+      $this->db->bind(':status', $status); // bind status
+    }
 
     $err = false;
     try {
