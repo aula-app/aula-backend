@@ -1188,7 +1188,7 @@ class Idea
 
     if ($status > -1) {
       // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
+      $extra_where .= " AND " . $this->db->au_ideas . ".status = :status";
     }
 
     if (strlen($info) > 0) {
@@ -1211,7 +1211,7 @@ class Idea
     }
     $select_part = 'SELECT ' . $this->db->au_rooms . '.hash_id as room_hash_id, ' . $this->db->au_users_basedata . '.hash_id as user_hash_id, ' . $this->db->au_users_basedata . '.id as user_id, ' . $this->db->au_users_basedata . '.displayname, ' . $this->db->au_ideas . '.room_id, ' . $this->db->au_ideas . '.created, ' . $this->db->au_ideas . '.last_update, ' . $this->db->au_ideas . '.id,  ' . $this->db->au_ideas . '.hash_id, ' . $this->db->au_ideas . '.title, ' . $this->db->au_ideas . '.content, ' . $this->db->au_ideas . '.sum_likes, ' . $this->db->au_ideas . '.sum_comments, ' . $this->db->au_ideas . '.sum_votes FROM ' . $this->db->au_ideas;
     $join = 'INNER JOIN ' . $this->db->au_rooms . ' ON (' . $this->db->au_ideas . '.room_id=' . $this->db->au_rooms . '.id) INNER JOIN ' . $this->db->au_users_basedata . ' ON (' . $this->db->au_ideas . '.user_id=' . $this->db->au_users_basedata . '.id) LEFT OUTER JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_ideas . '.id = ' . $this->db->au_rel_topics_ideas . '.idea_id';
-    $where = $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_ideas . '.room_id= :room_id AND ' . $this->db->au_rel_topics_ideas . '.idea_id IS NULL AND ' . $this->db->au_ideas . '.status = 1 ' . $extra_where;
+    $where = $this->db->au_ideas . '.id > 0 AND ' . $this->db->au_ideas . '.room_id= :room_id AND ' . $this->db->au_rel_topics_ideas . '.idea_id IS NULL ' . $extra_where;
     $stmt = $this->db->query($select_part . ' ' . $join . ' WHERE ' . $where . ' ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
 
     if ($limit_active) {
