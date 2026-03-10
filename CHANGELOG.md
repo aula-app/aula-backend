@@ -6,6 +6,8 @@
 ## v2.0.3
 
 - fix: Room->getRoomsByUser not returning rooms when status argument is passed
+- fix: fix status argument to Ideas->getIdeasByTopic and Topic->getTopicsByPhase 
+
 
 ## v2.0.2
 

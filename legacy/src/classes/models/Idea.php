@@ -645,7 +645,7 @@ class Idea
 
     if ($status > -1) {
       // specific status selected / -1 = get all status values
-      $extra_where .= " AND " . $this->db->au_ideas . ".status = " . $status;
+      $extra_where .= " AND " . $this->db->au_ideas . ".status = :status";
     }
 
     if (strlen($info) > 0) {
@@ -693,6 +693,10 @@ class Idea
 
     if ($search_field_valid) {
       $this->db->bind(':search_text', '%' . $search_text . '%');
+    }
+
+    if ($status > -1) {
+     $this->db->bind(':status', $status); // bind status
     }
 
     $err = false;
