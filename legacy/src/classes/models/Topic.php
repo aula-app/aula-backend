@@ -177,7 +177,7 @@ class Topic
       $room_id = $this->converters->checkRoomId($room_id);
     }
 
-    // auto convert user id 
+    // auto convert user id
     if ($user_id != -1) {
       $user_id = $this->converters->checkUserId($user_id);
 
@@ -199,7 +199,7 @@ class Topic
 
     if ($status > -1) {
       // check if a status was set (status > -1 default value)
-      $extra_where .= " AND " . $this->db->au_topics . ".status = " . $status;
+      $extra_where .= " AND " . $this->db->au_topics . ".status = :status";
     }
 
     if ($type > -1) {
@@ -255,6 +255,10 @@ class Topic
 
     if ($search_field_valid) {
       $this->db->bind(':search_text', '%' . $search_text . '%');
+    }
+
+    if ($status > -1) {
+      $this->db->bind(':status', $status); // bind status
     }
 
     $err = false;
