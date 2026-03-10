@@ -3,7 +3,7 @@
 # 	  2. locally building the image and running it on your machine
 #   Neither of these is a production setup.
 
-.PHONY: publish-legacy-release build-legacy-release run-legacy-local run-legacy-release prepare-legacy-local clean-legacy-local
+.PHONY: publish-legacy-release build-legacy-release run-legacy-local run-legacy-release prepare-legacy-local clean-legacy-local test
 
 DATE := $(shell date "+%Y-%m-%d")
 DOCKER_TAG := $(shell git rev-parse --short HEAD)
@@ -27,3 +27,10 @@ publish-legacy-release: build-legacy-release
 run-legacy-release:
 	docker compose -f ./legacy/docker-compose.yml pull
 	docker compose -f ./legacy/docker-compose.yml up -d
+
+test:
+	docker compose -f docker-compose.test.yml build --no-cache; \
+	docker compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from app-test; \
+	EXIT_CODE=$$?; \
+	docker compose -f docker-compose.test.yml down -v; \
+	exit $$EXIT_CODE

@@ -1,0 +1,32 @@
+name: aula-v2-test
+
+services:
+  mariadb-test:
+    image: mariadb:11.7
+    environment:
+      MARIADB_DATABASE: aula_database
+      MARIADB_ROOT_PASSWORD: example
+      MARIADB_USER: aula_user
+      MARIADB_PASSWORD: example
+    volumes:
+      - ./docker/mariadb/:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  app-test:
+    build:
+      context: ./
+      dockerfile: Dockerfile.test
+    environment:
+      APP_ENV: testing
+      DB_HOST: mariadb-test
+      DB_PORT: "3306"
+      CENTRAL_DB_HOST: mariadb-test
+      CENTRAL_DB_PORT: "3306"
+    depends_on:
+      mariadb-test:
+        condition: service_healthy
