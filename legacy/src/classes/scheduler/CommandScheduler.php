@@ -77,7 +77,7 @@ class CommandScheduler
       } catch (Throwable $exc) {
         error_log("[{$code}] ERROR Dispatching all due commands for a single instance. " . $exc->getMessage());
       } finally {
-        $forInstance->closeDb();
+        $forInstance?->closeDb();
       }
     }
   }
