@@ -26,7 +26,7 @@ class CommandSchedulerForInstance
     $this->commandDispatcherForInstance = new CommandDispatcher($db, $crypt, $syslog);
   }
 
-  public function dispatchAllDueCommands()
+  public function dispatchAllDueCommands(): void
   {
     $dueCommands = $this->getDueCommands();
     if (!$dueCommands) {
@@ -41,6 +41,11 @@ class CommandSchedulerForInstance
         error_log("[{$this->code}] ERROR Dispatching/Executing command ({$command['id']}): " . $exc->getMessage());
       }
     }
+  }
+
+  public function closeDb(): void
+  {
+    $this->commandDispatcherForInstance->closeDb();
   }
 
   protected function getDueCommands()
@@ -62,7 +67,7 @@ class CommandSchedulerForInstance
 
 class CommandScheduler
 {
-  public function dispatchDueCommands()
+  public function dispatchDueCommands(): void
   {
     $instances = InstanceConfig::findAll();
     foreach ($instances as $code => $instance) {
@@ -71,6 +76,8 @@ class CommandScheduler
         $forInstance->dispatchAllDueCommands();
       } catch (Throwable $exc) {
         error_log("[{$code}] ERROR Dispatching all due commands for a single instance. " . $exc->getMessage());
+      } finally {
+        $forInstance?->closeDb();
       }
     }
   }
