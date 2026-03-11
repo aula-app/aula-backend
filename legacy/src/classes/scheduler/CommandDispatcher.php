@@ -10,7 +10,7 @@ class CommandDispatcher
 {
   private $commandHandlers;
 
-  public function __construct(private $db, private $crypt, private $syslog)
+  public function __construct(private Database $db, private $crypt, private $syslog)
   {
     $this->commandHandlers = [
       // 0-9 - instance related
@@ -46,5 +46,10 @@ class CommandDispatcher
     }
 
     return ($handler())->executeSafe($command);
+  }
+
+  public function closeDb()
+  {
+    $this->db->close();
   }
 }

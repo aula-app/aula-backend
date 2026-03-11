@@ -160,4 +160,9 @@
     public function getDbname() {
         return $this->dbname;
     }
+
+    public function close() {
+        $this->dbh = null;
+        $this->stmt = null;
+    }
 }
