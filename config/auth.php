@@ -70,7 +70,7 @@ return [
     'providers' => [
         'aula_manager_users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\Manager\AulaManagerUser::class,
         ],
         'aula_users' => [
             'driver' => 'eloquent',

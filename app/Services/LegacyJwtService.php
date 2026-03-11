@@ -143,7 +143,7 @@ class LegacyJwtService
             return $tenant->jwt_key;
         }
 
-        throw new Error("JWT secret key is not configured for the Tenant");
+        throw new \Error("JWT secret key is not configured for the Tenant");
 
     }
 

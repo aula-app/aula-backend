@@ -82,14 +82,14 @@ class TenantStatisticsService
         $output = fopen('php://temp', 'r+');
 
         $headers = array_column(self::CSV_COLUMNS, 'label');
-        fputcsv($output, $headers);
+        fputcsv($output, $headers, escape: '\\');
 
         foreach ($allStats as $stats) {
             $row = array_map(
                 fn (array $col) => $stats[$col['key']] ?? '',
                 self::CSV_COLUMNS
             );
-            fputcsv($output, $row);
+            fputcsv($output, $row, escape: '\\');
         }
 
         rewind($output);
