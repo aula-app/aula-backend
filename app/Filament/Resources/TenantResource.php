@@ -6,10 +6,13 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TenantResource\Pages;
 use App\Models\Tenant;
+use App\Services\TenantsService;
+use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -42,12 +45,25 @@ class TenantResource extends Resource
 
                     TextInput::make('instance_code')
                         ->label('Instance Code')
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->helperText($isCreate
-                            ? 'Auto-generated on creation.'
-                            : null)
-                        ->visibleOn('edit'),
+                        ->when(
+                            $isCreate,
+                            fn (TextInput $field) => $field
+                                ->readOnly()
+                                ->dehydrated(true)
+                                ->helperText('Auto-generated. Click ↺ to get a new one.')
+                                ->suffixAction(
+                                    FormAction::make('regenerate')
+                                        ->icon('heroicon-o-arrow-path')
+                                        ->tooltip('Generate a new instance code')
+                                        ->action(fn (Set $set) => $set(
+                                            'instance_code',
+                                            app(TenantsService::class)->generateUniqueInstanceCode()
+                                        ))
+                                ),
+                            fn (TextInput $field) => $field
+                                ->disabled()
+                                ->dehydrated(false)
+                        ),
 
                     TextInput::make('api_base_url')
                         ->label('API Base URL')
