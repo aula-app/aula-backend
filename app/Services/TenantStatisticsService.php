@@ -37,6 +37,7 @@ class TenantStatisticsService
      */
     public function getAllTenantsStatistics(): array
     {
+        Log::debug('Getting all tenants statistics...');
         $tenants = Tenant::all();
         $generatedAt = now()->format('Y-m-d H:i:s');
         $results = [];
@@ -66,13 +67,15 @@ class TenantStatisticsService
             $results[] = $stats;
         }
 
+        Log::info('Got all tenants statistics for [{count}] tenants.', ['count' => count($results)]);
+
         return $results;
     }
 
     /**
      * Generate a CSV string from an array of per-tenant statistics.
      *
-     * @param array<int, array<string, mixed>> $allStats
+     * @param  array<int, array<string, mixed>>  $allStats
      */
     public function generateCsv(array $allStats): string
     {

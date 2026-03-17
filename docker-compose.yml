@@ -17,6 +17,16 @@ services:
       CENTRAL_DB_PORT: "3306"
     volumes:
       - type: bind
+        source: ./app
+        target: /opt/laravel/app
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config
+        target: /opt/laravel/config
+        bind:
+          create_host_path: false
+      - type: bind
         source: ./storage/oauth-private.key
         target: /opt/laravel/storage/oauth-private.key
         bind:

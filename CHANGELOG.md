@@ -3,6 +3,22 @@
 
 # v2
 
+## v2.0.3
+
+- fix: Room->getRoomsByUser not returning rooms when status argument is passed
+- fix: fix status argument to Ideas->getIdeasByTopic and Topic->getTopicsByPhase 
+
+
+## v2.0.2
+
+- fix: getIdeasByRoom not returning ideas when status argument is passed
+
+## v2.0.1
+
+- fix: CreateTenant command
+- feat: logging for statistics and reporting
+- fix: failing migrations due to duplicate column jwt_key
+
 ## v2.0.0
 
 - feat: CreateTenant command: `php artisan tenant:create`

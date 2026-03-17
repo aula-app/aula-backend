@@ -166,6 +166,8 @@ class Topic
     $status (int) 0=inactive, 1=active, 2=suspended, 3=archived, defaults to active (1)
     $user_id = id of user that is requesting the topics
     */
+    $limit = intval($limit);
+    $status = intval($status);
 
     // init vars
     $orderby_field = "";
@@ -177,7 +179,7 @@ class Topic
       $room_id = $this->converters->checkRoomId($room_id);
     }
 
-    // auto convert user id 
+    // auto convert user id
     if ($user_id != -1) {
       $user_id = $this->converters->checkUserId($user_id);
 
@@ -199,11 +201,11 @@ class Topic
 
     if ($status > -1) {
       // check if a status was set (status > -1 default value)
-      $extra_where .= " AND " . $this->db->au_topics . ".status = " . $status;
+      $extra_where .= " AND " . $this->db->au_topics . ".status = :status";
     }
 
     if ($type > -1) {
-      // check if a type was set (status > -1 default value)
+      // check if a type was set (type > -1 default value)
       $extra_where .= " AND " . $this->db->au_topics . ".type = " . $type;
     }
 
@@ -257,6 +259,10 @@ class Topic
       $this->db->bind(':search_text', '%' . $search_text . '%');
     }
 
+    if ($status > -1) {
+      $this->db->bind(':status', $status); // bind status
+    }
+
     $err = false;
     try {
       $topics = $this->db->resultSet();
@@ -283,13 +289,14 @@ class Topic
       // determine total number of datasets without pagination limits
       // get count
       $total_datasets = count($topics);
-      if ($limit_active) {
+      if ($limit_active && $total_datasets >= $limit) {
         // only newly calculate datasets if limits are active
         $total_datasets;
+        $extra_where_for_count = 'id > 0' . ($status > -1 ? str_replace(':status', $status, $extra_where) : $extra_where) ;
         if ($search_field_valid) {
-          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, 'id > 0' . $extra_where, $search_field, $search_text);
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, $extra_where_for_count, $search_field, $search_text);
         } else {
-          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, 'id > 0' . $extra_where);
+          $total_datasets = $this->converters->getTotalDatasets($this->db->au_topics, $extra_where_for_count);
         }
       }
       $returnvalue['success'] = true; // set return value to false
