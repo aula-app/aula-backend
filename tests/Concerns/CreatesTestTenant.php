@@ -24,20 +24,16 @@ trait CreatesTestTenant
             return;
         }
 
-        $existing = Tenant::where('instance_code', 'TEST001')->first();
-
-        if (!$existing) {
-            $existing = Tenant::create([
+        self::$testTenant = Tenant::updateOrCreate(
+            ['instance_code' => 'TEST001'],
+            [
                 'name'            => 'Test Tenant 001 (PHPUnit)',
-                'instance_code'   => 'TEST001',
                 'jwt_key'         => self::TEST_JWT_KEY,
                 'api_base_url'    => 'https://test001.example',
                 'admin1_username' => 'phpunit_admin',
                 'admin1_email'    => 'phpunit_admin@test001.example',
-            ]);
-        }
-
-        self::$testTenant = $existing;
+            ]
+        );
 
         Artisan::call('tenants:migrate', [
             '--tenants' => [self::$testTenant->id],
