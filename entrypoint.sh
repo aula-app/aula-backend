@@ -10,6 +10,12 @@ echo "🔑 Generating app key..."
 php artisan key:generate --force
 echo "✅ App key generated."
 
+echo "⏳ Waiting for database connection..."
+until php artisan db:show > /dev/null 2>&1; do
+  sleep 2
+done
+echo "✅ Database is ready."
+
 php artisan migrate --force
 php artisan optimize:clear
 php artisan storage:link

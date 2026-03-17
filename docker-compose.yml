@@ -10,6 +10,11 @@ services:
       context: ./
     ports:
       - "8000:80"
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: "3306"
+      CENTRAL_DB_HOST: mariadb
+      CENTRAL_DB_PORT: "3306"
     volumes:
       - type: bind
         source: ./storage/oauth-private.key
@@ -29,7 +34,6 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
-        required: false
     networks:
       - aula_local
 
