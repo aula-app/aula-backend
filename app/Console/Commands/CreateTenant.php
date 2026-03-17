@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\Tenant;
-use App\Services\TenantCreationService;
+use App\Services\TenantsService;
+use App\UseCases\CreateTenantUseCase;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 
 class CreateTenant extends Command
 {
@@ -15,8 +15,10 @@ class CreateTenant extends Command
 
     protected $description = 'Create a new tenant with database, admin users, and JWT key';
 
-    public function __construct(private readonly TenantCreationService $tenantCreationService)
-    {
+    public function __construct(
+        private readonly TenantsService $tenantsService,
+        private readonly CreateTenantUseCase $createTenantUseCase,
+    ) {
         parent::__construct();
     }
 
@@ -66,7 +68,11 @@ class CreateTenant extends Command
             $admin2Email = $this->ask('Second admin email');
         } while (empty($admin2Email));
 
-        $instanceCode = $this->tenantCreationService->generateUniqueInstanceCode();
+        do {
+            $instanceCode = $this->tenantsService->generateUniqueInstanceCode();
+            $this->newLine();
+            $this->info("Generated instance code: <comment>{$instanceCode}</comment>");
+        } while (! $this->confirm('Do you confirm this instance code?', true));
 
         $this->newLine();
         $this->info('=== Summary ===');
@@ -93,8 +99,9 @@ class CreateTenant extends Command
         $this->info('Creating tenant...');
 
         try {
-            $tenant = $this->tenantCreationService->create(
+            $tenant = $this->createTenantUseCase->execute(
                 name: $tenantName,
+                instanceCode: $instanceCode,
                 admin1Username: $admin1Username,
                 admin1FullName: $admin1FullName,
                 admin1Email: $admin1Email,

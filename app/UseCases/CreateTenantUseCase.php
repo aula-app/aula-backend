@@ -2,16 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\UseCases;
 
 use App\Models\Tenant;
+use App\Services\TenantsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class TenantCreationService
+class CreateTenantUseCase
 {
-    public function create(
+    public function __construct(private readonly TenantsService $tenantsService) {}
+
+    public function execute(
         string $name,
+        string $instanceCode,
         string $admin1Username,
         string $admin1FullName,
         string $admin1Email,
@@ -19,7 +23,6 @@ class TenantCreationService
         string $admin2FullName,
         string $admin2Email,
     ): Tenant {
-        $instanceCode = $this->generateUniqueInstanceCode();
         $jwtKey = Str::random(64);
         $apiBaseUrl = config('app.url');
         $admin1Secret = Str::random(64);
@@ -43,7 +46,7 @@ class TenantCreationService
         // Tenant::create() triggers CreateDatabase + MigrateDatabase via TenancyServiceProvider events.
         // Now populate the tenant DB with initial system data and admin users.
         $tenant->run(function () use (
-            $name, $instanceCode, $apiBaseUrl,
+            $name,
             $admin1Username, $admin1FullName, $admin1Email, $admin1Secret,
             $admin2Username, $admin2FullName, $admin2Email, $admin2Secret,
         ) {
@@ -53,15 +56,6 @@ class TenantCreationService
         });
 
         return $tenant;
-    }
-
-    public function generateUniqueInstanceCode(): string
-    {
-        do {
-            $code = strtolower(Str::random(5));
-        } while (Tenant::firstWhere('instance_code', $code) !== null);
-
-        return $code;
     }
 
     private function insertInitialSystemData(string $name): void
@@ -82,7 +76,7 @@ class TenantCreationService
             'online_mode' => 1,
             'created' => $now,
             'last_update' => $now,
-            'updater_id' => 2,
+            'updater_id' => 1,
         ]);
 
         DB::table('au_system_global_config')->insert([
