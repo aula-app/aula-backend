@@ -3,6 +3,10 @@
 
 # v2
 
+## v2.0.4
+
+- fix: stop re-generating app key for encrypting JWT/sessions on app startup
+
 ## v2.0.3
 
 - duplicate release of v2.0.1 (actually released legacy changes with v1.9.2)
