@@ -5,13 +5,11 @@
 
 ## v2.0.3
 
-- fix: Room->getRoomsByUser not returning rooms when status argument is passed
-- fix: fix status argument to Ideas->getIdeasByTopic and Topic->getTopicsByPhase 
-
+- duplicate release of v2.0.1 (actually released legacy changes with v1.9.2)
 
 ## v2.0.2
 
-- fix: getIdeasByRoom not returning ideas when status argument is passed
+- duplicate release of v2.0.1 (actually released legacy changes with v1.9.1)
 
 ## v2.0.1
 
@@ -25,6 +23,24 @@
 - ref: simplify docker-compose v1+v2 setup
 
 # v1
+
+##
+
+- fix(upload): backup/restore of uploaded files by creating instance folder with 0770 perms
+
+## v1.9.3
+
+- fix(commands): close db after dispatching sched. commands for instance
+
+## v1.9.2
+
+- fix: count for Topic->getTopics in #420
+
+## v1.9.1
+
+- fix: getIdeasByRoom not returning ideas when status argument is passed
+- fix: Room->getRoomsByUser not returning rooms when status argument is passed
+- fix: fix status argument to Ideas->getIdeasByTopic and Topic->getTopicsByPhase
 
 ## v1.9.0
 
