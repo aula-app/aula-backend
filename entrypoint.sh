@@ -6,9 +6,14 @@ rm -rf public/storage
 # Clear the old boostrap/cache
 php artisan clear-compiled
 
-echo "🔑 Generating app key..."
-php artisan key:generate --force
-echo "✅ App key generated."
+echo "🔑 Checking app key for encryption (sessions, JWT, app-level encryption)..."
+if ! grep -q '^APP_KEY=' .env || grep -q '^APP_KEY=$' .env; then
+  echo "🔑 No existing key found. Generating new app key..."
+  php artisan key:generate --force
+  echo "✅ App key generated."
+else
+  echo "✅ App key existing, reusing it. Remember to rotate the key occasionally."
+fi
 
 php artisan migrate --force
 php artisan optimize:clear
