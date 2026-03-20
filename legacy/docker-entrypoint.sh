@@ -24,6 +24,9 @@ if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
   exit 1;
 fi
 
+# instead of default umask 0022, use 0002, so we can have g+w permissions on uploaded files
+umask 0002
+
 env >> /etc/environment
 service cron start
 
