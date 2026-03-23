@@ -19,7 +19,8 @@ class CreateTenant extends Command
                             {--admin-email= : First admin email}
                             {--admin2-username= : Second admin username}
                             {--admin2-name= : Second admin full name (default: admin2)}
-                            {--admin2-email= : Second admin email}';
+                            {--admin2-email= : Second admin email}
+                            {--admin-password= : Pre-set a bcrypt password for both admin users (skips email-based setup flow)}';
 
     protected $description = 'Create a new tenant with database, admin users, and JWT key';
 
@@ -35,6 +36,8 @@ class CreateTenant extends Command
             && $this->option('admin-email') !== null
             && $this->option('admin2-username') !== null
             && $this->option('admin2-email') !== null;
+
+        $adminPassword = $this->option('admin-password');
 
         // Collect tenant information
         if (($tenantName = $this->option('name')) !== null) {
@@ -195,11 +198,17 @@ class CreateTenant extends Command
             $tenant->run(function () use (
                 $tenantName, $instanceCode, $baseUrl,
                 $adminUsername, $adminFullName, $adminEmail, $adminSecret,
-                $secondAdminUsername, $secondAdminFullName, $secondAdminEmail, $secondAdminSecret
+                $secondAdminUsername, $secondAdminFullName, $secondAdminEmail, $secondAdminSecret,
+                $adminPassword,
             ) {
                 $now = now();
 
                 $this->insertInitialSystemData($tenantName);
+
+                // When --admin-password is given, hash it and mark the account as fully registered
+                // so both admins can log in immediately without the email-based setup flow.
+                $pwHash       = $adminPassword !== null ? password_hash($adminPassword, PASSWORD_BCRYPT) : '';
+                $pwChanged    = $adminPassword !== null ? 1 : 0;
 
                 // Create first admin user
                 $adminId = DB::table('au_users_basedata')->insertGetId([
@@ -207,24 +216,25 @@ class CreateTenant extends Command
                     'displayname' => $adminFullName,
                     'username' => $adminUsername,
                     'email' => $adminEmail,
-                    'pw' => '',
+                    'pw' => $pwHash,
                     'hash_id' => Str::random(32),
                     'registration_status' => 2,
                     'status' => 1,
                     'userlevel' => 50,
                     'created' => $now,
                     'last_update' => $now,
-                    'pw_changed' => 0,
+                    'pw_changed' => $pwChanged,
                     'presence' => 1,
                     'roles' => '[]',
                 ]);
 
-                // Create password reset entry for first admin
-                DB::table('au_change_password')->insert([
-                    'user_id' => $adminId,
-                    'secret' => $adminSecret,
-                    'created_at' => $now,
-                ]);
+                if ($adminPassword === null) {
+                    DB::table('au_change_password')->insert([
+                        'user_id' => $adminId,
+                        'secret' => $adminSecret,
+                        'created_at' => $now,
+                    ]);
+                }
 
                 // Create second admin user
                 $secondAdminId = DB::table('au_users_basedata')->insertGetId([
@@ -232,32 +242,37 @@ class CreateTenant extends Command
                     'displayname' => $secondAdminFullName,
                     'username' => $secondAdminUsername,
                     'email' => $secondAdminEmail,
-                    'pw' => '',
+                    'pw' => $pwHash,
                     'hash_id' => Str::random(32),
                     'registration_status' => 2,
                     'status' => 1,
                     'userlevel' => 50,
                     'created' => $now,
                     'last_update' => $now,
-                    'pw_changed' => 0,
+                    'pw_changed' => $pwChanged,
                     'presence' => 1,
                     'roles' => '[]',
                 ]);
 
-                // Create password reset entry for second admin
-                DB::table('au_change_password')->insert([
-                    'user_id' => $secondAdminId,
-                    'secret' => $secondAdminSecret,
-                    'created_at' => $now,
-                ]);
+                if ($adminPassword === null) {
+                    DB::table('au_change_password')->insert([
+                        'user_id' => $secondAdminId,
+                        'secret' => $secondAdminSecret,
+                        'created_at' => $now,
+                    ]);
+                }
 
                 $this->newLine();
-                $this->info('=== Password Reset URLs ===');
-                $this->line("Admin ({$adminUsername}):");
-                $this->line("  {$baseUrl}/password/{$adminSecret}?code={$instanceCode}");
-                $this->newLine();
-                $this->line("Second Admin ({$secondAdminUsername}):");
-                $this->line("  {$baseUrl}/password/{$secondAdminSecret}?code={$instanceCode}");
+                if ($adminPassword !== null) {
+                    $this->info('✅ Admin accounts created with the provided password.');
+                } else {
+                    $this->info('=== Password Reset URLs ===');
+                    $this->line("Admin ({$adminUsername}):");
+                    $this->line("  {$baseUrl}/password/{$adminSecret}?code={$instanceCode}");
+                    $this->newLine();
+                    $this->line("Second Admin ({$secondAdminUsername}):");
+                    $this->line("  {$baseUrl}/password/{$secondAdminSecret}?code={$instanceCode}");
+                }
             });
 
         } catch (\Exception $e) {
