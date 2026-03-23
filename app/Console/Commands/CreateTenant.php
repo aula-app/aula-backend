@@ -39,6 +39,17 @@ class CreateTenant extends Command
 
         $adminPassword = $this->option('admin-password');
 
+        // Idempotency: in non-interactive mode, skip creation if the tenant already
+        // exists with the requested code. This lets `docker compose up` be re-run
+        // against a persistent volume without failing.
+        if ($nonInteractive && $this->option('code') !== null) {
+            if (Tenant::firstWhere('instance_code', $this->option('code')) !== null) {
+                $this->info("Tenant with code '{$this->option('code')}' already exists, skipping.");
+
+                return self::SUCCESS;
+            }
+        }
+
         // Collect tenant information
         if (($tenantName = $this->option('name')) !== null) {
             if (Tenant::firstWhere('name', $tenantName) !== null) {
