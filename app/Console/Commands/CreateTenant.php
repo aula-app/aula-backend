@@ -11,7 +11,15 @@ use Illuminate\Support\Str;
 
 class CreateTenant extends Command
 {
-    protected $signature = 'tenant:create';
+    protected $signature = 'tenant:create
+                            {--name= : Tenant name (skips interactive prompt)}
+                            {--code= : Instance code — 5 alphanumeric chars, or SINGLE (auto-generated if omitted)}
+                            {--admin-username= : First admin username}
+                            {--admin-name= : First admin full name (default: admin1)}
+                            {--admin-email= : First admin email}
+                            {--admin2-username= : Second admin username}
+                            {--admin2-name= : Second admin full name (default: admin2)}
+                            {--admin2-email= : Second admin email}';
 
     protected $description = 'Create a new tenant with database, admin users, and JWT key';
 
@@ -20,57 +28,100 @@ class CreateTenant extends Command
         $this->info('=== Create New Tenant ===');
         $this->newLine();
 
+        // When all required options are supplied we run non-interactively and skip
+        // the summary table / confirmation prompt at the end.
+        $nonInteractive = $this->option('name') !== null
+            && $this->option('admin-username') !== null
+            && $this->option('admin-email') !== null
+            && $this->option('admin2-username') !== null
+            && $this->option('admin2-email') !== null;
+
         // Collect tenant information
-        do {
-            $tenantName = $this->ask('Tenant name');
-            if (empty($tenantName)) {
-                $this->warn('Tenant has to have a name, maybe a school name?');
-
-                continue;
-            }
+        if (($tenantName = $this->option('name')) !== null) {
             if (Tenant::firstWhere('name', $tenantName) !== null) {
-                $this->warn('Tenant\'s name has to be unique. Try choosing another name.');
+                $this->error("Tenant name '{$tenantName}' already exists.");
 
-                continue;
+                return self::FAILURE;
             }
-            break;
-        } while (true);
+        } else {
+            do {
+                $tenantName = $this->ask('Tenant name');
+                if (empty($tenantName)) {
+                    $this->warn('Tenant has to have a name, maybe a school name?');
+
+                    continue;
+                }
+                if (Tenant::firstWhere('name', $tenantName) !== null) {
+                    $this->warn('Tenant\'s name has to be unique. Try choosing another name.');
+
+                    continue;
+                }
+                break;
+            } while (true);
+        }
 
         // Admin user information
         $this->info('--- Admin User ---');
-        do {
-            $adminUsername = $this->ask('Admin username');
-        } while (empty($adminUsername));
-        $adminFullName = $this->ask('Admin full name', 'admin1');
-        do {
-            $adminEmail = $this->ask('Admin email');
-        } while (empty($adminEmail));
+        if (($adminUsername = $this->option('admin-username')) === null) {
+            do {
+                $adminUsername = $this->ask('Admin username');
+            } while (empty($adminUsername));
+        }
+        $adminFullName = $this->option('admin-name') ?? $this->ask('Admin full name', 'admin1');
+        if (($adminEmail = $this->option('admin-email')) === null) {
+            do {
+                $adminEmail = $this->ask('Admin email');
+            } while (empty($adminEmail));
+        }
 
         // Second admin user information
         $this->newLine();
         $this->info('--- Second Admin User ---');
-        do {
-            $secondAdminUsername = $this->ask('Second admin username');
-            if (empty($secondAdminUsername)) {
-                $this->warn('Second admin has to have a username.');
-
-                continue;
-            }
+        if (($secondAdminUsername = $this->option('admin2-username')) !== null) {
             if ($adminUsername === $secondAdminUsername) {
-                $this->warn('Second admin username has to be different from the first admin username.');
+                $this->error('Second admin username must differ from the first admin username.');
 
-                continue;
+                return self::FAILURE;
             }
+        } else {
+            do {
+                $secondAdminUsername = $this->ask('Second admin username');
+                if (empty($secondAdminUsername)) {
+                    $this->warn('Second admin has to have a username.');
 
-            break;
-        } while (true);
-        $secondAdminFullName = $this->ask('Second admin full name', 'admin2');
-        do {
-            $secondAdminEmail = $this->ask('Second admin email');
-        } while (empty($secondAdminEmail));
+                    continue;
+                }
+                if ($adminUsername === $secondAdminUsername) {
+                    $this->warn('Second admin username has to be different from the first admin username.');
 
-        // Generate and confirm instance code
-        $instanceCode = $this->generateUniqueInstanceCode();
+                    continue;
+                }
+
+                break;
+            } while (true);
+        }
+        $secondAdminFullName = $this->option('admin2-name') ?? $this->ask('Second admin full name', 'admin2');
+        if (($secondAdminEmail = $this->option('admin2-email')) === null) {
+            do {
+                $secondAdminEmail = $this->ask('Second admin email');
+            } while (empty($secondAdminEmail));
+        }
+
+        // Resolve instance code: use --code option, or generate interactively
+        if (($instanceCode = $this->option('code')) !== null) {
+            if (! preg_match('/^[0-9a-zA-Z]{5}$|^SINGLE$/', $instanceCode)) {
+                $this->error('Instance code must be exactly 5 alphanumeric characters, or SINGLE.');
+
+                return self::FAILURE;
+            }
+            if (Tenant::firstWhere('instance_code', $instanceCode) !== null) {
+                $this->error("Instance code '{$instanceCode}' already exists.");
+
+                return self::FAILURE;
+            }
+        } else {
+            $instanceCode = $this->generateUniqueInstanceCode();
+        }
 
         // Generate JWT secret
         $jwtKey = Str::random(64);
@@ -78,29 +129,31 @@ class CreateTenant extends Command
         // Derive API base URL from APP_URL
         $apiBaseUrl = config('app.url');
 
-        // Show summary
-        $this->newLine();
-        $this->info('=== Summary ===');
-        $this->table(
-            ['Field', 'Value'],
-            [
-                ['Tenant Name', $tenantName],
-                ['Instance Code', $instanceCode],
-                ['API Base URL', $apiBaseUrl],
-                ['JWT Key', Str::limit($jwtKey, 20, '...')],
-                ['Admin Username', $adminUsername],
-                ['Admin Full Name', $adminFullName],
-                ['Admin Email', $adminEmail],
-                ['Second Admin Username', $secondAdminUsername],
-                ['Second Admin Full Name', $secondAdminFullName],
-                ['Second Admin Email', $secondAdminEmail],
-            ]
-        );
+        // Show summary and ask for confirmation when running interactively
+        if (! $nonInteractive) {
+            $this->newLine();
+            $this->info('=== Summary ===');
+            $this->table(
+                ['Field', 'Value'],
+                [
+                    ['Tenant Name', $tenantName],
+                    ['Instance Code', $instanceCode],
+                    ['API Base URL', $apiBaseUrl],
+                    ['JWT Key', Str::limit($jwtKey, 20, '...')],
+                    ['Admin Username', $adminUsername],
+                    ['Admin Full Name', $adminFullName],
+                    ['Admin Email', $adminEmail],
+                    ['Second Admin Username', $secondAdminUsername],
+                    ['Second Admin Full Name', $secondAdminFullName],
+                    ['Second Admin Email', $secondAdminEmail],
+                ]
+            );
 
-        if (! $this->confirm('Do you want to proceed with creating this tenant?', true)) {
-            $this->warn('Tenant creation cancelled.');
+            if (! $this->confirm('Do you want to proceed with creating this tenant?', true)) {
+                $this->warn('Tenant creation cancelled.');
 
-            return self::SUCCESS;
+                return self::SUCCESS;
+            }
         }
 
         // Create the tenant
