@@ -65,7 +65,6 @@ return [
          */
         'central_domains' => [
             str(env('APP_URL'))->after('://')->before('/')->before(':')->toString(),
-            str(env('MANAGER_URL', ''))->after('://')->before('/')->before(':')->toString(),
         ],
 
         /**
