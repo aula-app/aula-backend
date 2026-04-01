@@ -3,8 +3,8 @@ WORKDIR /opt/laravel
 EXPOSE 80
 
 # Install additional packages
-RUN apk --no-cache add supervisor nginx mariadb-client \
-    && docker-php-ext-install pdo pdo_mysql
+RUN apk --no-cache add supervisor nginx mariadb-client icu-dev icu-libs libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql intl zip
 
 COPY conf.d/supervisor/supervisord.conf /etc/supervisord.conf
 COPY conf.d/php-fpm/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf

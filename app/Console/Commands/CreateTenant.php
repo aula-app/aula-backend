@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\Tenant;
+use App\Services\TenantsService;
+use App\UseCases\CreateTenantUseCase;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class CreateTenant extends Command
 {
@@ -15,70 +15,65 @@ class CreateTenant extends Command
 
     protected $description = 'Create a new tenant with database, admin users, and JWT key';
 
+    public function __construct(
+        private readonly TenantsService $tenantsService,
+        private readonly CreateTenantUseCase $createTenantUseCase,
+    ) {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
         $this->info('=== Create New Tenant ===');
         $this->newLine();
 
-        // Collect tenant information
         do {
             $tenantName = $this->ask('Tenant name');
             if (empty($tenantName)) {
                 $this->warn('Tenant has to have a name, maybe a school name?');
-
                 continue;
             }
             if (Tenant::firstWhere('name', $tenantName) !== null) {
                 $this->warn('Tenant\'s name has to be unique. Try choosing another name.');
-
                 continue;
             }
             break;
         } while (true);
 
-        // Admin user information
         $this->info('--- Admin User ---');
         do {
-            $adminUsername = $this->ask('Admin username');
-        } while (empty($adminUsername));
-        $adminFullName = $this->ask('Admin full name', 'admin1');
+            $admin1Username = $this->ask('Admin username');
+        } while (empty($admin1Username));
+        $admin1FullName = $this->ask('Admin full name', 'admin1');
         do {
-            $adminEmail = $this->ask('Admin email');
-        } while (empty($adminEmail));
+            $admin1Email = $this->ask('Admin email');
+        } while (empty($admin1Email));
 
-        // Second admin user information
         $this->newLine();
         $this->info('--- Second Admin User ---');
         do {
-            $secondAdminUsername = $this->ask('Second admin username');
-            if (empty($secondAdminUsername)) {
+            $admin2Username = $this->ask('Second admin username');
+            if (empty($admin2Username)) {
                 $this->warn('Second admin has to have a username.');
-
                 continue;
             }
-            if ($adminUsername === $secondAdminUsername) {
+            if ($admin1Username === $admin2Username) {
                 $this->warn('Second admin username has to be different from the first admin username.');
-
                 continue;
             }
-
             break;
         } while (true);
-        $secondAdminFullName = $this->ask('Second admin full name', 'admin2');
+        $admin2FullName = $this->ask('Second admin full name', 'admin2');
         do {
-            $secondAdminEmail = $this->ask('Second admin email');
-        } while (empty($secondAdminEmail));
+            $admin2Email = $this->ask('Second admin email');
+        } while (empty($admin2Email));
 
-        // Generate and confirm instance code
-        $instanceCode = $this->generateUniqueInstanceCode();
+        do {
+            $instanceCode = $this->tenantsService->generateUniqueInstanceCode();
+            $this->newLine();
+            $this->info("Generated instance code: <comment>{$instanceCode}</comment>");
+        } while (! $this->confirm('Do you confirm this instance code?', true));
 
-        // Generate JWT secret
-        $jwtKey = Str::random(64);
-
-        // Derive API base URL from APP_URL
-        $apiBaseUrl = config('app.url');
-
-        // Show summary
         $this->newLine();
         $this->info('=== Summary ===');
         $this->table(
@@ -86,218 +81,48 @@ class CreateTenant extends Command
             [
                 ['Tenant Name', $tenantName],
                 ['Instance Code', $instanceCode],
-                ['API Base URL', $apiBaseUrl],
-                ['JWT Key', Str::limit($jwtKey, 20, '...')],
-                ['Admin Username', $adminUsername],
-                ['Admin Full Name', $adminFullName],
-                ['Admin Email', $adminEmail],
-                ['Second Admin Username', $secondAdminUsername],
-                ['Second Admin Full Name', $secondAdminFullName],
-                ['Second Admin Email', $secondAdminEmail],
+                ['API Base URL', config('app.url')],
+                ['Admin Username', $admin1Username],
+                ['Admin Full Name', $admin1FullName],
+                ['Admin Email', $admin1Email],
+                ['Second Admin Username', $admin2Username],
+                ['Second Admin Full Name', $admin2FullName],
+                ['Second Admin Email', $admin2Email],
             ]
         );
 
         if (! $this->confirm('Do you want to proceed with creating this tenant?', true)) {
             $this->warn('Tenant creation cancelled.');
-
             return self::SUCCESS;
         }
 
-        // Create the tenant
         $this->info('Creating tenant...');
 
-        $baseUrl = config('app.url');
-        $adminSecret = Str::random(64);
-        $secondAdminSecret = Str::random(64);
-
         try {
-            $tenant = Tenant::create([
-                'name' => $tenantName,
-                'api_base_url' => $apiBaseUrl,
-                'instance_code' => $instanceCode,
-                'jwt_key' => $jwtKey,
-                'admin1_name' => $adminFullName,
-                'admin1_username' => $adminUsername,
-                'admin1_email' => $adminEmail,
-                'admin2_name' => $secondAdminFullName,
-                'admin2_username' => $secondAdminUsername,
-                'admin2_email' => $secondAdminEmail,
-                'admin1_init_pass_url' => "{$baseUrl}/password/{$adminSecret}?code={$instanceCode}",
-                'admin2_init_pass_url' => "{$baseUrl}/password/{$secondAdminSecret}?code={$instanceCode}",
-            ]);
+            $tenant = $this->createTenantUseCase->execute(
+                name: $tenantName,
+                instanceCode: $instanceCode,
+                admin1Username: $admin1Username,
+                admin1FullName: $admin1FullName,
+                admin1Email: $admin1Email,
+                admin2Username: $admin2Username,
+                admin2FullName: $admin2FullName,
+                admin2Email: $admin2Email,
+            );
 
-            $this->info("Tenant created with ID: {$tenant->id}");
-            $this->info('Database created and migrations executed.');
+            $this->newLine();
+            $this->info("Tenant '{$tenant->name}' created successfully (ID: {$tenant->id})");
+            $this->newLine();
+            $this->info('=== Password Reset URLs ===');
+            $this->line("Admin ({$admin1Username}): {$tenant->admin1_init_pass_url}");
+            $this->newLine();
+            $this->line("Second Admin ({$admin2Username}): {$tenant->admin2_init_pass_url}");
 
         } catch (\Exception $e) {
             $this->error("Failed to create tenant: {$e->getMessage()}");
-
             return self::FAILURE;
         }
-
-        // Create admin users in the tenant database
-        $this->info('Creating admin users in tenant database...');
-
-        try {
-            $tenant->run(function () use (
-                $tenantName, $instanceCode, $baseUrl,
-                $adminUsername, $adminFullName, $adminEmail, $adminSecret,
-                $secondAdminUsername, $secondAdminFullName, $secondAdminEmail, $secondAdminSecret
-            ) {
-                $now = now();
-
-                $this->insertInitialSystemData($tenantName);
-
-                // Create first admin user
-                $adminId = DB::table('au_users_basedata')->insertGetId([
-                    'realname' => $adminFullName,
-                    'displayname' => $adminFullName,
-                    'username' => $adminUsername,
-                    'email' => $adminEmail,
-                    'pw' => '',
-                    'hash_id' => Str::random(32),
-                    'registration_status' => 2,
-                    'status' => 1,
-                    'userlevel' => 50,
-                    'created' => $now,
-                    'last_update' => $now,
-                    'pw_changed' => 0,
-                    'presence' => 1,
-                    'roles' => '[]',
-                ]);
-
-                // Create password reset entry for first admin
-                DB::table('au_change_password')->insert([
-                    'user_id' => $adminId,
-                    'secret' => $adminSecret,
-                    'created_at' => $now,
-                ]);
-
-                // Create second admin user
-                $secondAdminId = DB::table('au_users_basedata')->insertGetId([
-                    'realname' => $secondAdminFullName,
-                    'displayname' => $secondAdminFullName,
-                    'username' => $secondAdminUsername,
-                    'email' => $secondAdminEmail,
-                    'pw' => '',
-                    'hash_id' => Str::random(32),
-                    'registration_status' => 2,
-                    'status' => 1,
-                    'userlevel' => 50,
-                    'created' => $now,
-                    'last_update' => $now,
-                    'pw_changed' => 0,
-                    'presence' => 1,
-                    'roles' => '[]',
-                ]);
-
-                // Create password reset entry for second admin
-                DB::table('au_change_password')->insert([
-                    'user_id' => $secondAdminId,
-                    'secret' => $secondAdminSecret,
-                    'created_at' => $now,
-                ]);
-
-                $this->newLine();
-                $this->info('=== Password Reset URLs ===');
-                $this->line("Admin ({$adminUsername}):");
-                $this->line("  {$baseUrl}/password/{$adminSecret}?code={$instanceCode}");
-                $this->newLine();
-                $this->line("Second Admin ({$secondAdminUsername}):");
-                $this->line("  {$baseUrl}/password/{$secondAdminSecret}?code={$instanceCode}");
-            });
-
-        } catch (\Exception $e) {
-            $this->error("Failed to create admin users: {$e->getMessage()}");
-
-            return self::FAILURE;
-        }
-
-        $this->newLine();
-        $this->info('Tenant created successfully!');
 
         return self::SUCCESS;
-    }
-
-    /**
-     * @param  mixed  $configFile
-     * @param  mixed  $newConfig
-     */
-    protected function appendLegacyConfigInplace($configFile, $newConfig): bool
-    {
-        $reading = fopen($configFile, 'r');
-        if (! $reading) {
-            $this->error("Failed to open file {$configFile} for reading.");
-            throw new \RuntimeException("Failed to open file {$configFile} for reading.");
-        }
-        $writing = fopen("{$configFile}.tmp", 'w');
-
-        $placeholder = '// END_OF_CONFIG';
-        while (! feof($reading)) {
-            $line = fgets($reading);
-            if (! $line) {
-                break;
-            }
-            if (stristr($line, $placeholder)) {
-                $line = "{$newConfig}\n$placeholder\n";
-            }
-            fwrite($writing, $line);
-        }
-        fclose($reading);
-        fclose($writing);
-
-        $date = date('Y-m-d H:i:s');
-        copy($configFile, "{$configFile}.{$date}.bak");
-
-        return rename("{$configFile}.tmp", $configFile);
-    }
-
-    private function generateUniqueInstanceCode(): string
-    {
-        do {
-            $code = strtolower(Str::random(5));
-            if (Tenant::firstWhere('instance_code', $code) !== null) {
-                $this->warn("Instance code '{$code}' already exists, generating a new one...");
-
-                continue;
-            }
-
-            if (! $this->confirm("Use instance code '{$code}'?", true)) {
-                continue;
-            }
-
-            return $code;
-        } while (true);
-    }
-
-    /**
-     * @param  string  $name  - tenant name (school name)
-     */
-    private function insertInitialSystemData(string $name): void
-    {
-        $now = now();
-        $testrand = rand(100, 10000000);
-        $appendix = microtime(true).$testrand;
-        $hash_id = md5('Schule'.$appendix);
-
-        DB::table('au_rooms')->insert([
-            'room_name' => 'Schule',
-            'description_internal' => null,
-            'hash_id' => $hash_id,
-            'status' => 1,
-            'type' => 1,
-        ]);
-
-        DB::table('au_system_current_state')->insert([
-            'online_mode' => 1,
-            'created' => $now,
-            'last_update' => $now,
-            'updater_id' => 2,
-        ]);
-
-        DB::table('au_system_global_config')->insert([
-            'name' => $name,
-            'allow_registration' => 0,
-        ]);
     }
 }

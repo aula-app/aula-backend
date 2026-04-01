@@ -10,6 +10,14 @@ services:
       context: ./
     ports:
       - "8000:80"
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: "3306"
+      CENTRAL_DB_HOST: ${CENTRAL_DB_HOST:-mariadb}
+      CENTRAL_DB_PORT: ${CENTRAL_DB_PORT:-3306}
+      CENTRAL_DB_NAME: ${CENTRAL_DB_NAME:-aula_database}
+      CENTRAL_DB_USER: ${CENTRAL_DB_USER:-aula_user}
+      CENTRAL_DB_PASS: ${CENTRAL_DB_PASS:-example}
     volumes:
       - type: bind
         source: ./app
@@ -39,7 +47,6 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
-        required: false
     networks:
       - aula_local
 
@@ -47,7 +54,7 @@ services:
   mariadb:
     image: mariadb:11.7
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       # @NOTE: if you use this container, these
       #  values need to be reflected in .env
@@ -69,6 +76,6 @@ services:
   redis:
     image: redis:latest
     ports:
-      - 6379:6379
+      - 6380:6379
     networks:
       - aula_local

@@ -15,6 +15,12 @@ else
   echo "✅ App key existing, reusing it. Remember to rotate the key occasionally."
 fi
 
+echo "⏳ Waiting for database connection..."
+until php artisan db:show > /dev/null 2>&1; do
+  sleep 2
+done
+echo "✅ Database is ready."
+
 php artisan migrate --force
 php artisan optimize:clear
 php artisan storage:link

@@ -2,13 +2,14 @@
 
 namespace App\Models\Manager;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 
-class AulaManagerUser extends Authenticatable
+class AulaManagerUser extends Authenticatable implements FilamentUser
 {
     use HasApiTokens;
 
@@ -22,6 +23,8 @@ class AulaManagerUser extends Authenticatable
      *
      * @var list<string>
      */
+    protected $table = 'users';
+
     protected $fillable = [
         'name',
         'email',
@@ -49,5 +52,10 @@ class AulaManagerUser extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
     }
 }
