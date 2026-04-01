@@ -3,6 +3,7 @@
     class Database {
 
     private $host;
+    private $port;
     private $user;
     private $pass;
     private $dbname;
@@ -41,13 +42,14 @@
     public function __construct(InstanceConfig $instance) {
         //base config
         $this->host = $instance->host;
+        $this->port = $instance->port;
         $this->user = $instance->user;
         $this->pass = $instance->pass;
         $this->dbname = $instance->dbname;
         $this->code = $instance->code;
 
         // Set up a PDO connection
-        $dsn = "mysql:host=$this->host;dbname=$this->dbname";
+        $dsn = "mysql:host=$this->host;port=$this->port;dbname=$this->dbname";
         $options = array(
             PDO::ATTR_PERSISTENT => true,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION

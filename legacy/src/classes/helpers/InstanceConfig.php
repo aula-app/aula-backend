@@ -4,6 +4,7 @@ class InstanceConfig
 {
   public string $code;
   public string $host;
+  public string $port;
   public string $user;
   public string $pass;
   public string $dbname;
@@ -19,10 +20,12 @@ class InstanceConfig
     string $pass,
     string $dbname,
     string $jwt_key,
-    string $instance_api_url
+    string $instance_api_url,
+    string $port = '3306'
   ) {
     $this->code = $code;
     $this->host = $host;
+    $this->port = $port;
     $this->user = $user;
     $this->pass = $pass;
     $this->dbname = $dbname;
@@ -79,6 +82,7 @@ class InstanceConfig
         dbname: $data['tenancy_db_name'],
         jwt_key: $tenant['jwt_key'] ?? '',
         instance_api_url: $tenant['api_base_url'] ?? '',
+        port: getenv('CENTRAL_DB_PORT') ?: '3306',
       );
     }
 
@@ -145,6 +149,7 @@ class InstanceConfig
       dbname: $data['tenancy_db_name'],
       jwt_key: $tenant['jwt_key'] ?? '',
       instance_api_url: $tenant['api_base_url'] ?? '',
+      port: getenv('CENTRAL_DB_PORT') ?: '3306',
     );
   }
 }
