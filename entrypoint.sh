@@ -30,6 +30,12 @@ php artisan passport:keys -q
 chown www-data:www-data ./storage/oauth-*.key
 chmod 660 ./storage/oauth-public.key
 chmod 600 ./storage/oauth-private.key
-echo "✅ Passport keys"
+echo "✅ Passport keys ready."
+
+echo "🗃️ Copying assets for aula manager (filament)..."
+php artisan filament:assets
+echo "🔗 Fixing paths so nginx can serve raw resources..."
+find public/manager -type d -exec chmod 755 {} \;
+echo "✅ aula Manager ready."
 
 exec /usr/bin/supervisord -c /etc/supervisord.conf
