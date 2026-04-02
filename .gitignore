@@ -19,6 +19,8 @@ _ide_helper.php
 /public/build
 /public/hot
 /public/storage
+/public/manager/css
+/public/manager/js
 /storage/*.key
 /storage/pail
 /vendor
