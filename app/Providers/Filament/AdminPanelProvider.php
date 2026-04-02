@@ -67,7 +67,6 @@ class AdminPanelProvider extends PanelProvider
         Livewire::setUpdateRoute(function ($handle) {
             return Route::post('/manager/livewire/update', $handle)
                 ->middleware([
-                    Authenticate::class,
                     EncryptCookies::class,
                     AddQueuedCookiesToResponse::class,
                     StartSession::class,
