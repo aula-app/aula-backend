@@ -7,13 +7,14 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TenantResource\Pages;
 use App\Models\Tenant;
 use App\Services\TenantsService;
-use Filament\Forms\Components\Actions\Action as FormAction;
-use Filament\Forms\Components\Section;
+use Filament\Actions\Action as FormAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Set;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
+use Filament\Actions\EditAction;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -163,7 +164,7 @@ class TenantResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->filters([])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                EditAction::make(),
             ])
             ->bulkActions([]);
     }
