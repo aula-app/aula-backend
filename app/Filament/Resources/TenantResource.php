@@ -11,8 +11,8 @@ use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Forms\Set;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -22,7 +22,7 @@ class TenantResource extends Resource
 {
     protected static ?string $model = Tenant::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
 
     protected static ?string $navigationLabel = 'Tenants';
 
@@ -30,11 +30,11 @@ class TenantResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        $isCreate = $form->getOperation() === 'create';
+        $isCreate = $schema->getOperation() === 'create';
 
-        return $form->schema([
+        return $schema->components([
             Section::make('Basic Information')
                 ->schema([
                     TextInput::make('name')
