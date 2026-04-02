@@ -972,15 +972,17 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ],
 
         "IdeaAddLike" => [
-          "roles" => [
-            "user",
-            "moderator",
-            "moderator_v",
+          "open_roles" => [
             "super_moderator",
             "super_moderator_v",
             "principal",
             "principal_v",
             "admin"
+          ],
+          "roles" => [
+            "user",
+            "moderator",
+            "moderator_v"
           ],
           "from_room" => [
             "get_room" => "idea_id"
