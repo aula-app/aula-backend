@@ -15,7 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         //   basically, routes/tenant/api/v2/aula.php
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->trustProxies(at: [
+            '172.0.0.0/8',
+            '192.168.0.0/16',
+            '10.0.0.0/8',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
