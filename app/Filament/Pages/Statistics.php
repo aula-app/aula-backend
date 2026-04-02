@@ -11,9 +11,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class Statistics extends Page
 {
-    protected static string $view = 'filament.pages.statistics';
+    protected string $view = 'filament.pages.statistics';
 
-    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar';
 
     protected static ?string $navigationLabel = 'Statistics';
 
