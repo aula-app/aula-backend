@@ -8,6 +8,8 @@ services:
   aula-backend.v2:
     build:
       context: ./
+      args:
+        - DOCKER_TAG=local
     ports:
       - "8000:80"
     environment:
@@ -30,6 +32,11 @@ services:
         bind:
           create_host_path: false
       - type: bind
+        source: ./routes
+        target: /opt/laravel/routes
+        bind:
+          create_host_path: false
+      - type: bind
         source: ./storage/oauth-private.key
         target: /opt/laravel/storage/oauth-private.key
         bind:
@@ -47,6 +54,16 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    networks:
+      - aula_local
+
+  nginx:
+    image: nginx:stable-alpine-slim
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx-reverse-proxy.conf:/etc/nginx/nginx.conf
     networks:
       - aula_local
 

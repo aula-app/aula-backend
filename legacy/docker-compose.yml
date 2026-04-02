@@ -5,6 +5,8 @@ services:
   aula-backend-legacy:
     build:
       context: ./
+      args:
+        - DOCKER_TAG=local
     environment:
       APACHE_SERVER_NAME: localhost
       APP_ENV: local
@@ -13,8 +15,6 @@ services:
       CENTRAL_DB_NAME: ${CENTRAL_DB_NAME:-aula_database}
       CENTRAL_DB_USER: ${CENTRAL_DB_USER:-aula_user}
       CENTRAL_DB_PASS: ${CENTRAL_DB_PASS:-example}
-    ports:
-      - "8080:80"
     volumes:
       - ./docker-local/_generated_files_data:/var/www/html/files:rw
       - type: bind
