@@ -3,8 +3,9 @@
 
 # v2
 
-## v2.0.4
+## v2.1.0
 
+- feat: aula Manager using Filament
 - fix: stop re-generating app key for encrypting JWT/sessions on app startup
 
 ## v2.0.3
