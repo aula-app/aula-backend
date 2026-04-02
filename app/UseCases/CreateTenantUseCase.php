@@ -22,11 +22,16 @@ class CreateTenantUseCase
         string $admin2Username,
         string $admin2FullName,
         string $admin2Email,
+        ?string $adminPassword = null,
     ): Tenant {
         $jwtKey = Str::random(64);
         $apiBaseUrl = config('app.url');
         $admin1Secret = Str::random(64);
         $admin2Secret = Str::random(64);
+
+        // When a password is pre-set, admins can log in immediately — no email setup needed.
+        $admin1InitPassUrl = $adminPassword === null ? "{$apiBaseUrl}/password/{$admin1Secret}?code={$instanceCode}" : null;
+        $admin2InitPassUrl = $adminPassword === null ? "{$apiBaseUrl}/password/{$admin2Secret}?code={$instanceCode}" : null;
 
         $tenant = Tenant::create([
             'name' => $name,
@@ -39,8 +44,8 @@ class CreateTenantUseCase
             'admin2_name' => $admin2FullName,
             'admin2_username' => $admin2Username,
             'admin2_email' => $admin2Email,
-            'admin1_init_pass_url' => "{$apiBaseUrl}/password/{$admin1Secret}?code={$instanceCode}",
-            'admin2_init_pass_url' => "{$apiBaseUrl}/password/{$admin2Secret}?code={$instanceCode}",
+            'admin1_init_pass_url' => $admin1InitPassUrl,
+            'admin2_init_pass_url' => $admin2InitPassUrl,
         ]);
 
         // Tenant::create() triggers CreateDatabase + MigrateDatabase via TenancyServiceProvider events.
@@ -49,10 +54,11 @@ class CreateTenantUseCase
             $name,
             $admin1Username, $admin1FullName, $admin1Email, $admin1Secret,
             $admin2Username, $admin2FullName, $admin2Email, $admin2Secret,
+            $adminPassword,
         ) {
             $this->insertInitialSystemData($name);
-            $this->insertAdminUser($admin1Username, $admin1FullName, $admin1Email, $admin1Secret);
-            $this->insertAdminUser($admin2Username, $admin2FullName, $admin2Email, $admin2Secret);
+            $this->insertAdminUser($admin1Username, $admin1FullName, $admin1Email, $admin1Secret, $adminPassword);
+            $this->insertAdminUser($admin2Username, $admin2FullName, $admin2Email, $admin2Secret, $adminPassword);
         });
 
         return $tenant;
@@ -90,30 +96,36 @@ class CreateTenantUseCase
         string $fullName,
         string $email,
         string $secret,
+        ?string $adminPassword = null,
     ): void {
         $now = now();
+
+        $pwHash    = $adminPassword !== null ? password_hash($adminPassword, PASSWORD_BCRYPT) : '';
+        $pwChanged = $adminPassword !== null ? 1 : 0;
 
         $userId = DB::table('au_users_basedata')->insertGetId([
             'realname' => $fullName,
             'displayname' => $fullName,
             'username' => $username,
             'email' => $email,
-            'pw' => '',
+            'pw' => $pwHash,
             'hash_id' => Str::random(32),
             'registration_status' => 2,
             'status' => 1,
             'userlevel' => 50,
             'created' => $now,
             'last_update' => $now,
-            'pw_changed' => 0,
+            'pw_changed' => $pwChanged,
             'presence' => 1,
             'roles' => '[]',
         ]);
 
-        DB::table('au_change_password')->insert([
-            'user_id' => $userId,
-            'secret' => $secret,
-            'created_at' => $now,
-        ]);
+        if ($adminPassword === null) {
+            DB::table('au_change_password')->insert([
+                'user_id' => $userId,
+                'secret' => $secret,
+                'created_at' => $now,
+            ]);
+        }
     }
 }
