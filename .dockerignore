@@ -18,3 +18,7 @@ info.php
 
 **/docker-local/
 **/docker-compose.*
+
+nginx-reverse-proxy.conf
+Dockerfile*
+docker-compose*
