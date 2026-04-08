@@ -99,16 +99,16 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
 
       "CommentAddLike" => [
         "open_roles" => [
-          "super_moderator",
           "super_moderator_v",
-          "principal",
           "principal_v",
           "admin"
         ],
         "roles" => [
           "user",
-          "moderator",
           "moderator_v"
+          # "moderator" - excluded because it doesn't have voting rights
+          # "principal" - excluded because it doesn't have voting rights
+          # "super_moderator" - excluded because it doesn't have voting rights
         ],
         "from_room" => [
           "get_room" => "comment_id",
@@ -972,15 +972,17 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ],
 
         "IdeaAddLike" => [
-          "roles" => [
-            "user",
-            "moderator",
-            "moderator_v",
-            "super_moderator",
+          "open_roles" => [
             "super_moderator_v",
-            "principal",
             "principal_v",
             "admin"
+          ],
+          "roles" => [
+            "user",
+            "moderator_v"
+            # "moderator" - excluded because it doesn't have voting rights
+            # "principal" - excluded because it doesn't have voting rights
+            # "super_moderator" - excluded because it doesn't have voting rights
           ],
           "from_room" => [
             "get_room" => "idea_id"
