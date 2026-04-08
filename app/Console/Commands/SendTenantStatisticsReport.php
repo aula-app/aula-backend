@@ -99,16 +99,17 @@ class SendTenantStatisticsReport extends Command
     private function sendReport(string $csv, string $filename, array $recipients, int $tenantCount): void
     {
         $mailable = new TenantStatisticsReport($csv, $filename, $tenantCount);
-        $recipientsAsString = implode(',', $recipients);
 
-        try {
-            Mail::to($recipients)->send($mailable);
-            $this->info("Report sent to: {$recipientsAsString}");
-            Log::debug("Report sent to: {$recipientsAsString}");
-        } catch (Throwable $e) {
-            $errorMsg = "Failed to send report to {$recipientsAsString}: {$e->getMessage()}";
-            $this->error($errorMsg);
-            Log::warning($errorMsg);
+        foreach ($recipients as $recipient) {
+            try {
+                Mail::to($recipient)->send(clone $mailable);
+                $this->info("Report sent to: {$recipient}");
+                Log::debug("Report sent to: {$recipient}");
+            } catch (Throwable $e) {
+                $errorMsg = "Failed to send report to {$recipient}: {$e->getMessage()}";
+                $this->error($errorMsg);
+                Log::warning($errorMsg);
+            }
         }
     }
 
