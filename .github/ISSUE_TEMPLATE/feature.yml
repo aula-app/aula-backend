@@ -7,10 +7,6 @@ body:
   - type: markdown
     attributes:
       value: "## ✨ Feature Request"
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to fill out this feature issue!
   - type: textarea
     id: description-feature
     attributes:
