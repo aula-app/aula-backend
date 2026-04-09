@@ -24,4 +24,4 @@ body:
     attributes:
       value: |
         ### 🚢 Definition of Ready
-        Ensure the issue meets the criteria in our [Definition of Ready](https://github.com/aula-app/team-handbook/handbook/definition-of-ready-and-done.md) before it can be accepted for development.
+        Ensure the issue meets the criteria in our [Definition of Ready](https://github.com/aula-app/team-handbook/blob/main/handbook/definition-of-ready-and-done.md) before it can be accepted for development.
