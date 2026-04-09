@@ -20,8 +20,8 @@ body:
       placeholder: |
         - [ ] Criteria 1
         - [ ] Criteria 2
-  # - type: markdown
-  #   attributes:
-  #     value: |
-  #       ### 🚢 Definition of Ready
-  #       Ensure the issue meets the criteria in our [Definition of Ready]() before it can be accepted for development.
+  - type: markdown
+    attributes:
+      value: |
+        ### 🚢 Definition of Ready
+        Ensure the issue meets the criteria in our [Definition of Ready](https://github.com/aula-app/team-handbook/handbook/definition-of-ready-and-done.md) before it can be accepted for development.
