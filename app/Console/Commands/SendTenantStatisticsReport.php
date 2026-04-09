@@ -102,7 +102,7 @@ class SendTenantStatisticsReport extends Command
 
         foreach ($recipients as $recipient) {
             try {
-                Mail::to($recipient)->send($mailable);
+                Mail::to($recipient)->send(clone $mailable);
                 $this->info("Report sent to: {$recipient}");
                 Log::debug("Report sent to: {$recipient}");
             } catch (Throwable $e) {
