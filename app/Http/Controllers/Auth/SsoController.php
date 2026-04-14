@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\LegacyJwtService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,22 +25,32 @@ class SsoController extends Controller
      * We encode the instance_code into a signed state so the callback
      * can identify the tenant without the header.
      */
-    public function initiate(): RedirectResponse
+    /**
+     * Initiate SSO login flow.
+     *
+     * Returns a JSON response with the Keycloak redirect URL.
+     * The frontend is responsible for navigating to it so that the
+     * aula-instance-code header can be sent on the AJAX call.
+     */
+    public function initiate(): JsonResponse
     {
         $tenant = tenant();
         $idpHint = $tenant->sso_provider ?? null;
 
         $state = $this->buildSignedState($tenant->instance_code);
 
-        $driver = Socialite::driver('keycloak')
-            ->stateless()
-            ->with(['state' => $state]);
-
+        $params = ['state' => $state];
         if ($idpHint) {
-            $driver->with(['state' => $state, 'kc_idp_hint' => $idpHint]);
+            $params['kc_idp_hint'] = $idpHint;
         }
 
-        return $driver->redirect();
+        $url = Socialite::driver('keycloak')
+            ->stateless()
+            ->with($params)
+            ->redirect()
+            ->getTargetUrl();
+
+        return response()->json(['url' => $url]);
     }
 
     /**
@@ -150,13 +161,14 @@ class SsoController extends Controller
     {
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
 
-        return redirect()->away("{$frontendUrl}?sso_token={$token}");
+        // Reuses the existing /oauth-login/:jwt_token route in the frontend
+        return redirect("{$frontendUrl}/oauth-login/{$token}");
     }
 
     protected function frontendError(string $code): RedirectResponse
     {
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
 
-        return redirect()->away("{$frontendUrl}?sso_error={$code}");
+        return redirect("{$frontendUrl}/login?sso_error={$code}");
     }
 }
