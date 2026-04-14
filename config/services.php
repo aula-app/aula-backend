@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'keycloak' => [
+        'base_url' => env('KEYCLOAK_BASE_URL', 'https://sso.aula.de/auth'),
+        'realms' => env('KEYCLOAK_REALM', 'aula'),
+        'client_id' => env('KEYCLOAK_CLIENT_ID', 'aula-backend'),
+        'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),
+        'redirect' => env('KEYCLOAK_REDIRECT_URI'),
+    ],
+
 ];

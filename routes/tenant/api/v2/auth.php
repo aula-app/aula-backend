@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LegacyLoginController;
 use App\Http\Controllers\Auth\RefreshTokenController;
+use App\Http\Controllers\Auth\SsoController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -13,6 +14,10 @@ use Illuminate\Support\Facades\Route;
 
 // Public routes (no authentication required)
 Route::post('/login', [LegacyLoginController::class, 'login'])->name('login');
+
+// SSO routes
+Route::get('/sso/initiate', [SsoController::class, 'initiate'])->name('sso.initiate');
+Route::get('/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 
 // Protected routes (require valid JWT, but allow refresh_token error)
 Route::post('/refresh', [RefreshTokenController::class, 'refresh'])->name('refresh');
