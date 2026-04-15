@@ -9,6 +9,7 @@ use App\Services\LegacyJwtService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -145,16 +146,54 @@ class SsoController extends Controller
      */
     protected function provisionUser(mixed $socialiteUser): LegacyUser
     {
+        $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
+
         $user = new LegacyUser;
         $user->email = $socialiteUser->getEmail();
         $user->sso_sub = $socialiteUser->getId();
-        $user->username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
-        $user->displayname = $socialiteUser->getName() ?? $user->username;
+        $user->sso_provider = tenant()->sso_provider ?? null;
+        $user->username = $username;
+        $user->displayname = $socialiteUser->getName() ?? $username;
+        $user->hash_id = md5($username . microtime(true) . rand(100, 10000000));
         $user->userlevel = 20; // default: User
         $user->status = 1;
         $user->save();
 
+        $this->addToStandardRoom($user);
+
         return $user;
+    }
+
+    /**
+     * Add a newly provisioned user to the standard room (type=1, the school room).
+     * Mirrors legacy User::addUserToStandardRoom() logic.
+     */
+    protected function addToStandardRoom(LegacyUser $user): void
+    {
+        $room = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
+
+        if ($room === null) {
+            return;
+        }
+
+        // Insert into the room membership table
+        DB::table('au_rel_rooms_users')->insertOrIgnore([
+            'room_id'     => $room->id,
+            'user_id'     => $user->id,
+            'status'      => 1,
+            'created'     => now(),
+            'last_update' => now(),
+            'updater_id'  => 0,
+        ]);
+
+        // Update the user's roles JSON to include the role for this room
+        $roles = json_decode($user->roles ?? '[]', true) ?? [];
+        $roles = array_values(array_filter($roles, fn($r) => ($r['room'] ?? null) !== $room->hash_id));
+        $roles[] = ['role' => 20, 'room' => $room->hash_id];
+
+        DB::table('au_users_basedata')
+            ->where('id', $user->id)
+            ->update(['roles' => json_encode($roles), 'last_update' => now()]);
     }
 
     protected function frontendRedirect(string $token): RedirectResponse
