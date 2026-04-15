@@ -24,6 +24,17 @@ Route::name('auth.')
     ->prefix('/api/v2/legacy-auth')
     ->group(base_path('routes/tenant/api/v2/auth.php'));
 
+// SSO routes
+Route::name('sso.')
+    ->middleware([
+        'api',
+        InitializeTenancyByRequestData::class,
+    ])
+    ->prefix('/api/v2/auth')
+    ->group(function () {
+        Route::get('/sso/initiate', [\App\Http\Controllers\Auth\SsoController::class, 'initiate'])->name('initiate');
+    });
+
 // Passport-authenticated routes (existing)
 Route::name('aula.')
     ->middleware([
