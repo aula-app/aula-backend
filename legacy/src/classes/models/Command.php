@@ -184,6 +184,18 @@ class Command
     $date_start = trim($date_start);
     // auto set date to midnight for now
     $date_start = date_format(date_create($date_start),"Y-m-d 00:00:00");
+    $date_now = date_format(date_create(),"Y-m-d 00:00:00");
+
+    // dates are formatted equally, so we can safely string compare
+    if ($date_start < $date_now) {
+      $this->syslog->addSystemEvent(1, "Tried to create action in the past", 0, "", 1);
+      return [
+        'success' => false,
+        'error_code' => 1,
+        'data' => false,
+        'count' => 0,
+      ];
+    }
 
     if ($target_id > 0) {
       $target_id = intval($target_id);
