@@ -55,6 +55,9 @@ class SendEmailHandler extends CommandHandler
         break;
     }
 
+    // gethostname() for cli
+    $server_name = $_SERVER['SERVER_NAME'] ?? gethostname();
+
     $headers = array(
       'From' => $email_from,
       'To' => $email,
@@ -62,7 +65,7 @@ class SendEmailHandler extends CommandHandler
       'Reply-To' => $email_address,
       'MIME-Version' => $mime,
       'Content-type' => $content,
-      'Message-Id' => time() .'-' . md5($email_from . $email) . '@' . $_SERVER['SERVER_NAME'],
+      'Message-Id' => time() . '-' . md5($email_from . $email) . '@' . $server_name,
       'Date' => date('r')
     );
 
