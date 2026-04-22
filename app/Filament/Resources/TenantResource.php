@@ -86,13 +86,15 @@ class TenantResource extends Resource
                     TextInput::make('admin1_username')
                         ->label('Username')
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
 
                     TextInput::make('admin1_email')
                         ->label('Email')
                         ->email()
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
 
                     TextInput::make('admin1_init_pass_url')
                         ->label('Password Setup URL')
@@ -110,13 +112,15 @@ class TenantResource extends Resource
                     TextInput::make('admin2_username')
                         ->label('Username')
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
 
                     TextInput::make('admin2_email')
                         ->label('Email')
                         ->email()
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
 
                     TextInput::make('admin2_init_pass_url')
                         ->label('Password Setup URL')
