@@ -187,7 +187,8 @@ class Command
     $date_now = date_format(date_create(),"Y-m-d 00:00:00");
 
     // dates are formatted equally, so we can safely string compare
-    if ($date_start < $date_now) {
+    // n.b. less-than-equal, date_start must be at least tomorrow
+    if ($date_start <= $date_now) {
       $this->syslog->addSystemEvent(1, "Tried to create action in the past", 0, "", 1);
       return [
         'success' => false,
