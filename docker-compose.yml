@@ -50,7 +50,7 @@ services:
         source: ./legacy/docker-local/_generated_files_data/
         target: /mnt/aula-backend-legacy/files
         bind:
-          create_host_path: false
+          create_host_path: true
     depends_on:
       mariadb:
         condition: service_healthy
