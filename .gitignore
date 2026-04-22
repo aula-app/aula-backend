@@ -12,7 +12,6 @@ _ide_helper.php
 /.junie
 /.nova
 /.phpunit.cache
-/.vscode
 /.zed
 /auth.json
 /node_modules
