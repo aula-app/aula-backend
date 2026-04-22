@@ -144,6 +144,8 @@ class Text
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
+    $creator_id = intval($creator_id);
+    $user_needs_to_consent = intval($user_needs_to_consent);
 
     // init vars
     $orderby_field = "";
