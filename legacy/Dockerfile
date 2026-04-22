@@ -19,6 +19,7 @@ RUN set -eux; apt update -q && \
     memcached libmemcached-tools php-cli php-memcached php8.3-memcached \
     php-mysql default-mysql-client \
     php8.3-bcmath php8.3-curl php8.3-dom php8.3-mbstring php8.3-intl \
+    php8.3-xdebug \
     sendmail libphp-phpmailer php-mail && \
   apt purge -yq patch software-properties-common && \
   apt autoremove -yqq && \
