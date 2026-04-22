@@ -234,10 +234,23 @@ class Text
     $count_datasets = count($texts);
     if ($limit_active) {
       // only newly calculate datasets if limits are active
+      // build count where with literal values (named params are only bound on the main query)
+      $extra_where_for_count = 'id > 0' . $extra_where;
+      if ($status > -1) {
+        $extra_where_for_count = str_replace(':status', $status, $extra_where_for_count);
+      }
+      if ($creator_id > 0) {
+        $extra_where_for_count = str_replace(':creator_id', $creator_id, $extra_where_for_count);
+      }
+      if ($user_needs_to_consent > -1) {
+        $extra_where_for_count = str_replace(':user_needs_to_consent', $user_needs_to_consent, $extra_where_for_count);
+      }
       if ($search_field_valid) {
-        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $extra_where, $search_field, $search_text);
+        // remove the LIKE placeholder — getTotalDatasets adds its own LIKE clause from $search_field/$search_text
+        $extra_where_for_count = str_replace(" AND " . $search_field . " LIKE :search_text", '', $extra_where_for_count);
+        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, $extra_where_for_count, $search_field, $search_text);
       } else {
-        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, "id > 0" . $extra_where);
+        $count_datasets = $this->converters->getTotalDatasets($this->db->au_texts, $extra_where_for_count);
       }
     }
 
