@@ -49,7 +49,7 @@ class TenantResource extends Resource
                         ->when(
                             $isCreate,
                             fn (TextInput $field) => $field
-                                ->readOnly()
+                                ->disabled()
                                 ->dehydrated(true)
                                 ->helperText('Auto-generated. Click ↺ to get a new one.')
                                 ->suffixAction(
