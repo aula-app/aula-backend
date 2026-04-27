@@ -1,0 +1,58 @@
+name: Scan for vulnreabilities using Trivy
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build_and_scan_v1:
+    runs-on: [self-hosted, cicd]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: "[legacy] Add IMAGE_TAG_LEGACY_SHORT_SHA env property with commit short sha"
+        run: echo "IMAGE_TAG_LEGACY_SHORT_SHA=aulaapp/${{ github.event.repository.name }}:legacy-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: "[legacy] Build and tag legacy Docker image"
+        working-directory: ./legacy
+        run: docker build -t $IMAGE_TAG_LEGACY_SHORT_SHA .
+
+      - name: "[legacy] Run Trivy vuln scanner"
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_TAG_LEGACY_SHORT_SHA }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  build_and_scan_v2:
+    runs-on: [self-hosted, cicd]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Add IMAGE_TAG_SHORT_SHA env property with commit short sha
+        run: echo "IMAGE_TAG_SHORT_SHA=aulaapp/${{ github.event.repository.name }}:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: "Run Trivy vuln scanner"
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_TAG_SHORT_SHA }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
