@@ -12,17 +12,20 @@ EXPOSE 80
 WORKDIR $PROJECT_PATH
 USER root
 
-# Utilities, Apache, PHP, and supplementary programs which the application requires
+# Utilities, Apache, PHP, and supplementary programs which the application requires,
+# prevent autoloading xdebug
 RUN set -eux; apt update -q && \
   apt install -yqq curl cron gosu \
     apache2 libapache2-mod-php php8.3 \
     memcached libmemcached-tools php-cli php-memcached php8.3-memcached \
     php-mysql default-mysql-client \
     php8.3-bcmath php8.3-curl php8.3-dom php8.3-mbstring php8.3-intl \
+    php8.3-xdebug \
     sendmail libphp-phpmailer php-mail && \
   apt purge -yq patch software-properties-common && \
   apt autoremove -yqq && \
   apt clean && \
+  rm /etc/php/8.3/cli/conf.d/20-xdebug.ini /etc/php/8.3/apache2/conf.d/20-xdebug.ini && \
   rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Apache mods & conf (logs should be forwarded to stdout & stderr for docker; ServerName fqdn)

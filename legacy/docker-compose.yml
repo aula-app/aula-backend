@@ -32,5 +32,18 @@ services:
         target: /etc/php/8.3/apache2/php.ini
         bind:
           create_host_path: true
+      - type: bind
+        source: ./docker-local/php-xdebug-docker.ini
+        target: /etc/php/8.3/apache2/conf.d/21-xdebug-docker.ini
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ./docker-local/php-xdebug-docker.ini
+        target: /etc/php/8.3/cli/conf.d/21-xdebug-docker.ini
+        bind:
+          create_host_path: true
     networks:
       - aula_local
+    extra_hosts:
+      # for resolution on Linux
+      - "host.docker.internal:host-gateway"
