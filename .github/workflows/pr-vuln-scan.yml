@@ -46,6 +46,9 @@ jobs:
       - name: Add IMAGE_TAG_SHORT_SHA env property with commit short sha
         run: echo "IMAGE_TAG_SHORT_SHA=aulaapp/${{ github.event.repository.name }}:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
+      - name: Build and tag Docker image
+        run: docker build -t $IMAGE_TAG_SHORT_SHA .
+
       - name: "Run Trivy vuln scanner"
         uses: aquasecurity/trivy-action@v0.36.0
         with:
