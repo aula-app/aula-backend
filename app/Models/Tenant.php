@@ -26,6 +26,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'admin2_init_pass_url',
             'instance_code',
             'jwt_key',
+            'sso_enabled',
+            'sso_provider',
+            'sso_idp_config',
+            'sso_force_logout',
         ]);
     }
 }

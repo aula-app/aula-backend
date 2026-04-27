@@ -3,6 +3,10 @@
 
 # v2
 
+## v2.2.0
+
+-feat: add SSO login via Keycloak
+
 ## v2.1.0
 
 - feat: aula Manager using Filament
