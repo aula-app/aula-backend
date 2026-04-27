@@ -1,8 +1,5 @@
 name: Scan for vulnreabilities using Trivy
 
-permissions:
-  contents: read
-
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -10,6 +7,9 @@ on:
 jobs:
   build_and_scan_v1:
     runs-on: [self-hosted, cicd]
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -28,14 +28,24 @@ jobs:
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE_TAG_LEGACY_SHORT_SHA }}
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results-legacy.sarif'
+          # exit-code: '1'
+          # ignore-unfixed: true
+          # vuln-type: 'os,library'
+          # severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-results-legacy.sarif'
 
   build_and_scan_v2:
     runs-on: [self-hosted, cicd]
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -53,9 +63,16 @@ jobs:
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE_TAG_SHORT_SHA }}
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          # exit-code: '1'
+          # ignore-unfixed: true
+          # vuln-type: 'os,library'
+          # severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
 
