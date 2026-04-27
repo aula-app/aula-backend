@@ -9,6 +9,7 @@ use App\Services\LegacyJwtService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
@@ -33,7 +34,7 @@ class SsoController extends Controller
      * The frontend is responsible for navigating to it so that the
      * aula-instance-code header can be sent on the AJAX call.
      */
-    public function initiate(): JsonResponse
+    public function initiate(Request $request): JsonResponse
     {
         $tenant = tenant();
         $idpHint = $tenant->sso_provider ?? null;
@@ -43,6 +44,9 @@ class SsoController extends Controller
         $params = ['state' => $state];
         if ($idpHint) {
             $params['kc_idp_hint'] = $idpHint;
+        }
+        if ($request->boolean('force_login')) {
+            $params['prompt'] = 'login';
         }
 
         $url = Socialite::driver('keycloak')
@@ -90,6 +94,15 @@ class SsoController extends Controller
         if (! $user->isActive()) {
             return $this->frontendError('account_inactive');
         }
+
+        $idToken = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
+        $refreshToken = $socialiteUser->refreshToken ?? null;
+        $idpIdToken = $this->fetchIdpIdToken($socialiteUser->token, tenant()->sso_provider);
+
+        $user->sso_id_token = $idToken;
+        $user->sso_refresh_token = $refreshToken;
+        $user->sso_idp_id_token = $idpIdToken;
+        $user->save();
 
         $token = $this->jwtService->generateToken($user);
 
@@ -194,6 +207,148 @@ class SsoController extends Controller
         DB::table('au_users_basedata')
             ->where('id', $user->id)
             ->update(['roles' => json_encode($roles), 'last_update' => now()]);
+    }
+
+    /**
+     * SSO logout endpoint.
+     *
+     * When the tenant has sso_force_logout enabled, returns a Keycloak
+     * logout URL that the frontend must navigate to in order to end the
+     * user's Keycloak session (RP-initiated logout).
+     *
+     * When disabled, returns null so the frontend can proceed with a
+     * normal local logout.
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $tenant = tenant();
+
+        if (! $tenant->sso_force_logout) {
+            return response()->json(['logout_url' => null]);
+        }
+
+        /** @var \App\Models\LegacyUser $user */
+        $user = $request->attributes->get('authenticated_user');
+
+        $this->revokeKeycloakSession($user?->sso_refresh_token);
+
+        $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
+
+        // Build aula-realm logout URL (clears the Keycloak SSO session cookie).
+        $aulaLogoutUrl = $this->buildKeycloakLogoutUrl($user?->sso_id_token, $frontendUrl);
+
+        // If we have the upstream IdP id_token, chain: IdP logout → aula logout → frontend.
+        // This clears BOTH the IdP session and the Keycloak session.
+        $logoutUrl = $aulaLogoutUrl;
+        if ($user?->sso_idp_id_token && $aulaLogoutUrl) {
+            $idpLogoutUrl = $this->buildIdpLogoutUrl($user->sso_idp_id_token, $aulaLogoutUrl);
+            if ($idpLogoutUrl) {
+                $logoutUrl = $idpLogoutUrl;
+            }
+        }
+
+        return response()->json(['logout_url' => $logoutUrl]);
+    }
+
+    /**
+     * Build the Keycloak RP-initiated logout URL using the configured realm.
+     * This clears the SSO session cookie in the browser so the next login
+     * cannot silently re-authenticate.
+     */
+    protected function buildKeycloakLogoutUrl(?string $idToken, string $redirectUri): ?string
+    {
+        if (! $idToken) {
+            return null;
+        }
+
+        $base  = rtrim(config('services.keycloak.base_url'), '/');
+        $realm = config('services.keycloak.realms', 'master');
+
+        return "{$base}/realms/{$realm}/protocol/openid-connect/logout?" . http_build_query([
+            'id_token_hint'            => $idToken,
+            'post_logout_redirect_uri' => $redirectUri,
+        ]);
+    }
+
+    protected function revokeKeycloakSession(?string $refreshToken): void
+    {
+        if (! $refreshToken) {
+            return;
+        }
+
+        $base = rtrim(config('services.keycloak.base_url'), '/');
+        $realm = config('services.keycloak.realms', 'master');
+
+        Http::asForm()->post("{$base}/realms/{$realm}/protocol/openid-connect/logout", [
+            'client_id'     => config('services.keycloak.client_id'),
+            'client_secret' => config('services.keycloak.client_secret'),
+            'refresh_token' => $refreshToken,
+        ]);
+    }
+
+    /**
+     * Fetch the upstream IdP's id_token via Keycloak's broker token API.
+     * This token is later used as id_token_hint to log out from the IdP session.
+     */
+    protected function fetchIdpIdToken(?string $accessToken, ?string $provider): ?string
+    {
+        if (! $accessToken || ! $provider) {
+            return null;
+        }
+
+        $base = rtrim(config('services.keycloak.base_url'), '/');
+        $realm = config('services.keycloak.realms', 'master');
+
+        $response = Http::withToken($accessToken)
+            ->get("{$base}/realms/{$realm}/broker/{$provider}/token");
+
+        if (! $response->ok()) {
+            return null;
+        }
+
+        return $response->json('id_token');
+    }
+
+    /**
+     * Build an IdP logout URL by:
+     * 1. Extracting the issuer from the id_token
+     * 2. Fetching the OIDC discovery document to find end_session_endpoint
+     * 3. Appending id_token_hint and post_logout_redirect_uri
+     *
+     * Works for any OIDC-compliant provider (Keycloak realms, iServ, VIDIS, etc.)
+     */
+    protected function buildIdpLogoutUrl(?string $idpIdToken, string $redirectUri): ?string
+    {
+        if (! $idpIdToken) {
+            return null;
+        }
+
+        $parts = explode('.', $idpIdToken);
+        if (count($parts) !== 3) {
+            return null;
+        }
+
+        $payload = json_decode(base64_decode(str_pad($parts[1], strlen($parts[1]) + (4 - strlen($parts[1]) % 4) % 4, '=')), true);
+        $issuer = rtrim($payload['iss'] ?? '', '/');
+
+        if (! $issuer) {
+            return null;
+        }
+
+        $discovery = Http::get("{$issuer}/.well-known/openid-configuration");
+        if (! $discovery->ok()) {
+            return null;
+        }
+
+        $endSessionEndpoint = $discovery->json('end_session_endpoint');
+        if (! $endSessionEndpoint) {
+            return null;
+        }
+
+        return $endSessionEndpoint . '?' . http_build_query([
+            'post_logout_redirect_uri' => $redirectUri,
+            'id_token_hint'            => $idpIdToken,
+        ]);
     }
 
     protected function frontendRedirect(string $token): RedirectResponse

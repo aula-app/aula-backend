@@ -29,6 +29,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'sso_enabled',
             'sso_provider',
             'sso_idp_config',
+            'sso_force_logout',
         ]);
     }
 }

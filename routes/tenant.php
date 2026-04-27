@@ -33,6 +33,10 @@ Route::name('sso.')
     ->prefix('/api/v2/auth')
     ->group(function () {
         Route::get('/sso/initiate', [\App\Http\Controllers\Auth\SsoController::class, 'initiate'])->name('initiate');
+
+        Route::middleware('legacy.jwt')->group(function () {
+            Route::post('/sso/logout', [\App\Http\Controllers\Auth\SsoController::class, 'logout'])->name('sso.logout');
+        });
     });
 
 // Passport-authenticated routes (existing)
