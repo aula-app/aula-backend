@@ -75,6 +75,10 @@ class TenantResource extends Resource
                         ->label('Contact Info')
                         ->rows(3)
                         ->maxLength(1000),
+
+                    TextInput::make('school_type')
+                        ->label('Type of School')
+                        ->maxLength(255),
                 ]),
 
             Section::make('Primary Admin')

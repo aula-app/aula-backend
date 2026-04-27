@@ -16,6 +16,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'name',
             'api_base_url',
             'contact_info',
+            'school_type',
             'admin1_name',
             'admin1_username',
             'admin1_email',
