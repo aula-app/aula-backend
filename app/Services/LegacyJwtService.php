@@ -24,7 +24,7 @@ class LegacyJwtService
             'exp' => 0,
             'user_id' => $user->id,
             'user_hash' => $user->hash_id,
-            'user_level' => $user->userlevel,
+            'user_level' => $user->userlevel?->value,
             'roles' => json_decode($user->roles ?? '[]'),
             'temp_pw' => !empty($user->temp_pw),
         ];
