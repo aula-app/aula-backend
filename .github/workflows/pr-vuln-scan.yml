@@ -1,4 +1,4 @@
-name: Scan for vulnreabilities using Trivy
+name: Scan for vulnerabilities using Trivy
 
 on:
   pull_request:
