@@ -121,17 +121,22 @@ class ImportTenant extends Command
             $tenant->admin2_username = $exported['admin2_username'] ?? null;
             $tenant->admin2_email = $exported['admin2_email'] ?? null;
             $tenant->admin2_init_pass_url = null;
-            $tenant->data = [
-                'tenancy_db_name' => $dbName,
-                'tenancy_db_username' => $dbUser,
-                'tenancy_db_password' => $dbPass,
-            ];
+            $tenant->setInternal('db_name', $dbName);
+            $tenant->setInternal('db_username', $dbUser);
+            $tenant->setInternal('db_password', $dbPass);
             $tenant->save();
         });
 
         $this->info("Creating database: {$dbName}");
 
         DB::statement("CREATE DATABASE `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        $grants = implode(', ', [
+            'ALTER', 'ALTER ROUTINE', 'CREATE', 'CREATE ROUTINE', 'CREATE TEMPORARY TABLES', 'CREATE VIEW',
+            'DELETE', 'DROP', 'EVENT', 'EXECUTE', 'INDEX', 'INSERT', 'LOCK TABLES', 'REFERENCES', 'SELECT',
+            'SHOW VIEW', 'TRIGGER', 'UPDATE',
+        ]);
+        DB::statement("CREATE USER `{$dbUser}`@`%` IDENTIFIED BY '{$dbPass}'");
+        DB::statement("GRANT {$grants} ON `{$dbName}`.* TO `{$dbUser}`@`%`");
 
         $this->info('Importing database dump...');
 
