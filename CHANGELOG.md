@@ -3,6 +3,8 @@
 
 # v2
 
+- fix: new tenants can't be used due to permission issue
+
 ## v2.1.0
 
 - feat: aula Manager using Filament
