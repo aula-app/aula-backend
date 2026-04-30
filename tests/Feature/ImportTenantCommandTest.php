@@ -52,11 +52,8 @@ function createTenantForImportTest(array $attrs = []): Tenant
 
 function mockCreateDatabase(): void
 {
-    // Intercept CREATE DATABASE so it doesn't commit the transaction via DDL implicit commit
-    $db = DB::partialMock();
-    $db->shouldReceive('statement')
-        ->withArgs(fn (string $sql) => str_contains($sql, 'CREATE DATABASE'))
-        ->andReturn(true);
+    // Intercept all raw statements (DDL causes implicit commits that break DatabaseTransactions)
+    DB::partialMock()->shouldReceive('statement')->andReturn(true);
 }
 
 it('fails when the archive file does not exist', function () {
