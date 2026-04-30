@@ -3,12 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\Tenant;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
-
-uses(DatabaseTransactions::class);
 
 function makeTenantArchive(array $overrides = []): string
 {
@@ -40,7 +37,6 @@ function makeTenantArchive(array $overrides = []): string
 
 function createTenantForImportTest(array $attrs = []): Tenant
 {
-    // withoutEvents prevents stancl from running CreateDatabase (DDL that commits the transaction)
     return Tenant::withoutEvents(function () use ($attrs) {
         $tenant = new Tenant($attrs);
         $tenant->id = (string) Str::uuid();
@@ -50,10 +46,24 @@ function createTenantForImportTest(array $attrs = []): Tenant
     });
 }
 
-function mockCreateDatabase(): void
+function cleanupImportedTenant(string $instanceCode): void
 {
-    // Intercept all raw statements (DDL causes implicit commits that break DatabaseTransactions)
-    DB::partialMock()->shouldReceive('statement')->andReturn(true);
+    $tenant = Tenant::firstWhere('instance_code', $instanceCode);
+    if (! $tenant) {
+        return;
+    }
+
+    $dbName  = $tenant->getInternal('db_name');
+    $dbUser  = $tenant->getInternal('db_username');
+
+    if ($dbName) {
+        DB::statement("DROP DATABASE IF EXISTS `{$dbName}`");
+    }
+    if ($dbUser) {
+        DB::statement("DROP USER IF EXISTS `{$dbUser}`@`%`");
+    }
+
+    $tenant->withoutEvents(fn () => $tenant->forceDelete());
 }
 
 it('fails when the archive file does not exist', function () {
@@ -69,7 +79,7 @@ it('fails when instance code format is invalid', function () {
 });
 
 it('fails when a tenant with the same instance code already exists', function () {
-    createTenantForImportTest([
+    $tenant = createTenantForImportTest([
         'name'            => 'Existing School',
         'instance_code'   => 'IMP01',
         'jwt_key'         => 'key',
@@ -87,10 +97,11 @@ it('fails when a tenant with the same instance code already exists', function ()
     $this->artisan('tenant:import', ['file' => $archive, '--force' => true])->assertFailed();
 
     unlink($archive);
+    $tenant->withoutEvents(fn () => $tenant->forceDelete());
 });
 
 it('fails when a tenant with the same name already exists', function () {
-    createTenantForImportTest([
+    $tenant = createTenantForImportTest([
         'name'            => 'Import School',
         'instance_code'   => 'OTH01',
         'jwt_key'         => 'key',
@@ -108,36 +119,53 @@ it('fails when a tenant with the same name already exists', function () {
     $this->artisan('tenant:import', ['file' => $archive, '--force' => true])->assertFailed();
 
     unlink($archive);
+    $tenant->withoutEvents(fn () => $tenant->forceDelete());
 });
 
-it('imports a tenant successfully', function () {
+it('imports a tenant and creates the database and user', function () {
     $archive = makeTenantArchive();
 
-    mockCreateDatabase();
     Process::fake(["'mysql'*" => Process::result()]);
 
     $this->artisan('tenant:import', ['file' => $archive, '--force' => true])->assertSuccessful();
 
-    expect(Tenant::firstWhere('instance_code', 'IMP01'))->not->toBeNull();
+    $tenant = Tenant::firstWhere('instance_code', 'IMP01');
+    expect($tenant)->not->toBeNull();
+
+    $dbName = $tenant->getInternal('db_name');
+    $dbUser = $tenant->getInternal('db_username');
+    $dbPass = $tenant->getInternal('db_password');
+
+    expect($dbName)->not->toBeNull();
+    expect($dbUser)->toBe('aula_IMP01');
+    expect($dbPass)->not->toBeNull();
+
+    $databases = DB::select("SHOW DATABASES LIKE '{$dbName}'");
+    expect($databases)->not->toBeEmpty();
+
+    $userExists = DB::select("SELECT COUNT(*) as cnt FROM mysql.user WHERE user = '{$dbUser}'")[0]->cnt;
+    expect($userExists)->toBe(1);
 
     unlink($archive);
+    cleanupImportedTenant('IMP01');
 });
 
 it('accepts SINGLE as a valid instance code', function () {
     $archive = makeTenantArchive(['instance_code' => 'SINGLE', 'name' => 'Single School']);
 
-    mockCreateDatabase();
     Process::fake(["'mysql'*" => Process::result()]);
 
     $this->artisan('tenant:import', ['file' => $archive, '--force' => true])->assertSuccessful();
 
+    expect(Tenant::firstWhere('instance_code', 'SINGLE'))->not->toBeNull();
+
     unlink($archive);
+    cleanupImportedTenant('SINGLE');
 });
 
 it('overrides instance code and name via options', function () {
     $archive = makeTenantArchive();
 
-    mockCreateDatabase();
     Process::fake(["'mysql'*" => Process::result()]);
 
     $this->artisan('tenant:import', [
@@ -150,15 +178,16 @@ it('overrides instance code and name via options', function () {
     expect(Tenant::firstWhere('instance_code', 'OVR01'))->not->toBeNull();
 
     unlink($archive);
+    cleanupImportedTenant('OVR01');
 });
 
 it('fails when mysql import fails', function () {
     $archive = makeTenantArchive(['instance_code' => 'FAIL1', 'name' => 'Fail School']);
 
-    mockCreateDatabase();
     Process::fake(["'mysql'*" => Process::result('', 'Access denied', 1)]);
 
     $this->artisan('tenant:import', ['file' => $archive, '--force' => true])->assertFailed();
 
     unlink($archive);
+    cleanupImportedTenant('FAIL1');
 });
