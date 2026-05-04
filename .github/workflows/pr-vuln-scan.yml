@@ -35,7 +35,7 @@ jobs:
           # vuln-type: 'os,library'
           # severity: 'CRITICAL,HIGH'
 
-      - name: Upload Trivy scan results to GitHub Security tab
+      - name: "[legacy] Upload Trivy scan results to GitHub Security tab"
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
@@ -65,12 +65,41 @@ jobs:
           image-ref: ${{ env.IMAGE_TAG_SHORT_SHA }}
           format: 'sarif'
           output: 'trivy-results.sarif'
-          # exit-code: '1'
-          # ignore-unfixed: true
-          # vuln-type: 'os,library'
-          # severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Dockerfile.test installs a subset of v2's packages, but uses a different base (cli-alpine, not fpm), so it's worth scanning;
+  # also packages (and configs etc.) could diverge at some point
+  build_and_scan_test:
+    runs-on: [self-hosted, cicd]
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: "[test] Add IMAGE_TAG_TEST_SHORT_SHA env property with commit short sha"
+        run: echo "IMAGE_TAG_TEST_SHORT_SHA=aulaapp/${{ github.event.repository.name }}:test-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: "[test] Build and tag Docker image"
+        run: docker build -t $IMAGE_TAG_TEST_SHORT_SHA -f Dockerfile.test .
+
+      - name: "[test] Run Trivy vuln scanner"
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_TAG_TEST_SHORT_SHA }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: "[test] Upload Trivy scan results to GitHub Security tab"
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
