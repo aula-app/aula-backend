@@ -23,13 +23,6 @@ class SsoController extends Controller
     /**
      * Initiate SSO login flow.
      *
-     * Tenant context is already set by the aula-instance-code header.
-     * We encode the instance_code into a signed state so the callback
-     * can identify the tenant without the header.
-     */
-    /**
-     * Initiate SSO login flow.
-     *
      * Returns a JSON response with the Keycloak redirect URL.
      * The frontend is responsible for navigating to it so that the
      * aula-instance-code header can be sent on the AJAX call.
