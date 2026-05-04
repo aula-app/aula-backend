@@ -50,6 +50,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Create folder for trivy results
+        run: mkdir ./trivy-results
+
+      # n.b. this will essentially ignore /legacy because there are no composer or other lockfiles
+      - name: "Run Trivy vuln scanner, fs mode"
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results/fs.sarif'
+        # trivy-config: trivy.yaml
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -59,18 +72,19 @@ jobs:
       - name: Build and tag Docker image
         run: docker build -t $IMAGE_TAG_SHORT_SHA .
 
-      - name: "Run Trivy vuln scanner"
+      - name: "Run Trivy vuln scanner, image mode"
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE_TAG_SHORT_SHA }}
           format: 'sarif'
-          output: 'trivy-results.sarif'
+          output: 'trivy-results/image.sarif'
+          skip-setup-trivy: true
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: './trivy-results'
 
   # Dockerfile.test installs a subset of v2's packages, but uses a different base (cli-alpine, not fpm), so it's worth scanning;
   # also packages (and configs etc.) could diverge at some point
