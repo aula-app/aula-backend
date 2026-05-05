@@ -23,16 +23,9 @@ class SsoController extends Controller
     /**
      * Initiate SSO login flow.
      *
-     * Tenant context is already set by the aula-instance-code header.
-     * We encode the instance_code into a signed state so the callback
-     * can identify the tenant without the header.
-     */
-    /**
-     * Initiate SSO login flow.
-     *
      * Returns a JSON response with the Keycloak redirect URL.
-     * The frontend is responsible for navigating to it so that the
-     * aula-instance-code header can be sent on the AJAX call.
+     * The frontend navigates to it; the instance_code is carried in a signed
+     * state parameter so the callback can identify the tenant without the header.
      */
     public function initiate(Request $request): JsonResponse
     {
@@ -84,8 +77,7 @@ class SsoController extends Controller
 
         $socialiteUser = Socialite::driver('keycloak')->stateless()->user();
 
-        $user = LegacyUser::where('email', $socialiteUser->getEmail())->first()
-            ?? LegacyUser::where('sso_sub', $socialiteUser->getId())->first();
+        $user = $this->resolveUser($socialiteUser->getEmail(), $socialiteUser->getId());
 
         if ($user === null) {
             $user = $this->provisionUser($socialiteUser);
@@ -152,6 +144,42 @@ class SsoController extends Controller
     protected function stateSecret(): string
     {
         return config('app.key');
+    }
+
+    /**
+     * Find an existing user by email or sso_sub in a single query.
+     *
+     * If both columns match different rows (corrupt state), the sso_sub match
+     * takes priority and a warning is logged so the duplicate can be cleaned up
+     * manually.
+     */
+    protected function resolveUser(?string $email, string $sub): ?LegacyUser
+    {
+        $candidates = LegacyUser::where('email', $email)
+            ->orWhere('sso_sub', $sub)
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        if ($candidates->count() === 1) {
+            return $candidates->first();
+        }
+
+        $bySubMatch = $candidates->firstWhere('sso_sub', $sub);
+        $byEmailMatch = $candidates->firstWhere('email', $email);
+
+        if ($bySubMatch && $byEmailMatch && $bySubMatch->id !== $byEmailMatch->id) {
+            \Illuminate\Support\Facades\Log::warning('SSO: email and sso_sub match different users — prioritising sso_sub match.', [
+                'email'          => $email,
+                'sub'            => $sub,
+                'sso_sub_user'   => $bySubMatch->id,
+                'email_user'     => $byEmailMatch->id,
+            ]);
+        }
+
+        return $bySubMatch ?? $candidates->first();
     }
 
     /**
