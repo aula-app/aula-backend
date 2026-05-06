@@ -105,7 +105,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ],
         "roles" => [
           "user",
-          "moderator_v"
           # "moderator" - excluded because it doesn't have voting rights
           # "principal" - excluded because it doesn't have voting rights
           # "super_moderator" - excluded because it doesn't have voting rights
@@ -120,16 +119,12 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
 
       "CommentRemoveLike" => [
         "open_roles" => [
-          "super_moderator",
           "super_moderator_v",
-          "principal",
           "principal_v",
           "admin"
         ],
         "roles" => [
           "user",
-          "moderator",
-          "moderator_v"
         ],
         "from_room" => [
           "get_room" => "comment_id",
