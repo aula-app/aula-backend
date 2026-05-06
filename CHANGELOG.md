@@ -6,6 +6,7 @@
 ## v2.1.1
 
 - fix: super_moderator_v role permission on IdeaRemoveLike
+- fix: new tenants can't be used due to permission issue
 
 ## v2.1.0
 
