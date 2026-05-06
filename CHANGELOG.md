@@ -3,6 +3,10 @@
 
 # v2
 
+## v2.1.1
+
+- fix: super_moderator_v role permission on IdeaRemoveLike
+
 ## v2.1.0
 
 - feat: aula Manager using Filament
