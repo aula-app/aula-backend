@@ -5,7 +5,8 @@
 
 ## v2.2.0
 
--feat: add SSO login via Keycloak
+- feat: add SSO login via Keycloak
+- fix: new tenants can't be used due to permission issue
 
 ## v2.1.0
 

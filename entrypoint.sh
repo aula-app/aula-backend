@@ -24,6 +24,9 @@ echo "✅ Database is ready."
 php artisan migrate --force
 php artisan optimize:clear
 php artisan storage:link
+# Make sure write and setgid bits is enabled for storage, so
+#   any new folders created in ./storage will inherit the group www-data
+chmod -R g+ws ./storage
 
 echo "🔑 Ensuring Passport keys are present and with correct permissions..."
 php artisan passport:keys -q
