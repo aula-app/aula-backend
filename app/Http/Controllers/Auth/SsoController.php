@@ -6,19 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\LegacyJwtService;
+use App\Services\SsoUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class SsoController extends Controller
 {
     public function __construct(
-        protected LegacyJwtService $jwtService
+        protected LegacyJwtService $jwtService,
+        protected SsoUserService $ssoUserService,
     ) {}
+
+    // =========================================================
+    // Public endpoints
+    // =========================================================
 
     /**
      * Initiate SSO login flow.
@@ -29,7 +34,7 @@ class SsoController extends Controller
      */
     public function initiate(Request $request): JsonResponse
     {
-        $tenant = tenant();
+        $tenant  = tenant();
         $idpHint = $tenant->sso_provider ?? null;
 
         $state = $this->buildSignedState($tenant->instance_code);
@@ -77,29 +82,71 @@ class SsoController extends Controller
 
         $socialiteUser = Socialite::driver('keycloak')->stateless()->user();
 
-        $user = $this->resolveUser($socialiteUser->getEmail(), $socialiteUser->getId());
+        $user = $this->ssoUserService->resolveUser($socialiteUser->getEmail(), $socialiteUser->getId());
 
         if ($user === null) {
-            $user = $this->provisionUser($socialiteUser);
+            $user = $this->ssoUserService->provisionUser($socialiteUser);
         }
 
         if (! $user->isActive()) {
             return $this->frontendError('account_inactive');
         }
 
-        $idToken = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
+        $idToken      = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
         $refreshToken = $socialiteUser->refreshToken ?? null;
-        $idpIdToken = $this->fetchIdpIdToken($socialiteUser->token, tenant()->sso_provider);
+        $idpIdToken   = $this->fetchIdpIdToken($socialiteUser->token, tenant()->sso_provider);
 
-        $user->sso_id_token = $idToken;
+        $user->sso_id_token      = $idToken;
         $user->sso_refresh_token = $refreshToken;
-        $user->sso_idp_id_token = $idpIdToken;
+        $user->sso_idp_id_token  = $idpIdToken;
         $user->save();
 
         $token = $this->jwtService->generateToken($user);
 
         return $this->frontendRedirect($token);
     }
+
+    /**
+     * SSO logout endpoint.
+     *
+     * When the tenant has sso_force_logout enabled, returns a Keycloak
+     * logout URL that the frontend must navigate to in order to end the
+     * user's Keycloak session (RP-initiated logout).
+     *
+     * When disabled, returns null so the frontend can proceed with a
+     * normal local logout.
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $tenant = tenant();
+
+        if (! $tenant->sso_force_logout) {
+            return response()->json(['logout_url' => null]);
+        }
+
+        /** @var \App\Models\LegacyUser $user */
+        $user = $request->attributes->get('authenticated_user');
+
+        $this->revokeKeycloakSession($user?->sso_refresh_token);
+
+        $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
+
+        $aulaLogoutUrl = $this->buildKeycloakLogoutUrl($user?->sso_id_token, $frontendUrl);
+
+        $logoutUrl = $aulaLogoutUrl;
+        if ($user?->sso_idp_id_token && $aulaLogoutUrl) {
+            $idpLogoutUrl = $this->buildIdpLogoutUrl($user->sso_idp_id_token, $aulaLogoutUrl);
+            if ($idpLogoutUrl) {
+                $logoutUrl = $idpLogoutUrl;
+            }
+        }
+
+        return response()->json(['logout_url' => $logoutUrl]);
+    }
+
+    // =========================================================
+    // Protected helpers
+    // =========================================================
 
     /**
      * Build a signed state payload containing the instance_code.
@@ -109,7 +156,7 @@ class SsoController extends Controller
     {
         $payload = base64_encode(json_encode([
             'instance_code' => $instanceCode,
-            'nonce' => Str::random(16),
+            'nonce'         => Str::random(16),
         ]));
 
         $signature = hash_hmac('sha256', $payload, $this->stateSecret());
@@ -147,141 +194,7 @@ class SsoController extends Controller
     }
 
     /**
-     * Find an existing user by email or sso_sub in a single query.
-     *
-     * If both columns match different rows (corrupt state), the sso_sub match
-     * takes priority and a warning is logged so the duplicate can be cleaned up
-     * manually.
-     */
-    protected function resolveUser(?string $email, string $sub): ?LegacyUser
-    {
-        $candidates = LegacyUser::where('email', $email)
-            ->orWhere('sso_sub', $sub)
-            ->get();
-
-        if ($candidates->isEmpty()) {
-            return null;
-        }
-
-        if ($candidates->count() === 1) {
-            return $candidates->first();
-        }
-
-        $bySubMatch = $candidates->firstWhere('sso_sub', $sub);
-        $byEmailMatch = $candidates->firstWhere('email', $email);
-
-        if ($bySubMatch && $byEmailMatch && $bySubMatch->id !== $byEmailMatch->id) {
-            \Illuminate\Support\Facades\Log::warning('SSO: email and sso_sub match different users — prioritising sso_sub match.', [
-                'email'          => $email,
-                'sub'            => $sub,
-                'sso_sub_user'   => $bySubMatch->id,
-                'email_user'     => $byEmailMatch->id,
-            ]);
-        }
-
-        return $bySubMatch ?? $candidates->first();
-    }
-
-    /**
-     * Create a new user from the SSO claims.
-     */
-    protected function provisionUser(mixed $socialiteUser): LegacyUser
-    {
-        $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
-
-        $user = new LegacyUser;
-        $user->email = $socialiteUser->getEmail();
-        $user->sso_sub = $socialiteUser->getId();
-        $user->sso_provider = tenant()->sso_provider ?? null;
-        $user->username = $username;
-        $user->displayname = $socialiteUser->getName() ?? $username;
-        $user->hash_id = md5($username . microtime(true) . rand(100, 10000000));
-        $user->userlevel = 20; // default: User
-        $user->status = 1;
-        $user->save();
-
-        $this->addToStandardRoom($user);
-
-        return $user;
-    }
-
-    /**
-     * Add a newly provisioned user to the standard room (type=1, the school room).
-     * Mirrors legacy User::addUserToStandardRoom() logic.
-     */
-    protected function addToStandardRoom(LegacyUser $user): void
-    {
-        $room = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
-
-        if ($room === null) {
-            return;
-        }
-
-        // Insert into the room membership table
-        DB::table('au_rel_rooms_users')->insertOrIgnore([
-            'room_id'     => $room->id,
-            'user_id'     => $user->id,
-            'status'      => 1,
-            'created'     => now(),
-            'last_update' => now(),
-            'updater_id'  => 0,
-        ]);
-
-        // Update the user's roles JSON to include the role for this room
-        $roles = json_decode($user->roles ?? '[]', true) ?? [];
-        $roles = array_values(array_filter($roles, fn($r) => ($r['room'] ?? null) !== $room->hash_id));
-        $roles[] = ['role' => 20, 'room' => $room->hash_id];
-
-        DB::table('au_users_basedata')
-            ->where('id', $user->id)
-            ->update(['roles' => json_encode($roles), 'last_update' => now()]);
-    }
-
-    /**
-     * SSO logout endpoint.
-     *
-     * When the tenant has sso_force_logout enabled, returns a Keycloak
-     * logout URL that the frontend must navigate to in order to end the
-     * user's Keycloak session (RP-initiated logout).
-     *
-     * When disabled, returns null so the frontend can proceed with a
-     * normal local logout.
-     */
-    public function logout(Request $request): JsonResponse
-    {
-        $tenant = tenant();
-
-        if (! $tenant->sso_force_logout) {
-            return response()->json(['logout_url' => null]);
-        }
-
-        /** @var \App\Models\LegacyUser $user */
-        $user = $request->attributes->get('authenticated_user');
-
-        $this->revokeKeycloakSession($user?->sso_refresh_token);
-
-        $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
-
-        // Build aula-realm logout URL (clears the Keycloak SSO session cookie).
-        $aulaLogoutUrl = $this->buildKeycloakLogoutUrl($user?->sso_id_token, $frontendUrl);
-
-        // If we have the upstream IdP id_token, chain: IdP logout → aula logout → frontend.
-        // This clears BOTH the IdP session and the Keycloak session.
-        $logoutUrl = $aulaLogoutUrl;
-        if ($user?->sso_idp_id_token && $aulaLogoutUrl) {
-            $idpLogoutUrl = $this->buildIdpLogoutUrl($user->sso_idp_id_token, $aulaLogoutUrl);
-            if ($idpLogoutUrl) {
-                $logoutUrl = $idpLogoutUrl;
-            }
-        }
-
-        return response()->json(['logout_url' => $logoutUrl]);
-    }
-
-    /**
      * Build the Keycloak RP-initiated logout URL using the configured realm.
-     * This clears the SSO session cookie in the browser so the next login
-     * cannot silently re-authenticate.
      */
     protected function buildKeycloakLogoutUrl(?string $idToken, string $redirectUri): ?string
     {
@@ -304,7 +217,7 @@ class SsoController extends Controller
             return;
         }
 
-        $base = rtrim(config('services.keycloak.base_url'), '/');
+        $base  = rtrim(config('services.keycloak.base_url'), '/');
         $realm = config('services.keycloak.realms', 'master');
 
         Http::asForm()->post("{$base}/realms/{$realm}/protocol/openid-connect/logout", [
@@ -316,7 +229,6 @@ class SsoController extends Controller
 
     /**
      * Fetch the upstream IdP's id_token via Keycloak's broker token API.
-     * This token is later used as id_token_hint to log out from the IdP session.
      */
     protected function fetchIdpIdToken(?string $accessToken, ?string $provider): ?string
     {
@@ -324,7 +236,7 @@ class SsoController extends Controller
             return null;
         }
 
-        $base = rtrim(config('services.keycloak.base_url'), '/');
+        $base  = rtrim(config('services.keycloak.base_url'), '/');
         $realm = config('services.keycloak.realms', 'master');
 
         $response = Http::withToken($accessToken)
@@ -338,11 +250,7 @@ class SsoController extends Controller
     }
 
     /**
-     * Build an IdP logout URL by:
-     * 1. Extracting the issuer from the id_token
-     * 2. Fetching the OIDC discovery document to find end_session_endpoint
-     * 3. Appending id_token_hint and post_logout_redirect_uri
-     *
+     * Build an IdP logout URL by discovering the OIDC end_session_endpoint.
      * Works for any OIDC-compliant provider (Keycloak realms, iServ, VIDIS, etc.)
      */
     protected function buildIdpLogoutUrl(?string $idpIdToken, string $redirectUri): ?string
@@ -357,7 +265,7 @@ class SsoController extends Controller
         }
 
         $payload = json_decode(base64_decode(str_pad($parts[1], strlen($parts[1]) + (4 - strlen($parts[1]) % 4) % 4, '=')), true);
-        $issuer = rtrim($payload['iss'] ?? '', '/');
+        $issuer  = rtrim($payload['iss'] ?? '', '/');
 
         if (! $issuer) {
             return null;
@@ -383,7 +291,6 @@ class SsoController extends Controller
     {
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
 
-        // Reuses the existing /oauth-login/:jwt_token route in the frontend
         return redirect("{$frontendUrl}/oauth-login/{$token}");
     }
 
