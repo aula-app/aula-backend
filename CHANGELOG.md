@@ -7,7 +7,6 @@
 
 - fix: super_moderator_v role permissions on IdeaRemoveLike, CommentAddLike and CommentRemoveLike
 - fix: new tenants can't be used due to permission issue
-- fix: remove mariadb persistent connections from legacy connector
 
 ## v2.1.0
 
@@ -38,6 +37,9 @@
 
 ##
 
+## v1.9.4
+
+- fix: remove mariadb persistent connections from legacy connector
 - fix(upload): backup/restore of uploaded files by creating instance folder with 0770 perms
 
 ## v1.9.3
