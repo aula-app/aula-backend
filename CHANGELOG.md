@@ -3,6 +3,11 @@
 
 # v2
 
+## v2.1.1
+
+- fix: super_moderator_v role permissions on IdeaRemoveLike, CommentAddLike and CommentRemoveLike
+- fix: new tenants can't be used due to permission issue
+
 ## v2.1.0
 
 - feat: aula Manager using Filament

@@ -30,3 +30,21 @@ run-legacy-release:
 
 test:
 	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from app-test
+
+# Simplistic tasks that mirror the scans in .github/workflows/pr-vuln-scan.yml
+.PHONY: trivy
+trivy: trivy-legacy-image
+trivy: trivy-image
+trivy: trivy-fs
+
+.PHONY: trivy-legacy-image
+trivy-legacy-image:
+	trivy image aula-v2-aula-backend-legacy:latest
+
+.PHONY: trivy-image
+trivy-image:
+	trivy image aula-v2-aula-backend.v2:latest
+
+.PHONY: trivy-fs
+trivy-fs:
+	trivy fs .

@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Listen for Xdebug",
+      "type": "php",
+      "request": "launch",
+      "port": 9003,
+      "pathMappings": {
+        "/var/www/html/api": "${workspaceFolder}/legacy/src",
+        "/var/www/html/config": "${workspaceFolder}/legacy/config",
+        "/var/www/html/cron.php": "${workspaceFolder}/legacy/cron.php"
+      },
+      "log": true
+    }
+  ]
+}
