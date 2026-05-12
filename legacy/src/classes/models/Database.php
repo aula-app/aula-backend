@@ -51,7 +51,6 @@
         // Set up a PDO connection
         $dsn = "mysql:host=$this->host;port=$this->port;dbname=$this->dbname";
         $options = array(
-            PDO::ATTR_PERSISTENT => true,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         );
         try {
