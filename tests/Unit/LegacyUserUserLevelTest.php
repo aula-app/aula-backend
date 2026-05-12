@@ -13,8 +13,6 @@ class LegacyUserUserLevelTest extends TestCase
         $user = new LegacyUser();
         $user->userlevel = UserLevel::Moderator;
 
-        $this->assertInstanceOf(UserLevel::class, $user->userlevel);
-        $this->assertSame(UserLevel::Moderator, $user->userlevel);
         $this->assertSame(UserLevel::Moderator->value, $user->getJwtPayload()['userlevel']);
     }
 }

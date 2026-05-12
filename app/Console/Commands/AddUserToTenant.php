@@ -63,16 +63,8 @@ class AddUserToTenant extends Command
         }
 
         // Select role
-        $roleChoices = collect(UserLevel::cases())
-            ->mapWithKeys(fn (UserLevel $level) => [
-                "{$level->label()} ({$level->value})" => $level,
-            ])
-            ->all();
-        $defaultRoleChoice = array_search(
-            UserLevel::Admin->label().' ('.UserLevel::Admin->value.')',
-            array_keys($roleChoices),
-            true
-        );
+        $roleChoices = $this->roleChoices();
+        $defaultRoleChoice = $this->roleChoiceIndex(UserLevel::Admin, $roleChoices);
 
         $selectedRole = $this->choice(
             'Select role',
@@ -160,5 +152,30 @@ class AddUserToTenant extends Command
         $this->info("User '{$username}' created successfully as {$roleName}.");
 
         return self::SUCCESS;
+    }
+
+    private function roleChoices(): array
+    {
+        return collect(UserLevel::cases())
+            ->mapWithKeys(fn (UserLevel $level) => [
+                $this->roleChoiceLabel($level) => $level,
+            ])
+            ->all();
+    }
+
+    private function roleChoiceIndex(UserLevel $level, array $roleChoices): int
+    {
+        $index = array_search($this->roleChoiceLabel($level), array_keys($roleChoices), true);
+
+        if ($index === false) {
+            throw new \RuntimeException("Role choice for '{$level->value}' was not found.");
+        }
+
+        return $index;
+    }
+
+    private function roleChoiceLabel(UserLevel $level): string
+    {
+        return "{$level->label()} ({$level->value})";
     }
 }

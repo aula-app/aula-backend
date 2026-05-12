@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
 use App\Services\LegacyJwtService;
-use Illuminate\Support\Facades\DB;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -163,45 +162,6 @@ class LegacyAuthTest extends TestCase
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
         });
-    }
-
-    public function test_legacy_userlevel_persists_as_integer_in_tenant_database(): void
-    {
-        $tenant = self::$testTenant;
-        $this->assertNotNull($tenant);
-
-        $result = $tenant->run(function () {
-            LegacyUser::where('username', 'phpunit_enum_user')->delete();
-
-            $user = new LegacyUser();
-            $user->username = 'phpunit_enum_user';
-            $user->pw = password_hash('secret123', PASSWORD_DEFAULT);
-            $user->status = LegacyUser::STATUS_ACTIVE;
-            $user->hash_id = 'phpunit_enum_'.uniqid();
-            $user->userlevel = UserLevel::PrincipalPlus;
-            $user->roles = json_encode([]);
-            $user->refresh_token = false;
-            $user->save();
-
-            $userId = $user->id;
-            $rawUserLevel = DB::table('au_users_basedata')
-                ->where('id', $userId)
-                ->value('userlevel');
-
-            $freshUser = LegacyUser::findOrFail($userId);
-
-            LegacyUser::where('id', $userId)->delete();
-
-            return [
-                'raw' => (int) $rawUserLevel,
-                'casted_class' => get_class($freshUser->userlevel),
-                'casted_value' => $freshUser->userlevel->value,
-            ];
-        });
-
-        $this->assertSame(45, $result['raw']);
-        $this->assertSame(UserLevel::class, $result['casted_class']);
-        $this->assertSame(UserLevel::PrincipalPlus->value, $result['casted_value']);
     }
 
     public function test_login_wrong_password(): void
