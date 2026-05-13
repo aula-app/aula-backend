@@ -3,6 +3,9 @@ name: Scan for vulnerabilities using Trivy
 # Use `make trivy` to run them locally
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 
