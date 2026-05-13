@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\UserLevel;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,7 @@ class ListTenants extends Command
             try {
                 $admins = $tenant->run(function () {
                     return DB::table('au_users_basedata')
-                        ->where('userlevel', '>=', 50)
+                        ->where('userlevel', '>=', UserLevel::Admin->value)
                         ->orderBy('userlevel', 'desc')
                         ->orderBy('id')
                         ->get(['id', 'username', 'realname', 'email', 'userlevel', 'status']);
@@ -56,11 +57,7 @@ class ListTenants extends Command
                     $this->line('  No admin users found.');
                 } else {
                     $rows = $admins->map(function ($admin) {
-                        $level = match ($admin->userlevel) {
-                            60 => 'Tech Admin',
-                            50 => 'Admin',
-                            default => "Level {$admin->userlevel}",
-                        };
+                        $level = UserLevel::labelFor((int) $admin->userlevel);
 
                         $status = match ($admin->status) {
                             0 => 'Inactive',

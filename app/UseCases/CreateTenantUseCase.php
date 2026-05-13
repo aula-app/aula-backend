@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\UseCases;
 
+use App\Enums\UserLevel;
 use App\Models\Tenant;
 use App\Services\TenantsService;
 use Illuminate\Support\Facades\DB;
@@ -112,7 +113,7 @@ class CreateTenantUseCase
             'hash_id' => Str::random(32),
             'registration_status' => 2,
             'status' => 1,
-            'userlevel' => 50,
+            'userlevel' => UserLevel::Admin->value,
             'created' => $now,
             'last_update' => $now,
             'pw_changed' => $pwChanged,
