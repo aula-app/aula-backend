@@ -37,6 +37,9 @@
 
 ##
 
+## v1.9.4
+
+- fix: remove mariadb persistent connections from legacy connector
 - fix(upload): backup/restore of uploaded files by creating instance folder with 0770 perms
 
 ## v1.9.3
