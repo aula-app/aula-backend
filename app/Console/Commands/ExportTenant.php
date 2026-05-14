@@ -71,10 +71,21 @@ class ExportTenant extends Command
                 return self::FAILURE;
             }
 
+            $grants = implode(', ', [
+                'ALTER', 'ALTER ROUTINE', 'CREATE', 'CREATE ROUTINE', 'CREATE TEMPORARY TABLES', 'CREATE VIEW',
+                'DELETE', 'DROP', 'EVENT', 'EXECUTE', 'INDEX', 'INSERT', 'LOCK TABLES', 'REFERENCES', 'SELECT',
+                'SHOW VIEW', 'TRIGGER', 'UPDATE',
+            ]);
+            file_put_contents("{$tmpDir}/setup.sql", implode("\n", [
+                "CREATE DATABASE `{{DB_NAME}}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
+                "CREATE USER `{{DB_USER}}`@`%` IDENTIFIED BY '{{DB_PASS}}';",
+                "GRANT {$grants} ON `{{DB_NAME}}`.* TO `{{DB_USER}}`@`%`;",
+            ]));
+
             $result = Process::run([
                 'tar', '-czf', $outputFile,
                 '-C', $tmpDir,
-                'tenant.json', 'tenant.sql',
+                'tenant.json', 'tenant.sql', 'setup.sql',
             ]);
 
             if (! $result->successful()) {

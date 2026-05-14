@@ -27,9 +27,14 @@ function makeTenantArchive(array $overrides = []): string
     mkdir($dir, 0700, true);
     file_put_contents("{$dir}/tenant.json", json_encode($data, JSON_UNESCAPED_UNICODE));
     file_put_contents("{$dir}/tenant.sql", '-- empty');
+    file_put_contents("{$dir}/setup.sql", implode("\n", [
+        "CREATE DATABASE `{{DB_NAME}}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
+        "CREATE USER `{{DB_USER}}`@`%` IDENTIFIED BY '{{DB_PASS}}';",
+        "GRANT SELECT ON `{{DB_NAME}}`.* TO `{{DB_USER}}`@`%`;",
+    ]));
 
     $archive = sys_get_temp_dir().'/test_import_'.uniqid().'.tar.gz';
-    exec("tar -czf {$archive} -C {$dir} tenant.json tenant.sql");
+    exec("tar -czf {$archive} -C {$dir} tenant.json tenant.sql setup.sql");
     exec("rm -rf {$dir}");
 
     return $archive;
