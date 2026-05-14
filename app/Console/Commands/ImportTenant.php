@@ -50,8 +50,8 @@ class ImportTenant extends Command
             return self::FAILURE;
         }
 
-        if (! file_exists("{$tmpDir}/tenant.json") || ! file_exists("{$tmpDir}/tenant.sql")) {
-            $this->error('Archive is missing tenant.json or tenant.sql.');
+        if (! file_exists("{$tmpDir}/tenant.json") || ! file_exists("{$tmpDir}/tenant.sql") || ! file_exists("{$tmpDir}/setup.sql")) {
+            $this->error('Archive is missing tenant.json, tenant.sql, or setup.sql.');
 
             return self::FAILURE;
         }
@@ -129,14 +129,7 @@ class ImportTenant extends Command
 
         $this->info("Creating database: {$dbName}");
 
-        DB::statement("CREATE DATABASE `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        $grants = implode(', ', [
-            'ALTER', 'ALTER ROUTINE', 'CREATE', 'CREATE ROUTINE', 'CREATE TEMPORARY TABLES', 'CREATE VIEW',
-            'DELETE', 'DROP', 'EVENT', 'EXECUTE', 'INDEX', 'INSERT', 'LOCK TABLES', 'REFERENCES', 'SELECT',
-            'SHOW VIEW', 'TRIGGER', 'UPDATE',
-        ]);
-        DB::statement("CREATE USER `{$dbUser}`@`%` IDENTIFIED BY '{$dbPass}'");
-        DB::statement("GRANT {$grants} ON `{$dbName}`.* TO `{$dbUser}`@`%`");
+        $this->executeSetupSql($tmpDir, $dbName, $dbUser, $dbPass);
 
         $this->info('Importing database dump...');
 
@@ -170,5 +163,17 @@ class ImportTenant extends Command
         $this->line("  Database:      {$dbName}");
 
         return self::SUCCESS;
+    }
+
+    private function executeSetupSql(string $tmpDir, string $dbName, string $dbUser, string $dbPass): void
+    {
+        $sql = str_replace(
+            ['{{DB_NAME}}', '{{DB_USER}}', '{{DB_PASS}}'],
+            [$dbName, $dbUser, $dbPass],
+            file_get_contents("{$tmpDir}/setup.sql")
+        );
+        foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $statement) {
+            DB::statement($statement);
+        }
     }
 }
