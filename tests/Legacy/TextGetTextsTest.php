@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Legacy;
 
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
