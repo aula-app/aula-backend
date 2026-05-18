@@ -40,5 +40,7 @@ ENV APP_VERSION=$DOCKER_TAG
 
 # Copy everything (respects .dockerignore)
 COPY . .
+# Reown by www-data and make sure setgid bit is on for storage, so
+#   any new folders created in ./storage will inherit the group www-data
 RUN chown -R www-data:www-data ./ \
-    && chmod -R 755 ./storage
+    && chmod -R u=rwx,g=rws,o=rx ./storage

@@ -120,15 +120,12 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
 
       "CommentRemoveLike" => [
         "open_roles" => [
-          "super_moderator",
           "super_moderator_v",
-          "principal",
           "principal_v",
           "admin"
         ],
         "roles" => [
           "user",
-          "moderator",
           "moderator_v"
         ],
         "from_room" => [
@@ -1047,15 +1044,14 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ],
 
         "IdeaRemoveLike" => [
-          "roles" => [
-            "user",
-            "moderator",
-            "moderator_v",
-            "super_moderator",
+          "open_roles" => [
             "super_moderator_v",
-            "principal",
             "principal_v",
             "admin"
+          ],
+          "roles" => [
+            "user",
+            "moderator_v",
           ],
           "from_room" => [
             "get_room" => "idea_id"

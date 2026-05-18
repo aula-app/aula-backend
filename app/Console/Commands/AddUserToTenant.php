@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\UserLevel;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -14,19 +15,6 @@ class AddUserToTenant extends Command
     protected $signature = 'tenant:add-user';
 
     protected $description = 'Add a user to a tenant instance';
-
-    private const ROLES = [
-        10 => 'Guest',
-        20 => 'User',
-        30 => 'Moderator',
-        31 => 'Moderator+',
-        40 => 'Super Moderator',
-        41 => 'Super Moderator+',
-        44 => 'Principal',
-        45 => 'Principal+',
-        50 => 'Admin',
-        60 => 'Tech Admin',
-    ];
 
     public function handle(): int
     {
@@ -75,17 +63,17 @@ class AddUserToTenant extends Command
         }
 
         // Select role
-        $roleChoices = array_map(
-            fn ($level, $name) => "{$name} ({$level})",
-            array_keys(self::ROLES),
-            array_values(self::ROLES)
+        $roleChoices = $this->roleChoices();
+        $defaultRoleChoice = $this->roleChoiceIndex(UserLevel::Admin, $roleChoices);
+
+        $selectedRole = $this->choice(
+            'Select role',
+            array_keys($roleChoices),
+            $defaultRoleChoice
         );
 
-        $selectedRole = $this->choice('Select role', $roleChoices, 8); // Default: Admin (50)
-
-        preg_match('/\((\d+)\)$/', $selectedRole, $matches);
-        $userlevel = (int) $matches[1];
-        $roleName = self::ROLES[$userlevel];
+        $userlevel = $roleChoices[$selectedRole];
+        $roleName = $userlevel->label();
 
         // Ask for password
         $password = $this->secret('Password');
@@ -114,7 +102,7 @@ class AddUserToTenant extends Command
                 ['Username', $username],
                 ['Full Name', $fullName],
                 ['Email', $email],
-                ['Role', "{$roleName} ({$userlevel})"],
+                ['Role', "{$roleName} ({$userlevel->value})"],
             ]
         );
 
@@ -147,7 +135,7 @@ class AddUserToTenant extends Command
                     'hash_id' => Str::random(32),
                     'registration_status' => 2,
                     'status' => 1,
-                    'userlevel' => $userlevel,
+                    'userlevel' => $userlevel->value,
                     'created' => $now,
                     'last_update' => $now,
                     'pw_changed' => 1,
@@ -164,5 +152,30 @@ class AddUserToTenant extends Command
         $this->info("User '{$username}' created successfully as {$roleName}.");
 
         return self::SUCCESS;
+    }
+
+    private function roleChoices(): array
+    {
+        return collect(UserLevel::cases())
+            ->mapWithKeys(fn (UserLevel $level) => [
+                $this->roleChoiceLabel($level) => $level,
+            ])
+            ->all();
+    }
+
+    private function roleChoiceIndex(UserLevel $level, array $roleChoices): int
+    {
+        $index = array_search($this->roleChoiceLabel($level), array_keys($roleChoices), true);
+
+        if ($index === false) {
+            throw new \RuntimeException("Role choice for '{$level->value}' was not found.");
+        }
+
+        return $index;
+    }
+
+    private function roleChoiceLabel(UserLevel $level): string
+    {
+        return "{$level->label()} ({$level->value})";
     }
 }
