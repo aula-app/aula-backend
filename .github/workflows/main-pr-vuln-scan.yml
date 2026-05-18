@@ -1,4 +1,4 @@
-name: Scan for vulnerabilities using Trivy
+name: Scan for vulnerabilities using Trivy (image+fs) and Psalm
 
 # Use `make trivy` to run them locally
 
@@ -47,7 +47,7 @@ jobs:
           sarif_file: './trivy-results-legacy.sarif'
           category: trivy-legacy-image
 
-  build_and_scan_v2:
+  build_and_scan_v2_trivy_fs_psalm:
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -72,6 +72,18 @@ jobs:
         with:
           sarif_file: './trivy-results-fs.sarif'
           category: trivy-v2-fs
+
+      - name: "Run Psalm (static PHP analysis)"
+        uses: docker://ghcr.io/psalm/psalm-github-actions
+        with:
+          security_analysis: true
+          report_file: './psalm-results.sarif'
+
+      - name: "Upload Psalm scan results to GitHub Security tab"
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: './psalm-results.sarif'
+          category: psalm
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
