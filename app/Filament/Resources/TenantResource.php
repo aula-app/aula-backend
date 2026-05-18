@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TenantResource\Pages;
+use App\Models\SchoolType;
 use App\Models\Tenant;
 use App\Services\TenantsService;
 use Filament\Actions\Action as FormAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -76,9 +78,11 @@ class TenantResource extends Resource
                         ->rows(3)
                         ->maxLength(1000),
 
-                    TextInput::make('school_type')
+                    Select::make('school_type_id')
                         ->label('Type of School')
-                        ->maxLength(255),
+                        ->options(fn () => SchoolType::orderBy('name')->pluck('name', 'id'))
+                        ->searchable()
+                        ->nullable(),
                 ]),
 
             Section::make('Primary Admin')

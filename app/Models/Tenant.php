@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
@@ -16,7 +17,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'name',
             'api_base_url',
             'contact_info',
-            'school_type',
+            'school_type_id',
             'admin1_name',
             'admin1_username',
             'admin1_email',
@@ -28,5 +29,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'instance_code',
             'jwt_key',
         ]);
+    }
+
+    public function schoolType(): BelongsTo
+    {
+        return $this->belongsTo(SchoolType::class);
     }
 }
