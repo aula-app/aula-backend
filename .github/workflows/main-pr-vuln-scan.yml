@@ -1,0 +1,133 @@
+name: Scan for vulnerabilities using Trivy
+
+# Use `make trivy` to run them locally
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build_and_scan_v1:
+    runs-on: [self-hosted, cicd]
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: "[legacy] Add IMAGE_TAG_LEGACY_SHORT_SHA env property with commit short sha"
+        run: echo "IMAGE_TAG_LEGACY_SHORT_SHA=aulaapp/${{ github.event.repository.name }}:legacy-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: "[legacy] Build and tag legacy Docker image"
+        working-directory: ./legacy
+        run: docker build -t $IMAGE_TAG_LEGACY_SHORT_SHA .
+
+      - name: "[legacy] Run Trivy vuln scanner"
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_TAG_LEGACY_SHORT_SHA }}
+          format: 'sarif'
+          output: './trivy-results-legacy.sarif'
+          # exit-code: '1'
+          # ignore-unfixed: true
+          # vuln-type: 'os,library'
+          # severity: 'CRITICAL,HIGH'
+
+      - name: "[legacy] Upload Trivy scan results to GitHub Security tab"
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: './trivy-results-legacy.sarif'
+          category: trivy-legacy-image
+
+  build_and_scan_v2:
+    runs-on: [self-hosted, cicd]
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      # n.b. this will essentially ignore /legacy because there are no composer or other lockfiles
+      - name: "Run Trivy vuln scanner, fs mode"
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: './trivy-results-fs.sarif'
+        # trivy-config: trivy.yaml
+
+      - name: Upload Trivy scan results, fs mode, to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: './trivy-results-fs.sarif'
+          category: trivy-v2-fs
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Add IMAGE_TAG_SHORT_SHA env property with commit short sha
+        run: echo "IMAGE_TAG_SHORT_SHA=aulaapp/${{ github.event.repository.name }}:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build and tag Docker image
+        run: docker build -t $IMAGE_TAG_SHORT_SHA .
+
+      - name: "Run Trivy vuln scanner, image mode"
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_TAG_SHORT_SHA }}
+          format: 'sarif'
+          output: './trivy-results-image.sarif'
+          skip-setup-trivy: true
+
+      - name: Upload Trivy scan results, image mode, to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: './trivy-results-image.sarif'
+          category: trivy-v2-image
+
+  # Dockerfile.test installs a subset of v2's packages, but uses a different base (cli-alpine, not fpm), so it's worth scanning;
+  # also packages (and configs etc.) could diverge at some point
+  build_and_scan_test:
+    runs-on: [self-hosted, cicd]
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: "[test] Add IMAGE_TAG_TEST_SHORT_SHA env property with commit short sha"
+        run: echo "IMAGE_TAG_TEST_SHORT_SHA=aulaapp/${{ github.event.repository.name }}:test-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: "[test] Build and tag Docker image"
+        run: docker build -t $IMAGE_TAG_TEST_SHORT_SHA -f Dockerfile.test .
+
+      - name: "[test] Run Trivy vuln scanner"
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_TAG_TEST_SHORT_SHA }}
+          format: 'sarif'
+          output: './trivy-results.sarif'
+
+      - name: "[test] Upload Trivy scan results to GitHub Security tab"
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: './trivy-results.sarif'
+          category: trivy-test-image
+
