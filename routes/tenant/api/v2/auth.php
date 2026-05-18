@@ -29,7 +29,7 @@ Route::middleware('legacy.jwt')->group(function () {
             'email' => $user->email,
             'displayname' => $user->displayname,
             'realname' => $user->realname,
-            'userlevel' => $user->userlevel,
+            'userlevel' => $user->userlevel?->value,
             'roles' => json_decode($user->roles ?? '[]'),
         ]);
     })->name('me');
