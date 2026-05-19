@@ -10,7 +10,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build_and_scan_v1:
+  build_and_scan_v1_trivy:
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -47,7 +47,7 @@ jobs:
           sarif_file: './trivy-results-legacy.sarif'
           category: trivy-legacy-image
 
-  build_and_scan_v2_trivy_fs_psalm:
+  build_and_scan_v2_trivy_fs:
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -72,32 +72,6 @@ jobs:
         with:
           sarif_file: './trivy-results-fs.sarif'
           category: trivy-v2-fs
-
-      # tries to find XSS+injections, see https://psalm.dev/articles/detect-security-vulnerabilities-with-psalm
-      - name: "Run Psalm (static PHP analysis), security/taint"
-        uses: docker://ghcr.io/psalm/psalm-github-actions
-        with:
-          composer_ignore_platform_reqs: true
-          security_analysis: true
-          report_file: './psalm-results-security.sarif'
-
-      - name: "Upload Psalm scan results to GitHub Security tab"
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: './psalm-results-security.sarif'
-          category: psalm-security
-
-      - name: "Run Psalm (static PHP analysis), generic"
-        uses: docker://ghcr.io/psalm/psalm-github-actions
-        with:
-          composer_ignore_platform_reqs: true
-          report_file: './psalm-results.sarif'
-
-      - name: "Upload Psalm scan results to GitHub Security tab"
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: './psalm-results.sarif'
-          category: psalm
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -125,7 +99,7 @@ jobs:
 
   # Dockerfile.test installs a subset of v2's packages, but uses a different base (cli-alpine, not fpm), so it's worth scanning;
   # also packages (and configs etc.) could diverge at some point
-  build_and_scan_test:
+  build_and_scan_test_trivy:
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -157,3 +131,49 @@ jobs:
           sarif_file: './trivy-results.sarif'
           category: trivy-test-image
 
+  scan_v2_psalm:
+    runs-on: [self-hosted, cicd]
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2 # v2 = rolling
+        # with:
+          # php-version: '8.3' # default = from composer.*
+          # extensions: pdo
+          # coverage: none
+
+      - name: Cache Composer /vendor
+        uses: actions/cache@v2
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Composer install
+        run: composer install --no-interaction
+
+      - name: Run Psalm, generic
+        run: ./vendor/bin/psalm --report=./psalm-results.sarif
+        # filtering for exit code 2 ("found errors successfully") would be more specific
+        continue-on-error: true
+
+      # tries to find XSS+injections, see https://psalm.dev/articles/detect-security-vulnerabilities-with-psalm
+      - name: Run Psalm, security/taint
+        run: ./vendor/bin/psalm --taint-analysis --report=./psalm-results-security.sarif
+        continue-on-error: true
+
+      - name: "Upload Psalm scan results to GitHub Security tab"
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: './psalm-results.sarif'
+          category: psalm
+
+      - name: "Upload Psalm scan results to GitHub Security tab"
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: './psalm-results-security.sarif'
+          category: psalm-security
