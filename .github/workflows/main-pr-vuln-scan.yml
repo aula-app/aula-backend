@@ -143,14 +143,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Run Psalm, generic
-        run: docker run -u $(id -u):$(id -g) -v $PWD:/app --rm ghcr.io/danog/psalm:latest sh -c "composer install --no-dev --ignore-platform-reqs && /composer/vendor/bin/psalm --no-cache --report=/app/psalm-results.sarif"
+      # We don't do `uses: docker://ghcr.io/psalm/psalm-github-actions`
+      # because it installs /vendor as root, which trips up next checkout.
+      # --taint-analysis tries to find XSS+injections, see
+      # https://psalm.dev/articles/detect-security-vulnerabilities-with-psalm
+      # TODO: consider binding /vendor or /.composer/cache/files/ to a volume for caching
+      - name: Run Psalm
+        run: |
+          docker run \
+            -u $(id -u):$(id -g) \
+            -v $PWD:/app \
+            --rm \
+            ghcr.io/danog/psalm:latest \
+            sh -c \
+              "composer install --no-dev --ignore-platform-reqs ; \
+               /composer/vendor/bin/psalm --no-cache --report=/app/psalm-results.sarif ; \
+               /composer/vendor/bin/psalm --no-cache --taint-analysis --report=/app/psalm-results-security.sarif"
+        # psalm will have exit code 2 when it finds something to report
         continue-on-error: true
-
-      # tries to find XSS+injections, see https://psalm.dev/articles/detect-security-vulnerabilities-with-psalm
-      #- name: Run Psalm, security/taint
-      #  run: ./vendor/bin/psalm --taint-analysis --report=./psalm-results-security.sarif
-      #  continue-on-error: true
 
       - name: "Upload Psalm scan results to GitHub Security tab"
         uses: github/codeql-action/upload-sarif@v4
@@ -158,8 +168,8 @@ jobs:
           sarif_file: './psalm-results.sarif'
           category: psalm
 
-      #- name: "Upload Psalm scan results to GitHub Security tab"
-      #  uses: github/codeql-action/upload-sarif@v4
-      #  with:
-      #    sarif_file: './psalm-results-security.sarif'
-      #    category: psalm-security
+      - name: "Upload Psalm scan results to GitHub Security tab, taint/security"
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: './psalm-results-security.sarif'
+          category: psalm-security
