@@ -143,15 +143,15 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2 # v2 = rolling
         # with:
-          # php-version: '8.3' # default = from composer.*
-          # extensions: pdo
-          # coverage: none
+        #   php-version: '8.3' # default = from composer.*
+        #   extensions: pdo
+        #   coverage: none
 
-      - name: Cache Composer /vendor
-        uses: actions/cache@v2
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+      #- name: Cache Composer /vendor
+      #  uses: actions/cache@v2
+      #  with:
+      #    path: vendor
+      #    key: composer-${{ hashFiles('composer.lock') }}
 
       - name: Composer install
         run: composer install --no-interaction
