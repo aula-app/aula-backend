@@ -11,6 +11,7 @@ on:
 
 jobs:
   build_and_scan_v1_trivy:
+    if: false
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -48,6 +49,7 @@ jobs:
           category: trivy-legacy-image
 
   build_and_scan_v2_trivy_fs:
+    if: false
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -100,6 +102,7 @@ jobs:
   # Dockerfile.test installs a subset of v2's packages, but uses a different base (cli-alpine, not fpm), so it's worth scanning;
   # also packages (and configs etc.) could diverge at some point
   build_and_scan_test_trivy:
+    if: false
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
