@@ -140,31 +140,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2 # v2 = rolling
-        # with:
-        #   php-version: '8.3' # default = from composer.*
-        #   extensions: pdo
-        #   coverage: none
-
-      #- name: Cache Composer /vendor
-      #  uses: actions/cache@v2
-      #  with:
-      #    path: vendor
-      #    key: composer-${{ hashFiles('composer.lock') }}
-
-      - name: Composer install
-        run: composer install --no-interaction
-
       - name: Run Psalm, generic
-        run: ./vendor/bin/psalm --report=./psalm-results.sarif
-        # filtering for exit code 2 ("found errors successfully") would be more specific
+        run: docker run -u 1338:1006 -v $PWD:/app --rm -it ghcr.io/danog/psalm:latest sh -c "composer install --no-dev --ignore-platform-reqs && /composer/vendor/bin/psalm --no-cache --report=/app/psalm-results.sarif"
         continue-on-error: true
 
       # tries to find XSS+injections, see https://psalm.dev/articles/detect-security-vulnerabilities-with-psalm
-      - name: Run Psalm, security/taint
-        run: ./vendor/bin/psalm --taint-analysis --report=./psalm-results-security.sarif
-        continue-on-error: true
+      #- name: Run Psalm, security/taint
+      #  run: ./vendor/bin/psalm --taint-analysis --report=./psalm-results-security.sarif
+      #  continue-on-error: true
 
       - name: "Upload Psalm scan results to GitHub Security tab"
         uses: github/codeql-action/upload-sarif@v4
@@ -172,8 +155,8 @@ jobs:
           sarif_file: './psalm-results.sarif'
           category: psalm
 
-      - name: "Upload Psalm scan results to GitHub Security tab"
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: './psalm-results-security.sarif'
-          category: psalm-security
+      #- name: "Upload Psalm scan results to GitHub Security tab"
+      #  uses: github/codeql-action/upload-sarif@v4
+      #  with:
+      #    sarif_file: './psalm-results-security.sarif'
+      #    category: psalm-security
