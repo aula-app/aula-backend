@@ -64,11 +64,6 @@
       <code><![CDATA[microtime(true)]]></code>
     </InvalidOperand>
   </file>
-  <file src="routes/api.user.php">
-    <UndefinedClass>
-      <code><![CDATA[LegacyUserController]]></code>
-    </UndefinedClass>
-  </file>
   <file src="routes/console.php">
     <InvalidScope>
       <code><![CDATA[$this]]></code>
