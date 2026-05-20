@@ -49,7 +49,17 @@ class SsoUserService
      */
     public function provisionUser(mixed $socialiteUser): LegacyUser
     {
-        $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
+        $nickname = $socialiteUser->getNickname();
+        $email    = $socialiteUser->getEmail();
+        $username = $nickname ?? $email;
+
+        if ($nickname === null) {
+            Log::warning('SSO: nickname missing from upstream IdP — falling back to email for username.', [
+                'sub'      => $socialiteUser->getId(),
+                'email'    => $email,
+                'provider' => tenant()->sso_provider ?? null,
+            ]);
+        }
 
         $user             = new LegacyUser;
         $user->email      = $socialiteUser->getEmail();
