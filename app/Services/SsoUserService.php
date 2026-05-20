@@ -50,27 +50,15 @@ class SsoUserService
      */
     public function provisionUser(SocialiteUser $socialiteUser): LegacyUser
     {
-        $nickname = $socialiteUser->getNickname();
-        $email    = $socialiteUser->getEmail();
-        $username = $nickname ?? $email;
-
-        if ($nickname === null) {
+        if ($socialiteUser->getNickname() === null) {
             Log::warning('SSO: nickname missing from upstream IdP — falling back to email for username.', [
                 'sub'      => $socialiteUser->getId(),
-                'email'    => $email,
+                'email'    => $socialiteUser->getEmail(),
                 'provider' => tenant()->sso_provider ?? null,
             ]);
         }
 
-        $user             = new LegacyUser;
-        $user->email      = $socialiteUser->getEmail();
-        $user->sso_sub    = $socialiteUser->getId();
-        $user->sso_provider = tenant()->sso_provider ?? null;
-        $user->username   = $username;
-        $user->displayname = $socialiteUser->getName() ?? $username;
-        $user->hash_id    = md5($username . microtime(true) . rand(100, 10000000));
-        $user->userlevel  = 20; // default: User
-        $user->status     = 1;
+        $user = LegacyUser::fromSocialiteUser($socialiteUser, tenant()->sso_provider ?? null);
         $user->save();
 
         $this->addToStandardRoom($user);
