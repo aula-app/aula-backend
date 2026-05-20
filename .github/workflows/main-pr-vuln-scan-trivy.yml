@@ -7,10 +7,11 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   build_and_scan_v1_trivy:
+    # TODO: remove this
     if: false
     runs-on: [self-hosted, cicd]
     permissions:
@@ -49,6 +50,7 @@ jobs:
           category: trivy-legacy-image
 
   build_and_scan_v2_trivy_fs:
+    # TODO: remove this
     if: false
     runs-on: [self-hosted, cicd]
     permissions:
@@ -102,6 +104,7 @@ jobs:
   # Dockerfile.test installs a subset of v2's packages, but uses a different base (cli-alpine, not fpm), so it's worth scanning;
   # also packages (and configs etc.) could diverge at some point
   build_and_scan_test_trivy:
+    # TODO: remove this
     if: false
     runs-on: [self-hosted, cicd]
     permissions:
@@ -133,38 +136,3 @@ jobs:
         with:
           sarif_file: './trivy-results.sarif'
           category: trivy-test-image
-
-  scan_v2_psalm:
-    runs-on: [self-hosted, cicd]
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      # We don't do `uses: docker://ghcr.io/psalm/psalm-github-actions`
-      # because it installs /vendor as root, which trips up next checkout.
-      # --output-format=github will produce ::error workflow commands which GH will display
-      # --taint-analysis tries to find XSS+injections, see
-      # https://psalm.dev/articles/detect-security-vulnerabilities-with-psalm
-      # TODO: consider binding /vendor or /.composer/cache/files/ to a volume for caching
-      - name: Run Psalm
-        run: |
-          docker run \
-            -u $(id -u):$(id -g) \
-            -v $PWD:/app \
-            --rm \
-            ghcr.io/danog/psalm:latest \
-            sh -c \
-              "composer install --no-dev --ignore-platform-reqs ; \
-               /composer/vendor/bin/psalm --no-cache --output-format=github; \
-               /composer/vendor/bin/psalm --no-cache --taint-analysis --report=/app/psalm-results-security.sarif"
-        # psalm will have exit code 2 when it finds something to report
-        continue-on-error: true
-
-      - name: "Upload Psalm taint/security scan results to GitHub Security tab"
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: './psalm-results-security.sarif'
-          category: psalm-security

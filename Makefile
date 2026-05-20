@@ -50,14 +50,22 @@ trivy-image:
 trivy-fs:
 	trivy fs .
 
+# --taint-analysis is unnecessary with psalm-laravel
 .PHONY: psalm
-psalm: psalm-generic
-psalm: psalm-security
-
-.PHONY: psalm-generic
-psalm-generic:
+psalm:
 	psalm
 
-.PHONY: psalm-security
-psalm-security:
-	psalm --taint-analysis
+# tries to mirror .github/workflow/main-pr-scan-psalm.yml
+.PHONY: psalm-docker
+psalm-docker:
+	docker run \
+		-u $(shell id -u):$(shell id -g) \
+		-v ${PWD}:/app \
+		--rm \
+		ghcr.io/danog/psalm:7.0.0-beta19 \
+		sh -c \
+			"composer install --ignore-platform-reqs ; \
+			 /app/vendor/bin/psalm \
+				--no-cache \
+				--output-format=github \
+				--report=/app/psalm-results.sarif"
