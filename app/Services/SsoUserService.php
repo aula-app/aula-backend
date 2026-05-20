@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\LegacyUser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 class SsoUserService
 {
@@ -47,7 +48,7 @@ class SsoUserService
     /**
      * Create a new user from the SSO claims and enrol them in the standard room.
      */
-    public function provisionUser(mixed $socialiteUser): LegacyUser
+    public function provisionUser(SocialiteUser $socialiteUser): LegacyUser
     {
         $nickname = $socialiteUser->getNickname();
         $email    = $socialiteUser->getEmail();
