@@ -30,19 +30,19 @@ class SsoUserService
             return $candidates->first();
         }
 
-        $bySubMatch   = $candidates->firstWhere('sso_sub', $sub);
+        $bySubMatch = $candidates->firstWhere('sso_sub', $sub);
         $byEmailMatch = $candidates->firstWhere('email', $email);
 
         if ($bySubMatch && $byEmailMatch && $bySubMatch->id !== $byEmailMatch->id) {
             Log::warning('SSO: email and sso_sub match different users — prioritising sso_sub match.', [
-                'email'        => $email,
-                'sub'          => $sub,
+                'email' => $email,
+                'sub' => $sub,
                 'sso_sub_user' => $bySubMatch->id,
-                'email_user'   => $byEmailMatch->id,
+                'email_user' => $byEmailMatch->id,
             ]);
         }
 
-        return $bySubMatch ?? $candidates->first();
+        return $bySubMatch ?? $byEmailMatch;
     }
 
     /**
@@ -50,14 +50,6 @@ class SsoUserService
      */
     public function provisionUser(SocialiteUser $socialiteUser): LegacyUser
     {
-        if ($socialiteUser->getNickname() === null) {
-            Log::warning('SSO: nickname missing from upstream IdP — falling back to email for username.', [
-                'sub'      => $socialiteUser->getId(),
-                'email'    => $socialiteUser->getEmail(),
-                'provider' => tenant()->sso_provider ?? null,
-            ]);
-        }
-
         $user = LegacyUser::fromSocialiteUser($socialiteUser, tenant()->sso_provider ?? null);
         $user->save();
 
@@ -79,16 +71,16 @@ class SsoUserService
         }
 
         DB::table('au_rel_rooms_users')->insertOrIgnore([
-            'room_id'     => $room->id,
-            'user_id'     => $user->id,
-            'status'      => 1,
-            'created'     => now(),
+            'room_id' => $room->id,
+            'user_id' => $user->id,
+            'status' => 1,
+            'created' => now(),
             'last_update' => now(),
-            'updater_id'  => 0,
+            'updater_id' => 0,
         ]);
 
-        $roles  = json_decode($user->roles ?? '[]', true) ?? [];
-        $roles  = array_values(array_filter($roles, fn ($r) => ($r['room'] ?? null) !== $room->hash_id));
+        $roles = json_decode($user->roles ?? '[]', true) ?? [];
+        $roles = array_values(array_filter($roles, fn ($r) => ($r['room'] ?? null) !== $room->hash_id));
         $roles[] = ['role' => 20, 'room' => $room->hash_id];
 
         DB::table('au_users_basedata')

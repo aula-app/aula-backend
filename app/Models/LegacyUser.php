@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 class LegacyUser extends Model implements Authenticatable
@@ -59,6 +60,14 @@ class LegacyUser extends Model implements Authenticatable
      */
     public static function fromSocialiteUser(SocialiteUser $socialiteUser, ?string $provider): self
     {
+        if ($socialiteUser->getNickname() === null) {
+            Log::warning('SSO: nickname missing from upstream IdP — falling back to email for username.', [
+                'sub'      => $socialiteUser->getId(),
+                'email'    => $socialiteUser->getEmail(),
+                'provider' => $provider,
+            ]);
+        }
+
         $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
 
         $user               = new self;

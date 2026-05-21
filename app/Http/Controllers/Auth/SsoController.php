@@ -92,13 +92,9 @@ class SsoController extends Controller
             return $this->frontendError('account_inactive');
         }
 
-        $idToken      = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
-        $refreshToken = $socialiteUser->refreshToken ?? null;
-        $idpIdToken   = $this->fetchIdpIdToken($socialiteUser->token, tenant()->sso_provider);
-
-        $user->sso_id_token      = $idToken;
-        $user->sso_refresh_token = $refreshToken;
-        $user->sso_idp_id_token  = $idpIdToken;
+        $user->sso_id_token      = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
+        $user->sso_refresh_token = $socialiteUser->refreshToken ?? null;
+        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, tenant()->sso_provider);
         $user->save();
 
         $token = $this->jwtService->generateToken($user);
