@@ -38,6 +38,7 @@ jobs:
       # --taint-analysis is not necessary with psalm-laravel
       # Note: we're not using danog/psalm's /composer/vendor/bin/psalm,
       #   but the one composer installs itself, for integration with psalm-laravel.
+      # Note: keep in sync with `make psalm-docker`
       # TODO: consider binding /vendor, /.composer/cache/files/ and/or /.cache to a volume for caching
       # TODO: replace danog/psalm tag once v7 leaves beta
       #  (laravel-psalm recommends these versions)
