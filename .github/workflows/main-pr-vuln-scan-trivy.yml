@@ -1,4 +1,4 @@
-name: Scan for vulnerabilities using Trivy (image+fs) and Psalm
+name: Scan for vulnerabilities using Trivy (image+fs)
 
 # Use `make trivy` to run them locally
 
