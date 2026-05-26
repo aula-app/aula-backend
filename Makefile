@@ -50,12 +50,14 @@ trivy-image:
 trivy-fs:
 	trivy fs .
 
-# --taint-analysis is unnecessary with psalm-laravel
-.PHONY: psalm
-psalm:
-	psalm
+# your systems php might be a different version than CI's (cf. psalm-docker)
+# subtle differences w.r.t. deprecations might show up as psalm errors
+.PHONY: psalm-cli
+psalm-cli:
+	./vendor/bin/psalm
 
 # tries to mirror .github/workflow/main-pr-scan-psalm.yml
+# --taint-analysis is unnecessary with psalm-laravel
 .PHONY: psalm-docker
 psalm-docker:
 	docker run \
