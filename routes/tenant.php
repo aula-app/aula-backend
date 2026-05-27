@@ -24,21 +24,13 @@ Route::name('auth.')
     ->prefix('/api/v2/legacy-auth')
     ->group(base_path('routes/tenant/api/v2/auth.php'));
 
-// Passport-authenticated routes (existing)
-Route::name('aula-wip.')
+Route::name('aula.')
     ->middleware([
-        'api', // 'api' is including parameter substitution
+        /* 'api', // 'api' is including parameter substitution */
         /* \Illuminate\Session\Middleware\StartSession::class, */
         /* \Illuminate\View\Middleware\ShareErrorsFromSession::class, */
         InitializeTenancyByRequestData::class,
-        'auth:api', // our 'api' guard should be configured to use 'passport'
-    ]) // , 'can:is-admin'
-    ->prefix('/api/v2/')
-    ->group(base_path('routes/tenant/api/v2/aula-wip.php'));
-
-Route::name('aula.')
-    ->middleware([
-        InitializeTenancyByRequestData::class,
+        /* 'auth:api', // our 'api' guard should be configured to use 'passport' */
     ])
     ->prefix('/api/v2')
     ->group(base_path('routes/tenant/api/v2/aula.php'));
