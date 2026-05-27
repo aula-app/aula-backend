@@ -143,7 +143,7 @@ class Command
 
       return $returnvalue;
     }
-    $total_datasets = $this->converters->getTotalDatasets($this->db->au_commands, "id > 0" . $extra_where);
+    $total_datasets = $this->converters->getTotalDatasets($this->db->au_commands, "active = " . intval($active) . " AND id > 0" . $extra_where);
 
     if ($total_datasets < 1) {
       $returnvalue['success'] = false; // set success value
