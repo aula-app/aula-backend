@@ -37,6 +37,11 @@ services:
         bind:
           create_host_path: false
       - type: bind
+        source: ./database
+        target: /opt/laravel/database
+        bind:
+          create_host_path: false
+      - type: bind
         source: ./storage/oauth-private.key
         target: /opt/laravel/storage/oauth-private.key
         bind:

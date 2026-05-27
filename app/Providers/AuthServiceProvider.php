@@ -5,7 +5,11 @@ namespace App\Providers;
 use App\Auth\LegacyJwtGuard;
 use App\Services\LegacyJwtService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Socialite\Facades\Socialite;
+use SocialiteProviders\Keycloak\KeycloakExtendSocialite;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -30,5 +34,7 @@ class AuthServiceProvider extends ServiceProvider
                 $app['request']
             );
         });
+
+        Event::listen(SocialiteWasCalled::class, KeycloakExtendSocialite::class);
     }
 }
