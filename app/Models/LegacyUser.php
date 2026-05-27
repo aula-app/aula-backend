@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\UserLevel;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 class LegacyUser extends Model implements Authenticatable
 {
@@ -53,6 +55,34 @@ class LegacyUser extends Model implements Authenticatable
     public const STATUS_ACTIVE = 1;
     public const STATUS_SUSPENDED = 2;
     public const STATUS_ARCHIVED = 3;
+
+    /**
+     * Build an unsaved user from SSO claims. Caller is responsible for ->save().
+     */
+    public static function fromSocialiteUser(SocialiteUser $socialiteUser, ?string $provider): self
+    {
+        if ($socialiteUser->getNickname() === null) {
+            Log::warning('SSO: nickname missing from upstream IdP — falling back to email for username.', [
+                'sub'      => $socialiteUser->getId(),
+                'email'    => $socialiteUser->getEmail(),
+                'provider' => $provider,
+            ]);
+        }
+
+        $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
+
+        $user               = new self;
+        $user->email        = $socialiteUser->getEmail();
+        $user->sso_sub      = $socialiteUser->getId();
+        $user->sso_provider = $provider;
+        $user->username     = $username;
+        $user->displayname  = $socialiteUser->getName() ?? $username;
+        $user->hash_id      = md5($username . (string) microtime(true) . rand(100, 10000000));
+        $user->userlevel    = 20;
+        $user->status       = self::STATUS_ACTIVE;
+
+        return $user;
+    }
 
     /**
      * Check if the user is active.

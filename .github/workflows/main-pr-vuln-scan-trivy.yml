@@ -1,4 +1,4 @@
-name: Scan for vulnerabilities using Trivy
+name: Scan for vulnerabilities using Trivy (image+fs)
 
 # Use `make trivy` to run them locally
 
@@ -7,10 +7,10 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-  build_and_scan_v1:
+  build_and_scan_v1_trivy:
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -47,7 +47,7 @@ jobs:
           sarif_file: './trivy-results-legacy.sarif'
           category: trivy-legacy-image
 
-  build_and_scan_v2:
+  build_and_scan_v2_trivy_fs:
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -99,7 +99,7 @@ jobs:
 
   # Dockerfile.test installs a subset of v2's packages, but uses a different base (cli-alpine, not fpm), so it's worth scanning;
   # also packages (and configs etc.) could diverge at some point
-  build_and_scan_test:
+  build_and_scan_test_trivy:
     runs-on: [self-hosted, cicd]
     permissions:
       contents: read
@@ -130,4 +130,3 @@ jobs:
         with:
           sarif_file: './trivy-results.sarif'
           category: trivy-test-image
-

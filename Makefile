@@ -29,9 +29,11 @@ run-legacy-release:
 	docker compose -f ./legacy/docker-compose.yml up -d
 
 test:
+	docker compose -f docker-compose.test.yml down
 	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from app-test
 
-# Simplistic tasks that mirror the scans in .github/workflows/pr-vuln-scan.yml
+# Simplistic tasks that mirror the scans in .github/workflows/main-pr-vuln-scan.yml
+
 .PHONY: trivy
 trivy: trivy-legacy-image
 trivy: trivy-image
@@ -48,3 +50,25 @@ trivy-image:
 .PHONY: trivy-fs
 trivy-fs:
 	trivy fs .
+
+# your systems php might be a different version than CI's (cf. psalm-docker)
+# subtle differences w.r.t. deprecations might show up as psalm errors
+.PHONY: psalm-cli
+psalm-cli:
+	./vendor/bin/psalm
+
+# tries to mirror .github/workflow/main-pr-scan-psalm.yml
+# --taint-analysis is unnecessary with psalm-laravel
+.PHONY: psalm-docker
+psalm-docker:
+	docker run \
+		-u $(shell id -u):$(shell id -g) \
+		-v ${PWD}:/app \
+		--rm \
+		ghcr.io/danog/psalm:7.0.0-beta19 \
+		sh -c \
+			"composer install --ignore-platform-reqs ; \
+			 /app/vendor/bin/psalm \
+				--no-cache \
+				--output-format=github \
+				--report=/app/psalm-results.sarif"
