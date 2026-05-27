@@ -29,6 +29,7 @@ run-legacy-release:
 	docker compose -f ./legacy/docker-compose.yml up -d
 
 test:
+	docker compose -f docker-compose.test.yml down
 	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from app-test
 
 # Simplistic tasks that mirror the scans in .github/workflows/main-pr-vuln-scan.yml
