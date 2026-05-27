@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserLevel;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,7 @@ class LegacyUser extends Model implements Authenticatable
      */
     protected $casts = [
         'id' => 'integer',
-        'userlevel' => 'integer',
+        'userlevel' => UserLevel::class,
         'status' => 'integer',
         'refresh_token' => 'boolean',
         'created' => 'datetime',
@@ -122,7 +123,7 @@ class LegacyUser extends Model implements Authenticatable
         return [
             'id' => $this->id,
             'hash_id' => $this->hash_id,
-            'userlevel' => $this->userlevel,
+            'userlevel' => $this->userlevel?->value,
             'roles' => $this->roles,
             'temp_pw' => !empty($this->temp_pw),
         ];

@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<psalm
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="https://getpsalm.org/schema/config"
+  xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+  errorLevel="4"
+  findUnusedCode="false"
+  ensureOverrideAttribute="false"
+  errorBaseline="psalm-baseline.xml"
+>
+  <projectFiles>
+    <directory name="."/>
+    <ignoreFiles allowMissingFiles="true">
+      <directory name="legacy"/>
+      <directory name="vendor"/>
+      <directory name="storage"/>
+      <directory name="bootstrap/cache"/>
+      <directory name="tests"/><!-- install psalm/plugin-phpunit and psalm/plugin-mockery for the full tests support -->
+    </ignoreFiles>
+  </projectFiles>
+
+  <plugins>
+    <pluginClass class="Psalm\LaravelPlugin\Plugin"/>
+  </plugins>
+
+  <issueHandlers>
+    <ClassMustBeFinal errorLevel="info"/>
+    <ImplicitToStringCast errorLevel="info"/>
+    <MissingAbstractPureAnnotation errorLevel="info"/>
+    <MissingClosureReturnType errorLevel="info"/>
+    <MissingImmutableAnnotation errorLevel="info"/>
+    <MissingInterfaceImmutableAnnotation errorLevel="info"/>
+    <MissingOverrideAttribute errorLevel="info"/>
+    <MissingPureAnnotation errorLevel="info"/>
+    <RedundantCast errorLevel="info"/>
+    <RedundantCondition errorLevel="info"/>
+    <UnnecessaryVarAnnotation errorLevel="suppress"/>
+  </issueHandlers>
+</psalm>

@@ -1,0 +1,64 @@
+name: Scan for code quality and vulnerabilities using Psalm and its Laravel plugin
+
+# modeled after https://github.com/psalm/psalm-plugin-laravel/blob/HEAD/docs/github-actions.md
+# check `make psalm-docker`
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.php'
+      - 'psalm*.xml'
+      - 'composer.*'
+      - '.github/workflows/main-pr-scan-psalm.yml'
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '**.php'
+      - 'psalm*.xml'
+      - 'composer.*'
+      - '.github/workflows/main-pr-scan-psalm.yml'
+
+jobs:
+  scan_v2_psalm:
+    runs-on: [self-hosted, cicd]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      # We don't do `uses: docker://ghcr.io/psalm/psalm-github-actions`
+      # because it installs /vendor as root, which trips up next checkout,
+      # we don't use shivammathur/set-php because it eventually uses sudo.
+      # --output-format=github will produce ::error workflow commands which GH will display
+      # --taint-analysis is not necessary with psalm-laravel
+      # Note: we're not using danog/psalm's /composer/vendor/bin/psalm,
+      #   but the one composer installs itself, for integration with psalm-laravel.
+      # Note: keep in sync with `make psalm-docker`
+      # TODO: consider binding /vendor, /.composer/cache/files/ and/or /.cache to a volume for caching
+      # TODO: replace danog/psalm tag once v7 leaves beta
+      #  (laravel-psalm recommends these versions)
+      - name: Run Psalm
+        run: |
+          docker run \
+            -u $(id -u):$(id -g) \
+            -v $PWD:/app \
+            --rm \
+            ghcr.io/danog/psalm:7.0.0-beta19 \
+            sh -c \
+              "composer install --ignore-platform-reqs ; \
+               /app/vendor/bin/psalm \
+                --no-cache --threads=4 \
+                --output-format=github \
+                --report=psalm-results.sarif"
+
+      - name: "Upload Psalm scan results to GitHub Security tab"
+        if: always() && hashFiles('psalm-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: './psalm-results.sarif'
+          category: psalm

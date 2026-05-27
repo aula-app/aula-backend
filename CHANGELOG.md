@@ -7,6 +7,10 @@
 
 - feat: add SSO login via Keycloak
 
+## v2.1.2
+
+ - fix: non super users can't add or remove categories from an idea (#507)
+
 ## v2.1.1
 
 - fix: new tenants can't be used due to permission issue
@@ -40,7 +44,13 @@
 
 ##
 
+## v1.9.5
+
 - fix: super_moderator_v role permissions on IdeaRemoveLike, CommentAddLike and CommentRemoveLike
+
+## v1.9.4
+
+- fix: remove mariadb persistent connections from legacy connector
 - fix(upload): backup/restore of uploaded files by creating instance folder with 0770 perms
 
 ## v1.9.3
