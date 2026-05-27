@@ -1,5 +1,7 @@
 <?php
 
+// TODO remove this?
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
