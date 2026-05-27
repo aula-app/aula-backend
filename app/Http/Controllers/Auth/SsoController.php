@@ -34,6 +34,7 @@ class SsoController extends Controller
      */
     public function initiate(Request $request): JsonResponse
     {
+        /** @var Tenant $tenant */
         $tenant  = tenant();
         $idpHint = $tenant->sso_provider ?? null;
 
@@ -47,7 +48,10 @@ class SsoController extends Controller
             $params['prompt'] = 'login';
         }
 
-        $url = Socialite::driver('keycloak')
+        /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+        $driver = Socialite::driver('keycloak');
+
+        $url = $driver
             ->stateless()
             ->with($params)
             ->redirect()
@@ -80,7 +84,10 @@ class SsoController extends Controller
 
         tenancy()->initialize($tenant);
 
-        $socialiteUser = Socialite::driver('keycloak')->stateless()->user();
+        /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+        $driver = Socialite::driver('keycloak');
+        /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
+        $socialiteUser = $driver->stateless()->user();
 
         $user = $this->ssoUserService->resolveUser($socialiteUser->getEmail(), $socialiteUser->getId());
 
@@ -92,9 +99,11 @@ class SsoController extends Controller
             return $this->frontendError('account_inactive');
         }
 
+        /** @var Tenant $callbackTenant */
+        $callbackTenant          = tenant();
         $user->sso_id_token      = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
         $user->sso_refresh_token = $socialiteUser->refreshToken ?? null;
-        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, tenant()->sso_provider);
+        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
         $user->save();
 
         $token = $this->jwtService->generateToken($user);
@@ -114,6 +123,7 @@ class SsoController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
+        /** @var Tenant $tenant */
         $tenant = tenant();
 
         if (! $tenant->sso_force_logout) {

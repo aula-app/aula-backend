@@ -77,7 +77,7 @@ class LegacyUser extends Model implements Authenticatable
         $user->sso_provider = $provider;
         $user->username     = $username;
         $user->displayname  = $socialiteUser->getName() ?? $username;
-        $user->hash_id      = md5($username . microtime(true) . rand(100, 10000000));
+        $user->hash_id      = md5($username . (string) microtime(true) . rand(100, 10000000));
         $user->userlevel    = 20;
         $user->status       = self::STATUS_ACTIVE;
 

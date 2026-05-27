@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\LegacyUser;
+use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
@@ -50,7 +51,9 @@ class SsoUserService
      */
     public function provisionUser(SocialiteUser $socialiteUser): LegacyUser
     {
-        $user = LegacyUser::fromSocialiteUser($socialiteUser, tenant()->sso_provider ?? null);
+        /** @var Tenant|null $tenant */
+        $tenant = tenant();
+        $user = LegacyUser::fromSocialiteUser($socialiteUser, $tenant?->sso_provider);
         $user->save();
 
         $this->addToStandardRoom($user);
@@ -79,8 +82,9 @@ class SsoUserService
             'updater_id' => 0,
         ]);
 
-        $roles = json_decode($user->roles ?? '[]', true) ?? [];
-        $roles = array_values(array_filter($roles, fn ($r) => ($r['room'] ?? null) !== $room->hash_id));
+        /** @var list<array{role?: int, room?: string}> $roles */
+        $roles = json_decode($user->roles, true) ?: [];
+        $roles = array_values(array_filter($roles, fn (array $r) => ($r['room'] ?? null) !== $room->hash_id));
         $roles[] = ['role' => 20, 'room' => $room->hash_id];
 
         DB::table('au_users_basedata')
