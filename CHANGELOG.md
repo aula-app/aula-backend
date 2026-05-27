@@ -3,6 +3,10 @@
 
 # v2
 
+## v2.1.2
+
+ - fix: non super users can't add or remove categories from an idea (#507)
+
 ## v2.1.1
 
 - fix: super_moderator_v role permissions on IdeaRemoveLike, CommentAddLike and CommentRemoveLike
