@@ -25,7 +25,7 @@ Route::name('auth.')
     ->group(base_path('routes/tenant/api/v2/auth.php'));
 
 // Passport-authenticated routes (existing)
-Route::name('aula.')
+Route::name('aula-wip.')
     ->middleware([
         'api', // 'api' is including parameter substitution
         /* \Illuminate\Session\Middleware\StartSession::class, */
@@ -34,4 +34,11 @@ Route::name('aula.')
         'auth:api', // our 'api' guard should be configured to use 'passport'
     ]) // , 'can:is-admin'
     ->prefix('/api/v2/')
+    ->group(base_path('routes/tenant/api/v2/aula-wip.php'));
+
+Route::name('aula.')
+    ->middleware([
+        InitializeTenancyByRequestData::class,
+    ])
+    ->prefix('/api/v2')
     ->group(base_path('routes/tenant/api/v2/aula.php'));
