@@ -965,7 +965,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
             "moderator",
             "moderator_v"
           ],
-          "owner" => "idea_id"
+          "owner" => [ "idea_id" ]
         ],
 
         "IdeaAddLike" => [
@@ -1070,7 +1070,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
             "admin",
             "owner"
           ],
-          "owner" => "idea_id"
+          "owner" => [ "idea_id" ]
         ],
 
         "getIdeasByRoom" => [
