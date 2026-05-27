@@ -13,5 +13,6 @@ readonly class UserDTO
         public ?string $email,
         public ?UserLevel $userlevel,
         public ?string $about_me
-    ) {}
+    ) {
+    }
 }

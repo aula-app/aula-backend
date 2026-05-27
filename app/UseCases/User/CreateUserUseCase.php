@@ -12,6 +12,8 @@ class CreateUserUseCase
 {
     public static function execute(UserDTO $userDTO): LegacyUser
     {
+        // 1. Create LegacyUser
+        // 2. RoomService->addUserToStandardRoom
         $legacyUser = LegacyUser::create();
         $legacyUser->displayname = $userDTO->displayname;
         $legacyUser->realname = $userDTO->realname;
@@ -25,6 +27,12 @@ class CreateUserUseCase
         // - add user to standard room
         // - send email
         $legacyUser->save();
-        return $legacyUser;
+        return new UserDTO($legacyUser);
     }
+
+    // rooms, users, rel_rooms_users
+    // 1. Receive Room HashId
+    // 2. Fetch User
+    // 3. Update User.roles <- {room: hash_id, role: 20}
+    // 4. Insert au_rel_rooms_users (room.id, user.id)
 }

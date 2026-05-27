@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace Tests\Feature;
+
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -22,7 +23,8 @@ class CrudUser extends TestCase
         $this->ensureTestTenantExists();
     }
 
-    public function test_crud () {
+    public function test_crud()
+    {
         $tenant = self::$testTenant;
         $this->assertNotNull($tenant);
 
@@ -43,7 +45,7 @@ class CrudUser extends TestCase
             self::HEADERS,
         )
             ->assertOk()
-            ->assertJson(self::NEW_USER_DATA);
+            ->assertJson(['data' => self::NEW_USER_DATA]);
 
         // index
         $allUsers = $this->getJson(
@@ -85,7 +87,8 @@ class CrudUser extends TestCase
             ->assertOk();
     }
 
-    public function test_bad_create () {
+    public function test_bad_create()
+    {
         $this->postJson(
             '/api/v2/user',
             [
@@ -96,7 +99,8 @@ class CrudUser extends TestCase
         )->assertUnprocessable();
     }
 
-    public function test_bad_deletes () {
+    public function test_bad_deletes()
+    {
         $this->deleteJson(
             '/api/v2/user/1000000',
             [],
