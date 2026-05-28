@@ -14,6 +14,10 @@ class StoreUserRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Validation rules
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
     public function rules(): array
     {
         // TODO other properties
@@ -25,11 +29,15 @@ class StoreUserRequest extends FormRequest
         /*     ]), */
         /* ], */
         return [
-            // TODO: max/min size, pattern?
-            'displayname' => ['required','string','max:400'],
-            'username' => ['required'],
-            'realname' => ['required'],
+            // TODO alpha_num instead of string?
+            'displayname' => ['required', 'string', 'max:400'],
+            'username' => ['required', 'string', 'max:400'],
+            'realname' => ['required', 'string', 'max:400'],
+            // spoof requires php-intl
+            'email' => ['required', 'email:strict,spoof'],
+            // optional
             'userlevel' => [Rule::enum(UserLevel::class)],
+            'status' => ['digits_between:0,4'],
         ];
     }
 }
