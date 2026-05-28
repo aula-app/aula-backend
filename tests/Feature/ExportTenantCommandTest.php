@@ -14,16 +14,16 @@ function createTenantForExport(array $attrs = []): Tenant
     // withoutEvents prevents stancl from running CreateDatabase (DDL that commits the transaction)
     return Tenant::withoutEvents(function () use ($attrs) {
         $tenant = new Tenant(array_merge([
-            'name'            => 'Export School',
-            'instance_code'   => 'EXP01',
-            'jwt_key'         => 'testkey',
-            'api_base_url'    => 'https://example.com',
-            'admin1_name'     => 'Admin One',
+            'name' => 'Export School',
+            'instance_code' => 'EXP01',
+            'jwt_key' => 'testkey',
+            'api_base_url' => 'https://example.com',
+            'admin1_name' => 'Admin One',
             'admin1_username' => 'admin1',
-            'admin1_email'    => 'admin1@test.com',
-            'admin2_name'     => 'Admin Two',
+            'admin1_email' => 'admin1@test.com',
+            'admin2_name' => 'Admin Two',
             'admin2_username' => 'admin2',
-            'admin2_email'    => 'admin2@test.com',
+            'admin2_email' => 'admin2@test.com',
             'tenancy_db_name' => 'tenant_test_export',
         ], $attrs));
         $tenant->id = (string) Str::uuid();
@@ -50,12 +50,13 @@ it('exports successfully by code', function () {
 
     Process::fake([
         "'mysqldump'*" => Process::result(),
-        "'tar'*"       => Process::result(),
-        "'rm'*"        => Process::result(),
+        "'mariadb-dump'*" => Process::result("CREATE USER `aula_EXP01`@`%` IDENTIFIED BY PASSWORD '*ABC';\nGRANT SELECT ON `tenant_test_export`.* TO `aula_EXP01`@`%`;"),
+        "'tar'*" => Process::result(),
+        "'rm'*" => Process::result(),
     ]);
 
     $this->artisan('tenant:export', [
-        '--code'   => 'EXP01',
+        '--code' => 'EXP01',
         '--output' => '/tmp/test_export_code.tar.gz',
     ])->assertSuccessful();
 });
@@ -65,12 +66,13 @@ it('exports successfully by id', function () {
 
     Process::fake([
         "'mysqldump'*" => Process::result(),
-        "'tar'*"       => Process::result(),
-        "'rm'*"        => Process::result(),
+        "'mariadb-dump'*" => Process::result("CREATE USER `aula_EXP01`@`%` IDENTIFIED BY PASSWORD '*ABC';\nGRANT SELECT ON `tenant_test_export`.* TO `aula_EXP01`@`%`;"),
+        "'tar'*" => Process::result(),
+        "'rm'*" => Process::result(),
     ]);
 
     $this->artisan('tenant:export', [
-        '--id'     => $tenant->id,
+        '--id' => $tenant->id,
         '--output' => '/tmp/test_export_id.tar.gz',
     ])->assertSuccessful();
 });
@@ -80,7 +82,19 @@ it('fails when mysqldump fails', function () {
 
     Process::fake([
         "'mysqldump'*" => Process::result('', 'Connection refused', 1),
-        "'rm'*"        => Process::result(),
+        "'rm'*" => Process::result(),
+    ]);
+
+    $this->artisan('tenant:export', ['--code' => 'EXP01'])->assertFailed();
+});
+
+it('fails when mariadb-dump --system=users fails', function () {
+    createTenantForExport();
+
+    Process::fake([
+        "'mysqldump'*" => Process::result(),
+        "'mariadb-dump'*" => Process::result('', 'Access denied for --system=users', 1),
+        "'rm'*" => Process::result(),
     ]);
 
     $this->artisan('tenant:export', ['--code' => 'EXP01'])->assertFailed();
@@ -91,8 +105,9 @@ it('fails when tar fails', function () {
 
     Process::fake([
         "'mysqldump'*" => Process::result(),
-        "'tar'*"       => Process::result('', 'No space left on device', 1),
-        "'rm'*"        => Process::result(),
+        "'mariadb-dump'*" => Process::result("CREATE USER `aula_EXP01`@`%` IDENTIFIED BY PASSWORD '*ABC';"),
+        "'tar'*" => Process::result('', 'No space left on device', 1),
+        "'rm'*" => Process::result(),
     ]);
 
     $this->artisan('tenant:export', ['--code' => 'EXP01'])->assertFailed();

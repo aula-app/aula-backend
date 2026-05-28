@@ -127,9 +127,17 @@ class ImportTenant extends Command
             $tenant->save();
         });
 
-        $this->info("Creating database: {$dbName}");
+        $sourceDbName = $exported['_source']['db_name'] ?? null;
+        $sourceDbUser = $exported['_source']['db_username'] ?? null;
+        if ($sourceDbName === null || $sourceDbUser === null) {
+            $this->error('tenant.json is missing _source.db_name or _source.db_username.');
 
-        $this->executeSetupSql($tmpDir, $dbName, $dbUser, $dbPass);
+            return self::FAILURE;
+        }
+
+        $this->info("Creating database and user: {$dbName} / {$dbUser}");
+
+        $this->executeSetupSql($tmpDir, $sourceDbName, $sourceDbUser, $dbName, $dbUser, $dbPass);
 
         $this->info('Importing database dump...');
 
@@ -165,13 +173,32 @@ class ImportTenant extends Command
         return self::SUCCESS;
     }
 
-    private function executeSetupSql(string $tmpDir, string $dbName, string $dbUser, string $dbPass): void
-    {
+    private function executeSetupSql(
+        string $tmpDir,
+        string $sourceDbName,
+        string $sourceDbUser,
+        string $dbName,
+        string $dbUser,
+        string $dbPass,
+    ): void {
+        $sql = file_get_contents("{$tmpDir}/setup.sql");
+
+        // The setup.sql was produced from the source server's mariadb-dump --system=users
+        // output (plus a CREATE DATABASE line keyed to the source DB), so it references
+        // the source DB name and user. Rewrite those to the new tenant's identifiers and
+        // swap the existing IDENTIFIED clause (hashed password / auth plugin) for a fresh
+        // plaintext password that mariadb will hash on CREATE USER.
         $sql = str_replace(
-            ['{{DB_NAME}}', '{{DB_USER}}', '{{DB_PASS}}'],
-            [$dbName, $dbUser, $dbPass],
-            file_get_contents("{$tmpDir}/setup.sql")
+            [$sourceDbName, $sourceDbUser],
+            [$dbName, $dbUser],
+            $sql
         );
+        $sql = preg_replace(
+            "/IDENTIFIED\\s+(?:BY\\s+PASSWORD|VIA\\s+\\w+(?:\\s+USING)?|BY)\\s+'[^']*'/i",
+            sprintf("IDENTIFIED BY '%s'", addslashes($dbPass)),
+            $sql
+        );
+
         foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $statement) {
             DB::statement($statement);
         }

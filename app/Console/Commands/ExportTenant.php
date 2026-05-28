@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 
 class ExportTenant extends Command
@@ -26,12 +27,14 @@ class ExportTenant extends Command
 
         $this->info("Exporting tenant: {$tenant->name} (code: {$tenant->instance_code})");
 
-        $dbName = $tenant->tenancy_db_name ?? null;
-        if ($dbName === null) {
-            $this->error('Tenant database name not found (tenancy_db_name missing).');
+        $dbName = $tenant->database()->getName();
+        if ($dbName === null || $dbName === '') {
+            $this->error('Tenant database name not found.');
 
             return self::FAILURE;
         }
+
+        $dbUser = $tenant->database()->getUsername() ?? "aula_{$tenant->instance_code}";
 
         $outputFile = $this->option('output')
             ?? getcwd().'/tenant_'.$tenant->instance_code.'_'.now()->format('Ymd_His').'.tar.gz';
@@ -40,9 +43,14 @@ class ExportTenant extends Command
         mkdir($tmpDir, 0700, true);
 
         try {
+            $tenantData = $tenant->toArray();
+            $tenantData['_source'] = [
+                'db_name' => $dbName,
+                'db_username' => $dbUser,
+            ];
             file_put_contents(
                 "{$tmpDir}/tenant.json",
-                json_encode($tenant->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                json_encode($tenantData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             );
 
             $this->info("Dumping database: {$dbName}");
@@ -71,16 +79,46 @@ class ExportTenant extends Command
                 return self::FAILURE;
             }
 
-            $grants = implode(', ', [
-                'ALTER', 'ALTER ROUTINE', 'CREATE', 'CREATE ROUTINE', 'CREATE TEMPORARY TABLES', 'CREATE VIEW',
-                'DELETE', 'DROP', 'EVENT', 'EXECUTE', 'INDEX', 'INSERT', 'LOCK TABLES', 'REFERENCES', 'SELECT',
-                'SHOW VIEW', 'TRIGGER', 'UPDATE',
+            $this->info("Dumping privileges for user: {$dbUser}");
+
+            $result = Process::env(['MYSQL_PWD' => $pass])->run([
+                'mariadb-dump',
+                "--host={$host}",
+                "--port={$port}",
+                "--user={$user}",
+                '--single-transaction',
+                '--system=users',
             ]);
-            file_put_contents("{$tmpDir}/setup.sql", implode("\n", [
-                "CREATE DATABASE `{{DB_NAME}}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
-                "CREATE USER `{{DB_USER}}`@`%` IDENTIFIED BY '{{DB_PASS}}';",
-                "GRANT {$grants} ON `{{DB_NAME}}`.* TO `{{DB_USER}}`@`%`;",
-            ]));
+
+            if (! $result->successful()) {
+                $this->error('mariadb-dump --system=users failed:');
+                $this->line($result->errorOutput());
+
+                return self::FAILURE;
+            }
+
+            // Keep only the lines that reference the tenant's DB user (CREATE USER,
+            // GRANT, conditional ALTER USER / SET DEFAULT ROLE directives). Session
+            // state directives from the dump (SET NAMES, OLD_TIME_ZONE save/restore,
+            // EXECUTE IMMEDIATE on @current_role, etc.) are skipped: they rely on
+            // session continuity we cannot preserve when replaying statements one by
+            // one via DB::statement, and they are not needed to provision a single
+            // user with grants on the target server.
+            $userQ = preg_quote($dbUser, '/');
+            $ourUserHost = "/[`']{$userQ}[`']@[`'](localhost|%|127\\.0\\.0\\.1|::1|172)[`']/";
+            $lines = preg_grep($ourUserHost, explode("\n", $result->output()));
+
+            $schema = DB::selectOne(
+                'SELECT default_character_set_name AS charset, default_collation_name AS collation_name
+                   FROM information_schema.schemata WHERE schema_name = ?',
+                [$dbName]
+            );
+            $charset = $schema->charset ?? 'utf8mb4';
+            $collation = $schema->collation_name ?? 'utf8mb4_unicode_ci';
+
+            $setupSql = "CREATE DATABASE `{$dbName}` CHARACTER SET {$charset} COLLATE {$collation};\n"
+                .implode("\n", $lines)."\n";
+            file_put_contents("{$tmpDir}/setup.sql", $setupSql);
 
             $result = Process::run([
                 'tar', '-czf', $outputFile,

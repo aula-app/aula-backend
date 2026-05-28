@@ -9,28 +9,38 @@ use Illuminate\Support\Str;
 
 function makeTenantArchive(array $overrides = []): string
 {
+    $sourceDbName = 'tenant_source_db';
+    $sourceDbUser = 'aula_SRC01';
+
     $data = array_merge([
-        'id'              => '00000000-0000-0000-0000-000000000001',
-        'name'            => 'Import School',
-        'instance_code'   => 'IMP01',
-        'jwt_key'         => 'testkey',
-        'contact_info'    => null,
-        'admin1_name'     => 'Admin One',
+        'id' => '00000000-0000-0000-0000-000000000001',
+        'name' => 'Import School',
+        'instance_code' => 'IMP01',
+        'jwt_key' => 'testkey',
+        'contact_info' => null,
+        'admin1_name' => 'Admin One',
         'admin1_username' => 'admin1',
-        'admin1_email'    => 'admin1@test.com',
-        'admin2_name'     => 'Admin Two',
+        'admin1_email' => 'admin1@test.com',
+        'admin2_name' => 'Admin Two',
         'admin2_username' => 'admin2',
-        'admin2_email'    => 'admin2@test.com',
+        'admin2_email' => 'admin2@test.com',
+        '_source' => [
+            'db_name' => $sourceDbName,
+            'db_username' => $sourceDbUser,
+        ],
     ], $overrides);
 
     $dir = sys_get_temp_dir().'/test_import_src_'.uniqid();
     mkdir($dir, 0700, true);
     file_put_contents("{$dir}/tenant.json", json_encode($data, JSON_UNESCAPED_UNICODE));
     file_put_contents("{$dir}/tenant.sql", '-- empty');
+    // Setup.sql looks like real `mariadb-dump --system=users` output filtered for the
+    // source user, plus the leading CREATE DATABASE line added by ExportTenant.
     file_put_contents("{$dir}/setup.sql", implode("\n", [
-        "CREATE DATABASE `{{DB_NAME}}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
-        "CREATE USER `{{DB_USER}}`@`%` IDENTIFIED BY '{{DB_PASS}}';",
-        "GRANT SELECT ON `{{DB_NAME}}`.* TO `{{DB_USER}}`@`%`;",
+        "CREATE DATABASE `{$sourceDbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
+        '/*!40101 SET NAMES utf8mb4 */;',
+        "CREATE USER `{$sourceDbUser}`@`%` IDENTIFIED BY PASSWORD '*OLDHASH';",
+        "GRANT SELECT ON `{$sourceDbName}`.* TO `{$sourceDbUser}`@`%`;",
     ]));
 
     $archive = sys_get_temp_dir().'/test_import_'.uniqid().'.tar.gz';
@@ -58,8 +68,8 @@ function cleanupImportedTenant(string $instanceCode): void
         return;
     }
 
-    $dbName  = $tenant->getInternal('db_name');
-    $dbUser  = $tenant->getInternal('db_username');
+    $dbName = $tenant->getInternal('db_name');
+    $dbUser = $tenant->getInternal('db_username');
 
     if ($dbName) {
         DB::statement("DROP DATABASE IF EXISTS `{$dbName}`");
@@ -85,16 +95,16 @@ it('fails when instance code format is invalid', function () {
 
 it('fails when a tenant with the same instance code already exists', function () {
     $tenant = createTenantForImportTest([
-        'name'            => 'Existing School',
-        'instance_code'   => 'IMP01',
-        'jwt_key'         => 'key',
-        'api_base_url'    => 'https://example.com',
-        'admin1_name'     => 'Admin One',
+        'name' => 'Existing School',
+        'instance_code' => 'IMP01',
+        'jwt_key' => 'key',
+        'api_base_url' => 'https://example.com',
+        'admin1_name' => 'Admin One',
         'admin1_username' => 'admin1',
-        'admin1_email'    => 'admin1@test.com',
-        'admin2_name'     => 'Admin Two',
+        'admin1_email' => 'admin1@test.com',
+        'admin2_name' => 'Admin Two',
         'admin2_username' => 'admin2',
-        'admin2_email'    => 'admin2@test.com',
+        'admin2_email' => 'admin2@test.com',
     ]);
 
     $archive = makeTenantArchive();
@@ -107,16 +117,16 @@ it('fails when a tenant with the same instance code already exists', function ()
 
 it('fails when a tenant with the same name already exists', function () {
     $tenant = createTenantForImportTest([
-        'name'            => 'Import School',
-        'instance_code'   => 'OTH01',
-        'jwt_key'         => 'key',
-        'api_base_url'    => 'https://example.com',
-        'admin1_name'     => 'Admin One',
+        'name' => 'Import School',
+        'instance_code' => 'OTH01',
+        'jwt_key' => 'key',
+        'api_base_url' => 'https://example.com',
+        'admin1_name' => 'Admin One',
         'admin1_username' => 'admin1',
-        'admin1_email'    => 'admin1@test.com',
-        'admin2_name'     => 'Admin Two',
+        'admin1_email' => 'admin1@test.com',
+        'admin2_name' => 'Admin Two',
         'admin2_username' => 'admin2',
-        'admin2_email'    => 'admin2@test.com',
+        'admin2_email' => 'admin2@test.com',
     ]);
 
     $archive = makeTenantArchive();
@@ -174,9 +184,9 @@ it('overrides instance code and name via options', function () {
     Process::fake(["'mysql'*" => Process::result()]);
 
     $this->artisan('tenant:import', [
-        'file'    => $archive,
-        '--code'  => 'OVR01',
-        '--name'  => 'Overridden School',
+        'file' => $archive,
+        '--code' => 'OVR01',
+        '--name' => 'Overridden School',
         '--force' => true,
     ])->assertSuccessful();
 
