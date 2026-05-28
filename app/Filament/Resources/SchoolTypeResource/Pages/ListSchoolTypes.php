@@ -8,7 +8,7 @@ use App\Filament\Resources\SchoolTypeResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListSchoolTypes extends ListRecords
+final class ListSchoolTypes extends ListRecords
 {
     protected static string $resource = SchoolTypeResource::class;
 

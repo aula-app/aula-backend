@@ -7,7 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class SchoolType extends Model
+final class SchoolType extends Model
 {
     protected $fillable = ['name'];
 

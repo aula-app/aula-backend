@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\SchoolTypeResource\Pages;
 use App\Models\SchoolType;
 use Filament\Forms\Components\TextInput;
+use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
@@ -15,8 +16,12 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class SchoolTypeResource extends Resource
+/**
+ * @extends Resource<SchoolType, ResourceConfiguration>
+ */
+final class SchoolTypeResource extends Resource
 {
+    /** @var class-string<SchoolType>|null */
     protected static ?string $model = SchoolType::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
@@ -62,10 +67,10 @@ class SchoolTypeResource extends Resource
             ])
             ->defaultSort('name')
             ->filters([])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
             ])
-            ->bulkActions([]);
+            ->toolbarActions([]);
     }
 
     public static function getPages(): array
