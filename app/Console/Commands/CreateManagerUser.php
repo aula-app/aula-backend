@@ -28,7 +28,7 @@ class CreateManagerUser extends Command
                 $this->warn('A user with that email already exists.');
                 $email = null;
             }
-        } while (empty($email));
+        } while (empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL));
 
         do {
             $password = $this->secret('Password (min 8 characters)');
