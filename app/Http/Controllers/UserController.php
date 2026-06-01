@@ -9,6 +9,7 @@ use App\UseCases\User\CreateUserUseCase;
 use App\UseCases\User\DeleteUserUseCase;
 use App\UseCases\User\ListUsersUseCase;
 use App\DTO\UserDTO;
+use App\Domain\Models\User;
 use App\UseCases\User\ShowUserUseCase;
 use App\UseCases\User\UpdateUserUseCase;
 
@@ -23,49 +24,30 @@ class UserController extends Controller
         return UserResource::collection(ListUsersUseCase::execute());
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
         return new UserResource(ShowUserUseCase::execute($id));
     }
 
-    public function store(StoreUserRequest $storeUserRequest)
+    public function store(StoreUserRequest $storeUserRequest): UserResource
     {
         // Controller: FormRequest -> UserDTO
         // Retrieve the validated input data...
-        $validated = $storeUserRequest->validated();
-
-        // Use validated() instead of input(...) bc there might be some sanitization
-        $storeUserRequest->all();
-        /* $storeUserRequest; */
-        $userDTO = new UserDTO(
-            $storeUserRequest->validated('displayname'),
-            $storeUserRequest->validated('username'),
-            $storeUserRequest->validated('realname'),
-            $storeUserRequest->validated('email'),
-            $storeUserRequest->validated('userlevel'),
-            $storeUserRequest->validated('about_me')
-        );
+        $user = User::fromRequest($storeUserRequest);
 
         // UseCases - work only with DTOs
-        //??? rename DTO -> DomainModel??
-        $user = CreateUserUseCase::execute($userDTO);
+        // ??? rename DTO -> DomainModel??
+        $user = CreateUserUseCase::execute($user);
 
         // Controller: UserDTO -> UserResource
         return new UserResource($user);
     }
 
-    public function update(string $id, UpdateUserRequest $updateUserRequest)
+    public function update(string $id, UpdateUserRequest $updateUserRequest): UserResource
     {
-        $userDTO = new UserDTO(
-            $updateUserRequest->input('displayname'),
-            $updateUserRequest->input('username'),
-            $updateUserRequest->input('realname'),
-            $updateUserRequest->input('email'),
-            $updateUserRequest->input('userlevel'),
-            $updateUserRequest->input('about_me')
-        );
+        $user = User::fromRequest($updateUserRequest);
 
-        $user = UpdateUserUseCase::execute($id, $userDTO);
+        $user = UpdateUserUseCase::execute($id, $user);
 
         return new UserResource($user);
     }

@@ -6,28 +6,29 @@ namespace App\UseCases\User;
 
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
-use App\DTO\UserDTO;
+// use App\DTO\UserDTO;
+use App\Domain\Models\User;
 
 class CreateUserUseCase
 {
-    public static function execute(UserDTO $userDTO): LegacyUser
+    public static function execute(User $user): User
     {
         // 1. Create LegacyUser
         // 2. RoomService->addUserToStandardRoom
         $legacyUser = LegacyUser::create();
-        $legacyUser->displayname = $userDTO->displayname;
-        $legacyUser->realname = $userDTO->realname;
-        $legacyUser->username = $userDTO->username;
-        $legacyUser->email = $userDTO->email;
-        $legacyUser->userlevel = $userDTO->userlevel ?? UserLevel::Guest;
-        $legacyUser->about_me = $userDTO->about_me ?? '';
+        $legacyUser->displayname = $user->displayname;
+        $legacyUser->realname = $user->realname;
+        $legacyUser->username = $user->username;
+        $legacyUser->email = $user->email;
+        $legacyUser->userlevel = $user->userlevel ?? UserLevel::Guest;
+        $legacyUser->about_me = $user->about_me ?? '';
         // TODO functionality from legacy model User->addUser, including but not limited to:
         // - check for username unique
         // - generate password
         // - add user to standard room
         // - send email
         $legacyUser->save();
-        return new UserDTO($legacyUser);
+        return User::fromLegacy($legacyUser);
     }
 
     // rooms, users, rel_rooms_users

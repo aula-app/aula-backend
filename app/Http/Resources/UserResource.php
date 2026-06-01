@@ -4,9 +4,16 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+// use App\Models\User;
 
+/**
+ * @mixin \App\Domain\Models\User
+ */
 class UserResource extends JsonResource
 {
+    //public function __construct(User $resource) {
+    //    parent::__construct($resource);
+    //}
     /**
      * Transform the resource into an array.
      *
@@ -24,18 +31,18 @@ class UserResource extends JsonResource
             'about_me' => $this->about_me,
 
             // ignore?
-            'status' => $this->status,
-            'registration_status' => $this->registration_status,
+            // 'status' => $this->status,
+            // 'registration_status' => $this->registration_status,
 
             // ignore?
-            'created' => $this->created,
-            'last_update' => $this->last_update,
+            // 'created' => $this->created,
+            // 'last_update' => $this->last_update,
 
             'userlevel' => $this->userlevel?->value,
-            'temp_pw' => $this->temp_pw,
+            // 'temp_pw' => $this->temp_pw,
 
             // not implemented atm
-            'roles' => $this->roles,
+            // 'roles' => $this->roles,
         ];
     }
 }

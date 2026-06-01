@@ -37,7 +37,7 @@ class StoreUserRequest extends FormRequest
             'email' => ['required', 'email:strict,spoof'],
             // optional
             'userlevel' => [Rule::enum(UserLevel::class)],
-            'status' => ['digits_between:0,4'],
+            'status' => ['int:strict', 'between:0,4'],
         ];
     }
 }
