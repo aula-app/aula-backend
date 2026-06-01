@@ -5,28 +5,40 @@ declare(strict_types=1);
 namespace App\UseCases\User;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
-// use App\DTO\UserDTO;
 use App\Domain\Models\User;
 
 class CreateUserUseCase
 {
+
+    /**
+     * Creates a (legacy) user
+     * @param User $user
+     * @return User
+     * @psalm-suppress UndefinedMagicPropertyAssignment
+     */
     public static function execute(User $user): User
     {
-        // 1. Create LegacyUser
-        // 2. RoomService->addUserToStandardRoom
         $legacyUser = LegacyUser::create();
-        $legacyUser->displayname = $user->displayname;
-        $legacyUser->realname = $user->realname;
-        $legacyUser->username = $user->username;
+        $legacyUser->displayname = $user->displayName;
+        $legacyUser->realname = $user->realName;
+        $legacyUser->username = $user->userName;
         $legacyUser->email = $user->email;
-        $legacyUser->userlevel = $user->userlevel ?? UserLevel::Guest;
-        $legacyUser->about_me = $user->about_me ?? '';
+        $legacyUser->userlevel = $user->userLevel ?? UserLevel::Guest;
+        $legacyUser->about_me = $user->aboutMe ?? '';
+        $legacyUser->status = $user->status->value ?? UserStatus::Inactive->value;
         // TODO functionality from legacy model User->addUser, including but not limited to:
         // - check for username unique
+        //    -> here or at DB index (if index, check compat with v1)
         // - generate password
+        //    -> in the usecase
         // - add user to standard room
+        //    -> later
         // - send email
+        //    -> usecase calls helper/interface for email
+        // - change password
+        //    -> persistence model
         $legacyUser->save();
         return User::fromLegacy($legacyUser);
     }
