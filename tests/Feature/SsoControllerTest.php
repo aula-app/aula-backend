@@ -187,6 +187,87 @@ class SsoControllerTest extends TestCase
     }
 
     // =========================================================
+    // callback — email_verified claim enforcement
+    // =========================================================
+
+    public function test_callback_rejects_when_email_verified_is_false(): void
+    {
+        $idToken = $this->makeIdToken([
+            'sub'            => 'sub-unverified-001',
+            'email'          => 'sso_unverified@test.example',
+            'email_verified' => false,
+        ]);
+
+        $this->mockSocialiteCallback('sub-unverified-001', 'sso_unverified@test.example', 'Unverified', 'unverified', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=email_not_verified', $response->headers->get('Location'));
+
+        self::$testTenant->run(function () {
+            $this->assertEquals(0, LegacyUser::where('email', 'sso_unverified@test.example')->count());
+            $this->assertEquals(0, LegacyUser::where('sso_sub', 'sub-unverified-001')->count());
+        });
+    }
+
+    public function test_callback_rejects_when_email_verified_claim_is_missing(): void
+    {
+        $idToken = $this->makeIdToken([
+            'sub'   => 'sub-missing-claim-001',
+            'email' => 'sso_missingclaim@test.example',
+        ]);
+
+        $this->mockSocialiteCallback('sub-missing-claim-001', 'sso_missingclaim@test.example', 'Missing Claim', 'missingclaim', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=email_not_verified', $response->headers->get('Location'));
+
+        self::$testTenant->run(function () {
+            $this->assertEquals(0, LegacyUser::where('sso_sub', 'sub-missing-claim-001')->count());
+        });
+    }
+
+    public function test_callback_rejects_when_id_token_is_missing(): void
+    {
+        $socialiteUser = \Mockery::mock(\Laravel\Socialite\Two\User::class);
+        $socialiteUser->token = 'access-token-mock';
+        $socialiteUser->refreshToken = 'refresh-token-mock';
+        $socialiteUser->accessTokenResponseBody = [];
+        $socialiteUser->shouldReceive('getId')->andReturn('sub-no-idtoken');
+        $socialiteUser->shouldReceive('getEmail')->andReturn('sso_noidtoken@test.example');
+        $socialiteUser->shouldReceive('getName')->andReturn('No IdToken');
+        $socialiteUser->shouldReceive('getNickname')->andReturn('noidtoken');
+
+        $provider = \Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('user')->andReturn($socialiteUser);
+
+        Socialite::shouldReceive('driver')->with('keycloak')->andReturn($provider);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=email_not_verified', $response->headers->get('Location'));
+    }
+
+    public function test_callback_rejects_when_id_token_is_malformed(): void
+    {
+        $this->mockSocialiteCallback('sub-malformed-001', 'sso_malformed@test.example', 'Malformed', 'malformed', 'not.a.valid.jwt');
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=email_not_verified', $response->headers->get('Location'));
+    }
+
+    // =========================================================
     // resolveUser — collision handling
     // =========================================================
 
@@ -297,12 +378,14 @@ class SsoControllerTest extends TestCase
         return $payload . '.' . $signature;
     }
 
-    private function mockSocialiteCallback(string $sub, string $email, string $name, string $nickname): void
+    private function mockSocialiteCallback(string $sub, string $email, string $name, string $nickname, ?string $idToken = null): void
     {
         $socialiteUser = \Mockery::mock(\Laravel\Socialite\Two\User::class);
         $socialiteUser->token = 'access-token-mock';
         $socialiteUser->refreshToken = 'refresh-token-mock';
-        $socialiteUser->accessTokenResponseBody = ['id_token' => 'aula-id-token-mock'];
+        $socialiteUser->accessTokenResponseBody = [
+            'id_token' => $idToken ?? $this->makeIdToken(['sub' => $sub, 'email' => $email, 'email_verified' => true]),
+        ];
         $socialiteUser->shouldReceive('getId')->andReturn($sub);
         $socialiteUser->shouldReceive('getEmail')->andReturn($email);
         $socialiteUser->shouldReceive('getName')->andReturn($name);
@@ -313,6 +396,20 @@ class SsoControllerTest extends TestCase
         $provider->shouldReceive('user')->andReturn($socialiteUser);
 
         Socialite::shouldReceive('driver')->with('keycloak')->andReturn($provider);
+    }
+
+    private function makeIdToken(array $claims): string
+    {
+        $header  = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+        $payload = $this->base64UrlEncode(json_encode($claims));
+        $sig     = $this->base64UrlEncode('signature-not-verified');
+
+        return "{$header}.{$payload}.{$sig}";
+    }
+
+    private function base64UrlEncode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 
     private function jwtForUser(LegacyUser $user): string
