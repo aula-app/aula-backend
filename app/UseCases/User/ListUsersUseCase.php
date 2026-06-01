@@ -9,6 +9,7 @@ class ListUsersUseCase
 {
     public static function execute(): Collection
     {
+        // TODO for consistency, run fromLegacy for all?
         return LegacyUser::all();
     }
 }

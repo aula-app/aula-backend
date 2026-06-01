@@ -10,8 +10,8 @@ class DeleteUserUseCase
 {
     public static function execute(string $id)
     {
-        // TODO: test orFail
-        $legacyUser = LegacyUser::destroy($id);
+        LegacyUser::findOrFail($id);
+        LegacyUser::destroy($id);
         // TODO functionality from legacy model User->deleteUser, including but not limited to:
         // - remove user's delegations
         // - "delete_mode==1", delete this user's...
