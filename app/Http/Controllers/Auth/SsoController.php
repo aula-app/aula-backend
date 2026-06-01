@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -88,6 +89,19 @@ class SsoController extends Controller
         $driver = Socialite::driver('keycloak');
         /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
         $socialiteUser = $driver->stateless()->user();
+
+        $idToken     = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
+        $idTokenData = $this->decodeIdTokenPayload($idToken);
+
+        if (! $this->isEmailVerified($idTokenData)) {
+            Log::warning('SSO: rejecting login because email_verified claim is not true', [
+                'tenant' => $instanceCode,
+                'sub'    => $socialiteUser->getId(),
+                'reason' => $idTokenData === null ? 'id_token_missing_or_unparseable' : 'email_verified_not_true',
+            ]);
+
+            return $this->frontendError('email_not_verified');
+        }
 
         $user = $this->ssoUserService->resolveUser($socialiteUser->getEmail(), $socialiteUser->getId());
 
@@ -256,21 +270,49 @@ class SsoController extends Controller
     }
 
     /**
+     * Decode an OIDC id_token (JWT) payload without verifying the signature.
+     * Returns null when the token is missing, malformed, or the payload is not valid JSON.
+     */
+    protected function decodeIdTokenPayload(?string $idToken): ?array
+    {
+        if (! $idToken) {
+            return null;
+        }
+
+        $parts = explode('.', $idToken);
+        if (count($parts) !== 3) {
+            return null;
+        }
+
+        $padded  = str_pad($parts[1], strlen($parts[1]) + (4 - strlen($parts[1]) % 4) % 4, '=');
+        $decoded = base64_decode(strtr($padded, '-_', '+/'), true);
+        if ($decoded === false) {
+            return null;
+        }
+
+        $payload = json_decode($decoded, true);
+        if (! is_array($payload)) {
+            return null;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * OIDC: the email claim is only trustworthy when email_verified is strictly true.
+     */
+    protected function isEmailVerified(?array $idTokenPayload): bool
+    {
+        return is_array($idTokenPayload) && ($idTokenPayload['email_verified'] ?? null) === true;
+    }
+
+    /**
      * Build an IdP logout URL by discovering the OIDC end_session_endpoint.
      * Works for any OIDC-compliant provider (Keycloak realms, iServ, VIDIS, etc.)
      */
     protected function buildIdpLogoutUrl(?string $idpIdToken, string $redirectUri): ?string
     {
-        if (! $idpIdToken) {
-            return null;
-        }
-
-        $parts = explode('.', $idpIdToken);
-        if (count($parts) !== 3) {
-            return null;
-        }
-
-        $payload = json_decode(base64_decode(str_pad($parts[1], strlen($parts[1]) + (4 - strlen($parts[1]) % 4) % 4, '=')), true);
+        $payload = $this->decodeIdTokenPayload($idpIdToken);
         $issuer  = rtrim($payload['iss'] ?? '', '/');
 
         if (! $issuer) {
