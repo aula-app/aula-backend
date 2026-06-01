@@ -8,19 +8,24 @@ use App\Filament\Resources\TenantResource\Pages;
 use App\Models\SchoolType;
 use App\Models\Tenant;
 use App\Services\TenantsService;
+use BackedEnum;
 use Filament\Actions\Action as FormAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Set;
+use Filament\Schemas\Components\Utilities\Set as FilamentSet;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Actions\EditAction;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @extends Resource<Model,ResourceConfiguration>
+ */
 class TenantResource extends Resource
 {
     protected static ?string $model = Tenant::class;
@@ -58,7 +63,7 @@ class TenantResource extends Resource
                                     FormAction::make('regenerate')
                                         ->icon('heroicon-o-arrow-path')
                                         ->tooltip('Generate a new instance code')
-                                        ->action(fn (Set $set) => $set(
+                                        ->action(fn (FilamentSet $set) => $set(
                                             'instance_code',
                                             app(TenantsService::class)->generateUniqueInstanceCode()
                                         ))
@@ -99,7 +104,7 @@ class TenantResource extends Resource
 
                     TextInput::make('admin1_email')
                         ->label('Email')
-                        ->email()
+                        ->email(condition: $isCreate)
                         ->required()
                         ->maxLength(255)
                         ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
@@ -125,7 +130,7 @@ class TenantResource extends Resource
 
                     TextInput::make('admin2_email')
                         ->label('Email')
-                        ->email()
+                        ->email(condition: $isCreate)
                         ->required()
                         ->maxLength(255)
                         ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
