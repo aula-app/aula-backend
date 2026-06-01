@@ -8,6 +8,10 @@ php artisan clear-compiled
 
 echo "🔑 Checking app key for encryption (sessions, JWT, app-level encryption)..."
 if ! grep -q '^APP_KEY=' .env || grep -q '^APP_KEY=$' .env; then
+  # Ensure framework cache and other folders are available
+  mkdir -p storage/app/private storage/app/public storage/framework/cache storage/framework/sessions storage/framework/testing storage/framework/views
+  chown -R www-data:www-data ./storage
+
   echo "🔑 No existing key found. Generating new app key..."
   php artisan key:generate --force
   echo "✅ App key generated."
@@ -22,6 +26,7 @@ done
 echo "✅ Database is ready."
 
 php artisan migrate --force
+php artisan tenants:migrate --force
 php artisan optimize:clear
 php artisan storage:link
 # Make sure write and setgid bits is enabled for storage, so
