@@ -7,10 +7,15 @@ namespace App\Filament\Resources\TenantResource\Pages;
 use App\Filament\Resources\TenantResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @extends EditRecord<Model>
+ */
 class EditTenant extends EditRecord
 {
     protected static string $resource = TenantResource::class;
+
 
     protected function getHeaderActions(): array
     {
