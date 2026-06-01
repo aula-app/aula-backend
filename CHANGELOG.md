@@ -6,10 +6,7 @@
 ## v2.2.0
 
 - feat: add SSO login via Keycloak
-
-## v2.1.2
-
- - fix: non super users can't add or remove categories from an idea (#507)
+- fix: run tenancy DB migrations on deployment
 
 ## v2.1.1
 
@@ -43,6 +40,8 @@
 # v1
 
 ##
+
+- fix: non super users can't add or remove categories from an idea (#507)
 
 ## v1.9.5
 
