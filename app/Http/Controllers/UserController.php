@@ -8,14 +8,14 @@ use App\Http\Resources\UserResource;
 use App\UseCases\User\CreateUserUseCase;
 use App\UseCases\User\DeleteUserUseCase;
 use App\UseCases\User\ListUsersUseCase;
-use App\DTO\UserDTO;
 use App\Domain\Models\User;
 use App\UseCases\User\ShowUserUseCase;
 use App\UseCases\User\UpdateUserUseCase;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(): AnonymousResourceCollection
     {
         // TODO: implement
         // - pagination
@@ -24,31 +24,22 @@ class UserController extends Controller
         return UserResource::collection(ListUsersUseCase::execute());
     }
 
-    public function show(string $id)
+    public function show(string $id): UserResource
     {
         return new UserResource(ShowUserUseCase::execute($id));
     }
 
     public function store(StoreUserRequest $storeUserRequest): UserResource
     {
-        // Controller: FormRequest -> UserDTO
-        // Retrieve the validated input data...
         $user = User::fromRequest($storeUserRequest);
-
-        // UseCases - work only with DTOs
-        // ??? rename DTO -> DomainModel??
         $user = CreateUserUseCase::execute($user);
-
-        // Controller: UserDTO -> UserResource
         return new UserResource($user);
     }
 
     public function update(string $id, UpdateUserRequest $updateUserRequest): UserResource
     {
         $user = User::fromRequest($updateUserRequest);
-
         $user = UpdateUserUseCase::execute($id, $user);
-
         return new UserResource($user);
     }
 

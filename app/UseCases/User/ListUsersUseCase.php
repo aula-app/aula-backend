@@ -2,14 +2,14 @@
 
 namespace App\UseCases\User;
 
+use App\Domain\Models\User;
 use App\Models\LegacyUser;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 
 class ListUsersUseCase
 {
     public static function execute(): Collection
     {
-        // TODO for consistency, run fromLegacy for all?
-        return LegacyUser::all();
+        return LegacyUser::all()->map(fn ($legacyUser) => User::fromLegacy($legacyUser));
     }
 }

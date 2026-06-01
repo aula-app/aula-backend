@@ -3,36 +3,48 @@
 namespace App\Domain\Models;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 
 use App\Models\LegacyUser;
+use DateTimeImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 
 class User
 {
     public function __construct(
-        public string $displayname,
-        public string $username,
-        public string $realname,
+        public string $displayName,
+        public string $userName,
+        public string $realName,
         public ?string $email,
-        public ?UserLevel $userlevel,
-        public ?string $about_me
+        public ?UserLevel $userLevel,
+        public ?string $aboutMe
     ) {}
 
     public int $id;
-    public ?string $hash_id;
+    public ?string $hashId;
+    public ?UserStatus $status;
+    public ?DateTimeImmutable $createdAt = null;
+    public ?DateTimeImmutable $updatedAt = null;
 
+    /**
+     * @param LegacyUser $legacyUser
+     * @return User
+     * @psalm-suppress UndefinedMagicPropertyFetch
+     */
     public static function fromLegacy(LegacyUser $legacyUser): User
     {
         $user = new self(
-            $legacyUser->displayname,
-            $legacyUser->username,
-            $legacyUser->realname,
+            $legacyUser->displayname ?? '',
+            $legacyUser->username ?? '',
+            $legacyUser->realname ?? '',
             $legacyUser->email,
             $legacyUser->userlevel,
             $legacyUser->about_me,
         );
         $user->id = $legacyUser->id;
-        $user->hash_id = $legacyUser->hash_id;
+        $user->hashId = $legacyUser->hash_id;
+        $x = $legacyUser->status;
+        $user->status = UserStatus::tryFrom($x);
         return $user;
     }
 
@@ -46,6 +58,7 @@ class User
             UserLevel::tryFrom($formRequest->validated('userlevel')),
             $formRequest->validated('about_me')
         );
+        $user->status = UserStatus::tryFrom($formRequest->validated('status'));
         return $user;
     }
 }

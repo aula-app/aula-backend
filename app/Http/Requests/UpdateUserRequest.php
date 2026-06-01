@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,9 +22,10 @@ class UpdateUserRequest extends FormRequest
             'displayname' => ['required', 'string', 'max:400'],
             'username' => ['required', 'string', 'max:400'],
             'realname' => ['required', 'string', 'max:400'],
-            'email' => ['required', 'email:strict,spoof'],
+            'status' => [Rule::enum(UserStatus::class)],
+            // not required!
+            'email' => ['email:strict,spoof'],
             'userlevel' => [Rule::enum(UserLevel::class)],
-            'status' => ['int:strict', 'between:0,4'],
         ];
     }
 }

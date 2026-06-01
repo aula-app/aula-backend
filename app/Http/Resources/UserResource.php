@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use DateTimeInterface;
+
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 // use App\Models\User;
@@ -11,9 +13,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class UserResource extends JsonResource
 {
-    //public function __construct(User $resource) {
-    //    parent::__construct($resource);
-    //}
     /**
      * Transform the resource into an array.
      *
@@ -23,26 +22,20 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'realname' => $this->realname,
-            'displayname' => $this->displayname,
-            'username' => $this->username,
+            'realname' => $this->realName,
+            'displayname' => $this->displayName,
+            'username' => $this->userName,
             'email' => $this->email,
-            'hash_id' => $this->hash_id,
-            'about_me' => $this->about_me,
+            'hash_id' => $this->hashId,
+            'about_me' => $this->aboutMe,
 
-            // ignore?
-            // 'status' => $this->status,
-            // 'registration_status' => $this->registration_status,
+            'created' => $this->createdAt?->format(DateTimeInterface::ISO8601),
+            'last_update' => $this->updatedAt?->format(DateTimeInterface::ISO8601),
 
-            // ignore?
-            // 'created' => $this->created,
-            // 'last_update' => $this->last_update,
-
-            'userlevel' => $this->userlevel?->value,
+            'status' => $this->status?->value,
+            'userlevel' => $this->userLevel?->value,
             // 'temp_pw' => $this->temp_pw,
 
-            // not implemented atm
-            // 'roles' => $this->roles,
         ];
     }
 }

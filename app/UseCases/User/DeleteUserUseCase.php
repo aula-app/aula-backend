@@ -8,7 +8,7 @@ use App\Models\LegacyUser;
 
 class DeleteUserUseCase
 {
-    public static function execute(string $id)
+    public static function execute(string $id): void
     {
         LegacyUser::findOrFail($id);
         LegacyUser::destroy($id);
@@ -22,7 +22,6 @@ class DeleteUserUseCase
         //   - room relations
         //   - likes associations
         //   - votes associations
-        /* $legacyUser->deleteOrFail(); */
     }
 
 }

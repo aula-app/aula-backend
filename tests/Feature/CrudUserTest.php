@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -16,12 +17,12 @@ class CrudUserTest extends TestCase
         'displayname' => 'Mx McTestfacé',
         'username' => 'aula_testuser',
         'realname' => 'Testy McTestfacé',
-        'email' => 'featuretest@aula.de',
+        'status' => UserStatus::Active->value,
     ];
 
     private const array USER_DATA_UPDATE = [
         'userlevel' => UserLevel::Guest->value,
-        // 'status' => 1,
+        'email' => 'featuretest@aula.de',
     ];
 
     private const array HEADERS = ['aula-instance-code' => 'TEST001'];

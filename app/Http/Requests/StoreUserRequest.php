@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,24 +21,15 @@ class StoreUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        // TODO other properties
-        /* 'username' => [ */
-        /*     'required', */
-        /*     Rule::anyOf([ */
-        /*         ['string', 'email'], */
-        /*         ['string', 'alpha_dash', 'min:6'], */
-        /*     ]), */
-        /* ], */
         return [
             // TODO alpha_num instead of string?
             'displayname' => ['required', 'string', 'max:400'],
             'username' => ['required', 'string', 'max:400'],
             'realname' => ['required', 'string', 'max:400'],
+            'status' => ['required', Rule::enum(UserStatus::class)],
             // spoof requires php-intl
-            'email' => ['required', 'email:strict,spoof'],
-            // optional
+            'email' => ['email:strict,spoof'],
             'userlevel' => [Rule::enum(UserLevel::class)],
-            'status' => ['int:strict', 'between:0,4'],
         ];
     }
 }

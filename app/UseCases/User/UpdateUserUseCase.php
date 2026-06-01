@@ -15,13 +15,13 @@ class UpdateUserUseCase
         /* DB::transaction */
         $legacyUser = LegacyUser::findOrFail($id);
 
-        $legacyUser->displayname = $user->displayname;
-        $legacyUser->realname = $user->realname;
-        $legacyUser->username = $user->username;
+        $legacyUser->displayname = $user->displayName;
+        $legacyUser->realname = $user->realName;
+        $legacyUser->username = $user->userName;
         $legacyUser->email = $user->email;
         // TODO patch vs put vs required
-        $legacyUser->userlevel = $user->userlevel;
-        $legacyUser->about_me = $user->about_me;
+        $legacyUser->userlevel = $user->userLevel;
+        $legacyUser->about_me = $user->aboutMe;
         $legacyUser->save();
         /* DB::transaction */
         return User::fromLegacy($legacyUser);
