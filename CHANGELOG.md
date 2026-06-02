@@ -3,13 +3,13 @@
 
 # v2
 
-## v2.1.2
+## v2.2.0
 
- - fix: non super users can't add or remove categories from an idea (#507)
+- feat: add SSO login via Keycloak
+- fix: run tenancy DB migrations on deployment
 
 ## v2.1.1
 
-- fix: super_moderator_v role permissions on IdeaRemoveLike, CommentAddLike and CommentRemoveLike
 - fix: new tenants can't be used due to permission issue
 
 ## v2.1.0
@@ -40,6 +40,12 @@
 # v1
 
 ##
+
+- fix: non super users can't add or remove categories from an idea (#507)
+
+## v1.9.5
+
+- fix: super_moderator_v role permissions on IdeaRemoveLike, CommentAddLike and CommentRemoveLike
 
 ## v1.9.4
 
