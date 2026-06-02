@@ -161,10 +161,15 @@ class Room
       $limit_string = " LIMIT " . $offset . " , 9999999999999999";
     }
 
-    if ($status > -1) {
-      // specific status selected / -1 = get all status values
-      $extra_where .= " AND status = " . $status;
-    }
+    // TODO: this method is just being called by the admin and we need to get also inactive rooms.
+    // The problem is that this method is called on the settings and also on the admin user rooms listing.
+    // We need to check if in the admin user listing we display the inactive rooms differently on the
+    // interface, currently we just show inactive ones differently in the settings rooms list.
+    //
+    // if ($status > -1) {
+    //   // specific status selected / -1 = get all status values
+    //   $extra_where .= " AND status = " . $status;
+    // }
 
     if ($type > -1) {
       // specific status selected / -1 = get all status values
@@ -313,6 +318,7 @@ class Room
         rel_rooms_users.user_id = users_basedata.id
       WHERE
         rel_rooms_users.user_id = :user_id AND
+        rooms.status > 0 AND
         JSON_SEARCH(users_basedata.roles, 'one', rooms.hash_id, NULL, '$[*].room') IS NOT NULL
     EOD;
 
