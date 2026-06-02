@@ -23,6 +23,9 @@ class EditTenant extends EditRecord
         ];
     }
 
+    /**
+     * @psalm-pure
+     */
     protected function getSavedNotificationTitle(): ?string
     {
         return 'Tenant updated';
@@ -31,6 +34,8 @@ class EditTenant extends EditRecord
     /**
      * Only allow editing of safe fields. instance_code and jwt_key are never
      * overwritten through the panel — they are displayed as read-only.
+     *
+     * @psalm-pure
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {

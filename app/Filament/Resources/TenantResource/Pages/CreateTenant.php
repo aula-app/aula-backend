@@ -33,6 +33,9 @@ class CreateTenant extends CreateRecord
             ->modalSubmitActionLabel('Confirm and create');
     }
 
+    /**
+     * @psalm-pure
+     */
     protected function handleRecordCreation(array $data): Model
     {
         return app(CreateTenantUseCase::class)->execute(

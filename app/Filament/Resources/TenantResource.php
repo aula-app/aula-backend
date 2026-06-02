@@ -224,6 +224,9 @@ class TenantResource extends Resource
         ];
     }
 
+    /**
+     * @psalm-pure
+     */
     private static function deriveUsernameFromEmail(?string $email, ?string $current): string
     {
         if ($email === null) {
