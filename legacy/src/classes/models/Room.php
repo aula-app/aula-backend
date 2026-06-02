@@ -161,15 +161,10 @@ class Room
       $limit_string = " LIMIT " . $offset . " , 9999999999999999";
     }
 
-    // TODO: this method is just being called by the admin and we need to get also inactive rooms.
-    // The problem is that this method is called on the settings and also on the admin user rooms listing.
-    // We need to check if in the admin user listing we display the inactive rooms differently on the
-    // interface, currently we just show inactive ones differently in the settings rooms list.
-    //
-    // if ($status > -1) {
-    //   // specific status selected / -1 = get all status values
-    //   $extra_where .= " AND status = " . $status;
-    // }
+    if ($status > -1) {
+      // specific status selected / -1 = get all status values
+      $extra_where .= " AND status = " . $status;
+    }
 
     if ($type > -1) {
       // specific status selected / -1 = get all status values
