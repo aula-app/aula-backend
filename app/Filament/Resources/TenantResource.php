@@ -8,7 +8,6 @@ use App\Filament\Resources\TenantResource\Pages;
 use App\Models\SchoolType;
 use App\Models\Tenant;
 use App\Services\TenantsService;
-use BackedEnum;
 use Filament\Actions\Action as FormAction;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -48,7 +47,7 @@ class TenantResource extends Resource
         return $schema->components([
             Section::make('Basic Information')
                 ->schema([
-                    Hidden::make('admin1_username_manual')->default(true)->reactive(),
+                    Hidden::make('admin1_username_manual')->default(fn (mixed $state, callable $set, Get $get) => ! empty($get('admin1_username')))->reactive(),
                     Hidden::make('admin2_username_manual')->default(fn (mixed $state, callable $set, Get $get) => ! empty($get('admin2_username')))->reactive(),
 
                     TextInput::make('name')
@@ -106,7 +105,7 @@ class TenantResource extends Resource
 
                     TextInput::make('admin1_email')
                         ->label('Email')
-                        ->email(condition: $isCreate)
+                        ->email()
                         ->required()
                         ->reactive()
                         ->afterStateUpdated(function (?string $state, callable $set, Get $get): void {
@@ -142,7 +141,7 @@ class TenantResource extends Resource
 
                     TextInput::make('admin2_email')
                         ->label('Email')
-                        ->email(condition: $isCreate)
+                        ->email()
                         ->required()
                         ->reactive()
                         ->afterStateUpdated(function (?string $state, callable $set, Get $get): void {
@@ -230,7 +229,7 @@ class TenantResource extends Resource
         }
         $part = ($pos = strpos($email, '@')) !== false ? substr($email, 0, $pos) : $email;
         // normalize to NFC
-        if (class_exists(\Normalizer\Normalizer::class) === false && function_exists('normalizer_normalize')) {
+        if (function_exists('normalizer_normalize')) {
             $part = strval(normalizer_normalize($part, \Normalizer::FORM_C));
         }
         // allow Unicode letters, numbers, dot, underscore, hyphen
