@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\LegacyUser;
+use App\Models\Tenant;
 use App\Services\LegacyJwtService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,19 @@ class LegacyLoginController extends Controller
         $username = $request->input('username');
         $password = $request->input('password');
 
+        /** @var Tenant|null $tenant */
+        $tenant = tenant();
+
+        // Tenants flagged sso_required reject password login for everyone, regardless
+        // of whether the specific user has finished SSO linking yet.
+        if ($tenant && $tenant->sso_required) {
+            return response()->json([
+                'success'    => false,
+                'error_code' => 3,
+                'error'      => 'tenant_requires_sso',
+            ]);
+        }
+
         // Find user by username
         $user = LegacyUser::where('username', $username)->first();
 
@@ -35,6 +49,17 @@ class LegacyLoginController extends Controller
             return response()->json([
                 'success' => false,
                 'error_code' => 2,
+            ]);
+        }
+
+        // SSO-linked users must authenticate via the IdP. A local password is bypass
+        // surface — refuse the login so the local secret can never substitute for the
+        // IdP session.
+        if ($user->sso_sub !== null) {
+            return response()->json([
+                'success'    => false,
+                'error_code' => 3,
+                'error'      => 'use_sso',
             ]);
         }
 

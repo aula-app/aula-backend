@@ -19,7 +19,10 @@ $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $email =  $_GET["email"];
-  $stmt = $db->query('SELECT id,username,realname FROM au_users_basedata WHERE email = :email');
+  // SSO-linked users (sso_sub IS NOT NULL) cannot reset a local password — their
+  // identity lives in the IdP. Filtering at the query level keeps the response
+  // shape identical to the no-match case, preserving anti-enumeration.
+  $stmt = $db->query('SELECT id,username,realname FROM au_users_basedata WHERE email = :email AND sso_sub IS NULL');
   $db->bind(':email', $email);
 
   $results = $db->resultSet();
