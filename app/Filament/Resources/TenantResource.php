@@ -23,13 +23,15 @@ use Filament\Resources\Resource;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 
 /**
- * @extends Resource<Model,ResourceConfiguration>
+ * @extends Resource<Tenant,ResourceConfiguration>
  */
 class TenantResource extends Resource
 {
+    /**
+     * @var ?class-string<Tenant>
+     */
     protected static ?string $model = Tenant::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
@@ -68,7 +70,7 @@ class TenantResource extends Resource
                                     FormAction::make('regenerate')
                                         ->icon('heroicon-o-arrow-path')
                                         ->tooltip('Generate a new instance code')
-                                        ->action(fn (FilamentSet $set) => $set(
+                                        ->action(fn (FilamentSet $set): mixed => $set(
                                             'instance_code',
                                             app(TenantsService::class)->generateUniqueInstanceCode()
                                         ))

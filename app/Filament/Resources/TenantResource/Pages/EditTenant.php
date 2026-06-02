@@ -7,10 +7,9 @@ namespace App\Filament\Resources\TenantResource\Pages;
 use App\Filament\Resources\TenantResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Database\Eloquent\Model;
 
 /**
- * @extends EditRecord<Model>
+ * @extends EditRecord<\App\Models\Tenant>
  */
 class EditTenant extends EditRecord
 {
