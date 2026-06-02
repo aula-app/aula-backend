@@ -5,45 +5,22 @@ namespace App\Services;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 class SsoUserService
 {
-    /**
-     * Find an existing user by email or sso_sub in a single query.
-     *
-     * If both columns match different rows (corrupt state), the sso_sub match
-     * takes priority and a warning is logged so the duplicate can be cleaned up
-     * manually.
-     */
-    public function resolveUser(?string $email, string $sub): ?LegacyUser
+    public function findBySub(string $sub): ?LegacyUser
     {
-        $candidates = LegacyUser::where('email', $email)
-            ->orWhere('sso_sub', $sub)
-            ->get();
+        return LegacyUser::where('sso_sub', $sub)->first();
+    }
 
-        if ($candidates->isEmpty()) {
+    public function findByEmail(?string $email): ?LegacyUser
+    {
+        if ($email === null || $email === '') {
             return null;
         }
 
-        if ($candidates->count() === 1) {
-            return $candidates->first();
-        }
-
-        $bySubMatch = $candidates->firstWhere('sso_sub', $sub);
-        $byEmailMatch = $candidates->firstWhere('email', $email);
-
-        if ($bySubMatch && $byEmailMatch && $bySubMatch->id !== $byEmailMatch->id) {
-            Log::warning('SSO: email and sso_sub match different users — prioritising sso_sub match.', [
-                'email' => $email,
-                'sub' => $sub,
-                'sso_sub_user' => $bySubMatch->id,
-                'email_user' => $byEmailMatch->id,
-            ]);
-        }
-
-        return $bySubMatch ?? $byEmailMatch;
+        return LegacyUser::where('email', $email)->first();
     }
 
     /**

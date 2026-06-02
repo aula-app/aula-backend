@@ -10,6 +10,8 @@ use App\Services\SsoUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -17,6 +19,8 @@ use Laravel\Socialite\Facades\Socialite;
 
 class SsoController extends Controller
 {
+    private const LINK_INTENT_TTL_MINUTES = 10;
+
     public function __construct(
         protected LegacyJwtService $jwtService,
         protected SsoUserService $ssoUserService,
@@ -103,19 +107,55 @@ class SsoController extends Controller
             return $this->frontendError('email_not_verified');
         }
 
-        $user = $this->ssoUserService->resolveUser($socialiteUser->getEmail(), $socialiteUser->getId());
+        /** @var Tenant $callbackTenant */
+        $callbackTenant = tenant();
+        $sub            = $socialiteUser->getId();
+        $email          = $socialiteUser->getEmail();
+
+        $user = $this->ssoUserService->findBySub($sub);
 
         if ($user === null) {
-            $user = $this->ssoUserService->provisionUser($socialiteUser);
+            $emailMatch = $this->ssoUserService->findByEmail($email);
+
+            if ($emailMatch === null) {
+                $user = $this->ssoUserService->provisionUser($socialiteUser);
+            } else {
+                if (! $emailMatch->isActive()) {
+                    return $this->frontendError('account_inactive');
+                }
+
+                if ($emailMatch->sso_sub !== null) {
+                    Log::warning('SSO: email matches a user already bound to a different sso_sub', [
+                        'tenant'          => $instanceCode,
+                        'incoming_sub'    => $sub,
+                        'existing_sub'    => $emailMatch->sso_sub,
+                        'matched_user_id' => $emailMatch->id,
+                    ]);
+
+                    return $this->frontendError('sub_collision');
+                }
+
+                $linkToken = $this->storeLinkIntent($emailMatch, $socialiteUser, $callbackTenant);
+
+                return $this->frontendError('account_link_required', ['sso_link' => $linkToken]);
+            }
+        } else {
+            $strayEmailMatch = $this->ssoUserService->findByEmail($email);
+            if ($strayEmailMatch && $strayEmailMatch->id !== $user->id) {
+                Log::warning('SSO: email and sso_sub match different users — prioritising sso_sub match.', [
+                    'email'        => $email,
+                    'sub'          => $sub,
+                    'sso_sub_user' => $user->id,
+                    'email_user'   => $strayEmailMatch->id,
+                ]);
+            }
         }
 
         if (! $user->isActive()) {
             return $this->frontendError('account_inactive');
         }
 
-        /** @var Tenant $callbackTenant */
-        $callbackTenant          = tenant();
-        $user->sso_id_token      = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
+        $user->sso_id_token      = $idToken;
         $user->sso_refresh_token = $socialiteUser->refreshToken ?? null;
         $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
         $user->save();
@@ -123,6 +163,58 @@ class SsoController extends Controller
         $token = $this->jwtService->generateToken($user);
 
         return $this->frontendRedirect($token);
+    }
+
+    /**
+     * Link an SSO identity to an authenticated legacy user.
+     *
+     * Auth: bearer JWT (legacy.jwt middleware). The bearer user proves possession
+     * of the legacy account; the link-intent token proves possession of the IdP
+     * identity. Both must point to the same user_id.
+     */
+    public function link(Request $request): JsonResponse
+    {
+        $request->validate([
+            'sso_link_token' => 'required|string',
+        ]);
+
+        /** @var LegacyUser $authUser */
+        $authUser = $request->attributes->get('authenticated_user');
+        $token    = $request->input('sso_link_token');
+
+        $intent = Cache::get($this->linkIntentCacheKey($token));
+
+        if (! is_array($intent)) {
+            return response()->json(['success' => false, 'error' => 'link_intent_not_found'], 404);
+        }
+
+        if (($intent['user_id'] ?? null) !== $authUser->id) {
+            Log::warning('SSO: link rejected — bearer JWT user does not match link intent', [
+                'authenticated_user' => $authUser->id,
+                'intent_user'        => $intent['user_id'] ?? null,
+            ]);
+
+            return response()->json(['success' => false, 'error' => 'user_mismatch'], 403);
+        }
+
+        $fresh = LegacyUser::find($authUser->id);
+
+        if ($fresh->sso_sub !== null && $fresh->sso_sub !== $intent['sso_sub']) {
+            return response()->json(['success' => false, 'error' => 'already_linked'], 409);
+        }
+
+        DB::transaction(function () use ($fresh, $intent) {
+            $fresh->sso_sub           = $intent['sso_sub'];
+            $fresh->sso_provider      = $intent['sso_provider'] ?? null;
+            $fresh->sso_id_token      = $intent['sso_id_token'] ?? null;
+            $fresh->sso_refresh_token = $intent['sso_refresh_token'] ?? null;
+            $fresh->sso_idp_id_token  = $intent['sso_idp_id_token'] ?? null;
+            $fresh->save();
+        });
+
+        Cache::forget($this->linkIntentCacheKey($token));
+
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -342,10 +434,39 @@ class SsoController extends Controller
         return redirect("{$frontendUrl}/oauth-login/{$token}");
     }
 
-    protected function frontendError(string $code): RedirectResponse
+    protected function frontendError(string $code, array $extra = []): RedirectResponse
     {
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
+        $query       = http_build_query(['sso_error' => $code] + $extra);
 
-        return redirect("{$frontendUrl}/login?sso_error={$code}");
+        return redirect("{$frontendUrl}/login?{$query}");
+    }
+
+    /**
+     * Persist an account-link intent in the cache and return the opaque token.
+     * The intent carries everything the link endpoint needs to stamp the row
+     * once the user has proven legacy-account possession via password.
+     */
+    protected function storeLinkIntent(LegacyUser $emailMatch, $socialiteUser, Tenant $tenant): string
+    {
+        $token = bin2hex(random_bytes(16));
+
+        Cache::put($this->linkIntentCacheKey($token), [
+            'user_id'           => $emailMatch->id,
+            'email'             => $emailMatch->email,
+            'sso_sub'           => $socialiteUser->getId(),
+            'sso_provider'      => $tenant->sso_provider,
+            'sso_id_token'      => $socialiteUser->accessTokenResponseBody['id_token'] ?? null,
+            'sso_refresh_token' => $socialiteUser->refreshToken ?? null,
+            'sso_idp_id_token'  => $this->fetchIdpIdToken($socialiteUser->token, $tenant->sso_provider),
+            'instance_code'     => $tenant->instance_code,
+        ], now()->addMinutes(self::LINK_INTENT_TTL_MINUTES));
+
+        return $token;
+    }
+
+    protected function linkIntentCacheKey(string $token): string
+    {
+        return "sso_link:{$token}";
     }
 }
