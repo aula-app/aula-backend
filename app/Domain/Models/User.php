@@ -34,17 +34,16 @@ class User
     public static function fromLegacy(LegacyUser $legacyUser): User
     {
         $user = new self(
-            $legacyUser->displayname ?? '',
-            $legacyUser->username ?? '',
-            $legacyUser->realname ?? '',
+            $legacyUser->displayname,
+            $legacyUser->username,
+            $legacyUser->realname,
             $legacyUser->email,
             $legacyUser->userlevel,
             $legacyUser->about_me,
         );
         $user->id = $legacyUser->id;
         $user->hashId = $legacyUser->hash_id;
-        $x = $legacyUser->status;
-        $user->status = UserStatus::tryFrom($x);
+        $user->status = UserStatus::tryFrom($legacyUser->status);
         return $user;
     }
 

@@ -14,9 +14,9 @@ class CrudUserTest extends TestCase
     use CreatesTestTenant;
 
     private const array NEW_USER_DATA = [
-        'displayname' => 'Mx McTestfacé',
+        'displayname' => 'Firstnamé',
         'username' => 'aula_testuser',
-        'realname' => 'Testy McTestfacé',
+        'realname' => 'Firstnamé Lastname',
         'status' => UserStatus::Active->value,
     ];
 
@@ -41,8 +41,7 @@ class CrudUserTest extends TestCase
             '/api/v2/user',
             self::NEW_USER_DATA,
         )
-            // why not Created any more??
-            // ->assertCreated()
+            // used to be ->assertCreated(), but changed at some point?
             ->assertOk()
             ->assertJson(['data' => self::NEW_USER_DATA]);
         $newUserId1 = $newUserResult->decodeResponseJson()['data']['id'];
@@ -70,7 +69,7 @@ class CrudUserTest extends TestCase
         $this->assertContains($newUserId1, $allUserIds);
         $this->assertContains($newUserId2, $allUserIds);
 
-        // update/put
+        // update (put, no patch)
         $changedUserData = self::NEW_USER_DATA;
         $changedUserData['realname'] = 'Changed Name';
 
@@ -80,15 +79,6 @@ class CrudUserTest extends TestCase
         )
             ->assertOk()
             ->assertJson(['data' => $changedUserData]);
-
-        /* TODO update/patch?
-        $patchUserData = ['realname' => 'Changed Name'];
-        $this->patchJson(
-            '/api/v2/user/'.$newUserId,
-            $patchUserData,
-        )
-            ->assertOk();
-        */
 
         // delete
         $this->deleteJson('/api/v2/user/'.$newUserId1, [])

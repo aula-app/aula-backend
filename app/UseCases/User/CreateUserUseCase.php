@@ -27,7 +27,7 @@ class CreateUserUseCase
         $legacyUser->email = $user->email;
         $legacyUser->userlevel = $user->userLevel ?? UserLevel::Guest;
         $legacyUser->about_me = $user->aboutMe ?? '';
-        $legacyUser->status = $user->status->value ?? UserStatus::Inactive->value;
+        $legacyUser->status = $user->status?->value ?? UserStatus::Inactive->value;
         // TODO functionality from legacy model User->addUser, including but not limited to:
         // - check for username unique
         //    -> here or at DB index (if index, check compat with v1)

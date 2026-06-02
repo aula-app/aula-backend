@@ -3,6 +3,7 @@
 namespace Tests\Feature\Models;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use Illuminate\Support\Facades\DB;
 use Tests\Concerns\CreatesTestTenant;
@@ -29,7 +30,7 @@ class LegacyUserTest extends TestCase
             $user = new LegacyUser();
             $user->username = 'phpunit_enum_user';
             $user->pw = password_hash('secret123', PASSWORD_DEFAULT);
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active->value;
             $user->hash_id = 'phpunit_enum_'.uniqid();
             $user->userlevel = UserLevel::PrincipalPlus;
             $user->roles = json_encode([]);
