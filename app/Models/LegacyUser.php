@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -47,19 +48,11 @@ class LegacyUser extends Model implements Authenticatable
     ];
 
     /**
-     * User status constants
-     */
-    public const STATUS_INACTIVE = 0;
-    public const STATUS_ACTIVE = 1;
-    public const STATUS_SUSPENDED = 2;
-    public const STATUS_ARCHIVED = 3;
-
-    /**
      * Check if the user is active.
      */
     public function isActive(): bool
     {
-        return $this->status === self::STATUS_ACTIVE;
+        return $this->status === UserStatus::Active->value;
     }
 
     /**

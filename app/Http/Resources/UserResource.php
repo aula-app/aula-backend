@@ -6,7 +6,6 @@ use DateTimeInterface;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-// use App\Models\User;
 
 /**
  * @mixin \App\Domain\Models\User
@@ -35,7 +34,6 @@ class UserResource extends JsonResource
             'status' => $this->status?->value,
             'userlevel' => $this->userLevel?->value,
             // 'temp_pw' => $this->temp_pw,
-
         ];
     }
 }
