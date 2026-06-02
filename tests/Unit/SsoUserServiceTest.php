@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Models\LegacyUser;
 use App\Services\SsoUserService;
-use Illuminate\Support\Facades\Log;
 use Mockery;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -30,59 +29,57 @@ class SsoUserServiceTest extends TestCase
     }
 
     // =========================================================
-    // resolveUser
+    // findBySub / findByEmail
     // =========================================================
 
-    public function test_resolve_user_returns_null_when_no_match(): void
+    public function test_find_by_sub_returns_null_when_no_match(): void
     {
         $result = self::$testTenant->run(
-            fn () => $this->service->resolveUser('nobody@sso.test', 'sub-nobody')
+            fn () => $this->service->findBySub('sub-nobody')
         );
 
         $this->assertNull($result);
     }
 
-    public function test_resolve_user_matches_by_email(): void
-    {
-        $user = self::$testTenant->run(fn () => $this->makeUser('unit_email@sso.test', null));
-
-        $result = self::$testTenant->run(
-            fn () => $this->service->resolveUser('unit_email@sso.test', 'sub-not-in-db')
-        );
-
-        $this->assertNotNull($result);
-        $this->assertEquals($user->id, $result->id);
-    }
-
-    public function test_resolve_user_matches_by_sso_sub(): void
+    public function test_find_by_sub_matches_existing_user(): void
     {
         $user = self::$testTenant->run(fn () => $this->makeUser('unit_sub@sso.test', 'sub-match-001'));
 
         $result = self::$testTenant->run(
-            fn () => $this->service->resolveUser('other@sso.test', 'sub-match-001')
+            fn () => $this->service->findBySub('sub-match-001')
         );
 
         $this->assertNotNull($result);
         $this->assertEquals($user->id, $result->id);
     }
 
-    public function test_resolve_user_prioritises_sso_sub_on_collision_and_logs_warning(): void
+    public function test_find_by_email_returns_null_when_no_match(): void
     {
-        self::$testTenant->run(function () {
-            $this->makeUser('unit_collision@sso.test', null);
-            $this->makeUser('unit_other@sso.test', 'sub-collision-unit');
-        });
+        $result = self::$testTenant->run(
+            fn () => $this->service->findByEmail('unit_nobody@sso.test')
+        );
 
-        Log::shouldReceive('warning')
-            ->once()
-            ->with(Mockery::pattern('/SSO: email and sso_sub match different users/'), Mockery::any());
+        $this->assertNull($result);
+    }
+
+    public function test_find_by_email_matches_existing_user(): void
+    {
+        $user = self::$testTenant->run(fn () => $this->makeUser('unit_email@sso.test', null));
 
         $result = self::$testTenant->run(
-            fn () => $this->service->resolveUser('unit_collision@sso.test', 'sub-collision-unit')
+            fn () => $this->service->findByEmail('unit_email@sso.test')
         );
 
         $this->assertNotNull($result);
-        $this->assertEquals('sub-collision-unit', $result->sso_sub);
+        $this->assertEquals($user->id, $result->id);
+    }
+
+    public function test_find_by_email_returns_null_for_null_or_empty(): void
+    {
+        self::$testTenant->run(function () {
+            $this->assertNull($this->service->findByEmail(null));
+            $this->assertNull($this->service->findByEmail(''));
+        });
     }
 
     // =========================================================

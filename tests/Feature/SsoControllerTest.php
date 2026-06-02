@@ -130,23 +130,69 @@ class SsoControllerTest extends TestCase
         });
     }
 
-    public function test_callback_finds_existing_user_by_email(): void
+    public function test_callback_with_email_match_no_sub_redirects_to_link_flow(): void
     {
         $existing = self::$testTenant->run(function () {
-            return $this->createUser('sso_existing@test.example', null);
+            return $this->createUser('sso_link@test.example', null);
         });
 
-        Http::fake(['*/broker/*/token' => Http::response(['id_token' => 'idp.token.test'], 200)]);
-        $this->mockSocialiteCallback('sub-existing-email', 'sso_existing@test.example', 'Existing', 'existing');
+        $this->mockSocialiteCallback('sub-link-001', 'sso_link@test.example', 'Linker', 'linker');
 
-        $state = $this->buildState(self::INSTANCE_CODE);
+        $state    = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
+        $response->assertRedirect();
+        $location = $response->headers->get('Location');
+        $this->assertStringContainsString('sso_error=account_link_required', $location);
+        $this->assertMatchesRegularExpression('/sso_link=[a-f0-9]{32,}/', $location);
+
+        // The legacy row must NOT be stamped yet — linking is gated on password proof.
+        self::$testTenant->run(function () use ($existing) {
+            $fresh = LegacyUser::find($existing->id);
+            $this->assertNull($fresh->sso_sub);
+            $this->assertNull($fresh->sso_id_token);
+            $this->assertNull($fresh->sso_provider);
+        });
+    }
+
+    public function test_callback_with_email_match_to_inactive_user_rejects_account_inactive_not_link(): void
+    {
         self::$testTenant->run(function () {
-            $this->assertEquals(1, LegacyUser::where('email', 'sso_existing@test.example')->count());
+            $this->createUser('sso_inactive_email@test.example', null, LegacyUser::STATUS_SUSPENDED);
         });
 
-        $this->assertRedirectAuthenticatesUser($response, $existing);
+        $this->mockSocialiteCallback('sub-inactive-email-001', 'sso_inactive_email@test.example', 'Inactive', 'inactive');
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $location = $response->headers->get('Location');
+        $this->assertStringContainsString('sso_error=account_inactive', $location);
+        $this->assertStringNotContainsString('sso_link=', $location);
+    }
+
+    public function test_callback_with_email_match_to_user_having_different_sso_sub_rejects_sub_collision(): void
+    {
+        self::$testTenant->run(function () {
+            $this->createUser('sso_owned@test.example', 'existing-sub-aaa');
+        });
+
+        $this->mockSocialiteCallback('intruder-sub-bbb', 'sso_owned@test.example', 'Intruder', 'intruder');
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $location = $response->headers->get('Location');
+        $this->assertStringContainsString('sso_error=sub_collision', $location);
+        $this->assertStringNotContainsString('sso_link=', $location);
+
+        // No mutation on the original row.
+        self::$testTenant->run(function () {
+            $fresh = LegacyUser::where('email', 'sso_owned@test.example')->first();
+            $this->assertEquals('existing-sub-aaa', $fresh->sso_sub);
+        });
     }
 
     public function test_callback_finds_existing_user_by_sso_sub(): void
@@ -265,6 +311,155 @@ class SsoControllerTest extends TestCase
 
         $response->assertRedirect();
         $this->assertStringContainsString('sso_error=email_not_verified', $response->headers->get('Location'));
+    }
+
+    // =========================================================
+    // POST /sso/link — password-proof account linking
+    // =========================================================
+
+    public function test_link_endpoint_stamps_sso_sub_and_tokens_when_bearer_matches_intent(): void
+    {
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_linkme@test.example', null));
+
+        $linkToken = $this->primeLinkIntent([
+            'user_id'           => $user->id,
+            'email'             => $user->email,
+            'sso_sub'           => 'sub-fresh-001',
+            'sso_provider'      => 'mock-iserv',
+            'sso_id_token'      => 'aula-id-token-linktest',
+            'sso_refresh_token' => 'refresh-token-linktest',
+            'sso_idp_id_token'  => 'idp-id-token-linktest',
+            'instance_code'     => self::INSTANCE_CODE,
+        ]);
+
+        $jwt = $this->jwtForUser($user);
+
+        $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+
+        $response->assertOk()->assertJson(['success' => true]);
+
+        self::$testTenant->run(function () use ($user) {
+            $fresh = LegacyUser::find($user->id);
+            $this->assertEquals('sub-fresh-001', $fresh->sso_sub);
+            $this->assertEquals('mock-iserv', $fresh->sso_provider);
+            $this->assertEquals('aula-id-token-linktest', $fresh->sso_id_token);
+            $this->assertEquals('refresh-token-linktest', $fresh->sso_refresh_token);
+            $this->assertEquals('idp-id-token-linktest', $fresh->sso_idp_id_token);
+        });
+    }
+
+    public function test_link_endpoint_rejects_when_bearer_jwt_user_does_not_match_intent(): void
+    {
+        [$victim, $attacker] = self::$testTenant->run(function () {
+            return [
+                $this->createUser('sso_victim@test.example', null),
+                $this->createUser('sso_attacker@test.example', null),
+            ];
+        });
+
+        $linkToken = $this->primeLinkIntent([
+            'user_id'       => $victim->id,
+            'email'         => $victim->email,
+            'sso_sub'       => 'sub-take-over',
+            'sso_provider'  => 'mock-iserv',
+            'sso_id_token'  => 'tok',
+            'instance_code' => self::INSTANCE_CODE,
+        ]);
+
+        $jwt = $this->jwtForUser($attacker);
+
+        $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+
+        $response->assertForbidden();
+
+        self::$testTenant->run(function () use ($victim) {
+            $fresh = LegacyUser::find($victim->id);
+            $this->assertNull($fresh->sso_sub);
+        });
+    }
+
+    public function test_link_endpoint_rejects_invalid_or_expired_token(): void
+    {
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_bad@test.example', null));
+        $jwt  = $this->jwtForUser($user);
+
+        $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => 'does-not-exist-12345'], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+
+        $response->assertStatus(404);
+    }
+
+    public function test_link_endpoint_requires_bearer_jwt(): void
+    {
+        $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => 'whatever'], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+        ]);
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_link_endpoint_is_one_shot_consumes_intent_after_success(): void
+    {
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_oneshot@test.example', null));
+
+        $linkToken = $this->primeLinkIntent([
+            'user_id'       => $user->id,
+            'email'         => $user->email,
+            'sso_sub'       => 'sub-oneshot',
+            'sso_provider'  => 'mock-iserv',
+            'sso_id_token'  => 'tok',
+            'instance_code' => self::INSTANCE_CODE,
+        ]);
+
+        $jwt = $this->jwtForUser($user);
+
+        $first = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+        $first->assertOk();
+
+        $second = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+        $second->assertStatus(404);
+    }
+
+    public function test_link_endpoint_rejects_when_target_user_already_has_sso_sub(): void
+    {
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_alreadylinked@test.example', 'sub-already-set'));
+
+        $linkToken = $this->primeLinkIntent([
+            'user_id'       => $user->id,
+            'email'         => $user->email,
+            'sso_sub'       => 'sub-different-new',
+            'sso_provider'  => 'mock-iserv',
+            'sso_id_token'  => 'tok',
+            'instance_code' => self::INSTANCE_CODE,
+        ]);
+
+        $jwt = $this->jwtForUser($user);
+
+        $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+
+        $response->assertStatus(409);
+
+        self::$testTenant->run(function () use ($user) {
+            $fresh = LegacyUser::find($user->id);
+            $this->assertEquals('sub-already-set', $fresh->sso_sub);
+        });
     }
 
     // =========================================================
@@ -396,6 +591,21 @@ class SsoControllerTest extends TestCase
         $provider->shouldReceive('user')->andReturn($socialiteUser);
 
         Socialite::shouldReceive('driver')->with('keycloak')->andReturn($provider);
+    }
+
+    /**
+     * Seed a link intent directly into the cache and return the opaque token.
+     * Must run inside tenant context — CacheTenancyBootstrapper applies a
+     * per-tenant prefix, so a central write would not be visible to the
+     * tenant-scoped controller read.
+     */
+    private function primeLinkIntent(array $intent): string
+    {
+        $token = bin2hex(random_bytes(16));
+        self::$testTenant->run(function () use ($token, $intent) {
+            \Illuminate\Support\Facades\Cache::put("sso_link:{$token}", $intent, now()->addMinutes(10));
+        });
+        return $token;
     }
 
     private function makeIdToken(array $claims): string
