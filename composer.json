@@ -18,8 +18,10 @@
         "gladcodes/keygen": "^1.1.2",
         "laravel/framework": "^12.0",
         "laravel/passport": "^13",
+        "laravel/socialite": "^5.26",
         "laravel/tinker": "^2.10.1",
         "pear/mail": "*",
+        "socialiteproviders/keycloak": "^5.3",
         "stancl/tenancy": "dev-master"
     },
     "require-dev": {
