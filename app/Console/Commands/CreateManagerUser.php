@@ -23,8 +23,11 @@ class CreateManagerUser extends Command
         } while (empty($name));
 
         do {
-            $email = $this->ask('Email') ?? '';
-            if (!empty($email) && AulaManagerUser::firstWhere('email', $email)) {
+            $email = $this->ask('Email');
+            if ($email === null || empty($email)) {
+                continue;
+            }
+            if (AulaManagerUser::firstWhere('email', $email) !== null) {
                 $this->warn('A user with that email already exists.');
                 $email = null;
             }
@@ -40,7 +43,7 @@ class CreateManagerUser extends Command
                 $this->warn('Password must be at least 8 characters.');
                 $password = null;
             }
-        } while (empty($password));
+        } while ($password === null || empty($password));
 
         AulaManagerUser::create([
             'name' => $name,
