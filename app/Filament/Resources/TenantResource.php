@@ -12,12 +12,14 @@ use Filament\Actions\Action as FormAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Set;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Actions\EditAction;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -136,6 +138,36 @@ class TenantResource extends Resource
                         ->dehydrated(false)
                         ->visibleOn('edit'),
                 ]),
+
+            Section::make('Single Sign-On')
+                ->description('OIDC/Keycloak integration. Leave SSO disabled to keep this tenant on legacy username+password login only.')
+                ->collapsed(fn (?Tenant $record) => !($record?->sso_enabled))
+                ->schema([
+                    Toggle::make('sso_enabled')
+                        ->label('SSO enabled')
+                        ->helperText('Show the SSO login button on the login page.')
+                        ->default(false),
+
+                    TextInput::make('sso_provider')
+                        ->label('IdP alias in Keycloak')
+                        ->helperText('Optional. The Keycloak identity-provider alias for this school (used as kc_idp_hint). Leave empty to land on the realm login page.')
+                        ->maxLength(64),
+
+                    Toggle::make('sso_force_logout')
+                        ->label('End Keycloak session on logout')
+                        ->helperText('When on, clicking Logout in aula also ends the Keycloak session (RP-initiated logout).')
+                        ->default(true),
+
+                    Toggle::make('sso_required')
+                        ->label('SSO required (no password login)')
+                        ->helperText('When on, refuse legacy username+password login for everyone in this tenant. Only flip on AFTER all users have completed account linking — while on, the link flow itself is unreachable.')
+                        ->default(false),
+
+                    Toggle::make('sso_require_email_verified')
+                        ->label('Require verified email from IdP')
+                        ->helperText('When on (default), reject SSO logins whose id_token does not assert email_verified=true. Turn off only when the IdP is trusted to control all email addresses (e.g., school-issued addresses with no self-registration).')
+                        ->default(true),
+                ]),
         ]);
     }
 
@@ -166,6 +198,16 @@ class TenantResource extends Resource
                 TextColumn::make('admin2_email')
                     ->label('Secondary Admin Email')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                IconColumn::make('sso_enabled')
+                    ->label('SSO')
+                    ->boolean()
+                    ->toggleable(),
+
+                IconColumn::make('sso_required')
+                    ->label('SSO only')
+                    ->boolean()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('created_at')
