@@ -27,9 +27,10 @@ class SsoControllerTest extends TestCase
         parent::setUp();
         $this->ensureTestTenantExists();
         self::$testTenant->update([
-            'sso_enabled'      => true,
-            'sso_provider'     => 'mock-iserv',
-            'sso_force_logout' => false,
+            'sso_enabled'                 => true,
+            'sso_provider'                => 'mock-iserv',
+            'sso_force_logout'            => false,
+            'sso_require_email_verified'  => true,
         ]);
 
         config([
@@ -300,6 +301,70 @@ class SsoControllerTest extends TestCase
         self::$testTenant->run(function () {
             $this->assertEquals(0, LegacyUser::where('sso_sub', 'sub-missing-claim-001')->count());
         });
+    }
+
+    public function test_callback_allows_unverified_email_when_tenant_disables_requirement(): void
+    {
+        self::$testTenant->update(['sso_require_email_verified' => false]);
+
+        $idToken = $this->makeIdToken([
+            'sub'            => 'sub-unverified-allowed',
+            'email'          => 'sso_unverified_allowed@test.example',
+            'email_verified' => false,
+        ]);
+
+        $this->mockSocialiteCallback('sub-unverified-allowed', 'sso_unverified_allowed@test.example', 'Allowed', 'allowed', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('/oauth-login/', $response->headers->get('Location'));
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('sso_sub', 'sub-unverified-allowed')->first();
+            $this->assertNotNull($user);
+            $this->assertEquals('sso_unverified_allowed@test.example', $user->email);
+        });
+    }
+
+    public function test_callback_allows_missing_email_verified_claim_when_tenant_disables_requirement(): void
+    {
+        self::$testTenant->update(['sso_require_email_verified' => false]);
+
+        $idToken = $this->makeIdToken([
+            'sub'   => 'sub-missing-allowed',
+            'email' => 'sso_missing_allowed@test.example',
+        ]);
+
+        $this->mockSocialiteCallback('sub-missing-allowed', 'sso_missing_allowed@test.example', 'Missing Allowed', 'missingallowed', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('/oauth-login/', $response->headers->get('Location'));
+    }
+
+    public function test_callback_still_rejects_id_token_invalid_when_email_verified_requirement_is_disabled(): void
+    {
+        // Defense-in-depth check: relaxing the email_verified requirement must NOT
+        // also relax the cryptographic verification (sig + iss + aud + exp + azp).
+        self::$testTenant->update(['sso_require_email_verified' => false]);
+
+        $idToken = $this->makeIdToken([
+            'sub'   => 'sub-still-strict',
+            'email' => 'sso_strict@test.example',
+            'iss'   => 'https://impostor.example/realms/aula-test',
+        ]);
+
+        $this->mockSocialiteCallback('sub-still-strict', 'sso_strict@test.example', 'Strict', 'strict', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=id_token_invalid', $response->headers->get('Location'));
     }
 
     public function test_callback_rejects_when_id_token_is_missing(): void

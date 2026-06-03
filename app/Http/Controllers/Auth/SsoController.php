@@ -120,7 +120,7 @@ class SsoController extends Controller
             return $this->frontendError('id_token_invalid');
         }
 
-        if (($verifiedClaims['email_verified'] ?? null) !== true) {
+        if ($tenant->sso_require_email_verified && ($verifiedClaims['email_verified'] ?? null) !== true) {
             Log::warning('SSO: rejecting login because email_verified claim is not true', [
                 'tenant' => $instanceCode,
                 'sub'    => $socialiteUser->getId(),
