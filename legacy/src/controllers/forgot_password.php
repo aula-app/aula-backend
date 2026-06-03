@@ -18,6 +18,15 @@ $syslog = new Systemlog ($db);
 $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+  // SSO-only tenants have no concept of local password recovery. Short-circuit
+  // before any DB work, returning the same response shape as the no-match case
+  // so the endpoint cannot be used to enumerate which tenants are SSO-locked.
+  if ($instance->sso_required) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(["success" => true]);
+    return;
+  }
+
   $email =  $_GET["email"];
   // SSO-linked users (sso_sub IS NOT NULL) cannot reset a local password — their
   // identity lives in the IdP. Filtering at the query level keeps the response
