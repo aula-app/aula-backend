@@ -41,6 +41,7 @@ return [
         'client_id' => env('KEYCLOAK_CLIENT_ID', 'aula-backend'),
         'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),
         'redirect' => env('KEYCLOAK_REDIRECT_URI'),
+        'clock_skew_seconds' => env('SSO_CLOCK_SKEW_SECONDS', 300),
     ],
 
 ];

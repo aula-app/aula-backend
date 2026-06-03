@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
+use App\Services\IdTokenVerification\IdTokenVerificationException;
+use App\Services\IdTokenVerifier;
 use App\Services\LegacyJwtService;
 use App\Services\SsoUserService;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +26,7 @@ class SsoController extends Controller
     public function __construct(
         protected LegacyJwtService $jwtService,
         protected SsoUserService $ssoUserService,
+        protected IdTokenVerifier $idTokenVerifier,
     ) {}
 
     // =========================================================
@@ -94,14 +97,33 @@ class SsoController extends Controller
         /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
         $socialiteUser = $driver->stateless()->user();
 
-        $idToken     = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
-        $idTokenData = $this->decodeIdTokenPayload($idToken);
+        $idToken = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
 
-        if (! $this->isEmailVerified($idTokenData)) {
+        if ($idToken === null) {
+            Log::warning('SSO: rejecting login because Socialite returned no id_token', [
+                'tenant' => $instanceCode,
+                'sub'    => $socialiteUser->getId(),
+            ]);
+
+            return $this->frontendError('id_token_invalid');
+        }
+
+        try {
+            $verifiedClaims = $this->idTokenVerifier->verify($idToken);
+        } catch (IdTokenVerificationException $e) {
+            Log::warning('SSO: rejecting login because id_token verification failed', [
+                'tenant' => $instanceCode,
+                'sub'    => $socialiteUser->getId(),
+                'reason' => $e->reason,
+            ]);
+
+            return $this->frontendError('id_token_invalid');
+        }
+
+        if (($verifiedClaims['email_verified'] ?? null) !== true) {
             Log::warning('SSO: rejecting login because email_verified claim is not true', [
                 'tenant' => $instanceCode,
                 'sub'    => $socialiteUser->getId(),
-                'reason' => $idTokenData === null ? 'id_token_missing_or_unparseable' : 'email_verified_not_true',
             ]);
 
             return $this->frontendError('email_not_verified');
@@ -394,16 +416,6 @@ class SsoController extends Controller
         }
 
         return $payload;
-    }
-
-    /**
-     * OIDC: the email claim is only trustworthy when email_verified is strictly true.
-     *
-     * @psalm-pure
-     */
-    protected function isEmailVerified(?array $idTokenPayload): bool
-    {
-        return is_array($idTokenPayload) && ($idTokenPayload['email_verified'] ?? null) === true;
     }
 
     /**
