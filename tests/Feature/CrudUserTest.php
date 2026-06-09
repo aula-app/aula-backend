@@ -136,6 +136,12 @@ class CrudUserTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_patch_disallowed()
+    {
+        $this->patchJson('/api/v2/users/foo', [])
+            ->assertMethodNotAllowed();
+    }
+
     public function test_bad_deletes()
     {
         $this->deleteJson('/api/v2/users/1000000', [])
