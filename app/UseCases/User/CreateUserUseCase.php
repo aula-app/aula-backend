@@ -21,7 +21,7 @@ class CreateUserUseCase
      * @return UserData
      * @psalm-suppress UndefinedMagicPropertyAssignment
      */
-    public static function execute(UserStoreData $userStoreData): UserData
+    public function execute(UserStoreData $userStoreData): UserData
     {
         $legacyUser = LegacyUser::create();
         $legacyUser->displayname = $userStoreData->displayName;

@@ -26,22 +26,22 @@ class UserController extends Controller
 
     public function show(string $id): UserData
     {
-        return ShowUserUseCase::execute($id);
+        return (new ShowUserUseCase())->execute($id);
     }
 
     public function store(UserStoreData $userStoreData): UserData
     {
         // $user = User::fromRequest($storeUserRequest);
-        return CreateUserUseCase::execute($userStoreData);
+        return (new CreateUserUseCase())->execute($userStoreData);
     }
 
     public function update(string $id, UserUpdateData $userUpdateData): UserData
     {
-        return UpdateUserUseCase::execute($id, $userUpdateData);
+        return (new UpdateUserUseCase())->execute($id, $userUpdateData);
     }
 
     public function destroy(string $id): void
     {
-        DeleteUserUseCase::execute($id);
+        (new DeleteUserUseCase())->execute($id);
     }
 }

@@ -10,7 +10,7 @@ use App\Models\LegacyUser;
 
 class UpdateUserUseCase
 {
-    public static function execute(string $id, UserUpdateData $updateUserData): UserData
+    public function execute(string $id, UserUpdateData $updateUserData): UserData
     {
         /* TODO: DB::transaction */
         $legacyUser = LegacyUser::findOrFail($id);
