@@ -44,7 +44,10 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJson(self::NEW_USER_DATA);
-        $newUserId1 = $newUserResult->decodeResponseJson()['hash_id'];
+        $newUserDecoded = $newUserResult->decodeResponseJson();
+        // TODO: too weak
+        $this->assertIsString($newUserDecoded['created']);
+        $newUserId1 = $newUserDecoded['hash_id'];
         $this->assertGreaterThan(0, $newUserId1);
 
         // create with optional
