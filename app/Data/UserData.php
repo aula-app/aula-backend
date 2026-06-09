@@ -5,6 +5,7 @@ namespace App\Data;
 use Illuminate\Validation\Rule;
 
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\MapOutputName;
 use Spatie\LaravelData\Attributes\WithCast;
@@ -21,6 +22,8 @@ class UserData extends Data
 {
     public function __construct(
         public int|Optional $id,
+        #[MapName('hash_id')]
+        public string|Optional $hashId,
         #[MapInputName('displayname')]
         #[MapOutputName('displayname')]
         #[Max(400)]

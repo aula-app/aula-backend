@@ -24,9 +24,10 @@ class UserController extends Controller
         return ListUsersUseCase::execute();
     }
 
-    public function show(string $id): UserData
+    // TODO? hash_id is nullable in DB
+    public function show(string $hashId): UserData
     {
-        return (new ShowUserUseCase())->execute($id);
+        return (new ShowUserUseCase())->execute($hashId);
     }
 
     public function store(UserStoreData $userStoreData): UserData
@@ -35,13 +36,13 @@ class UserController extends Controller
         return (new CreateUserUseCase())->execute($userStoreData);
     }
 
-    public function update(string $id, UserUpdateData $userUpdateData): UserData
+    public function update(string $hashId, UserUpdateData $userUpdateData): UserData
     {
-        return (new UpdateUserUseCase())->execute($id, $userUpdateData);
+        return (new UpdateUserUseCase())->execute($hashId, $userUpdateData);
     }
 
-    public function destroy(string $id): void
+    public function destroy(string $hashId): void
     {
-        (new DeleteUserUseCase())->execute($id);
+        (new DeleteUserUseCase())->execute($hashId);
     }
 }

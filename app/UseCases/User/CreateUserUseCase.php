@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\UseCases\User;
 
+use Str;
+
 use App\Data\UserData;
 use App\Data\UserStoreData;
 use Spatie\LaravelData\Optional;
@@ -23,6 +25,7 @@ class CreateUserUseCase
     public function execute(UserStoreData $userStoreData): UserData
     {
         $legacyUser = new LegacyUser();
+        $legacyUser->hash_id = Str::random(32);
         $legacyUser->displayname = $userStoreData->displayName;
         $legacyUser->realname = $userStoreData->realName;
         $legacyUser->username = $userStoreData->userName;

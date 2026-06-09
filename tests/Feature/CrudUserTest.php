@@ -44,7 +44,7 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJson(self::NEW_USER_DATA);
-        $newUserId1 = $newUserResult->decodeResponseJson()['id'];
+        $newUserId1 = $newUserResult->decodeResponseJson()['hash_id'];
         $this->assertGreaterThan(0, $newUserId1);
 
         // create with optional
@@ -54,7 +54,7 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJson(self::USER_DATA_UPDATE);
-        $newUserId2 = $newUserResult->decodeResponseJson()['id'];
+        $newUserId2 = $newUserResult->decodeResponseJson()['hash_id'];
 
         // show
         $this->getJson('/api/v2/user/'.$newUserId1)
@@ -65,7 +65,7 @@ class CrudUserTest extends TestCase
         $allUsers = $this->getJson('/api/v2/user/')
             ->assertOk()->json();
 
-        $allUserIds = array_column($allUsers, 'id');
+        $allUserIds = array_column($allUsers, 'hash_id');
         $this->assertContains($newUserId1, $allUserIds);
         $this->assertContains($newUserId2, $allUserIds);
 
