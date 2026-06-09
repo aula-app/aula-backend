@@ -18,34 +18,34 @@ use App\Enums\UserStatus;
 
 use Spatie\LaravelData\Optional;
 
-readonly class UserData extends Data
+class UserData extends Data
 {
     public function __construct(
-        public int|Optional $id,
+        readonly public int|Optional $id,
         #[MapName('hash_id')]
-        public string|Optional $hashId,
+        readonly public string|Optional $hashId,
         #[MapInputName('displayname')]
         #[MapOutputName('displayname')]
         #[Max(400)]
-        public string $displayName,
+        readonly public string $displayName,
         #[MapInputName('username')]
         #[MapOutputName('username')]
         #[Max(400)]
-        public string $userName,
+        readonly public string $userName,
         #[MapInputName('realname')]
         #[MapOutputName('realname')]
         #[Max(400)]
-        public string $realName,
-        public string|Optional $email,
+        readonly public string $realName,
+        readonly public string|Optional $email,
         #[MapInputName('userlevel')]
         #[MapOutputName('userlevel')]
         #[WithCast(EnumCast::class, type: UserLevel::class)]
-        public UserLevel|Optional $userLevel,
+        readonly public UserLevel|Optional $userLevel,
         #[MapInputName('about_me')]
         #[MapOutputName('about_me')]
-        public string|Optional $aboutMe,
+        readonly public string|Optional $aboutMe,
         #[WithCast(EnumCast::class, type: UserStatus::class)]
-        public UserStatus $status
+        readonly public UserStatus $status
     ) {}
 
     public static function rules($context = null): array
