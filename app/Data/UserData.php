@@ -22,30 +22,44 @@ class UserData extends Data
 {
     public function __construct(
         readonly public int|Optional $id,
+
         #[MapName('hash_id')]
         readonly public string|Optional $hashId,
+
         #[MapInputName('displayname')]
         #[MapOutputName('displayname')]
         #[Max(400)]
         readonly public string $displayName,
+
         #[MapInputName('username')]
         #[MapOutputName('username')]
         #[Max(400)]
         readonly public string $userName,
+
         #[MapInputName('realname')]
         #[MapOutputName('realname')]
         #[Max(400)]
         readonly public string $realName,
+
         readonly public string|Optional $email,
+
         #[MapInputName('userlevel')]
         #[MapOutputName('userlevel')]
         #[WithCast(EnumCast::class, type: UserLevel::class)]
         readonly public UserLevel|Optional $userLevel,
+
         #[MapInputName('about_me')]
         #[MapOutputName('about_me')]
         readonly public string|Optional $aboutMe,
+
         #[WithCast(EnumCast::class, type: UserStatus::class)]
-        readonly public UserStatus $status
+        readonly public UserStatus $status,
+
+        #[MapInputName('created')]
+        #[MapOutputName('created')]
+        #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
+        readonly public DateTimeImmutable|Optional $createdAt,
     ) {}
 
     public static function rules($context = null): array

@@ -45,6 +45,8 @@ class CreateUserUseCase
         // - change password
         //    -> persistence model
         $legacyUser->save();
+        // for unmanaged timestamp
+        $legacyUser->refresh();
         return UserData::from($legacyUser);
     }
 
