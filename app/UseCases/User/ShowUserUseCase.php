@@ -7,9 +7,9 @@ use App\Models\LegacyUser;
 
 class ShowUserUseCase
 {
-    public function execute(string $id): UserData
+    public function execute(string $hashId): UserData
     {
-        $legacyUser = LegacyUser::findOrFail($id);
+        $legacyUser = LegacyUser::where('hash_id', $hashId)->firstOrFail();
         return UserData::from($legacyUser);
     }
 }

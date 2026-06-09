@@ -10,10 +10,10 @@ use App\Models\LegacyUser;
 
 class UpdateUserUseCase
 {
-    public function execute(string $id, UserUpdateData $updateUserData): UserData
+    public function execute(string $hashId, UserUpdateData $updateUserData): UserData
     {
         /* TODO: DB::transaction */
-        $legacyUser = LegacyUser::findOrFail($id);
+        $legacyUser = LegacyUser::where('hash_id', $hashId)->firstOrFail();
 
         $legacyUser->displayname = $updateUserData->displayName;
         $legacyUser->realname = $updateUserData->realName;
