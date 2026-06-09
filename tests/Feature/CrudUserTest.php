@@ -39,7 +39,7 @@ class CrudUserTest extends TestCase
     {
         // create
         $newUserResult = $this->post(
-            '/api/v2/user',
+            '/api/v2/users',
             self::NEW_USER_DATA,
         )
             ->assertCreated()
@@ -49,7 +49,7 @@ class CrudUserTest extends TestCase
 
         // create with optional
         $newUserResult = $this->post(
-            '/api/v2/user',
+            '/api/v2/users',
             [...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE],
         )
             ->assertCreated()
@@ -57,12 +57,12 @@ class CrudUserTest extends TestCase
         $newUserId2 = $newUserResult->decodeResponseJson()['hash_id'];
 
         // show
-        $this->getJson('/api/v2/user/'.$newUserId1)
+        $this->getJson('/api/v2/users/'.$newUserId1)
             ->assertOk()
             ->assertJson(self::NEW_USER_DATA);
 
         // index
-        $allUsers = $this->getJson('/api/v2/user/')
+        $allUsers = $this->getJson('/api/v2/users/')
             ->assertOk()->json();
 
         $allUserIds = array_column($allUsers, 'hash_id');
@@ -77,7 +77,7 @@ class CrudUserTest extends TestCase
         ];
 
         $this->putJson(
-            '/api/v2/user/'.$newUserId1,
+            '/api/v2/users/'.$newUserId1,
             $changedUserData,
         )
             ->assertOk()
@@ -85,7 +85,7 @@ class CrudUserTest extends TestCase
 
         // test update required
         $result = $this->putJson(
-            '/api/v2/user/'.$newUserId1,
+            '/api/v2/users/'.$newUserId1,
             self::NEW_USER_DATA
         );
         $result
@@ -95,52 +95,52 @@ class CrudUserTest extends TestCase
         // test update validation
         $changedUserData['email'] = 'bad@mail_huh.com';
         $this->putJson(
-            '/api/v2/user/'.$newUserId1,
+            '/api/v2/users/'.$newUserId1,
             $changedUserData,
         )
             ->assertInvalid(['email'])
             ->assertUnprocessable();
 
         // delete
-        $this->deleteJson('/api/v2/user/'.$newUserId1, [])
+        $this->deleteJson('/api/v2/users/'.$newUserId1, [])
             ->assertOk();
-        $this->deleteJson('/api/v2/user/'.$newUserId2, [])
+        $this->deleteJson('/api/v2/users/'.$newUserId2, [])
             ->assertOk();
     }
 
     public function test_create_validation()
     {
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['username' => null]])
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['username' => null]])
             ->assertInvalid(['username'])
             ->assertUnprocessable();
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['username' => '']])
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['username' => '']])
             ->assertInvalid(['username'])
             ->assertUnprocessable();
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['displayname' => str_repeat('A', 500)]])
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['displayname' => str_repeat('A', 500)]])
             ->assertInvalid(['displayname'])
             ->assertUnprocessable();
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['email' => 'bad@mail_huh.com']])
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['email' => 'bad@mail_huh.com']])
             ->assertInvalid(['email'])
             ->assertUnprocessable();
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['userlevel' => '1000']])
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['userlevel' => '1000']])
             ->assertInvalid(['userlevel'])
             ->assertUnprocessable();
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['userlevel' => 1000]])
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['userlevel' => 1000]])
             ->assertInvalid(['userlevel'])
             ->assertUnprocessable();
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['status' => 5]])
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['status' => 5]])
             ->assertInvalid(['status'])
             ->assertUnprocessable();
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['status' => '5']])
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['status' => '5']])
             ->assertInvalid(['status'])
             ->assertUnprocessable();
     }
 
     public function test_bad_deletes()
     {
-        $this->deleteJson('/api/v2/user/1000000', [])
+        $this->deleteJson('/api/v2/users/1000000', [])
             ->assertNotFound();
-        $this->deleteJson('/api/v2/user/foo', [])
+        $this->deleteJson('/api/v2/users/foo', [])
             ->assertNotFound();
     }
 }
