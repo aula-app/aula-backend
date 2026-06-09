@@ -2,45 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UpdateUserRequest;
-use App\Http\Resources\UserResource;
 use App\UseCases\User\CreateUserUseCase;
 use App\UseCases\User\DeleteUserUseCase;
 use App\UseCases\User\ListUsersUseCase;
-use App\Domain\Models\User;
 use App\UseCases\User\ShowUserUseCase;
 use App\UseCases\User\UpdateUserUseCase;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Spatie\LaravelData\DataCollection;
+
+use App\Data\UserData;
+use App\Data\UserStoreData;
+use App\Data\UserUpdateData;
 
 class UserController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(): DataCollection
     {
         // TODO: implement
         // - pagination
         // - sorting
         // - filter by status, userlevel, room_id?
-        return UserResource::collection(ListUsersUseCase::execute());
+        return ListUsersUseCase::execute();
     }
 
-    public function show(string $id): UserResource
+    public function show(string $id): UserData
     {
-        return new UserResource(ShowUserUseCase::execute($id));
+        return ShowUserUseCase::execute($id);
     }
 
-    public function store(StoreUserRequest $storeUserRequest): UserResource
+    public function store(UserStoreData $userStoreData): UserData
     {
-        $user = User::fromRequest($storeUserRequest);
-        $user = CreateUserUseCase::execute($user);
-        return new UserResource($user);
+        // $user = User::fromRequest($storeUserRequest);
+        return CreateUserUseCase::execute($userStoreData);
     }
 
-    public function update(string $id, UpdateUserRequest $updateUserRequest): UserResource
+    public function update(string $id, UserUpdateData $userUpdateData): UserData
     {
-        $user = User::fromRequest($updateUserRequest);
-        $user = UpdateUserUseCase::execute($id, $user);
-        return new UserResource($user);
+        return UpdateUserUseCase::execute($id, $userUpdateData);
     }
 
     public function destroy(string $id): void

@@ -2,14 +2,19 @@
 
 namespace App\UseCases\User;
 
-use App\Domain\Models\User;
+use App\Data\UserData;
 use App\Models\LegacyUser;
-use Illuminate\Support\Collection;
+use Spatie\LaravelData\DataCollection;
 
 class ListUsersUseCase
 {
-    public static function execute(): Collection
+    /**
+     * Summary of execute
+     * @return DataCollection<int, UserData>
+     */
+    public static function execute(): DataCollection
     {
-        return LegacyUser::all()->map(fn ($legacyUser) => User::fromLegacy($legacyUser));
+        $all = LegacyUser::all();
+        return UserData::collect($all, DataCollection::class);
     }
 }

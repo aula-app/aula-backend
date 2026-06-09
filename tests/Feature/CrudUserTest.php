@@ -23,6 +23,7 @@ class CrudUserTest extends TestCase
     private const array USER_DATA_UPDATE = [
         'userlevel' => UserLevel::Guest->value,
         'email' => 'featuretest@aula.de',
+        'about_me' => 'About me!',
     ];
 
     private const array HEADERS = ['aula-instance-code' => 'TEST001'];
@@ -41,10 +42,9 @@ class CrudUserTest extends TestCase
             '/api/v2/user',
             self::NEW_USER_DATA,
         )
-            // used to be ->assertCreated(), but changed at some point?
-            ->assertOk()
-            ->assertJson(['data' => self::NEW_USER_DATA]);
-        $newUserId1 = $newUserResult->decodeResponseJson()['data']['id'];
+            ->assertCreated()
+            ->assertJson(self::NEW_USER_DATA);
+        $newUserId1 = $newUserResult->decodeResponseJson()['id'];
         $this->assertGreaterThan(0, $newUserId1);
 
         // create with optional
@@ -52,33 +52,54 @@ class CrudUserTest extends TestCase
             '/api/v2/user',
             [...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE],
         )
-            ->assertOk()
-            ->assertJson(['data' => self::USER_DATA_UPDATE]);
-        $newUserId2 = $newUserResult->decodeResponseJson()['data']['id'];
+            ->assertCreated()
+            ->assertJson(self::USER_DATA_UPDATE);
+        $newUserId2 = $newUserResult->decodeResponseJson()['id'];
 
         // show
         $this->getJson('/api/v2/user/'.$newUserId1)
             ->assertOk()
-            ->assertJson(['data' => self::NEW_USER_DATA]);
+            ->assertJson(self::NEW_USER_DATA);
 
         // index
-        $allUsers = $this->getJson('/api/v2/user/');
-        $allUsers->assertOk()->decodeResponseJson();
+        $allUsers = $this->getJson('/api/v2/user/')
+            ->assertOk()->json();
 
-        $allUserIds = array_column($allUsers['data'], 'id');
+        $allUserIds = array_column($allUsers, 'id');
         $this->assertContains($newUserId1, $allUserIds);
         $this->assertContains($newUserId2, $allUserIds);
 
         // update (put, no patch)
-        $changedUserData = self::NEW_USER_DATA;
-        $changedUserData['realname'] = 'Changed Name';
+        $changedUserData = [
+            ...self::NEW_USER_DATA,
+            ...self::USER_DATA_UPDATE,
+            ...['realname' => 'Changed Name'],
+        ];
 
         $this->putJson(
             '/api/v2/user/'.$newUserId1,
             $changedUserData,
         )
             ->assertOk()
-            ->assertJson(['data' => $changedUserData]);
+            ->assertJson($changedUserData);
+
+        // test update required
+        $result = $this->putJson(
+            '/api/v2/user/'.$newUserId1,
+            self::NEW_USER_DATA
+        );
+        $result
+            ->assertInvalid(['email', 'userlevel', 'about_me'])
+            ->assertUnprocessable();
+
+        // test update validation
+        $changedUserData['email'] = 'bad@mail_huh.com';
+        $this->putJson(
+            '/api/v2/user/'.$newUserId1,
+            $changedUserData,
+        )
+            ->assertInvalid(['email'])
+            ->assertUnprocessable();
 
         // delete
         $this->deleteJson('/api/v2/user/'.$newUserId1, [])
@@ -89,21 +110,29 @@ class CrudUserTest extends TestCase
 
     public function test_create_validation()
     {
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['username' => null]],
-            )->assertUnprocessable();
-        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['username' => '']],
-            )->assertUnprocessable();
+        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['username' => null]])
+            ->assertInvalid(['username'])
+            ->assertUnprocessable();
+        $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['username' => '']])
+            ->assertInvalid(['username'])
+            ->assertUnprocessable();
         $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['displayname' => str_repeat('A', 500)]])
+            ->assertInvalid(['displayname'])
             ->assertUnprocessable();
         $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['email' => 'bad@mail_huh.com']])
+            ->assertInvalid(['email'])
             ->assertUnprocessable();
         $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['userlevel' => '1000']])
+            ->assertInvalid(['userlevel'])
             ->assertUnprocessable();
         $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['userlevel' => 1000]])
+            ->assertInvalid(['userlevel'])
             ->assertUnprocessable();
         $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['status' => 5]])
+            ->assertInvalid(['status'])
             ->assertUnprocessable();
         $this->postJson('/api/v2/user', [...self::NEW_USER_DATA, ...['status' => '5']])
+            ->assertInvalid(['status'])
             ->assertUnprocessable();
     }
 

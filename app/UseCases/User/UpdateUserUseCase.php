@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace App\UseCases\User;
 
+use App\Data\UserData;
+use App\Data\UserUpdateData;
 use App\Models\LegacyUser;
-use App\Domain\Models\User;
 
 class UpdateUserUseCase
 {
-    public static function execute(string $id, User $user): User
+    public static function execute(string $id, UserUpdateData $updateUserData): UserData
     {
         /* TODO: DB::transaction */
         $legacyUser = LegacyUser::findOrFail($id);
 
-        $legacyUser->displayname = $user->displayName;
-        $legacyUser->realname = $user->realName;
-        $legacyUser->username = $user->userName;
-        $legacyUser->email = $user->email;
-        $legacyUser->userlevel = $user->userLevel;
-        $legacyUser->about_me = $user->aboutMe;
+        $legacyUser->displayname = $updateUserData->displayName;
+        $legacyUser->realname = $updateUserData->realName;
+        $legacyUser->username = $updateUserData->userName;
+        $legacyUser->email = $updateUserData->email;
+        $legacyUser->userlevel = $updateUserData->userLevel;
+        $legacyUser->about_me = $updateUserData->aboutMe;
         $legacyUser->save();
         /* / DB::transaction */
-        return User::fromLegacy($legacyUser);
+        return UserData::from($legacyUser);
     }
 }
