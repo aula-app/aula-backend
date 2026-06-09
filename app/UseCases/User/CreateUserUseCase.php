@@ -23,7 +23,7 @@ class CreateUserUseCase
      */
     public function execute(UserStoreData $userStoreData): UserData
     {
-        $legacyUser = LegacyUser::create();
+        $legacyUser = new LegacyUser();
         $legacyUser->displayname = $userStoreData->displayName;
         $legacyUser->realname = $userStoreData->realName;
         $legacyUser->username = $userStoreData->userName;
