@@ -23,13 +23,28 @@ use App\Enums\UserStatus;
 
 use Spatie\LaravelData\Optional;
 
-class UserData extends Data
+abstract class UserData extends Data
 {
-    public function __construct(
-        readonly public int|Optional $id,
+    // can't specify abstract in constructor promotion
+    abstract public int|Optional $id {
+        // need hooked property for abstract; equals readonly
+        get;
+    }
 
-        #[MapName('hash_id')]
-        readonly public string|Optional $hashId,
+    abstract public string|Optional $hashId { get; }
+
+    // WithCast might not be necessary?
+    // #[WithCast(EnumCast::class, type: UserLevel::class)]
+    abstract public UserLevel|Optional $userLevel { get; }
+
+    // Validation of abstract must be done in child
+    abstract public string|Optional|null $email { get; }
+
+    abstract public string|Optional $aboutMe { get; }
+
+    public function __construct(
+        int|Optional $id,
+        string|Optional $hashId,
 
         #[MapInputName('displayname')]
         #[MapOutputName('displayname')]
@@ -46,16 +61,12 @@ class UserData extends Data
         #[Max(400)]
         readonly public string $realName,
 
-        readonly public string|Optional $email,
+        // N.B. nullable!
+        string|Optional|null $email,
 
-        #[MapInputName('userlevel')]
-        #[MapOutputName('userlevel')]
-        #[WithCast(EnumCast::class, type: UserLevel::class)]
-        readonly public UserLevel|Optional $userLevel,
+        UserLevel|Optional $userLevel,
 
-        #[MapInputName('about_me')]
-        #[MapOutputName('about_me')]
-        readonly public string|Optional $aboutMe,
+        string|Optional $aboutMe,
 
         #[WithCast(EnumCast::class, type: UserStatus::class)]
         readonly public UserStatus $status,
@@ -65,26 +76,12 @@ class UserData extends Data
         #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
         #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
         readonly public DateTimeImmutable|Optional $createdAt,
-    ) {}
-
-    public static function rules($context = null): array
-    {
-        // We explicitly define these rules so inheritors User{Store,Update}Data
-        // can add 'sometimes', resp. 'required'.
-        // Otherwise, 'sometimes' is inferred from Optional and we get ['required','sometimes']
-        // where 'sometimes' will break 'required'.
-        // Hence, we also can't use #[MergeValidationRules] and instead do a custom merge in the
-        // child classes.
-        return [
-            'email' => [
-                Rule::email()
-            ],
-            'userlevel' => [
-                Rule::enum(UserLevel::class)
-            ],
-            'about_me' => [
-                'string'
-            ]
-        ];
+    ) {
+        // abstract are unpromotable, need to be set up sans sugar
+        $this->id = $id;
+        $this->hashId = $hashId;
+        $this->email = $email;
+        $this->userLevel = $userLevel;
+        $this->aboutMe = $aboutMe;
     }
 }
