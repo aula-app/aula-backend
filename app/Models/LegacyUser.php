@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -49,14 +50,6 @@ class LegacyUser extends Model implements Authenticatable
     ];
 
     /**
-     * User status constants
-     */
-    public const STATUS_INACTIVE = 0;
-    public const STATUS_ACTIVE = 1;
-    public const STATUS_SUSPENDED = 2;
-    public const STATUS_ARCHIVED = 3;
-
-    /**
      * Build an unsaved user from SSO claims. Caller is responsible for ->save().
      */
     public static function fromSocialiteUser(SocialiteUser $socialiteUser, ?string $provider): self
@@ -79,7 +72,7 @@ class LegacyUser extends Model implements Authenticatable
         $user->displayname  = $socialiteUser->getName() ?? $username;
         $user->hash_id      = md5($username . (string) microtime(true) . rand(100, 10000000));
         $user->userlevel    = 20;
-        $user->status       = self::STATUS_ACTIVE;
+        $user->status       = UserStatus::Active->value;
 
         return $user;
     }
@@ -89,7 +82,7 @@ class LegacyUser extends Model implements Authenticatable
      */
     public function isActive(): bool
     {
-        return $this->status === self::STATUS_ACTIVE;
+        return $this->status === UserStatus::Active->value;
     }
 
     /**

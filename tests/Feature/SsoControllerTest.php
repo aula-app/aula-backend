@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
@@ -173,7 +174,7 @@ class SsoControllerTest extends TestCase
     public function test_callback_inactive_user_redirects_to_account_inactive_error(): void
     {
         self::$testTenant->run(function () {
-            $this->createUser('sso_inactive@test.example', 'sub-inactive-001', LegacyUser::STATUS_SUSPENDED);
+            $this->createUser('sso_inactive@test.example', 'sub-inactive-001', UserStatus::Suspended->value);
         });
 
         Http::fake(['*/broker/*/token' => Http::response([], 200)]);
@@ -223,7 +224,7 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => false]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_logout@test.example', 'sub-logout-001', LegacyUser::STATUS_ACTIVE, ['sso_id_token' => 'idtoken']));
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_logout@test.example', 'sub-logout-001', UserStatus::Active->value, ['sso_id_token' => 'idtoken']));
 
         $jwt = $this->jwtForUser($user);
 
@@ -239,7 +240,7 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => true]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', LegacyUser::STATUS_ACTIVE, [
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', UserStatus::Active->value, [
             'sso_id_token'      => 'aula-id-token',
             'sso_refresh_token' => 'refresh-token',
             'sso_idp_id_token'  => null,
@@ -267,7 +268,7 @@ class SsoControllerTest extends TestCase
     // Helpers
     // =========================================================
 
-    private function createUser(string $email, ?string $sub, int $status = LegacyUser::STATUS_ACTIVE, array $extra = []): LegacyUser
+    private function createUser(string $email, ?string $sub, int $status = UserStatus::Active->value, array $extra = []): LegacyUser
     {
         $user = new LegacyUser();
         $user->email      = $email;

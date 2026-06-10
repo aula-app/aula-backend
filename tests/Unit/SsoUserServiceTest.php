@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Services\SsoUserService;
 use Illuminate\Support\Facades\Log;
@@ -99,7 +100,7 @@ class SsoUserServiceTest extends TestCase
         $this->assertEquals('sub-prov-001', $user->sso_sub);
         $this->assertEquals('testuser', $user->username);
         $this->assertEquals('Test User', $user->displayname);
-        $this->assertEquals(20, $user->userlevel);
+        $this->assertEquals(20, $user->userlevel->value);
         $this->assertEquals(1, $user->status);
     }
 
@@ -151,7 +152,7 @@ class SsoUserServiceTest extends TestCase
         $user              = new LegacyUser;
         $user->email       = $email;
         $user->sso_sub     = $sub;
-        $user->status      = LegacyUser::STATUS_ACTIVE;
+        $user->status      = UserStatus::Active->value;
         $user->username    = $email;
         $user->hash_id     = md5($email . microtime(true));
         $user->userlevel   = 20;

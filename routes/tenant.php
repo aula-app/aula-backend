@@ -42,11 +42,11 @@ Route::name('sso.')
 // Passport-authenticated routes (existing)
 Route::name('aula.')
     ->middleware([
-        'api', // 'api' is including parameter substitution
+        /* 'api', // 'api' is including parameter substitution */
         /* \Illuminate\Session\Middleware\StartSession::class, */
         /* \Illuminate\View\Middleware\ShareErrorsFromSession::class, */
         InitializeTenancyByRequestData::class,
-        'auth:api', // our 'api' guard should be configured to use 'passport'
-    ]) // , 'can:is-admin'
-    ->prefix('/api/v2/')
+        /* 'auth:api', // our 'api' guard should be configured to use 'passport' */
+    ])
+    ->prefix('/api/v2')
     ->group(base_path('routes/tenant/api/v2/aula.php'));
