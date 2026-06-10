@@ -2,14 +2,14 @@
 
 namespace App\UseCases\User;
 
-use App\Data\UserData;
+use App\Data\UserModelData;
 use App\Models\LegacyUser;
 
 class ShowUserUseCase
 {
-    public function execute(string $hashId): UserData
+    public function execute(string $hashId): UserModelData
     {
         $legacyUser = LegacyUser::where('hash_id', $hashId)->firstOrFail();
-        return UserData::from($legacyUser);
+        return UserModelData::from($legacyUser);
     }
 }

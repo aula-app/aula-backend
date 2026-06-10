@@ -9,7 +9,7 @@ use App\UseCases\User\ShowUserUseCase;
 use App\UseCases\User\UpdateUserUseCase;
 use Spatie\LaravelData\DataCollection;
 
-use App\Data\UserData;
+use App\Data\UserModelData;
 use App\Data\UserStoreData;
 use App\Data\UserUpdateData;
 
@@ -25,18 +25,18 @@ class UserController extends Controller
     }
 
     // TODO? hash_id is nullable in DB
-    public function show(string $hashId): UserData
+    public function show(string $hashId): UserModelData
     {
         return (new ShowUserUseCase())->execute($hashId);
     }
 
-    public function store(UserStoreData $userStoreData): UserData
+    public function store(UserStoreData $userStoreData): UserModelData
     {
         // $user = User::fromRequest($storeUserRequest);
         return (new CreateUserUseCase())->execute($userStoreData);
     }
 
-    public function update(string $hashId, UserUpdateData $userUpdateData): UserData
+    public function update(string $hashId, UserUpdateData $userUpdateData): UserModelData
     {
         return (new UpdateUserUseCase())->execute($hashId, $userUpdateData);
     }

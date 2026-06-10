@@ -6,7 +6,7 @@ namespace App\UseCases\User;
 
 use Str;
 
-use App\Data\UserData;
+use App\Data\UserModelData;
 use App\Data\UserStoreData;
 use Spatie\LaravelData\Optional;
 
@@ -19,10 +19,10 @@ class CreateUserUseCase
     /**
      * Creates a (legacy) user
      * @param UserStoreData $userStoreData
-     * @return UserData
+     * @return UserModelData
      * @psalm-suppress UndefinedMagicPropertyAssignment
      */
-    public function execute(UserStoreData $userStoreData): UserData
+    public function execute(UserStoreData $userStoreData): UserModelData
     {
         $legacyUser = new LegacyUser();
         $legacyUser->hash_id = Str::random(32);
@@ -47,7 +47,7 @@ class CreateUserUseCase
         $legacyUser->save();
         // for unmanaged timestamp
         $legacyUser->refresh();
-        return UserData::from($legacyUser);
+        return UserModelData::from($legacyUser);
     }
 
     // rooms, users, rel_rooms_users
