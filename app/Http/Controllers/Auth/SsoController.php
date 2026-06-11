@@ -19,7 +19,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 class SsoController extends Controller
 {
-    private const LINK_INTENT_TTL_MINUTES = 10;
+    private const int LINK_INTENT_TTL_MINUTES = 10;
 
     public function __construct(
         protected LegacyJwtService $jwtService,
@@ -199,6 +199,10 @@ class SsoController extends Controller
 
         $fresh = LegacyUser::find($authUser->id);
 
+        if ($fresh === null) {
+            return response()->json(['success' => false, 'error' => 'user_not_found'], 404);
+        }
+
         if ($fresh->sso_sub !== null && $fresh->sso_sub !== $intent['sso_sub']) {
             return response()->json(['success' => false, 'error' => 'already_linked'], 409);
         }
@@ -364,10 +368,12 @@ class SsoController extends Controller
     /**
      * Decode an OIDC id_token (JWT) payload without verifying the signature.
      * Returns null when the token is missing, malformed, or the payload is not valid JSON.
+     *
+     * @psalm-pure
      */
     protected function decodeIdTokenPayload(?string $idToken): ?array
     {
-        if (! $idToken) {
+        if ($idToken === null || $idToken === '') {
             return null;
         }
 
@@ -392,6 +398,8 @@ class SsoController extends Controller
 
     /**
      * OIDC: the email claim is only trustworthy when email_verified is strictly true.
+     *
+     * @psalm-pure
      */
     protected function isEmailVerified(?array $idTokenPayload): bool
     {
@@ -446,8 +454,10 @@ class SsoController extends Controller
      * Persist an account-link intent in the cache and return the opaque token.
      * The intent carries everything the link endpoint needs to stamp the row
      * once the user has proven legacy-account possession via password.
+     *
+     * @param  \SocialiteProviders\Manager\OAuth2\User  $socialiteUser
      */
-    protected function storeLinkIntent(LegacyUser $emailMatch, $socialiteUser, Tenant $tenant): string
+    protected function storeLinkIntent(LegacyUser $emailMatch, \Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant): string
     {
         $token = bin2hex(random_bytes(16));
 
@@ -465,6 +475,9 @@ class SsoController extends Controller
         return $token;
     }
 
+    /**
+     * @psalm-pure
+     */
     protected function linkIntentCacheKey(string $token): string
     {
         return "sso_link:{$token}";
