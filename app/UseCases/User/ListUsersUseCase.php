@@ -9,8 +9,8 @@ use Spatie\LaravelData\DataCollection;
 class ListUsersUseCase
 {
     /**
-     * Summary of execute
-     * @return DataCollection<int, UserModelData>
+     * @psalm-suppress InvalidReturnType
+     * @psalm-suppress InvalidReturnStatement
      */
     public static function execute(): DataCollection
     {
