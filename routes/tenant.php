@@ -36,6 +36,7 @@ Route::name('sso.')
 
         Route::middleware('legacy.jwt')->group(function () {
             Route::post('/sso/logout', [\App\Http\Controllers\Auth\SsoController::class, 'logout'])->name('sso.logout');
+            Route::post('/sso/link', [\App\Http\Controllers\Auth\SsoController::class, 'link'])->name('sso.link');
         });
     });
 

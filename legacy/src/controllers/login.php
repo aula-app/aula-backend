@@ -21,6 +21,19 @@ $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 
 
 header('Content-Type: application/json; charset=utf-8');
+
+// SSO-only tenants reject password login outright, regardless of which user is
+// attempting it. The check happens before any DB work so unauthenticated
+// requests cannot probe the user table on SSO-locked tenants.
+if ($instance->sso_required) {
+  echo json_encode([
+    'success'    => false,
+    'error_code' => 3,
+    'error'      => 'tenant_requires_sso',
+  ]);
+  return;
+}
+
 $json = file_get_contents('php://input');
 
 // Converts it into a PHP object
@@ -34,6 +47,24 @@ if ($loginResult["error_code"] == 2) {
 }
 
 if ($loginResult["success"] && $loginResult["error_code"] == 0) {
+  // Refuse password login for SSO-linked users — local password is bypass surface
+  // for an identity that lives in the IdP. Mirrors the Laravel LegacyLoginController
+  // check; this controller is the one the React frontend actually hits.
+  $user_id = $loginResult["data"]["id"] ?? null;
+  if ($user_id !== null) {
+    $stmt = $db->query('SELECT sso_sub FROM ' . $db->au_users_basedata . ' WHERE id = :id');
+    $db->bind(':id', $user_id);
+    $row = $db->resultSet();
+    if (!empty($row[0]['sso_sub'])) {
+      echo json_encode([
+        'success'    => false,
+        'error_code' => 3,
+        'error'      => 'use_sso',
+      ]);
+      return;
+    }
+  }
+
   $current_settings = $settings->getInstanceSettings();
   if ($current_settings["data"]["online_mode"] != 1 && $loginResult["data"]["userlevel"] < 50) {
     echo json_encode([
