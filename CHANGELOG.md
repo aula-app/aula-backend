@@ -18,6 +18,7 @@
 - feat: aula Manager using Filament
 - fix: stop re-generating app key for encrypting JWT/sessions on app startup
 - fix: logging permissions
+- feat: add tenant:export and tenant:import commands
 
 ## v2.0.3
 
