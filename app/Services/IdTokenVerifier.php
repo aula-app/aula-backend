@@ -27,16 +27,16 @@ use Throwable;
  * cache is bypassed once to handle Keycloak key rotation without forcing a
  * restart.
  */
-class IdTokenVerifier
+final class IdTokenVerifier
 {
-    private const JWKS_TTL_SECONDS = 3600;
+    private const int JWKS_TTL_SECONDS = 3600;
     /**
      * Default clock-skew tolerance in seconds. 5 minutes matches the conservative
      * end of common OIDC defaults (Auth0/Okta/Cognito range from 60 to 300 seconds)
      * and absorbs typical NTP drift without exposing meaningful replay surface
      * for short-lived id_tokens. Override per-environment via SSO_CLOCK_SKEW_SECONDS.
      */
-    private const DEFAULT_CLOCK_SKEW_SECONDS = 300;
+    private const int DEFAULT_CLOCK_SKEW_SECONDS = 300;
 
     /**
      * @return array<string, mixed> verified claims
@@ -131,6 +131,7 @@ class IdTokenVerifier
         }
 
         return Cache::remember($this->jwksCacheKey(), self::JWKS_TTL_SECONDS, function (): array {
+            /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::get($this->jwksUrl());
 
             if (! $response->ok()) {
@@ -213,6 +214,9 @@ class IdTokenVerifier
         return (string) config('services.keycloak.client_id');
     }
 
+    /**
+     * @psalm-pure
+     */
     private function base64UrlDecode(string $data): string
     {
         $padded = str_pad($data, strlen($data) + (4 - strlen($data) % 4) % 4, '=');

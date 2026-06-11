@@ -178,7 +178,7 @@ class SsoController extends Controller
         }
 
         $user->sso_id_token      = $idToken;
-        $user->sso_refresh_token = $socialiteUser->refreshToken ?? null;
+        $user->sso_refresh_token = $socialiteUser->refreshToken;
         $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
         $user->save();
 
@@ -479,7 +479,7 @@ class SsoController extends Controller
             'sso_sub'           => $socialiteUser->getId(),
             'sso_provider'      => $tenant->sso_provider,
             'sso_id_token'      => $socialiteUser->accessTokenResponseBody['id_token'] ?? null,
-            'sso_refresh_token' => $socialiteUser->refreshToken ?? null,
+            'sso_refresh_token' => $socialiteUser->refreshToken,
             'sso_idp_id_token'  => $this->fetchIdpIdToken($socialiteUser->token, $tenant->sso_provider),
             'instance_code'     => $tenant->instance_code,
         ], now()->addMinutes(self::LINK_INTENT_TTL_MINUTES));
