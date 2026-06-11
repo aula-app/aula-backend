@@ -9,19 +9,11 @@ use Str;
 use App\Data\UserModelData;
 use App\Data\UserStoreData;
 use Spatie\LaravelData\Optional;
-
 use App\Enums\UserLevel;
-use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 
 class CreateUserUseCase
 {
-    /**
-     * Creates a (legacy) user
-     * @param UserStoreData $userStoreData
-     * @return UserModelData
-     * @psalm-suppress UndefinedMagicPropertyAssignment
-     */
     public function execute(UserStoreData $userStoreData): UserModelData
     {
         $legacyUser = new LegacyUser();
