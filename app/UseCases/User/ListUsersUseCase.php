@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\UseCases\User;
 
 use App\Data\UserModelData;
@@ -11,6 +13,7 @@ class ListUsersUseCase
     /**
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement
+     * @return DataCollection
      */
     public static function execute(): DataCollection
     {
