@@ -8,9 +8,13 @@ use App\Filament\Resources\TenantResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
+/**
+ * @extends EditRecord<\App\Models\Tenant>
+ */
 class EditTenant extends EditRecord
 {
     protected static string $resource = TenantResource::class;
+
 
     protected function getHeaderActions(): array
     {
@@ -19,6 +23,9 @@ class EditTenant extends EditRecord
         ];
     }
 
+    /**
+     * @psalm-pure
+     */
     protected function getSavedNotificationTitle(): ?string
     {
         return 'Tenant updated';
@@ -27,6 +34,8 @@ class EditTenant extends EditRecord
     /**
      * Only allow editing of safe fields. instance_code and jwt_key are never
      * overwritten through the panel — they are displayed as read-only.
+     *
+     * @psalm-pure
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
