@@ -20,6 +20,11 @@ services:
       CENTRAL_DB_NAME: ${CENTRAL_DB_NAME:-aula_database}
       CENTRAL_DB_USER: ${CENTRAL_DB_USER:-aula_user}
       CENTRAL_DB_PASS: ${CENTRAL_DB_PASS:-example}
+       # OpenTelemetry
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-aula-backend}
+      OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-otlp}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
     volumes:
       - type: bind
         source: ./app
