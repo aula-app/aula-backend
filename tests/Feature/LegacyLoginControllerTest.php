@@ -29,6 +29,9 @@ class LegacyLoginControllerTest extends TestCase
         parent::tearDown();
     }
 
+    // Also acts as the regression guard for #495 link flow — the SSO callback redirects
+    // email-matched users (sso_sub still NULL) to the legacy login so they can prove
+    // possession of their legacy password before linking. That login MUST still succeed.
     public function test_login_succeeds_for_user_without_sso_sub_on_non_required_tenant(): void
     {
         self::$testTenant->run(fn () => $this->createUser('login_plain@test.example', 'login_plain', null));
@@ -41,21 +44,6 @@ class LegacyLoginControllerTest extends TestCase
         $response->assertOk()->assertJson(['success' => true])->assertJsonStructure(['JWT']);
     }
 
-    public function test_login_succeeds_for_user_without_sso_sub_when_tenant_allows_password_during_link_flow(): void
-    {
-        // Regression guard for #495 link flow — the SSO callback redirects email-matched
-        // users (sso_sub still NULL) to the legacy login so they can prove possession of
-        // their legacy password before linking. That login MUST still succeed.
-        self::$testTenant->run(fn () => $this->createUser('login_linkable@test.example', 'login_linkable', null));
-
-        $response = $this->postJson('/api/v2/legacy-auth/login', [
-            'username' => 'login_linkable',
-            'password' => self::PASSWORD,
-        ], ['aula-instance-code' => self::INSTANCE_CODE]);
-
-        $response->assertOk()->assertJson(['success' => true]);
-    }
-
     public function test_login_refused_for_user_with_sso_sub_set(): void
     {
         self::$testTenant->run(fn () => $this->createUser('login_ssoUser@test.example', 'login_ssouser', 'sub-already-linked'));
@@ -66,8 +54,9 @@ class LegacyLoginControllerTest extends TestCase
         ], ['aula-instance-code' => self::INSTANCE_CODE]);
 
         $response->assertOk();
-        $response->assertJson(['success' => false, 'error_code' => 3, 'error' => 'use_sso']);
-        $this->assertArrayNotHasKey('JWT', $response->json());
+        $response->assertJson(['success' => false, 'error' => 'use_sso']);
+        $response->assertJsonMissingPath('JWT');
+        $response->assertJsonMissingPath('error_code');
     }
 
     public function test_login_refused_when_tenant_has_sso_required_even_without_user_sso_sub(): void
@@ -81,8 +70,9 @@ class LegacyLoginControllerTest extends TestCase
         ], ['aula-instance-code' => self::INSTANCE_CODE]);
 
         $response->assertOk();
-        $response->assertJson(['success' => false, 'error_code' => 3, 'error' => 'tenant_requires_sso']);
-        $this->assertArrayNotHasKey('JWT', $response->json());
+        $response->assertJson(['success' => false, 'error' => 'tenant_requires_sso']);
+        $response->assertJsonMissingPath('JWT');
+        $response->assertJsonMissingPath('error_code');
     }
 
     public function test_login_refused_for_wrong_password_returns_generic_error(): void
@@ -95,7 +85,8 @@ class LegacyLoginControllerTest extends TestCase
         ], ['aula-instance-code' => self::INSTANCE_CODE]);
 
         $response->assertOk();
-        $response->assertJson(['success' => false, 'error_code' => 2]);
+        $response->assertJson(['success' => false, 'error' => 'bad_credentials']);
+        $response->assertJsonMissingPath('error_code');
     }
 
     private function createUser(string $email, string $username, ?string $sub): LegacyUser

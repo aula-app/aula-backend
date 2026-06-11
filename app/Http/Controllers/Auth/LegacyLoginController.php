@@ -36,9 +36,8 @@ class LegacyLoginController extends Controller
         // of whether the specific user has finished SSO linking yet.
         if ($tenant && $tenant->sso_required) {
             return response()->json([
-                'success'    => false,
-                'error_code' => 3,
-                'error'      => 'tenant_requires_sso',
+                'success' => false,
+                'error'   => 'tenant_requires_sso',
             ]);
         }
 
@@ -48,7 +47,7 @@ class LegacyLoginController extends Controller
         if ($user === null) {
             return response()->json([
                 'success' => false,
-                'error_code' => 2,
+                'error'   => 'bad_credentials',
             ]);
         }
 
@@ -57,21 +56,19 @@ class LegacyLoginController extends Controller
         // IdP session.
         if ($user->sso_sub !== null) {
             return response()->json([
-                'success'    => false,
-                'error_code' => 3,
-                'error'      => 'use_sso',
+                'success' => false,
+                'error'   => 'use_sso',
             ]);
         }
 
         // Check if user is active
         if (!$user->isActive()) {
             return response()->json([
-                'success' => true,
-                'error_code' => 2,
+                'success'     => true,
                 'user_status' => $user->status,
-                'user_id' => $user->id,
-                'data' => $this->getReactivationDate($user),
-                'count' => 1,
+                'user_id'     => $user->id,
+                'data'        => $this->getReactivationDate($user),
+                'count'       => 1,
             ]);
         }
 
@@ -79,7 +76,7 @@ class LegacyLoginController extends Controller
         if (!$user->checkPassword($password)) {
             return response()->json([
                 'success' => false,
-                'error_code' => 2,
+                'error'   => 'bad_credentials',
             ]);
         }
 
