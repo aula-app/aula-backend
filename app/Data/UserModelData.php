@@ -12,6 +12,7 @@ use Spatie\LaravelData\Attributes\MapOutputName;
 class UserModelData extends UserData
 {
     // need to repeat abstract, including types, but types can be a subset
+    // (see also NonInvariantPropertyType in psalm.xml)
     // all abstracts non-Optional in Model
     public readonly int $id;
 
