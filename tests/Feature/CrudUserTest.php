@@ -113,6 +113,15 @@ class CrudUserTest extends TestCase
 
     public function test_create_validation()
     {
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['created' => '2001-01-23T12:34:56Z']])
+            ->assertInvalid(['created'])
+            ->assertUnprocessable();
+        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['created' => 'nondate']])
+            ->assertInvalid(['created'])
+            ->assertUnprocessable();
+        $r = $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['created' => '']])
+            ->assertInvalid(['created'])
+            ->assertUnprocessable();
         $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['username' => null]])
             ->assertInvalid(['username'])
             ->assertUnprocessable();

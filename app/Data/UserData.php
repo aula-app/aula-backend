@@ -86,4 +86,12 @@ abstract class UserData extends Data
         $this->userLevel = $userLevel;
         $this->aboutMe = $aboutMe;
     }
+
+    public static function rules(): array
+    {
+        return [
+            // laravel-data does not have #[Missing]
+            'created' => ['missing']
+        ];
+    }
 }
