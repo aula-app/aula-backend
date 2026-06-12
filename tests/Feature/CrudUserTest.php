@@ -47,8 +47,8 @@ class CrudUserTest extends TestCase
         $newUserDecoded = $newUserResult->decodeResponseJson();
         // TODO: too weak
         $this->assertIsString($newUserDecoded['created']);
-        $newUserId1 = $newUserDecoded['hash_id'];
-        $this->assertGreaterThan(0, $newUserId1);
+        $newUserHashId1 = $newUserDecoded['hash_id'];
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserHashId1);
 
         // create with optional
         $newUserResult = $this->post(
@@ -57,10 +57,11 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJson(self::USER_DATA_UPDATE);
-        $newUserId2 = $newUserResult->decodeResponseJson()['hash_id'];
+        $newUserHashId2 = $newUserResult->decodeResponseJson()['hash_id'];
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserHashId2);
 
         // show
-        $this->getJson('/api/v2/users/'.$newUserId1)
+        $this->getJson('/api/v2/users/'.$newUserHashId1)
             ->assertOk()
             ->assertJson(self::NEW_USER_DATA);
 
@@ -68,9 +69,9 @@ class CrudUserTest extends TestCase
         $allUsers = $this->getJson('/api/v2/users/')
             ->assertOk()->json();
 
-        $allUserIds = array_column($allUsers, 'hash_id');
-        $this->assertContains($newUserId1, $allUserIds);
-        $this->assertContains($newUserId2, $allUserIds);
+        $allUserHashIds = array_column($allUsers, 'hash_id');
+        $this->assertContains($newUserHashId1, $allUserHashIds);
+        $this->assertContains($newUserHashId2, $allUserHashIds);
 
         // update (put, no patch)
         $changedUserData = [
@@ -80,7 +81,7 @@ class CrudUserTest extends TestCase
         ];
 
         $this->putJson(
-            '/api/v2/users/'.$newUserId1,
+            '/api/v2/users/'.$newUserHashId1,
             $changedUserData,
         )
             ->assertOk()
@@ -88,7 +89,7 @@ class CrudUserTest extends TestCase
 
         // test update required
         $result = $this->putJson(
-            '/api/v2/users/'.$newUserId1,
+            '/api/v2/users/'.$newUserHashId1,
             self::NEW_USER_DATA
         );
         $result
@@ -98,16 +99,16 @@ class CrudUserTest extends TestCase
         // test update validation
         $changedUserData['email'] = 'bad@mail_huh.com';
         $this->putJson(
-            '/api/v2/users/'.$newUserId1,
+            '/api/v2/users/'.$newUserHashId1,
             $changedUserData,
         )
             ->assertInvalid(['email'])
             ->assertUnprocessable();
 
         // delete
-        $this->deleteJson('/api/v2/users/'.$newUserId1, [])
+        $this->deleteJson('/api/v2/users/'.$newUserHashId1, [])
             ->assertOk();
-        $this->deleteJson('/api/v2/users/'.$newUserId2, [])
+        $this->deleteJson('/api/v2/users/'.$newUserHashId2, [])
             ->assertOk();
     }
 
