@@ -9,6 +9,7 @@ use App\Enums\UserStatus;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Depends;
+use DateTimeImmutable;
 
 class CrudUserTest extends TestCase
 {
@@ -45,8 +46,8 @@ class CrudUserTest extends TestCase
             ->assertCreated()
             ->assertJson(self::NEW_USER_DATA);
         $newUserDecoded = $result->decodeResponseJson();
-        // TODO: too weak
         $this->assertIsString($newUserDecoded['created']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newUserDecoded['created']));
         $newUserHashId = $newUserDecoded['hash_id'];
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserHashId);
         return $newUserHashId;
@@ -150,40 +151,23 @@ class CrudUserTest extends TestCase
 
     public function test_create_validation()
     {
-        // TODO make a foreach
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['created' => '2001-01-23T12:34:56Z']])
-            ->assertInvalid(['created'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['created' => 'nondate']])
-            ->assertInvalid(['created'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['created' => '']])
-            ->assertInvalid(['created'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['username' => null]])
-            ->assertInvalid(['username'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['username' => '']])
-            ->assertInvalid(['username'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['displayname' => str_repeat('A', 500)]])
-            ->assertInvalid(['displayname'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['email' => 'bad@mail_huh.com']])
-            ->assertInvalid(['email'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['userlevel' => '1000']])
-            ->assertInvalid(['userlevel'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['userlevel' => 1000]])
-            ->assertInvalid(['userlevel'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['status' => 5]])
-            ->assertInvalid(['status'])
-            ->assertUnprocessable();
-        $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...['status' => '5']])
-            ->assertInvalid(['status'])
-            ->assertUnprocessable();
+        foreach([
+            ['created' => '2001-01-23T12:34:56Z'],
+            ['created' => 'nondate'],
+            ['created' => ''],
+            ['username' => null],
+            ['username' => ''],
+            ['displayname' => str_repeat('A', 500)],
+            ['email' => 'bad@mail_huh.com'],
+            ['userlevel' => '1000'],
+            ['userlevel' => 1000],
+            ['status' => 5],
+            ['status' => '5'],
+        ] as $kv) {
+            $this->postJson('/api/v2/users', [...self::NEW_USER_DATA, ...$kv])
+                ->assertInvalid(array_key_first($kv))
+                ->assertUnprocessable();
+        }
     }
 
     public function test_patch_disallowed()
