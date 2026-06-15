@@ -78,6 +78,11 @@ abstract class UserData extends Data
         #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
         #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
         readonly public DateTimeImmutable|Optional $createdAt,
+
+        #[MapName('last_update')]
+        #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
+        readonly public DateTimeImmutable|Optional $updatedAt,
     ) {
         // abstract are unpromotable, need to be set up sans sugar
         $this->id = $id;
@@ -92,6 +97,7 @@ abstract class UserData extends Data
         return [
             // laravel-data does not have #[Missing]
             'created' => ['missing'],
+            'last_update' => ['missing'],
             'hash_id' => ['missing'],
             'id' => ['missing'],
         ];

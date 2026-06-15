@@ -35,6 +35,9 @@ class UserDataTest extends TestCase
         $this->assertArrayHasKey('userlevel', $rules);
         $this->assertNotContains('required', $rules['userlevel']);
         $this->assertContains('sometimes', $rules['userlevel']);
+        $this->assertEquals(['missing'], $rules['created']);
+        $this->assertEquals(['missing'], $rules['last_update']);
+        $this->assertEquals(['missing'], $rules['hash_id']);
         $this->assertTrue(array_any(
             $rules['userlevel'],
             fn ($r) => $r instanceof \Illuminate\Validation\Rules\Enum
@@ -46,6 +49,9 @@ class UserDataTest extends TestCase
         $this->assertArrayHasKey('userlevel', $rules);
         $this->assertContains('required', $rules['userlevel']);
         $this->assertNotContains('sometimes', $rules['userlevel']);
+        $this->assertEquals(['missing'], $rules['created']);
+        $this->assertEquals(['missing'], $rules['last_update']);
+        $this->assertEquals(['missing'], $rules['hash_id']);
         $this->assertTrue(array_any(
             $rules['userlevel'],
             fn ($r) => $r instanceof \Illuminate\Validation\Rules\Enum
