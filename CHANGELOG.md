@@ -7,6 +7,7 @@
 
 - feat: add SSO login via Keycloak
 - fix: run tenancy DB migrations on deployment
+- fix: hide inactive rooms from users
 
 ## v2.1.1
 

@@ -25,8 +25,11 @@ class LegacyAuthTest extends TestCase
 
     public function test_jwt_service_generates_valid_tokens(): void
     {
-        $service = new class extends LegacyJwtService {
-            protected function getJwtKey(): string { return 'test_secret'; }
+        $service = new class () extends LegacyJwtService {
+            protected function getJwtKey(): string
+            {
+                return 'test_secret';
+            }
         };
 
         $user = new LegacyUser();
@@ -192,7 +195,7 @@ class LegacyAuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJson(['success' => false, 'error_code' => 2])
+            ->assertJson(['success' => false, 'error' => 'bad_credentials'])
             ->assertJsonMissing(['JWT']);
 
         $tenant->run(function () {
@@ -212,7 +215,7 @@ class LegacyAuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJson(['success' => false, 'error_code' => 2]);
+            ->assertJson(['success' => false, 'error' => 'bad_credentials']);
     }
 
     public function test_login_inactive_user(): void
@@ -244,10 +247,10 @@ class LegacyAuthTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'error_code' => 2,
                 'user_status' => UserStatus::Suspended->value,
             ])
-            ->assertJsonMissing(['JWT']);
+            ->assertJsonMissing(['JWT'])
+            ->assertJsonMissingPath('error_code');
 
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_inactive')->delete();
@@ -256,8 +259,11 @@ class LegacyAuthTest extends TestCase
 
     public function test_token_matches_legacy_format(): void
     {
-        $service = new class extends LegacyJwtService {
-            protected function getJwtKey(): string { return 'test_key'; }
+        $service = new class () extends LegacyJwtService {
+            protected function getJwtKey(): string
+            {
+                return 'test_key';
+            }
         };
 
         $user = new LegacyUser();

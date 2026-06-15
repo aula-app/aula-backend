@@ -10,6 +10,7 @@ class InstanceConfig
   public string $dbname;
   public string $jwt_key;
   public string $instance_api_url;
+  public bool $sso_required;
 
   private static ?PDO $centralDb = null;
 
@@ -21,7 +22,8 @@ class InstanceConfig
     string $dbname,
     string $jwt_key,
     string $instance_api_url,
-    string $port = '3306'
+    string $port = '3306',
+    bool $sso_required = false
   ) {
     $this->code = $code;
     $this->host = $host;
@@ -31,6 +33,7 @@ class InstanceConfig
     $this->dbname = $dbname;
     $this->jwt_key = $jwt_key;
     $this->instance_api_url = $instance_api_url;
+    $this->sso_required = $sso_required;
   }
 
   private static function getCentralDb(): PDO
@@ -53,7 +56,7 @@ class InstanceConfig
   private static function findTenantByCode(string $code): ?array
   {
     $stmt = self::getCentralDb()->prepare(
-      'SELECT instance_code, jwt_key, api_base_url, data FROM tenants WHERE instance_code = ? LIMIT 1'
+      'SELECT instance_code, jwt_key, api_base_url, data, sso_required FROM tenants WHERE instance_code = ? LIMIT 1'
     );
     $stmt->execute([$code]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -61,7 +64,7 @@ class InstanceConfig
   }
 
   public static function findAll(): ?array {
-    $stmt = self::getCentralDb()->prepare('SELECT instance_code, jwt_key, api_base_url, data FROM tenants');
+    $stmt = self::getCentralDb()->prepare('SELECT instance_code, jwt_key, api_base_url, data, sso_required FROM tenants');
     $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -83,6 +86,7 @@ class InstanceConfig
         jwt_key: $tenant['jwt_key'] ?? '',
         instance_api_url: $tenant['api_base_url'] ?? '',
         port: getenv('CENTRAL_DB_PORT') ?: '3306',
+        sso_required: (bool) ($tenant['sso_required'] ?? false),
       );
     }
 
@@ -150,6 +154,7 @@ class InstanceConfig
       jwt_key: $tenant['jwt_key'] ?? '',
       instance_api_url: $tenant['api_base_url'] ?? '',
       port: getenv('CENTRAL_DB_PORT') ?: '3306',
+      sso_required: (bool) ($tenant['sso_required'] ?? false),
     );
   }
 }
