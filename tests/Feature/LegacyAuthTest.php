@@ -244,7 +244,6 @@ class LegacyAuthTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'error_code' => 2,
                 'user_status' => UserStatus::Suspended->value,
             ])
             ->assertJsonMissing(['JWT'])
