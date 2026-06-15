@@ -91,7 +91,9 @@ abstract class UserData extends Data
     {
         return [
             // laravel-data does not have #[Missing]
-            'created' => ['missing']
+            'created' => ['missing'],
+            'hash_id' => ['missing'],
+            'id' => ['missing'],
         ];
     }
 }
