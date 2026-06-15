@@ -313,6 +313,7 @@ class Room
         rel_rooms_users.user_id = users_basedata.id
       WHERE
         rel_rooms_users.user_id = :user_id AND
+        rooms.status = 1 AND
         JSON_SEARCH(users_basedata.roles, 'one', rooms.hash_id, NULL, '$[*].room') IS NOT NULL
     EOD;
 

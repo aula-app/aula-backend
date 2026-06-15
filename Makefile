@@ -59,6 +59,7 @@ psalm-cli:
 
 # tries to mirror .github/workflow/main-pr-scan-psalm.yml
 # --taint-analysis is unnecessary with psalm-laravel
+# --report-show-info: only error-level for GH, info/note are for IDE
 .PHONY: psalm-docker
 psalm-docker:
 	docker run \
@@ -71,4 +72,5 @@ psalm-docker:
 			 /app/vendor/bin/psalm \
 				--no-cache \
 				--output-format=github \
+				--report-show-info=false \
 				--report=/app/psalm-results.sarif"

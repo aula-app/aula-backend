@@ -36,6 +36,7 @@ jobs:
       # we don't use shivammathur/set-php because it eventually uses sudo.
       # --output-format=github will produce ::error workflow commands which GH will display
       # --taint-analysis is not necessary with psalm-laravel
+      # --report-show-info: only error-level for GH, info/note are for IDE
       # Note: we're not using danog/psalm's /composer/vendor/bin/psalm,
       #   but the one composer installs itself, for integration with psalm-laravel.
       # Note: keep in sync with `make psalm-docker`
@@ -54,6 +55,7 @@ jobs:
                /app/vendor/bin/psalm \
                 --no-cache --threads=4 \
                 --output-format=github \
+                --report-show-info=false \
                 --report=psalm-results.sarif"
 
       - name: "Upload Psalm scan results to GitHub Security tab"
