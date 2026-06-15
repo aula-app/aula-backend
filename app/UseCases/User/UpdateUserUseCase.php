@@ -23,6 +23,8 @@ class UpdateUserUseCase
         $legacyUser->about_me = $userUpdateData->aboutMe;
         $legacyUser->save();
         /* / DB::transaction */
+        // for unmanaged last_update/updatedAt timestamp
+        $legacyUser->refresh();
         return UserModelData::from($legacyUser);
     }
 }

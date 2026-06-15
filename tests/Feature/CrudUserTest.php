@@ -103,12 +103,17 @@ class CrudUserTest extends TestCase
             ...['realname' => 'Changed Name'],
         ];
 
-        $this->putJson(
+        $result = $this->putJson(
             '/api/v2/users/'.$newUserHashId,
             $changedUserData,
         )
             ->assertOk()
             ->assertJson($changedUserData);
+        $updatedUserDecoded = $result->decodeResponseJson();
+        $this->assertIsString($updatedUserDecoded['last_update']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['last_update']));
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['created']));
+        $this->assertGreaterThanOrEqual($updatedUserDecoded['created'], $updatedUserDecoded['last_update']);
     }
 
     #[Depends('test_create')]
@@ -155,9 +160,10 @@ class CrudUserTest extends TestCase
             ['created' => '2001-01-23T12:34:56Z'],
             ['created' => 'nondate'],
             ['created' => ''],
-            // created, id, hash_id musst be *missing* from request
+            // created, last_update, id, hash_id musst be *missing* from request
             ['id' => ''],
             ['hash_id' => ''],
+            ['last_update' => ''],
             ['username' => null],
             ['username' => ''],
             ['displayname' => str_repeat('A', 500)],
