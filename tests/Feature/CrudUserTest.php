@@ -155,6 +155,9 @@ class CrudUserTest extends TestCase
             ['created' => '2001-01-23T12:34:56Z'],
             ['created' => 'nondate'],
             ['created' => ''],
+            // created, id, hash_id musst be *missing* from request
+            ['id' => ''],
+            ['hash_id' => ''],
             ['username' => null],
             ['username' => ''],
             ['displayname' => str_repeat('A', 500)],
