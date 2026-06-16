@@ -181,9 +181,11 @@ class CrudUserTest extends TestCase
         }
     }
 
-    public function test_patch_disallowed()
+    #[Depends('test_create')]
+    public function test_patch_disallowed($newUserHashId)
     {
-        $this->patchJson('/api/v2/users/foo', [])
+        // need an existing user, PATCH to /api/v2/users/foo will 404 before 405ing
+        $this->patchJson('/api/v2/users/'.$newUserHashId, [])
             ->assertMethodNotAllowed();
     }
 
