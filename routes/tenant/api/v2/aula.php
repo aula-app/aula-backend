@@ -5,8 +5,6 @@ use App\Http\Controllers\UserController;
 
 // TODO: GET /api/v2/users/ without header is 500ing with TenantCouldNotBeIdentifiedByRequestDataException, should probably 400/404?
 Route::apiResource('users', UserController::class)
-    ->except(['update'])
-    ->whereUuid('user');
+    ->except(['update']);
 Route::put('users/{user}', [UserController::class, 'update'])
-    ->name('users.update')
-    ->whereUuid('user');
+    ->name('users.update');

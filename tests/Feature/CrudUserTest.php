@@ -195,7 +195,7 @@ class CrudUserTest extends TestCase
             ->assertNotFound();
         $this->getJson('/api/v2/users/foo', [])
             ->assertNotFound();
-        $this->getJson('/api/v2/users/12345678-1234-1234-1234-1234567890ab', [])
+        $this->getJson('/api/v2/users/0123456789abcdef0123456789abcdef', [])
             ->assertNotFound();
     }
 
