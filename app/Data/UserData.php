@@ -36,6 +36,10 @@ abstract class UserData extends Data
 
     abstract public string|null $aboutMe { get; }
 
+    abstract public DateTimeImmutable|null $createdAt { get; }
+
+    abstract public DateTimeImmutable|null $updatedAt { get; }
+
     public function __construct(
         int|null $id,
 
@@ -65,20 +69,9 @@ abstract class UserData extends Data
 
         readonly public UserStatus $status,
 
-        // laravel-data is missing #[Missing]
-        #[Rule('missing')]
-        #[MapInputName('created')]
-        #[MapOutputName('created')]
-        // unexpectedly, WithCast and WithTransformer seem unnecessary
-        // #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
-        // #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
-        readonly public DateTimeImmutable|null $createdAt,
+        DateTimeImmutable|null $createdAt,
 
-        #[Rule('missing')]
-        #[MapName('last_update')]
-        // #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
-        // #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
-        readonly public DateTimeImmutable|null $updatedAt,
+        DateTimeImmutable|null $updatedAt,
     ) {
         // abstract are unpromotable, need to be set up sans sugar
         $this->id = $id;
@@ -86,5 +79,7 @@ abstract class UserData extends Data
         $this->email = $email;
         $this->userLevel = $userLevel;
         $this->aboutMe = $aboutMe;
+        $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
     }
 }

@@ -54,10 +54,10 @@ class UserDataTest extends TestCase
         $this->assertArrayHasKey('userlevel', $rules);
         $this->assertNotContains('required', $rules['userlevel']);
         $this->assertContains('nullable', $rules['userlevel']);
-        $this->assertContains('missing', $rules['created']);
-        $this->assertNotContains('sometimes', $rules['created']);
-        $this->assertContains('missing', $rules['last_update']);
-        $this->assertNotContains('sometimes', $rules['last_update']);
+        $this->assertContains('missing', $rules['created_at']);
+        $this->assertNotContains('sometimes', $rules['created_at']);
+        $this->assertContains('missing', $rules['updated_at']);
+        $this->assertNotContains('sometimes', $rules['updated_at']);
         $this->assertContains('missing', $rules['hash_id']);
         $this->assertNotContains('sometimes', $rules['hash_id']);
         $this->assertTrue(array_any(
@@ -71,10 +71,10 @@ class UserDataTest extends TestCase
         $this->assertArrayHasKey('userlevel', $rules);
         $this->assertContains('required', $rules['userlevel']);
         $this->assertNotContains('sometimes', $rules['userlevel']);
-        $this->assertContains('missing', $rules['created']);
-        $this->assertNotContains('sometimes', $rules['created']);
-        $this->assertContains('missing', $rules['last_update']);
-        $this->assertNotContains('sometimes', $rules['last_update']);
+        $this->assertContains('missing', $rules['created_at']);
+        $this->assertNotContains('sometimes', $rules['created_at']);
+        $this->assertContains('missing', $rules['updated_at']);
+        $this->assertNotContains('sometimes', $rules['updated_at']);
         $this->assertContains('missing', $rules['hash_id']);
         $this->assertNotContains('sometimes', $rules['hash_id']);
         $this->assertTrue(array_any(

@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Data;
 
+use DateTimeImmutable;
+
 use App\Data\UserData;
 use App\Enums\UserLevel;
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\LaravelData\Attributes\MapInputName;
+use Spatie\LaravelData\Attributes\MapOutputName;
+use Spatie\LaravelData\Attributes\Validation\Rule;
 
 class UserModelData extends UserData
 {
@@ -27,5 +32,17 @@ class UserModelData extends UserData
 
     #[MapName('about_me')]
     public readonly string $aboutMe;
+
+    // Input: from legacyUser
+    #[MapInputName('created')]
+    // Output: to API, as JSON Resource
+    #[MapOutputName('created_at')]
+    // cf. UserStore/UpdateData only have Input
+    public readonly DateTimeImmutable $createdAt;
+
+    #[MapInputName('last_update')]
+    #[MapOutputName('updated_at')]
+    // unlike created, this can still be null (at creation)
+    public readonly DateTimeImmutable|null $updatedAt;
 }
 
