@@ -135,12 +135,13 @@ class CrudUserTest extends TestCase
             ...self::NEW_USER_DATA,
             ...self::USER_DATA_UPDATE,
             ...['email' => 'bad@mail_huh.com'],
+            ...['userlevel' => 1000],
         ];
         $this->putJson(
             '/api/v2/users/'.$newUserHashId,
             $changedUserData,
         )
-            ->assertInvalid(['email'])
+            ->assertInvalid(['email', 'userlevel'])
             ->assertUnprocessable();
     }
 
@@ -163,6 +164,7 @@ class CrudUserTest extends TestCase
             // created, last_update, id, hash_id musst be *missing* from request
             ['id' => ''],
             ['hash_id' => ''],
+            ['hash_id' => null],
             ['last_update' => ''],
             ['username' => null],
             ['username' => ''],

@@ -5,48 +5,41 @@ declare(strict_types=1);
 namespace App\Data;
 
 use DateTimeImmutable;
-use DateTimeInterface;
-use Illuminate\Validation\Rule;
 
-use Spatie\LaravelData\Attributes\WithTransformer;
-use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
-use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\MapOutputName;
-use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\Validation\Max;
-use Spatie\LaravelData\Casts\EnumCast;
+use Spatie\LaravelData\Attributes\Validation\Rule;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
-// use DateTimeImmutable;
-
-use Spatie\LaravelData\Optional;
 
 abstract class UserData extends Data
 {
+    // can't use MapInput or validation Attributes with abstract properties; must declare in final child class
     // can't specify abstract in constructor promotion
-    abstract public int|Optional $id {
+    abstract public int|null $id {
         // need hooked property for abstract; equals readonly
         get;
     }
 
-    abstract public string|Optional $hashId { get; }
+    // we don't use Optional as it brings unnecessary complexity (e.g. it "infects" validation rules with a hard-to-shake `sometimes`, which overrides `required`)
+    // instead we use nullable (which is not inferred as `sometimes`)
+    abstract public string|null $hashId { get; }
 
-    // WithCast might not be necessary?
-    // #[WithCast(EnumCast::class, type: UserLevel::class)]
-    abstract public UserLevel|Optional $userLevel { get; }
+    abstract public UserLevel|null $userLevel { get; }
 
-    // Validation of abstract must be done in child
-    abstract public string|Optional|null $email { get; }
+    // Validation (#[Email]) of abstract must be done in child
+    abstract public string|null $email { get; }
 
-    abstract public string|Optional $aboutMe { get; }
+    abstract public string|null $aboutMe { get; }
 
     public function __construct(
-        int|Optional $id,
-        string|Optional $hashId,
+        int|null $id,
+
+        string|null $hashId,
 
         #[MapInputName('displayname')]
         #[MapOutputName('displayname')]
@@ -63,26 +56,29 @@ abstract class UserData extends Data
         #[Max(400)]
         readonly public string $realName,
 
-        // N.B. nullable!
-        string|Optional|null $email,
+        // N.B. truly nullable; can have value null
+        string|null $email,
 
-        UserLevel|Optional $userLevel,
+        UserLevel|null $userLevel,
 
-        string|Optional $aboutMe,
+        string|null $aboutMe,
 
-        #[WithCast(EnumCast::class, type: UserStatus::class)]
         readonly public UserStatus $status,
 
+        // laravel-data is missing #[Missing]
+        #[Rule('missing')]
         #[MapInputName('created')]
         #[MapOutputName('created')]
-        #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
-        readonly public DateTimeImmutable|Optional $createdAt,
+        // unexpectedly, WithCast and WithTransformer seem unnecessary
+        // #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
+        // #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
+        readonly public DateTimeImmutable|null $createdAt,
 
+        #[Rule('missing')]
         #[MapName('last_update')]
-        #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
-        readonly public DateTimeImmutable|Optional $updatedAt,
+        // #[WithCast(DateTimeInterfaceCast::class, format: DateTimeInterface::ATOM)]
+        // #[WithTransformer(DateTimeInterfaceTransformer::class, format: DateTimeInterface::ATOM)]
+        readonly public DateTimeImmutable|null $updatedAt,
     ) {
         // abstract are unpromotable, need to be set up sans sugar
         $this->id = $id;
@@ -90,16 +86,5 @@ abstract class UserData extends Data
         $this->email = $email;
         $this->userLevel = $userLevel;
         $this->aboutMe = $aboutMe;
-    }
-
-    public static function rules(): array
-    {
-        return [
-            // laravel-data does not have #[Missing]
-            'created' => ['missing'],
-            'last_update' => ['missing'],
-            'hash_id' => ['missing'],
-            'id' => ['missing'],
-        ];
     }
 }
