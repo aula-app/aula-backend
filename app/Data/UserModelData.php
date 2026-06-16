@@ -11,16 +11,15 @@ use App\Enums\UserLevel;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\MapOutputName;
-use Spatie\LaravelData\Attributes\Validation\Rule;
 
 class UserModelData extends UserData
 {
+    // note: use (undocumented) #[Spatie\LaravelData\Attributes\Hidden] to remove properties from API output
+    // this seems easier and cleaner than ::from($legacyUser)->except or Lazy
+
     // need to repeat abstract, including types, but types can be a subset
     // (see also NonInvariantPropertyType in psalm.xml)
     // all abstracts non-Optional in Model
-    public readonly int $id;
-
-    // Map both Input + Output here for de/serialization
     #[MapName('hash_id')]
     public readonly string $hashId;
 
@@ -33,6 +32,7 @@ class UserModelData extends UserData
     #[MapName('about_me')]
     public readonly string $aboutMe;
 
+    // Input+Output not synonymous here:
     // Input: from legacyUser
     #[MapInputName('created')]
     // Output: to API, as JSON Resource
