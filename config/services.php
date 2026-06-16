@@ -44,4 +44,16 @@ return [
         'clock_skew_seconds' => env('SSO_CLOCK_SKEW_SECONDS', 300),
     ],
 
+    'eduplaces' => [
+        'auth_url' => env('EDUPLACES_AUTH_URL', 'https://auth.eduplaces.io'),
+        'api_url' => env('EDUPLACES_API_URL', 'https://api.eduplaces.io'),
+        'client_id' => env('EDUPLACES_CLIENT_ID'),
+        'client_secret' => env('EDUPLACES_CLIENT_SECRET'),
+        'idp_alias' => env('EDUPLACES_IDP_ALIAS', 'eduplaces'),
+        'allowed_issuers' => array_filter(array_map('trim', explode(',', (string) env(
+            'EDUPLACES_ALLOWED_ISSUERS',
+            'https://auth.eduplaces.io,https://auth.sandbox.eduplaces.dev',
+        )))),
+    ],
+
 ];

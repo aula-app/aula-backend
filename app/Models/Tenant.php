@@ -34,6 +34,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'sso_force_logout',
             'sso_required',
             'sso_require_email_verified',
+            'eduplaces_school_id',
         ]);
     }
 
