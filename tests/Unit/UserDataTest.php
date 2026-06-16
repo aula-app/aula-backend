@@ -2,10 +2,12 @@
 
 namespace Tests\Unit;
 
+use App\Data\UserModelData;
 use App\Data\UserStoreData;
 use App\Data\UserUpdateData;
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
+use DateTimeImmutable;
 use Tests\TestCase;
 
 class UserDataTest extends TestCase
@@ -26,7 +28,24 @@ class UserDataTest extends TestCase
         $this->assertTrue(\is_int(self::INPUT['userlevel']));
         $userUpdateData = UserUpdateData::from(self::INPUT);
         $this->assertTrue($userUpdateData->userLevel instanceof UserLevel);
+        $this->assertEquals(UserLevel::Guest, $userUpdateData->userLevel);
         $this->assertTrue($userUpdateData->status instanceof UserStatus);
+        $this->assertEquals(UserStatus::Active, $userUpdateData->status);
+    }
+
+    public function test_it_casts_dates_properly(): void
+    {
+        $nowCarbon = new \Illuminate\Support\Carbon;
+        $userModelData = UserModelData::from([
+            'id' => 123,
+            'hash_id' => '123abc',
+            ...self::INPUT,
+            'created' => $nowCarbon,
+            'last_update' => $nowCarbon,
+        ]);
+        $this->assertTrue($userModelData->createdAt instanceof DateTimeImmutable);
+        $this->assertTrue($userModelData->updatedAt instanceof DateTimeImmutable);
+        $this->assertEquals($nowCarbon->toAtomString(), $userModelData->createdAt->format(DATE_ATOM));
     }
 
     public function test_it_has_proper_store_validation_rules(): void
@@ -34,10 +53,13 @@ class UserDataTest extends TestCase
         $rules = UserStoreData::getValidationRules([]);
         $this->assertArrayHasKey('userlevel', $rules);
         $this->assertNotContains('required', $rules['userlevel']);
-        $this->assertContains('sometimes', $rules['userlevel']);
-        $this->assertEquals(['missing'], $rules['created']);
-        $this->assertEquals(['missing'], $rules['last_update']);
-        $this->assertEquals(['missing'], $rules['hash_id']);
+        $this->assertContains('nullable', $rules['userlevel']);
+        $this->assertContains('missing', $rules['created']);
+        $this->assertNotContains('sometimes', $rules['created']);
+        $this->assertContains('missing', $rules['last_update']);
+        $this->assertNotContains('sometimes', $rules['last_update']);
+        $this->assertContains('missing', $rules['hash_id']);
+        $this->assertNotContains('sometimes', $rules['hash_id']);
         $this->assertTrue(array_any(
             $rules['userlevel'],
             fn ($r) => $r instanceof \Illuminate\Validation\Rules\Enum
@@ -49,9 +71,12 @@ class UserDataTest extends TestCase
         $this->assertArrayHasKey('userlevel', $rules);
         $this->assertContains('required', $rules['userlevel']);
         $this->assertNotContains('sometimes', $rules['userlevel']);
-        $this->assertEquals(['missing'], $rules['created']);
-        $this->assertEquals(['missing'], $rules['last_update']);
-        $this->assertEquals(['missing'], $rules['hash_id']);
+        $this->assertContains('missing', $rules['created']);
+        $this->assertNotContains('sometimes', $rules['created']);
+        $this->assertContains('missing', $rules['last_update']);
+        $this->assertNotContains('sometimes', $rules['last_update']);
+        $this->assertContains('missing', $rules['hash_id']);
+        $this->assertNotContains('sometimes', $rules['hash_id']);
         $this->assertTrue(array_any(
             $rules['userlevel'],
             fn ($r) => $r instanceof \Illuminate\Validation\Rules\Enum

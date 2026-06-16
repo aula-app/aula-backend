@@ -6,10 +6,7 @@ namespace App\Data;
 
 use App\Data\UserData;
 use App\Enums\UserLevel;
-use Spatie\LaravelData\Optional;
 use Spatie\LaravelData\Attributes\MapName;
-use Spatie\LaravelData\Attributes\MapInputName;
-use Spatie\LaravelData\Attributes\MapOutputName;
 
 class UserModelData extends UserData
 {
@@ -22,6 +19,7 @@ class UserModelData extends UserData
     #[MapName('hash_id')]
     public readonly string $hashId;
 
+    // N.b. true nullable (not only to signal optional)
     public readonly string|null $email;
 
     #[MapName('userlevel')]

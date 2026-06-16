@@ -9,24 +9,27 @@ Caveats + notes:
 
 **Create-with-defaults vs. Update/Put-all-required**
 
-- we use `Optional` to communicate which fields are not always required, then use inheritance (`UserStoreData`, `UserUpdateData`) to set `required`, `sometimes` (= not required) or `missing` (= never)  for validation.
+- we use nullable/`|null` to communicate which fields are not always required, then use inheritance (`UserStoreData`, `UserUpdateData`) to set `required`, `sometimes` (= not required) or `missing` (= never)  for validation.
+    - we do not use `Optional` since it adds complexity
+      (e.g. the validation rule `sometimes` is then inferred and hard to override, even with `required`)
 - `UserData` is the parent with *all* properties/fields
     - all properties are readonly
     - child classes can not extend with new fields - this causes a cascade of verbosity (verbatim repeated constructors etc.)
-    - every field/property that can be Optional in any child…
-        - …has to be Optional in the parent.
+    - inheritance forces childrens' properties' types to be subsets of parents' --
+      this enforces more consistency than repeating properties over several DTOs
+    - every field/property that can be nullable/unrequired in any child…
+        - …has to be nullable in the parent.
         - all properties have to be `public`
           (any combination of protected or private just did not work)
         - is implemented as `abstract` and "hooked"
           (t has a `get;`; this also makes it readonly)
         - all abstract properties have to be finalized in all children
         - in the child, the property can be overriden with a subset of typehints,
-          notably without `|Optional`.
+          notably without `|null`.
         - Psalm complains about this subset; but its warning about compiler errors don't apply.
         - We can not completely hide/protect any parent's property;
           instead we rely on validation (e.g. to prevent (write) attempt to `UserStoreData->hash_id`)
         - this construct is slightly cumbersome. Other "cleaner" attempts (`protected`, child properties) did not pan out and led to substantially more code.
-    - we don't use `Optional|null` or `nullable` to aid optionality; only when a field's value can be `null` (e.g. `email`).
 - `UserModelData` serves as a domain model and for output (via response).
 
 **Field name mapping**

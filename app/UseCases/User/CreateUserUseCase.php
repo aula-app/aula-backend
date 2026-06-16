@@ -21,9 +21,9 @@ class CreateUserUseCase
         $legacyUser->displayname = $userStoreData->displayName;
         $legacyUser->realname = $userStoreData->realName;
         $legacyUser->username = $userStoreData->userName;
-        $legacyUser->email = $userStoreData->email instanceof Optional ? null : $userStoreData->email;
-        $legacyUser->userlevel = $userStoreData->userLevel instanceof Optional ? UserLevel::Guest : $userStoreData->userLevel;
-        $legacyUser->about_me = $userStoreData->aboutMe instanceof Optional ? '' : $userStoreData->aboutMe;
+        $legacyUser->email = $userStoreData->email;
+        $legacyUser->userlevel = $userStoreData->userLevel ?? UserLevel::Guest;
+        $legacyUser->about_me = $userStoreData->aboutMe ?? '';
         $legacyUser->status = $userStoreData->status->value;
         // TODO functionality from legacy model User->addUser, including but not limited to:
         // - check for username unique

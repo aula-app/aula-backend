@@ -6,25 +6,30 @@ namespace App\Data;
 
 use App\Data\UserData;
 use App\Enums\UserLevel;
-use Spatie\LaravelData\Optional;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\Validation\Email;
+
+use Spatie\LaravelData\Attributes\Validation\Rule;
 
 class UserStoreData extends UserData
 {
     // need to repeat abstract, types can be a subset,
     // but we can't "remove" the property (or set to abstract-only)
-    // it can't be Optional only, either
-    public readonly int|Optional $id;
-    public readonly string|Optional $hashId;
+    // it can't be null only, either
+    #[Rule('missing')]
+    public readonly int|null $id;
 
-    // have to repeat validation
+    #[Rule('missing')]
+    #[MapInputName('hash_id')]
+    public readonly string|null $hashId;
+
     #[Email]
-    public readonly string|Optional $email;
+    public readonly string|null $email;
 
+    // unexpectedly, this works without #[WithCast]
     #[MapInputName('userlevel')]
-    public readonly UserLevel|Optional $userLevel;
+    public readonly UserLevel|null $userLevel;
 
     #[MapInputName('about_me')]
-    public readonly string|Optional $aboutMe;
+    public readonly string|null $aboutMe;
 }

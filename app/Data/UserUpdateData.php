@@ -6,14 +6,18 @@ namespace App\Data;
 
 use App\Data\UserData;
 use App\Enums\UserLevel;
-use Spatie\LaravelData\Optional;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\Validation\Email;
+use Spatie\LaravelData\Attributes\Validation\Rule;
 
 class UserUpdateData extends UserData
 {
-    public readonly int|Optional $id;
-    public readonly string|Optional $hashId;
+    #[Rule('missing')]
+    public readonly int|null $id;
+
+    #[Rule('missing')]
+    #[MapInputName('hash_id')]
+    public readonly string|null $hashId;
 
     #[Email]
     public readonly string $email;
