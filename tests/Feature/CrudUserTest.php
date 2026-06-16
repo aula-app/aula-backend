@@ -46,8 +46,8 @@ class CrudUserTest extends TestCase
             ->assertCreated()
             ->assertJson(self::NEW_USER_DATA);
         $newUserDecoded = $result->decodeResponseJson();
-        $this->assertIsString($newUserDecoded['created']);
-        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newUserDecoded['created']));
+        $this->assertIsString($newUserDecoded['created_at']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newUserDecoded['created_at']));
         $newUserHashId = $newUserDecoded['hash_id'];
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserHashId);
         return $newUserHashId;
@@ -110,10 +110,10 @@ class CrudUserTest extends TestCase
             ->assertOk()
             ->assertJson($changedUserData);
         $updatedUserDecoded = $result->decodeResponseJson();
-        $this->assertIsString($updatedUserDecoded['last_update']);
-        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['last_update']));
-        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['created']));
-        $this->assertGreaterThanOrEqual($updatedUserDecoded['created'], $updatedUserDecoded['last_update']);
+        $this->assertIsString($updatedUserDecoded['updated_at']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['updated_at']));
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['created_at']));
+        $this->assertGreaterThanOrEqual($updatedUserDecoded['created_at'], $updatedUserDecoded['updated_at']);
     }
 
     #[Depends('test_create')]
@@ -158,14 +158,14 @@ class CrudUserTest extends TestCase
     public function test_create_validation()
     {
         foreach([
-            ['created' => '2001-01-23T12:34:56Z'],
-            ['created' => 'nondate'],
-            ['created' => ''],
+            ['created_at' => '2001-01-23T12:34:56Z'],
+            ['created_at' => 'nondate'],
+            ['created_at' => ''],
             // created, last_update, id, hash_id musst be *missing* from request
             ['id' => ''],
             ['hash_id' => ''],
             ['hash_id' => null],
-            ['last_update' => ''],
+            ['updated_at' => ''],
             ['username' => null],
             ['username' => ''],
             ['displayname' => str_repeat('A', 500)],

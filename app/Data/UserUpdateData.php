@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Data;
 
+use DateTimeImmutable;
+
 use App\Data\UserData;
 use App\Enums\UserLevel;
 use Spatie\LaravelData\Attributes\MapInputName;
@@ -27,4 +29,12 @@ class UserUpdateData extends UserData
 
     #[MapInputName('about_me')]
     public readonly string $aboutMe;
+
+    #[Rule('missing')]
+    #[MapInputName('created_at')]
+    public readonly DateTimeImmutable|null $createdAt;
+
+    #[Rule('missing')]
+    #[MapInputName('updated_at')]
+    public readonly DateTimeImmutable|null $updatedAt;
 }

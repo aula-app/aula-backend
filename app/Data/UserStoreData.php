@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Data;
 
+use DateTimeImmutable;
+
 use App\Data\UserData;
 use App\Enums\UserLevel;
 use Spatie\LaravelData\Attributes\MapInputName;
@@ -13,9 +15,10 @@ use Spatie\LaravelData\Attributes\Validation\Rule;
 
 class UserStoreData extends UserData
 {
-    // need to repeat abstract, types can be a subset,
-    // but we can't "remove" the property (or set to abstract-only)
-    // it can't be null only, either
+    // Need to repeat abstract; types can be a subset.
+    // But we can't "remove" the property (or set to abstract-only)
+    // we can only block it, via 'missing' validation.
+    // It can't be subset to null only, either.
     #[Rule('missing')]
     public readonly int|null $id;
 
@@ -32,4 +35,13 @@ class UserStoreData extends UserData
 
     #[MapInputName('about_me')]
     public readonly string|null $aboutMe;
+
+    #[Rule('missing')]
+    // cf. UserModelData, where Input/Output differ
+    #[MapInputName('created_at')]
+    public readonly DateTimeImmutable|null $createdAt;
+
+    #[Rule('missing')]
+    #[MapInputName('updated_at')]
+    public readonly DateTimeImmutable|null $updatedAt;
 }
