@@ -20,8 +20,8 @@ class UserStoreData extends UserData
     // we can only block it, via 'missing' validation.
     // It can't be subset to null only, either.
     #[Rule('missing')]
-    #[MapInputName('hash_id')]
-    public readonly string|null $hashId;
+    #[MapInputName('public_id')]
+    public readonly string|null $publicId;
 
     #[Email]
     public readonly string|null $email;

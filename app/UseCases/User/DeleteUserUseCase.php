@@ -8,9 +8,9 @@ use App\Models\LegacyUser;
 
 class DeleteUserUseCase
 {
-    public function execute(string $hashId): void
+    public function execute(string $publicId): void
     {
-        LegacyUser::where('hash_id', $hashId)->firstOrFail()->deleteOrFail();
+        LegacyUser::where('hash_id', $publicId)->firstOrFail()->deleteOrFail();
 
         // TODO functionality from legacy model User->deleteUser, including but not limited to:
         // - remove user's delegations
