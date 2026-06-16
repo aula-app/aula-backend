@@ -187,6 +187,18 @@ class CrudUserTest extends TestCase
             ->assertMethodNotAllowed();
     }
 
+    public function test_bad_show()
+    {
+        // unfortunately we can't easily distinguish between "invalid route param" and "valid, but not found"
+        // (= whether the ShowUserUseCase even executes)
+        $this->getJson('/api/v2/users/1', [])
+            ->assertNotFound();
+        $this->getJson('/api/v2/users/foo', [])
+            ->assertNotFound();
+        $this->getJson('/api/v2/users/12345678-1234-1234-1234-1234567890ab', [])
+            ->assertNotFound();
+    }
+
     public function test_bad_deletes()
     {
         $this->deleteJson('/api/v2/users/1000000', [])
