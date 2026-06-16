@@ -58,8 +58,8 @@ class UserDataTest extends TestCase
         $this->assertNotContains('sometimes', $rules['created_at']);
         $this->assertContains('missing', $rules['updated_at']);
         $this->assertNotContains('sometimes', $rules['updated_at']);
-        $this->assertContains('missing', $rules['hash_id']);
-        $this->assertNotContains('sometimes', $rules['hash_id']);
+        $this->assertContains('missing', $rules['public_id']);
+        $this->assertNotContains('sometimes', $rules['public_id']);
         $this->assertTrue(array_any(
             $rules['userlevel'],
             fn ($r) => $r instanceof \Illuminate\Validation\Rules\Enum
@@ -75,8 +75,8 @@ class UserDataTest extends TestCase
         $this->assertNotContains('sometimes', $rules['created_at']);
         $this->assertContains('missing', $rules['updated_at']);
         $this->assertNotContains('sometimes', $rules['updated_at']);
-        $this->assertContains('missing', $rules['hash_id']);
-        $this->assertNotContains('sometimes', $rules['hash_id']);
+        $this->assertContains('missing', $rules['public_id']);
+        $this->assertNotContains('sometimes', $rules['public_id']);
         $this->assertTrue(array_any(
             $rules['userlevel'],
             fn ($r) => $r instanceof \Illuminate\Validation\Rules\Enum

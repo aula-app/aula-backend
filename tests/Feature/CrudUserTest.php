@@ -49,9 +49,9 @@ class CrudUserTest extends TestCase
         $newUserDecoded = $result->decodeResponseJson();
         $this->assertIsString($newUserDecoded['created_at']);
         $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newUserDecoded['created_at']));
-        $newUserHashId = $newUserDecoded['hash_id'];
-        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserHashId);
-        return $newUserHashId;
+        $newUserPublicId = $newUserDecoded['public_id'];
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserPublicId);
+        return $newUserPublicId;
     }
 
     public function test_create_optional()
@@ -62,42 +62,42 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJson(self::USER_DATA_UPDATE);
-        $newUserHashId = $result->decodeResponseJson()['hash_id'];
-        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserHashId);
-        return $newUserHashId;
+        $newUserPublicId = $result->decodeResponseJson()['public_id'];
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserPublicId);
+        return $newUserPublicId;
     }
 
     #[Depends('test_create')]
-    public function test_show($newUserHashId)
+    public function test_show($newUserPublicId)
     {
-        $this->getJson('/api/v2/users/'.$newUserHashId)
+        $this->getJson('/api/v2/users/'.$newUserPublicId)
             ->assertOk()
             ->assertJsonMissingPath('id')
             ->assertJson(self::NEW_USER_DATA);
     }
 
     #[Depends('test_create_optional')]
-    public function test_show_optional($newUserHashId)
+    public function test_show_optional($newUserPublicId)
     {
-        $this->getJson('/api/v2/users/'.$newUserHashId)
+        $this->getJson('/api/v2/users/'.$newUserPublicId)
             ->assertOk()
             ->assertJson([...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE]);
     }
 
     #[Depends('test_create')]
     #[Depends('test_create_optional')]
-    public function test_index($newUserHashId1, $newUserHashId2)
+    public function test_index($newUserPublicId1, $newUserPublicId2)
     {
         $allUsers = $this->getJson('/api/v2/users/')
             ->assertOk()->json();
 
-        $allUserHashIds = array_column($allUsers, 'hash_id');
-        $this->assertContains($newUserHashId1, $allUserHashIds);
-        $this->assertContains($newUserHashId2, $allUserHashIds);
+        $allUserPublicIds = array_column($allUsers, 'public_id');
+        $this->assertContains($newUserPublicId1, $allUserPublicIds);
+        $this->assertContains($newUserPublicId2, $allUserPublicIds);
     }
 
     #[Depends('test_create')]
-    public function test_update($newUserHashId)
+    public function test_update($newUserPublicId)
     {
         $changedUserData = [
             ...self::NEW_USER_DATA,
@@ -106,7 +106,7 @@ class CrudUserTest extends TestCase
         ];
 
         $result = $this->putJson(
-            '/api/v2/users/'.$newUserHashId,
+            '/api/v2/users/'.$newUserPublicId,
             $changedUserData,
         )
             ->assertOk()
@@ -120,10 +120,10 @@ class CrudUserTest extends TestCase
     }
 
     #[Depends('test_create')]
-    public function test_update_required($newUserHashId)
+    public function test_update_required($newUserPublicId)
     {
         $result = $this->putJson(
-            '/api/v2/users/'.$newUserHashId,
+            '/api/v2/users/'.$newUserPublicId,
             self::NEW_USER_DATA
         );
         $result
@@ -132,7 +132,7 @@ class CrudUserTest extends TestCase
     }
 
     #[Depends('test_create')]
-    public function test_update_validation($newUserHashId)
+    public function test_update_validation($newUserPublicId)
     {
         $changedUserData = [
             ...self::NEW_USER_DATA,
@@ -141,7 +141,7 @@ class CrudUserTest extends TestCase
             ...['userlevel' => 1000],
         ];
         $this->putJson(
-            '/api/v2/users/'.$newUserHashId,
+            '/api/v2/users/'.$newUserPublicId,
             $changedUserData,
         )
             ->assertInvalid(['email', 'userlevel'])
@@ -150,11 +150,11 @@ class CrudUserTest extends TestCase
 
     #[Depends('test_create')]
     #[Depends('test_create_optional')]
-    public function test_delete($newUserHashId1, $newUserHashId2)
+    public function test_delete($newUserPublicId1, $newUserPublicId2)
     {
-        $this->deleteJson('/api/v2/users/'.$newUserHashId1, [])
+        $this->deleteJson('/api/v2/users/'.$newUserPublicId1, [])
             ->assertOk();
-        $this->deleteJson('/api/v2/users/'.$newUserHashId2, [])
+        $this->deleteJson('/api/v2/users/'.$newUserPublicId2, [])
             ->assertOk();
     }
 
@@ -164,9 +164,9 @@ class CrudUserTest extends TestCase
             ['created_at' => '2001-01-23T12:34:56Z'],
             ['created_at' => 'nondate'],
             ['created_at' => ''],
-            // created, last_update, hash_id musst be *missing* from request
-            ['hash_id' => ''],
-            ['hash_id' => null],
+            // created, last_update, public_id musst be *missing* from request
+            ['public_id' => ''],
+            ['public_id' => null],
             ['updated_at' => ''],
             ['username' => null],
             ['username' => ''],
@@ -184,10 +184,10 @@ class CrudUserTest extends TestCase
     }
 
     #[Depends('test_create')]
-    public function test_patch_disallowed($newUserHashId)
+    public function test_patch_disallowed($newUserPublicId)
     {
         // need an existing user, PATCH to /api/v2/users/foo will 404 before 405ing
-        $this->patchJson('/api/v2/users/'.$newUserHashId, [])
+        $this->patchJson('/api/v2/users/'.$newUserPublicId, [])
             ->assertMethodNotAllowed();
     }
 

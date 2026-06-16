@@ -20,8 +20,11 @@ class UserModelData extends UserData
     // need to repeat abstract, including types, but types can be a subset
     // (see also NonInvariantPropertyType in psalm.xml)
     // all abstracts non-Optional in Model
-    #[MapName('hash_id')]
-    public readonly string $hashId;
+
+    // different Input vs Ouput, see `created` below
+    #[MapInputName('hash_id')]
+    #[MapOutputName('public_id')]
+    public readonly string $publicId;
 
     // N.b. true nullable (not only to signal optional)
     public readonly string|null $email;

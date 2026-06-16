@@ -8,10 +8,7 @@ use DateTimeImmutable;
 
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Attributes\MapName;
-use Spatie\LaravelData\Attributes\MapInputName;
-use Spatie\LaravelData\Attributes\MapOutputName;
 use Spatie\LaravelData\Attributes\Validation\Max;
-use Spatie\LaravelData\Attributes\Validation\Rule;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
@@ -24,7 +21,7 @@ abstract class UserData extends Data
       - we don't use Optional as it brings unnecessary complexity (e.g. it "infects" validation rules with a hard-to-shake `sometimes`, which overrides `required`)
       - instead we use nullable (which is not inferred as `sometimes`)
     */
-    abstract public string|null $hashId { get; }
+    abstract public string|null $publicId { get; }
 
     abstract public UserLevel|null $userLevel { get; }
 
@@ -38,20 +35,17 @@ abstract class UserData extends Data
     abstract public DateTimeImmutable|null $updatedAt { get; }
 
     public function __construct(
-        string|null $hashId,
+        string|null $publicId,
 
-        #[MapInputName('displayname')]
-        #[MapOutputName('displayname')]
+        #[MapName('displayname')]
         #[Max(400)]
         readonly public string $displayName,
 
-        #[MapInputName('username')]
-        #[MapOutputName('username')]
+        #[MapName('username')]
         #[Max(400)]
         readonly public string $userName,
 
-        #[MapInputName('realname')]
-        #[MapOutputName('realname')]
+        #[MapName('realname')]
         #[Max(400)]
         readonly public string $realName,
 
@@ -69,7 +63,7 @@ abstract class UserData extends Data
         DateTimeImmutable|null $updatedAt,
     ) {
         // abstract are unpromotable, need to be set up sans sugar
-        $this->hashId = $hashId;
+        $this->publicId = $publicId;
         $this->email = $email;
         $this->userLevel = $userLevel;
         $this->aboutMe = $aboutMe;

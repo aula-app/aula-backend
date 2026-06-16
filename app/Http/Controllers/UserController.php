@@ -34,10 +34,10 @@ class UserController extends Controller
         return $this->listUsersUseCase->execute();
     }
 
-    // TODO? hash_id is nullable in DB
-    public function show(string $hashId): UserModelData
+    // TODO? public_id is nullable in DB
+    public function show(string $publicId): UserModelData
     {
-        return $this->showUserUseCase->execute($hashId);
+        return $this->showUserUseCase->execute($publicId);
     }
 
     public function store(UserStoreData $userStoreData): UserModelData
@@ -45,13 +45,13 @@ class UserController extends Controller
         return $this->createUserUseCase->execute($userStoreData);
     }
 
-    public function update(string $hashId, UserUpdateData $userUpdateData): UserModelData
+    public function update(string $publicId, UserUpdateData $userUpdateData): UserModelData
     {
-        return $this->updateUserUseCase->execute($hashId, $userUpdateData);
+        return $this->updateUserUseCase->execute($publicId, $userUpdateData);
     }
 
-    public function destroy(string $hashId): void
+    public function destroy(string $publicId): void
     {
-        $this->deleteUserUseCase->execute($hashId);
+        $this->deleteUserUseCase->execute($publicId);
     }
 }
