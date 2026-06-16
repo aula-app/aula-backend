@@ -18,15 +18,12 @@ use App\Enums\UserStatus;
 
 abstract class UserData extends Data
 {
-    // can't use MapInput or validation Attributes with abstract properties; must declare in final child class
-    // can't specify abstract in constructor promotion
-    abstract public int|null $id {
-        // need hooked property for abstract; equals readonly
-        get;
-    }
-
-    // we don't use Optional as it brings unnecessary complexity (e.g. it "infects" validation rules with a hard-to-shake `sometimes`, which overrides `required`)
-    // instead we use nullable (which is not inferred as `sometimes`)
+    /*
+      - can't use MapInput or validation Attributes with abstract properties; must declare in final child class
+      - can't specify abstract in constructor promotion
+      - we don't use Optional as it brings unnecessary complexity (e.g. it "infects" validation rules with a hard-to-shake `sometimes`, which overrides `required`)
+      - instead we use nullable (which is not inferred as `sometimes`)
+    */
     abstract public string|null $hashId { get; }
 
     abstract public UserLevel|null $userLevel { get; }
@@ -41,8 +38,6 @@ abstract class UserData extends Data
     abstract public DateTimeImmutable|null $updatedAt { get; }
 
     public function __construct(
-        int|null $id,
-
         string|null $hashId,
 
         #[MapInputName('displayname')]
@@ -74,7 +69,6 @@ abstract class UserData extends Data
         DateTimeImmutable|null $updatedAt,
     ) {
         // abstract are unpromotable, need to be set up sans sugar
-        $this->id = $id;
         $this->hashId = $hashId;
         $this->email = $email;
         $this->userLevel = $userLevel;

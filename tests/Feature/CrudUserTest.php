@@ -44,6 +44,7 @@ class CrudUserTest extends TestCase
             self::NEW_USER_DATA,
         )
             ->assertCreated()
+            ->assertJsonMissingPath('id')
             ->assertJson(self::NEW_USER_DATA);
         $newUserDecoded = $result->decodeResponseJson();
         $this->assertIsString($newUserDecoded['created_at']);
@@ -71,6 +72,7 @@ class CrudUserTest extends TestCase
     {
         $this->getJson('/api/v2/users/'.$newUserHashId)
             ->assertOk()
+            ->assertJsonMissingPath('id')
             ->assertJson(self::NEW_USER_DATA);
     }
 
@@ -108,6 +110,7 @@ class CrudUserTest extends TestCase
             $changedUserData,
         )
             ->assertOk()
+            ->assertJsonMissingPath('id')
             ->assertJson($changedUserData);
         $updatedUserDecoded = $result->decodeResponseJson();
         $this->assertIsString($updatedUserDecoded['updated_at']);
@@ -161,8 +164,7 @@ class CrudUserTest extends TestCase
             ['created_at' => '2001-01-23T12:34:56Z'],
             ['created_at' => 'nondate'],
             ['created_at' => ''],
-            // created, last_update, id, hash_id musst be *missing* from request
-            ['id' => ''],
+            // created, last_update, hash_id musst be *missing* from request
             ['hash_id' => ''],
             ['hash_id' => null],
             ['updated_at' => ''],

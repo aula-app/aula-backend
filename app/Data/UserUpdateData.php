@@ -15,9 +15,6 @@ use Spatie\LaravelData\Attributes\Validation\Rule;
 class UserUpdateData extends UserData
 {
     #[Rule('missing')]
-    public readonly int|null $id;
-
-    #[Rule('missing')]
     #[MapInputName('hash_id')]
     public readonly string|null $hashId;
 

@@ -31,6 +31,7 @@ Caveats + notes:
           instead we rely on validation (e.g. to prevent (write) attempt to `UserStoreData->hash_id`)
         - this construct is slightly cumbersome. Other "cleaner" attempts (`protected`, child properties) did not pan out and led to substantially more code.
 - `UserModelData` serves as a domain model and for output (via response).
+    - properties can be removed from output (e.g. `id`) via (undocumented) `#[Spatie\LaravelData\Attributes\Hidden]`
 
 **Field name mapping**
 
