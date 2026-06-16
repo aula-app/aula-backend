@@ -4,26 +4,51 @@ namespace Tests\Feature;
 
 use App\Models\LegacyUser;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 use Tests\Concerns\CreatesTestTenant;
+use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
 
 class SsoControllerTest extends TestCase
 {
     use CreatesTestTenant;
+    use SignsIdTokens;
 
     private const INSTANCE_CODE = 'TEST001';
+    private const KEYCLOAK_BASE = 'https://sso.test.local';
+    private const KEYCLOAK_REALM = 'aula-test';
+    private const KEYCLOAK_CLIENT_ID = 'aula-backend-test';
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->ensureTestTenantExists();
         self::$testTenant->update([
-            'sso_enabled'      => true,
-            'sso_provider'     => 'mock-iserv',
-            'sso_force_logout' => false,
+            'sso_enabled'                 => true,
+            'sso_provider'                => 'mock-iserv',
+            'sso_force_logout'            => false,
+            'sso_require_email_verified'  => true,
+        ]);
+
+        config([
+            'services.keycloak.base_url'  => self::KEYCLOAK_BASE,
+            'services.keycloak.realms'    => self::KEYCLOAK_REALM,
+            'services.keycloak.client_id' => self::KEYCLOAK_CLIENT_ID,
+        ]);
+
+        // The callback's id_token verification fetches JWKS through the tenant-scoped
+        // cache, so the fake and the flush must run inside tenant context.
+        self::$testTenant->run(function () {
+            Cache::flush();
+        });
+        $this->fakeJwksEndpoint();
+        // Pre-register the broker stub so callbacks that reach the post-link save
+        // path do not make real HTTP calls; tests that care about this URL override.
+        Http::fake([
+            '*/broker/*/token' => Http::response(['id_token' => 'idp.token.test'], 200),
         ]);
     }
 
@@ -278,6 +303,70 @@ class SsoControllerTest extends TestCase
         });
     }
 
+    public function test_callback_allows_unverified_email_when_tenant_disables_requirement(): void
+    {
+        self::$testTenant->update(['sso_require_email_verified' => false]);
+
+        $idToken = $this->makeIdToken([
+            'sub'            => 'sub-unverified-allowed',
+            'email'          => 'sso_unverified_allowed@test.example',
+            'email_verified' => false,
+        ]);
+
+        $this->mockSocialiteCallback('sub-unverified-allowed', 'sso_unverified_allowed@test.example', 'Allowed', 'allowed', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('/oauth-login/', $response->headers->get('Location'));
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('sso_sub', 'sub-unverified-allowed')->first();
+            $this->assertNotNull($user);
+            $this->assertEquals('sso_unverified_allowed@test.example', $user->email);
+        });
+    }
+
+    public function test_callback_allows_missing_email_verified_claim_when_tenant_disables_requirement(): void
+    {
+        self::$testTenant->update(['sso_require_email_verified' => false]);
+
+        $idToken = $this->makeIdToken([
+            'sub'   => 'sub-missing-allowed',
+            'email' => 'sso_missing_allowed@test.example',
+        ]);
+
+        $this->mockSocialiteCallback('sub-missing-allowed', 'sso_missing_allowed@test.example', 'Missing Allowed', 'missingallowed', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('/oauth-login/', $response->headers->get('Location'));
+    }
+
+    public function test_callback_still_rejects_id_token_invalid_when_email_verified_requirement_is_disabled(): void
+    {
+        // Defense-in-depth check: relaxing the email_verified requirement must NOT
+        // also relax the cryptographic verification (sig + iss + aud + exp + azp).
+        self::$testTenant->update(['sso_require_email_verified' => false]);
+
+        $idToken = $this->makeIdToken([
+            'sub'   => 'sub-still-strict',
+            'email' => 'sso_strict@test.example',
+            'iss'   => 'https://impostor.example/realms/aula-test',
+        ]);
+
+        $this->mockSocialiteCallback('sub-still-strict', 'sso_strict@test.example', 'Strict', 'strict', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=id_token_invalid', $response->headers->get('Location'));
+    }
+
     public function test_callback_rejects_when_id_token_is_missing(): void
     {
         $socialiteUser = \Mockery::mock(\Laravel\Socialite\Two\User::class);
@@ -299,7 +388,7 @@ class SsoControllerTest extends TestCase
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
-        $this->assertStringContainsString('sso_error=email_not_verified', $response->headers->get('Location'));
+        $this->assertStringContainsString('sso_error=id_token_invalid', $response->headers->get('Location'));
     }
 
     public function test_callback_rejects_when_id_token_is_malformed(): void
@@ -310,7 +399,39 @@ class SsoControllerTest extends TestCase
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
-        $this->assertStringContainsString('sso_error=email_not_verified', $response->headers->get('Location'));
+        $this->assertStringContainsString('sso_error=id_token_invalid', $response->headers->get('Location'));
+    }
+
+    public function test_callback_rejects_when_id_token_signature_is_tampered(): void
+    {
+        $valid    = $this->makeIdToken(['sub' => 'sub-tampered', 'email' => 'sso_tampered@test.example']);
+        [$h, $p]  = explode('.', $valid);
+        $tampered = "{$h}.{$p}." . strtr(base64_encode('not-the-real-signature'), '+/', '-_');
+
+        $this->mockSocialiteCallback('sub-tampered', 'sso_tampered@test.example', 'Tampered', 'tampered', $tampered);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=id_token_invalid', $response->headers->get('Location'));
+    }
+
+    public function test_callback_rejects_when_id_token_issuer_is_unexpected(): void
+    {
+        $idToken = $this->makeIdToken([
+            'sub'   => 'sub-bad-iss',
+            'email' => 'sso_badiss@test.example',
+            'iss'   => 'https://impostor.example/realms/aula-test',
+        ]);
+
+        $this->mockSocialiteCallback('sub-bad-iss', 'sso_badiss@test.example', 'Bad Iss', 'badiss', $idToken);
+
+        $state    = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=id_token_invalid', $response->headers->get('Location'));
     }
 
     // =========================================================
@@ -608,18 +729,21 @@ class SsoControllerTest extends TestCase
         return $token;
     }
 
+    /**
+     * Build a properly signed id_token for the test JWKS. Defaults cover the
+     * crypto envelope (iss/aud/exp/azp) so the verifier accepts the token; the
+     * email_verified claim is deliberately NOT defaulted so tests that omit it
+     * exercise the controller's missing-claim rejection.
+     */
     private function makeIdToken(array $claims): string
     {
-        $header  = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-        $payload = $this->base64UrlEncode(json_encode($claims));
-        $sig     = $this->base64UrlEncode('signature-not-verified');
-
-        return "{$header}.{$payload}.{$sig}";
-    }
-
-    private function base64UrlEncode(string $data): string
-    {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+        return $this->signIdToken(array_merge([
+            'iss' => self::KEYCLOAK_BASE . '/realms/' . self::KEYCLOAK_REALM,
+            'aud' => self::KEYCLOAK_CLIENT_ID,
+            'azp' => self::KEYCLOAK_CLIENT_ID,
+            'iat' => time() - 30,
+            'exp' => time() + 600,
+        ], $claims));
     }
 
     private function jwtForUser(LegacyUser $user): string
