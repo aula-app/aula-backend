@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Services\LegacyJwtService;
 use Mockery;
@@ -42,7 +43,7 @@ class LegacyJwtServiceTest extends TestCase
         $user->email = $attributes['email'] ?? 'test@example.com';
         $user->userlevel = $attributes['userlevel'] ?? UserLevel::User;
         $user->roles = $attributes['roles'] ?? json_encode([['room' => 'room1', 'role' => 20]]);
-        $user->status = $attributes['status'] ?? LegacyUser::STATUS_ACTIVE;
+        $user->status = $attributes['status'] ?? UserStatus::Active->value;
         $user->temp_pw = $attributes['temp_pw'] ?? null;
 
         return $user;

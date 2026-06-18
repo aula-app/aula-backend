@@ -1,5 +1,8 @@
 <?php
 
+// TODO: does this do anything? what is the state of config/auth.php?
+//   see also routes/tenant, aula. .. middlewares api + auth:api
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;

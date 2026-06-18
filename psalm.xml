@@ -35,5 +35,18 @@
     <RedundantCast errorLevel="info"/>
     <RedundantCondition errorLevel="info"/>
     <UnnecessaryVarAnnotation errorLevel="suppress"/>
+    <!-- We use "variant" property types in UserData inheritance
+      to enforce certain children to un-optional some properties.
+      https://psalm.dev/265 says this is bad because
+      "for typed properties, this can cause a compile error".
+      But it doesn't, as long as the child's properties are a subset
+      of the (abstract) parent's.
+      Ideally psalm will learn about this at some point,
+      we downgrade it to info.
+      TODO: move to baseline, scope to files, document as semi-permanent?
+        (Alternatively, use copious line-level suppresses.)
+      -->
+    <NonInvariantPropertyType errorLevel="info"/>
+    <NonInvariantDocblockPropertyType errorLevel="info"/>
   </issueHandlers>
 </psalm>
