@@ -14,7 +14,8 @@ class LegacyLoginController extends Controller
 {
     public function __construct(
         protected LegacyJwtService $jwtService
-    ) {}
+    ) {
+    }
 
     /**
      * Handle a login request.

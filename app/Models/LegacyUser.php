@@ -42,20 +42,12 @@ class LegacyUser extends Model implements Authenticatable
     protected $casts = [
         'id' => 'integer',
         'userlevel' => UserLevel::class,
-        'status' => 'integer',
+        'status' => UserStatus::class,
         'refresh_token' => 'boolean',
         'created' => 'datetime',
         'last_update' => 'datetime',
         'last_login' => 'datetime',
     ];
-
-    /**
-     * User status constants
-     */
-    public const STATUS_INACTIVE = 0;
-    public const STATUS_ACTIVE = 1;
-    public const STATUS_SUSPENDED = 2;
-    public const STATUS_ARCHIVED = 3;
 
     /**
      * Build an unsaved user from SSO claims. Caller is responsible for ->save().
@@ -79,8 +71,8 @@ class LegacyUser extends Model implements Authenticatable
         $user->username     = $username;
         $user->displayname  = $socialiteUser->getName() ?? $username;
         $user->hash_id      = md5($username . (string) microtime(true) . rand(100, 10000000));
-        $user->userlevel    = 20;
-        $user->status       = self::STATUS_ACTIVE;
+        $user->userlevel    = UserLevel::User;
+        $user->status       = UserStatus::Active;
 
         return $user;
     }
@@ -90,7 +82,7 @@ class LegacyUser extends Model implements Authenticatable
      */
     public function isActive(): bool
     {
-        return $this->status === UserStatus::Active->value;
+        return $this->status === UserStatus::Active;
     }
 
     /**

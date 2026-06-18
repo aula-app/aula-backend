@@ -79,16 +79,16 @@ class LegacyAuthTest extends TestCase
     {
         $user = new LegacyUser();
 
-        $user->status = UserStatus::Active->value;
+        $user->status = UserStatus::Active;
         $this->assertTrue($user->isActive());
 
-        $user->status = UserStatus::Inactive->value;
+        $user->status = UserStatus::Inactive;
         $this->assertFalse($user->isActive());
 
-        $user->status = UserStatus::Suspended->value;
+        $user->status = UserStatus::Suspended;
         $this->assertFalse($user->isActive());
 
-        $user->status = UserStatus::Archived->value;
+        $user->status = UserStatus::Archived;
         $this->assertFalse($user->isActive());
     }
 
@@ -136,7 +136,7 @@ class LegacyAuthTest extends TestCase
             $user = new LegacyUser();
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash($password, PASSWORD_DEFAULT);
-            $user->status = UserStatus::Active->value;
+            $user->status = UserStatus::Active;
             $user->hash_id = 'phpunit_hash_' . uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
@@ -179,7 +179,7 @@ class LegacyAuthTest extends TestCase
             $user = new LegacyUser();
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash('correctpass', PASSWORD_DEFAULT);
-            $user->status = UserStatus::Active->value;
+            $user->status = UserStatus::Active;
             $user->hash_id = 'phpunit_hash_' . uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
@@ -229,7 +229,7 @@ class LegacyAuthTest extends TestCase
             $user = new LegacyUser();
             $user->username = 'phpunit_inactive';
             $user->pw = password_hash('testpass', PASSWORD_DEFAULT);
-            $user->status = UserStatus::Suspended->value;
+            $user->status = UserStatus::Suspended;
             $user->hash_id = 'phpunit_hash_' . uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);

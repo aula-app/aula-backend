@@ -246,7 +246,7 @@ class SsoControllerTest extends TestCase
     public function test_callback_inactive_user_redirects_to_account_inactive_error(): void
     {
         self::$testTenant->run(function () {
-            $this->createUser('sso_inactive@test.example', 'sub-inactive-001', LegacyUser::STATUS_SUSPENDED);
+            $this->createUser('sso_inactive@test.example', 'sub-inactive-001', UserStatus::Inactive);
         });
 
         Http::fake(['*/broker/*/token' => Http::response([], 200)]);
@@ -622,7 +622,7 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => false]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_logout@test.example', 'sub-logout-001', LegacyUser::STATUS_ACTIVE, ['sso_id_token' => 'idtoken']));
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_logout@test.example', 'sub-logout-001', UserStatus::Active, ['sso_id_token' => 'idtoken']));
 
         $jwt = $this->jwtForUser($user);
 
@@ -638,7 +638,7 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => true]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', LegacyUser::STATUS_ACTIVE, [
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', UserStatus::Active, [
             'sso_id_token'      => 'aula-id-token',
             'sso_refresh_token' => 'refresh-token',
             'sso_idp_id_token'  => null,
