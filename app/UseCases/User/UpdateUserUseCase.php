@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\UseCases\User;
 
-use App\Data\UserModelData;
-use App\Data\UserUpdateData;
+use App\Data\User\DomainUserData;
+use App\Data\User\Requests\UpdateUserData;
 use App\Models\LegacyUser;
 
 class UpdateUserUseCase
 {
-    public function execute(string $hashId, UserUpdateData $userUpdateData): UserModelData
+    public function execute(string $hashId, UpdateUserData $userUpdateData): DomainUserData
     {
         /* TODO: DB::transaction */
         $legacyUser = LegacyUser::where('hash_id', $hashId)->firstOrFail();
@@ -25,6 +25,6 @@ class UpdateUserUseCase
         /* / DB::transaction */
         // for unmanaged last_update/updatedAt timestamp
         $legacyUser->refresh();
-        return UserModelData::from($legacyUser);
+        return DomainUserData::from($legacyUser);
     }
 }

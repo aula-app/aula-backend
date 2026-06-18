@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Data;
+namespace App\Data\User;
 
 use DateTimeImmutable;
-
-use App\Data\UserData;
+use App\Data\User\AbstractUserData;
 use App\Enums\UserLevel;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\MapOutputName;
 
-class UserModelData extends UserData
+class DomainUserData extends AbstractUserData
 {
     // note: use (undocumented) #[Spatie\LaravelData\Attributes\Hidden] to remove properties from API output
     // this seems easier and cleaner than ::from($legacyUser)->except or Lazy
@@ -21,7 +20,7 @@ class UserModelData extends UserData
     // (see also NonInvariantPropertyType in psalm.xml)
     // all abstracts non-Optional in Model
 
-    // different Input vs Ouput, see `created` below
+    // different Input vs Output, see `created` below
     #[MapInputName('hash_id')]
     #[MapOutputName('public_id')]
     public readonly string $publicId;
@@ -48,4 +47,3 @@ class UserModelData extends UserData
     // unlike created, this can still be null (at creation)
     public readonly DateTimeImmutable|null $updatedAt;
 }
-

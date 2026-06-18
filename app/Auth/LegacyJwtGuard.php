@@ -16,7 +16,8 @@ class LegacyJwtGuard implements Guard
     public function __construct(
         protected LegacyJwtService $jwtService,
         protected Request $request
-    ) {}
+    ) {
+    }
 
     /**
      * Determine if the current user is authenticated.

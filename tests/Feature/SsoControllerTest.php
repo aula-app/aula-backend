@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
@@ -151,7 +153,7 @@ class SsoControllerTest extends TestCase
             $this->assertNotNull($user);
             $this->assertEquals('sso_new@test.example', $user->email);
             $this->assertEquals('mock-iserv', $user->sso_provider);
-            $this->assertEquals(20, $user->userlevel);
+            $this->assertEquals(UserLevel::User, $user->userlevel);
         });
     }
 
@@ -183,7 +185,7 @@ class SsoControllerTest extends TestCase
     public function test_callback_with_email_match_to_inactive_user_rejects_account_inactive_not_link(): void
     {
         self::$testTenant->run(function () {
-            $this->createUser('sso_inactive_email@test.example', null, LegacyUser::STATUS_SUSPENDED);
+            $this->createUser('sso_inactive_email@test.example', null, UserStatus::Suspended);
         });
 
         $this->mockSocialiteCallback('sub-inactive-email-001', 'sso_inactive_email@test.example', 'Inactive', 'inactive');
@@ -664,7 +666,7 @@ class SsoControllerTest extends TestCase
     // Helpers
     // =========================================================
 
-    private function createUser(string $email, ?string $sub, int $status = LegacyUser::STATUS_ACTIVE, array $extra = []): LegacyUser
+    private function createUser(string $email, ?string $sub, UserStatus $status = UserStatus::Active, array $extra = []): LegacyUser
     {
         $user = new LegacyUser();
         $user->email      = $email;

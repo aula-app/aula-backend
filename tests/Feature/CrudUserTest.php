@@ -160,7 +160,7 @@ class CrudUserTest extends TestCase
 
     public function test_create_validation()
     {
-        foreach([
+        foreach ([
             ['created_at' => '2001-01-23T12:34:56Z'],
             ['created_at' => 'nondate'],
             ['created_at' => ''],

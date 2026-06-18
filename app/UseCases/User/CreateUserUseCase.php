@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace App\UseCases\User;
 
-use Str;
-
-use App\Data\UserModelData;
-use App\Data\UserStoreData;
-use Spatie\LaravelData\Optional;
+use App\Data\User\DomainUserData;
+use App\Data\User\Requests\StoreUserData;
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
+use Illuminate\Support\Str;
 
 class CreateUserUseCase
 {
-    public function execute(UserStoreData $userStoreData): UserModelData
+    public function execute(StoreUserData $userStoreData): DomainUserData
     {
         $legacyUser = new LegacyUser();
         $legacyUser->hash_id = Str::random(32);
@@ -39,7 +37,7 @@ class CreateUserUseCase
         $legacyUser->save();
         // for unmanaged createdAt/created timestamp
         $legacyUser->refresh();
-        return UserModelData::from($legacyUser);
+        return DomainUserData::from($legacyUser);
     }
 
     // rooms, users, rel_rooms_users

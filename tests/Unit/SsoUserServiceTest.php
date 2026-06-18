@@ -18,7 +18,7 @@ class SsoUserServiceTest extends TestCase
     {
         parent::setUp();
         $this->ensureTestTenantExists();
-        $this->service = new SsoUserService;
+        $this->service = new SsoUserService();
     }
 
     protected function tearDown(): void
@@ -113,6 +113,7 @@ class SsoUserServiceTest extends TestCase
     // addToStandardRoom
     // =========================================================
 
+    // @FIXME: we shouldn't have conditional tests - ensure std. room exists for this test case
     public function test_add_to_standard_room_inserts_membership_when_standard_room_exists(): void
     {
         self::$testTenant->run(function () {
@@ -145,7 +146,7 @@ class SsoUserServiceTest extends TestCase
 
     private function makeUser(string $email, ?string $sub): LegacyUser
     {
-        $user              = new LegacyUser;
+        $user              = new LegacyUser();
         $user->email       = $email;
         $user->sso_sub     = $sub;
         $user->status      = LegacyUser::STATUS_ACTIVE;

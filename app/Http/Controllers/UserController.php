@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Data\User\DomainUserData;
+use App\Data\User\Requests\StoreUserData;
+use App\Data\User\Requests\UpdateUserData;
 use App\UseCases\User\CreateUserUseCase;
 use App\UseCases\User\DeleteUserUseCase;
 use App\UseCases\User\ListUsersUseCase;
 use App\UseCases\User\ShowUserUseCase;
 use App\UseCases\User\UpdateUserUseCase;
 use Spatie\LaravelData\DataCollection;
-
-use App\Data\UserModelData;
-use App\Data\UserStoreData;
-use App\Data\UserUpdateData;
 
 class UserController extends Controller
 {
@@ -23,7 +22,8 @@ class UserController extends Controller
         protected ListUsersUseCase $listUsersUseCase,
         protected UpdateUserUseCase $updateUserUseCase,
         protected DeleteUserUseCase $deleteUserUseCase,
-    ) {}
+    ) {
+    }
 
     public function index(): DataCollection
     {
@@ -35,17 +35,17 @@ class UserController extends Controller
     }
 
     // TODO? public_id is nullable in DB
-    public function show(string $publicId): UserModelData
+    public function show(string $publicId): DomainUserData
     {
         return $this->showUserUseCase->execute($publicId);
     }
 
-    public function store(UserStoreData $userStoreData): UserModelData
+    public function store(StoreUserData $userStoreData): DomainUserData
     {
         return $this->createUserUseCase->execute($userStoreData);
     }
 
-    public function update(string $publicId, UserUpdateData $userUpdateData): UserModelData
+    public function update(string $publicId, UpdateUserData $userUpdateData): DomainUserData
     {
         return $this->updateUserUseCase->execute($publicId, $userUpdateData);
     }
