@@ -1135,6 +1135,7 @@ CREATE TABLE `au_topics` (
   `updater_id` int(11) DEFAULT 0 COMMENT 'id of the user that does the update',
   `room_id` int(11) DEFAULT 0 COMMENT 'id of the room the topic is in',
   `phase_id` int(11) DEFAULT 1 COMMENT 'Number of phase the topic is in (0=wild idea 1=work 2=approval 3=voting 4=implemenation',
+  `phase_start` datetime DEFAULT NULL COMMENT 'Timestamp when the current phase (phase_id) started; resets the phase countdown',
   `wild_ideas_enabled` int(11) DEFAULT 1 COMMENT '1=enabled 0=disabled',
   `publishing_date` datetime DEFAULT NULL COMMENT 'Date, when the topic is active (Phases start working)',
   `phase_duration_0` int(11) DEFAULT 0 COMMENT 'Duration of phase 0',
