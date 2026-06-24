@@ -177,7 +177,7 @@ class SsoIdpInitiatedTest extends TestCase
                 'access_token' => 'ep-test-token',
                 'expires_in'   => 3600,
             ], 200),
-            self::EDUPLACES_API.'/schools' => Http::response([], 200),
+            self::EDUPLACES_API.'/idm/ep/v1/schools' => Http::response([], 200),
         ]);
         $this->fakeBrokerIdpToken(self::EDUPLACES_SUB);
         $this->mockSocialiteCallback('keycloak-sub-noschool', 'idp_noschool@test.example', 'N', 'n');
@@ -267,11 +267,11 @@ class SsoIdpInitiatedTest extends TestCase
                 'access_token' => 'ep-test-token',
                 'expires_in'   => 3600,
             ], 200),
-            self::EDUPLACES_API.'/schools' => Http::response([
+            self::EDUPLACES_API.'/idm/ep/v1/schools' => Http::response([
                 ['id' => $schoolId, 'name' => 'Test School'],
             ], 200),
-            self::EDUPLACES_API.'/schools/'.$schoolId.'/users' => Http::response([
-                ['id' => $sub, 'status' => 'ACTIVE', 'role' => 'TEACHER'],
+            self::EDUPLACES_API.'/idm/ep/v1/schools/'.$schoolId.'/users' => Http::response([
+                ['id' => $sub, 'status' => 'ACTIVE', 'role' => 'LEHR'],
             ], 200),
         ]);
     }

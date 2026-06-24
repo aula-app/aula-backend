@@ -21,6 +21,13 @@ class EduplacesClient
     private const USERS_READ_SCOPE = 'urn:eduplaces:idm:v1:users:read';
 
     /**
+     * IDM endpoints live under this prefix (e.g. /idm/ep/v1/schools).
+     * The OAuth scope URN uses :v1: but the URL prefix uses /ep/v1 — they
+     * are not the same versioning.
+     */
+    private const IDM_PREFIX = '/idm/ep/v1';
+
+    /**
      * Resolve the Eduplaces school UUID that the given user (sub) belongs to.
      *
      * Strategy: iterate the schools that have sync enabled for this app and
@@ -111,7 +118,7 @@ class EduplacesClient
      */
     protected function listSchoolIds(string $token): iterable
     {
-        $response = $this->idmGet($token, '/schools');
+        $response = $this->idmGet($token, self::IDM_PREFIX.'/schools');
 
         $payload = $response->json();
         $entries = is_array($payload) ? ($payload['data'] ?? $payload) : [];
@@ -129,7 +136,7 @@ class EduplacesClient
 
     protected function schoolContainsSub(string $token, string $schoolId, string $sub): bool
     {
-        $response = $this->idmGet($token, "/schools/{$schoolId}/users");
+        $response = $this->idmGet($token, self::IDM_PREFIX."/schools/{$schoolId}/users");
 
         if ($response->status() === 404) {
             return false;
