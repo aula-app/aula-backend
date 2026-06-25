@@ -264,7 +264,7 @@ class SsoController extends Controller
 
         $token = $this->jwtService->generateToken($user);
 
-        return $this->frontendRedirect($token);
+        return $this->frontendRedirect($token, $callbackTenant->instance_code);
     }
 
     /**
@@ -569,11 +569,17 @@ class SsoController extends Controller
         ]);
     }
 
-    protected function frontendRedirect(string $token): RedirectResponse
+    protected function frontendRedirect(string $token, ?string $instanceCode = null): RedirectResponse
     {
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
-
-        return redirect("{$frontendUrl}/oauth-login/{$token}");
+        $url = "{$frontendUrl}/oauth-login/{$token}";
+        if ($instanceCode !== null && $instanceCode !== '') {
+            // Carry the resolved tenant back to the frontend so the OAuth
+            // landing page can populate localStorage for IdP-initiated
+            // launches that started without any instance context.
+            $url .= '?'.http_build_query(['code' => $instanceCode]);
+        }
+        return redirect($url);
     }
 
     protected function frontendError(string $code, array $extra = []): RedirectResponse
