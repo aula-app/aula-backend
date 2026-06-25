@@ -23,6 +23,14 @@ class SsoController extends Controller
 {
     private const int LINK_INTENT_TTL_MINUTES = 10;
 
+    /**
+     * Sentinel value in the signed state that marks the callback as an
+     * IdP-initiated launch from Eduplaces. The callback resolves the tenant
+     * from the upstream id_token's `school` claim instead of from an
+     * instance_code carried in the state.
+     */
+    private const string IDP_INITIATED_EDUPLACES = '__IDP_INITIATED_EDUPLACES__';
+
     public function __construct(
         protected LegacyJwtService $jwtService,
         protected SsoUserService $ssoUserService,
@@ -78,31 +86,46 @@ class SsoController extends Controller
      * Handle an IdP-initiated SSO launch (OIDC third-party initiated login).
      *
      * Eduplaces' marketplace launcher hits this endpoint with `iss` and
-     * (optionally) `login_hint`. There is no instance_code in the spec, so
-     * we cannot identify the tenant server-side. Instead we bounce the
-     * browser to the frontend, which collects the instance code from the
-     * user (or recalls it from a prior session) and then re-enters the
-     * regular tenant-scoped `/sso/initiate` flow with the `login_hint`
-     * preserved.
+     * (optionally) `login_hint`. The spec does not carry a tenant identifier,
+     * but Eduplaces emits a `school` claim in the upstream id_token. We use
+     * a sentinel state value to mark the callback as IdP-initiated; the
+     * callback then resolves the aula tenant by mapping `school` →
+     * `tenants.eduplaces_school_id`.
      */
     public function idpInitiated(Request $request): RedirectResponse|JsonResponse
     {
         $iss = (string) $request->query('iss', '');
-
         $allowedIssuers = (array) config('services.eduplaces.allowed_issuers', []);
 
         if ($iss === '' || ! in_array($iss, $allowedIssuers, true)) {
             return response()->json(['error' => 'invalid_issuer'], 400);
         }
 
-        $params = ['via' => 'eduplaces'];
+        $idpAlias = (string) config('services.eduplaces.idp_alias', 'eduplaces');
+        if ($idpAlias === '') {
+            return response()->json(['error' => 'idp_alias_missing'], 500);
+        }
+
+        $state = $this->buildSignedState(self::IDP_INITIATED_EDUPLACES);
+
+        $params = [
+            'state'       => $state,
+            'kc_idp_hint' => $idpAlias,
+        ];
         if (($loginHint = (string) $request->query('login_hint', '')) !== '') {
             $params['login_hint'] = $loginHint;
         }
 
-        $frontendUrl = rtrim((string) config('app.frontend_url', '/'), '/');
+        /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+        $driver = Socialite::driver('keycloak');
 
-        return redirect()->away("{$frontendUrl}/login?".http_build_query($params));
+        $url = $driver
+            ->stateless()
+            ->with($params)
+            ->redirect()
+            ->getTargetUrl();
+
+        return redirect()->away($url);
     }
 
     /**
@@ -121,18 +144,38 @@ class SsoController extends Controller
             return $this->frontendError('invalid_state');
         }
 
-        $tenant = Tenant::where('instance_code', $instanceCode)->first();
+        $idpInitiated = $instanceCode === self::IDP_INITIATED_EDUPLACES;
 
-        if ($tenant === null) {
-            return $this->frontendError('unknown_tenant');
+        // For the tenant-scoped flow, fail fast before doing the OAuth
+        // round-trip if the tenant is unknown. The IdP-initiated branch
+        // cannot fail this early because it needs the upstream id_token
+        // (and therefore the OAuth completion) to know which tenant to
+        // resolve.
+        if (! $idpInitiated) {
+            $tenant = Tenant::where('instance_code', $instanceCode)->first();
+
+            if ($tenant === null) {
+                return $this->frontendError('unknown_tenant');
+            }
         }
-
-        tenancy()->initialize($tenant);
 
         /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
         $driver = Socialite::driver('keycloak');
         /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
         $socialiteUser = $driver->stateless()->user();
+
+        if ($idpInitiated) {
+            $resolveResult = $this->resolveTenantFromEduplacesClaim($socialiteUser);
+
+            if ($resolveResult instanceof RedirectResponse) {
+                return $resolveResult;
+            }
+
+            $tenant = $resolveResult;
+            $instanceCode = $tenant->instance_code;
+        }
+
+        tenancy()->initialize($tenant);
 
         $idToken = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
 
@@ -361,6 +404,48 @@ class SsoController extends Controller
         $data = json_decode(base64_decode($payload), true);
 
         return $data['instance_code'] ?? null;
+    }
+
+    /**
+     * Resolve the aula tenant for an IdP-initiated Eduplaces login by reading
+     * the `school` claim from the upstream id_token. Tenants are mapped to
+     * Eduplaces schools by the `eduplaces_school_id` column.
+     *
+     * @return Tenant|RedirectResponse Tenant on success; a RedirectResponse with a
+     *                                  frontend error code on failure.
+     */
+    protected function resolveTenantFromEduplacesClaim(\Laravel\Socialite\Two\User $socialiteUser): Tenant|RedirectResponse
+    {
+        $idpAlias = (string) config('services.eduplaces.idp_alias', 'eduplaces');
+
+        $idpIdToken = $this->fetchIdpIdToken($socialiteUser->token, $idpAlias);
+        $payload    = $this->decodeIdTokenPayload($idpIdToken);
+        $schoolId   = is_array($payload) ? ($payload['school'] ?? null) : null;
+
+        if (! is_string($schoolId) || $schoolId === '') {
+            Log::warning('SSO: IdP-initiated Eduplaces login has no school claim', [
+                'keycloak_sub' => $socialiteUser->getId(),
+                'claim_keys'   => is_array($payload) ? array_keys($payload) : null,
+            ]);
+
+            return $this->frontendError('eduplaces_school_missing');
+        }
+
+        $tenant = Tenant::where('eduplaces_school_id', $schoolId)->first();
+
+        if ($tenant === null) {
+            Log::warning('SSO: no aula tenant matches Eduplaces school', [
+                'eduplaces_school_id' => $schoolId,
+            ]);
+
+            return $this->frontendError('school_not_provisioned');
+        }
+
+        if (! $tenant->sso_enabled) {
+            return $this->frontendError('sso_disabled');
+        }
+
+        return $tenant;
     }
 
     protected function stateSecret(): string
