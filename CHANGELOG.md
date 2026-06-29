@@ -3,6 +3,9 @@
 
 # v2
 
+## v2.2.1
+ - fix: add information to database when a phase starts
+
 ## v2.2.0
 
 - feat: add SSO login via Keycloak
