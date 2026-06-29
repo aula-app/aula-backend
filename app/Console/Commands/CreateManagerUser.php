@@ -27,12 +27,11 @@ class CreateManagerUser extends Command
             if ($email === null || empty($email)) {
                 continue;
             }
-            if (AulaManagerUser::firstWhere('email', $email) !== null) {
-                $this->warn('A user with that email already exists.');
-                $email = null;
-            }
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $this->warn('Email should be valid.');
+                $email = null;
+            } elseif (AulaManagerUser::firstWhere('email', $email) !== null) {
+                $this->warn('A user with that email already exists.');
                 $email = null;
             }
         } while (empty($email));
