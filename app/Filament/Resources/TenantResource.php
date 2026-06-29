@@ -115,8 +115,11 @@ class TenantResource extends Resource
                         ->reactive()
                         ->afterStateUpdated(function (?string $state, callable $set, Get $get): void {
                             if ($get('admin1_username_manual') === false || empty($get('admin1_username'))) {
-                                $set('admin1_username', TenantResource::deriveUsernameFromEmail($state, $get('admin1_username')));
-                                $set('admin1_username_manual', false);
+                                $derived = TenantResource::deriveUsernameFromEmail($state);
+                                if ($derived !== '') {
+                                    $set('admin1_username', $derived);
+                                    $set('admin1_username_manual', false);
+                                }
                             }
                         })
                         ->maxLength(255),
@@ -151,8 +154,11 @@ class TenantResource extends Resource
                         ->reactive()
                         ->afterStateUpdated(function (?string $state, callable $set, Get $get): void {
                             if ($get('admin2_username_manual') === false || empty($get('admin2_username'))) {
-                                $set('admin2_username', TenantResource::deriveUsernameFromEmail($state, $get('admin2_username')));
-                                $set('admin2_username_manual', false);
+                                $derived = TenantResource::deriveUsernameFromEmail($state);
+                                if ($derived !== '') {
+                                    $set('admin2_username', $derived);
+                                    $set('admin2_username_manual', false);
+                                }
                             }
                         })
                         ->maxLength(255),
@@ -172,7 +178,6 @@ class TenantResource extends Resource
                         ->dehydrated(false)
                         ->suffixAction(CopyAction::make())
                         ->visibleOn('edit'),
-                    ]),
                 ]),
 
             Section::make('Single Sign-On')
@@ -268,18 +273,18 @@ class TenantResource extends Resource
         ];
     }
 
-    /**
-     * @psalm-pure
-     */
-    private static function deriveUsernameFromEmail(?string $email, ?string $current): string
+    private static function deriveUsernameFromEmail(?string $email): string
     {
         if ($email === null) {
             return '';
         }
         $part = ($pos = strpos($email, '@')) !== false ? substr($email, 0, $pos) : $email;
-        // normalize to NFC
+        // normalize to NFC (skip if normalization fails on malformed input)
         if (function_exists('normalizer_normalize')) {
-            $part = strval(normalizer_normalize($part, \Normalizer::FORM_C));
+            $normalized = normalizer_normalize($part, \Normalizer::FORM_C);
+            if ($normalized !== false) {
+                $part = $normalized;
+            }
         }
         // allow Unicode letters, numbers, dot, underscore, hyphen
         $username = preg_replace('/[^\p{L}\p{N}._-]+/u', '_', $part);
