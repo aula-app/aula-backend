@@ -150,7 +150,7 @@ class SsoControllerTest extends TestCase
             $user = LegacyUser::where('sso_sub', 'sub-new-001')->first();
             $this->assertNotNull($user);
             $this->assertEquals('sso_new@test.example', $user->email);
-            $this->assertEquals(20, $user->userlevel);
+            $this->assertEquals(20, $user->userlevel->value);
         });
     }
 
