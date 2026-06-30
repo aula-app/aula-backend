@@ -17,6 +17,7 @@ $crypt = new Crypt();
 $syslog = new Systemlog($db);
 $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 $settings = new Settings($db, $crypt, $syslog);
+$converters = new Converters($db);
 
 $json = file_get_contents('php://input');
 $input = json_decode($json, true);
@@ -26,9 +27,9 @@ header('Content-Type: application/json; charset=utf-8');
 
 if (!!$check_jwt && $check_jwt["success"]) {
   $jwt_payload = $jwt->payload();
-  $user_id = $jwt_payload->user_id;
-  $userlevel = $jwt_payload->user_level;
   $user_hash = $jwt_payload->user_hash;
+  $user_id = $converters->checkUserId($jwt_payload->user_hash);
+  $userlevel = $jwt_payload->user_level;
   $roles = $jwt_payload->roles;
 
   $current_settings = $settings->getInstanceSettings();
