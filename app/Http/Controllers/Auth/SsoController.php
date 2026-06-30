@@ -136,21 +136,53 @@ class SsoController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        $state = $request->query('state', '');
-
-        $instanceCode = $this->verifySignedState($state);
+        $instanceCode = $this->verifySignedState($request->query('state', ''));
 
         if ($instanceCode === null) {
             return $this->frontendError('invalid_state');
         }
 
+        $session = $this->completeOauthAndResolveTenant($instanceCode);
+
+        if ($session instanceof RedirectResponse) {
+            return $session;
+        }
+
+        [$tenant, $socialiteUser, $instanceCode] = $session;
+
+        tenancy()->initialize($tenant);
+
+        $idToken = $this->verifyCallbackIdToken($socialiteUser, $tenant, $instanceCode);
+
+        if ($idToken instanceof RedirectResponse) {
+            return $idToken;
+        }
+
+        /** @var Tenant $callbackTenant */
+        $callbackTenant = tenant();
+
+        $user = $this->resolveCallbackUser($socialiteUser, $callbackTenant, $instanceCode);
+
+        if ($user instanceof RedirectResponse) {
+            return $user;
+        }
+
+        return $this->issueSsoSession($user, $socialiteUser, $idToken, $callbackTenant);
+    }
+
+    /**
+     * Complete the Keycloak OAuth round-trip and resolve the aula tenant.
+     *
+     * For the tenant-scoped flow we fail fast on an unknown tenant before the
+     * OAuth round-trip. The IdP-initiated flow can only resolve its tenant
+     * afterwards, from the upstream id_token's `school` claim.
+     *
+     * @return array{0: Tenant, 1: \SocialiteProviders\Manager\OAuth2\User, 2: string}|RedirectResponse
+     */
+    protected function completeOauthAndResolveTenant(string $instanceCode): array|RedirectResponse
+    {
         $idpInitiated = $instanceCode === self::IDP_INITIATED_EDUPLACES;
 
-        // For the tenant-scoped flow, fail fast before doing the OAuth
-        // round-trip if the tenant is unknown. The IdP-initiated branch
-        // cannot fail this early because it needs the upstream id_token
-        // (and therefore the OAuth completion) to know which tenant to
-        // resolve.
         if (! $idpInitiated) {
             $tenant = Tenant::where('instance_code', $instanceCode)->first();
 
@@ -175,30 +207,20 @@ class SsoController extends Controller
             $instanceCode = $tenant->instance_code;
         }
 
-        // Exactly one of the branches above resolves $tenant to a Tenant, but
-        // Psalm cannot correlate the two $idpInitiated checks to prove it.
+        // Exactly one branch above resolves $tenant, but Psalm cannot correlate
+        // the two $idpInitiated checks to prove it.
         /** @var Tenant $tenant */
-        tenancy()->initialize($tenant);
+        return [$tenant, $socialiteUser, $instanceCode];
+    }
 
-        $idTokenResult = $this->verifyCallbackIdToken($socialiteUser, $tenant, $instanceCode);
-
-        if ($idTokenResult instanceof RedirectResponse) {
-            return $idTokenResult;
-        }
-
-        $idToken = $idTokenResult;
-
-        /** @var Tenant $callbackTenant */
-        $callbackTenant = tenant();
-
-        $userResult = $this->resolveCallbackUser($socialiteUser, $callbackTenant, $instanceCode);
-
-        if ($userResult instanceof RedirectResponse) {
-            return $userResult;
-        }
-
-        $user = $userResult;
-
+    /**
+     * Persist the SSO tokens on the user, issue an aula JWT and redirect to the
+     * frontend OAuth landing page.
+     *
+     * @param  \Laravel\Socialite\Two\User  $socialiteUser
+     */
+    protected function issueSsoSession(LegacyUser $user, \Laravel\Socialite\Two\User $socialiteUser, string $idToken, Tenant $callbackTenant): RedirectResponse
+    {
         $user->sso_id_token      = $idToken;
         $user->sso_refresh_token = $socialiteUser->refreshToken;
         $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
