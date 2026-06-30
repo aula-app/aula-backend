@@ -231,7 +231,6 @@ class SsoController extends Controller
 
         DB::transaction(function () use ($fresh, $intent) {
             $fresh->sso_sub           = $intent['sso_sub'];
-            $fresh->sso_provider      = $intent['sso_provider'] ?? null;
             $fresh->sso_id_token      = $intent['sso_id_token'] ?? null;
             $fresh->sso_refresh_token = $intent['sso_refresh_token'] ?? null;
             $fresh->sso_idp_id_token  = $intent['sso_idp_id_token'] ?? null;
@@ -477,7 +476,6 @@ class SsoController extends Controller
             'user_id'           => $emailMatch->id,
             'email'             => $emailMatch->email,
             'sso_sub'           => $socialiteUser->getId(),
-            'sso_provider'      => $tenant->sso_provider,
             'sso_id_token'      => $socialiteUser->accessTokenResponseBody['id_token'] ?? null,
             'sso_refresh_token' => $socialiteUser->refreshToken,
             'sso_idp_id_token'  => $this->fetchIdpIdToken($socialiteUser->token, $tenant->sso_provider),

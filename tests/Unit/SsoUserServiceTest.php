@@ -96,7 +96,7 @@ class SsoUserServiceTest extends TestCase
         $this->assertEquals('sub-prov-001', $user->sso_sub);
         $this->assertEquals('testuser', $user->username);
         $this->assertEquals('Test User', $user->displayname);
-        $this->assertEquals(20, $user->userlevel);
+        $this->assertEquals(20, $user->userlevel->value);
         $this->assertEquals(1, $user->status);
     }
 
