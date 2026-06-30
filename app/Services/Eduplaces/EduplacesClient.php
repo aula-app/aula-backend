@@ -32,8 +32,14 @@ class EduplacesClient
      *
      * Strategy: iterate the schools that have sync enabled for this app and
      * check each school's user list for the sub. Eduplaces' IDM model does
-     * not expose a school id directly on the user object, so this is the
-     * documented path. Result is cached per-sub to keep the callback cheap.
+     * not expose a school id directly on the user object, so a reverse lookup
+     * over the schools is the only path available. Result is cached per-sub to
+     * keep the callback cheap.
+     *
+     * Assumes a sub belongs to exactly one synced school: Eduplaces issues a
+     * distinct account (and therefore a distinct sub) per school, even for the
+     * same person, so the first matching school is unambiguous. If that ever
+     * stops holding, this returns whichever synced school is listed first.
      *
      * Returns null when no synced school claims the user — caller decides
      * whether that's a hard error (no aula tenant for this school) or a

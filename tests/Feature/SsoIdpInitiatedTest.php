@@ -106,9 +106,9 @@ class SsoIdpInitiatedTest extends TestCase
         $response = $this->get('/api/v2/auth/sso/idp-initiated?iss='.urlencode(self::EDUPLACES_AUTH).'&login_hint='.urlencode($hint));
 
         $response->assertRedirect();
-        $this->assertEquals(self::EDUPLACES_IDP_ALIAS, $capturedParams['kc_idp_hint'] ?? null);
-        $this->assertEquals($hint, $capturedParams['login_hint'] ?? null);
-        $this->assertNotEmpty($capturedParams['state'] ?? '');
+        $this->assertEquals(self::EDUPLACES_IDP_ALIAS, $capturedParams['kc_idp_hint']);
+        $this->assertEquals($hint, $capturedParams['login_hint']);
+        $this->assertNotEmpty($capturedParams['state']);
     }
 
     public function test_idp_initiated_omits_login_hint_when_absent(): void
