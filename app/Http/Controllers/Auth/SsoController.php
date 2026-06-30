@@ -23,6 +23,14 @@ class SsoController extends Controller
 {
     private const int LINK_INTENT_TTL_MINUTES = 10;
 
+    /**
+     * Sentinel value in the signed state that marks the callback as an
+     * IdP-initiated launch from Eduplaces. The callback resolves the tenant
+     * from the upstream id_token's `school` claim instead of from an
+     * instance_code carried in the state.
+     */
+    private const string IDP_INITIATED_EDUPLACES = '__IDP_INITIATED_EDUPLACES__';
+
     public function __construct(
         protected LegacyJwtService $jwtService,
         protected SsoUserService $ssoUserService,
@@ -55,6 +63,12 @@ class SsoController extends Controller
         if ($request->boolean('force_login')) {
             $params['prompt'] = 'login';
         }
+        if (($loginHint = (string) $request->query('login_hint', '')) !== '') {
+            // Preserves the user pre-selection blob when the frontend re-enters
+            // /sso/initiate after a third-party initiated login (e.g. Eduplaces
+            // marketplace launcher → /sso/idp-initiated → frontend → here).
+            $params['login_hint'] = $loginHint;
+        }
 
         /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
         $driver = Socialite::driver('keycloak');
@@ -69,6 +83,52 @@ class SsoController extends Controller
     }
 
     /**
+     * Handle an IdP-initiated SSO launch (OIDC third-party initiated login).
+     *
+     * Eduplaces' marketplace launcher hits this endpoint with `iss` and
+     * (optionally) `login_hint`. The spec does not carry a tenant identifier,
+     * but Eduplaces emits a `school` claim in the upstream id_token. We use
+     * a sentinel state value to mark the callback as IdP-initiated; the
+     * callback then resolves the aula tenant by mapping `school` →
+     * `tenants.eduplaces_school_id`.
+     */
+    public function idpInitiated(Request $request): RedirectResponse|JsonResponse
+    {
+        $iss = (string) $request->query('iss', '');
+        $allowedIssuers = (array) config('services.eduplaces.allowed_issuers', []);
+
+        if ($iss === '' || ! in_array($iss, $allowedIssuers, true)) {
+            return response()->json(['error' => 'invalid_issuer'], 400);
+        }
+
+        $idpAlias = (string) config('services.eduplaces.idp_alias', 'eduplaces');
+        if ($idpAlias === '') {
+            return response()->json(['error' => 'idp_alias_missing'], 500);
+        }
+
+        $state = $this->buildSignedState(self::IDP_INITIATED_EDUPLACES);
+
+        $params = [
+            'state'       => $state,
+            'kc_idp_hint' => $idpAlias,
+        ];
+        if (($loginHint = (string) $request->query('login_hint', '')) !== '') {
+            $params['login_hint'] = $loginHint;
+        }
+
+        /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+        $driver = Socialite::driver('keycloak');
+
+        $url = $driver
+            ->stateless()
+            ->with($params)
+            ->redirect()
+            ->getTargetUrl();
+
+        return redirect()->away($url);
+    }
+
+    /**
      * Handle the SSO callback from Keycloak.
      *
      * This is a universal route — no tenant middleware runs here.
@@ -76,27 +136,114 @@ class SsoController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        $state = $request->query('state', '');
-
-        $instanceCode = $this->verifySignedState($state);
+        $instanceCode = $this->verifySignedState($request->query('state', ''));
 
         if ($instanceCode === null) {
             return $this->frontendError('invalid_state');
         }
 
-        $tenant = Tenant::where('instance_code', $instanceCode)->first();
+        $session = $this->completeOauthAndResolveTenant($instanceCode);
 
-        if ($tenant === null) {
-            return $this->frontendError('unknown_tenant');
+        if ($session instanceof RedirectResponse) {
+            return $session;
         }
 
+        [$tenant, $socialiteUser, $instanceCode] = $session;
+
         tenancy()->initialize($tenant);
+
+        $idToken = $this->verifyCallbackIdToken($socialiteUser, $tenant, $instanceCode);
+
+        if ($idToken instanceof RedirectResponse) {
+            return $idToken;
+        }
+
+        /** @var Tenant $callbackTenant */
+        $callbackTenant = tenant();
+
+        $user = $this->resolveCallbackUser($socialiteUser, $callbackTenant, $instanceCode);
+
+        if ($user instanceof RedirectResponse) {
+            return $user;
+        }
+
+        return $this->issueSsoSession($user, $socialiteUser, $idToken, $callbackTenant);
+    }
+
+    /**
+     * Complete the Keycloak OAuth round-trip and resolve the aula tenant.
+     *
+     * For the tenant-scoped flow we fail fast on an unknown tenant before the
+     * OAuth round-trip. The IdP-initiated flow can only resolve its tenant
+     * afterwards, from the upstream id_token's `school` claim.
+     *
+     * @return array{0: Tenant, 1: \SocialiteProviders\Manager\OAuth2\User, 2: string}|RedirectResponse
+     */
+    protected function completeOauthAndResolveTenant(string $instanceCode): array|RedirectResponse
+    {
+        $idpInitiated = $instanceCode === self::IDP_INITIATED_EDUPLACES;
+
+        if (! $idpInitiated) {
+            $tenant = Tenant::where('instance_code', $instanceCode)->first();
+
+            if ($tenant === null) {
+                return $this->frontendError('unknown_tenant');
+            }
+        }
 
         /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
         $driver = Socialite::driver('keycloak');
         /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
         $socialiteUser = $driver->stateless()->user();
 
+        if ($idpInitiated) {
+            $resolveResult = $this->resolveTenantFromEduplacesClaim($socialiteUser);
+
+            if ($resolveResult instanceof RedirectResponse) {
+                return $resolveResult;
+            }
+
+            $tenant = $resolveResult;
+            $instanceCode = $tenant->instance_code;
+        }
+
+        // Exactly one branch above resolves $tenant, but Psalm cannot correlate
+        // the two $idpInitiated checks to prove it.
+        /** @var Tenant $tenant */
+        return [$tenant, $socialiteUser, $instanceCode];
+    }
+
+    /**
+     * Persist the SSO tokens on the user, issue an aula JWT and redirect to the
+     * frontend OAuth landing page.
+     *
+     * @param  \Laravel\Socialite\Two\User  $socialiteUser
+     */
+    protected function issueSsoSession(LegacyUser $user, \Laravel\Socialite\Two\User $socialiteUser, string $idToken, Tenant $callbackTenant): RedirectResponse
+    {
+        $user->sso_id_token      = $idToken;
+        $user->sso_refresh_token = $socialiteUser->refreshToken;
+        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
+        $user->save();
+
+        $token = $this->jwtService->generateToken($user);
+
+        return $this->frontendRedirect($token, $callbackTenant->instance_code);
+    }
+
+    /**
+     * Extract and verify the upstream id_token for a completed OAuth callback.
+     *
+     * Returns the raw id_token string on success, or a RedirectResponse carrying
+     * the appropriate frontend error when the token is missing, fails signature
+     * verification, or fails the tenant's email-verification policy.
+     *
+     * @param  \SocialiteProviders\Manager\OAuth2\User  $socialiteUser
+     * @return string|RedirectResponse
+     */
+    protected function verifyCallbackIdToken(\Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant, string $instanceCode): string|RedirectResponse
+    {
+        /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
         $idToken = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
 
         if ($idToken === null) {
@@ -129,10 +276,24 @@ class SsoController extends Controller
             return $this->frontendError('email_not_verified');
         }
 
-        /** @var Tenant $callbackTenant */
-        $callbackTenant = tenant();
-        $sub            = $socialiteUser->getId();
-        $email          = $socialiteUser->getEmail();
+        return $idToken;
+    }
+
+    /**
+     * Resolve the aula user for a verified SSO identity: match by sso_sub, fall
+     * back to email (provisioning a new user or requiring an explicit account
+     * link), and ensure the resulting account is active.
+     *
+     * Returns the active LegacyUser, or a RedirectResponse carrying the frontend
+     * error/flow signal (account_inactive, sub_collision, account_link_required).
+     *
+     * @param  \Laravel\Socialite\Two\User  $socialiteUser
+     * @return LegacyUser|RedirectResponse
+     */
+    protected function resolveCallbackUser(\Laravel\Socialite\Two\User $socialiteUser, Tenant $callbackTenant, string $instanceCode): LegacyUser|RedirectResponse
+    {
+        $sub   = $socialiteUser->getId();
+        $email = $socialiteUser->getEmail();
 
         $user = $this->ssoUserService->findBySub($sub);
 
@@ -177,14 +338,7 @@ class SsoController extends Controller
             return $this->frontendError('account_inactive');
         }
 
-        $user->sso_id_token      = $idToken;
-        $user->sso_refresh_token = $socialiteUser->refreshToken;
-        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
-        $user->save();
-
-        $token = $this->jwtService->generateToken($user);
-
-        return $this->frontendRedirect($token);
+        return $user;
     }
 
     /**
@@ -325,6 +479,48 @@ class SsoController extends Controller
         return $data['instance_code'] ?? null;
     }
 
+    /**
+     * Resolve the aula tenant for an IdP-initiated Eduplaces login by reading
+     * the `school` claim from the upstream id_token. Tenants are mapped to
+     * Eduplaces schools by the `eduplaces_school_id` column.
+     *
+     * @return Tenant|RedirectResponse Tenant on success; a RedirectResponse with a
+     *                                  frontend error code on failure.
+     */
+    protected function resolveTenantFromEduplacesClaim(\Laravel\Socialite\Two\User $socialiteUser): Tenant|RedirectResponse
+    {
+        $idpAlias = (string) config('services.eduplaces.idp_alias', 'eduplaces');
+
+        $idpIdToken = $this->fetchIdpIdToken($socialiteUser->token, $idpAlias);
+        $payload    = $this->decodeIdTokenPayload($idpIdToken);
+        $schoolId   = is_array($payload) ? ($payload['school'] ?? null) : null;
+
+        if (! is_string($schoolId) || $schoolId === '') {
+            Log::warning('SSO: IdP-initiated Eduplaces login has no school claim', [
+                'keycloak_sub' => $socialiteUser->getId(),
+                'claim_keys'   => is_array($payload) ? array_keys($payload) : null,
+            ]);
+
+            return $this->frontendError('eduplaces_school_missing');
+        }
+
+        $tenant = Tenant::where('eduplaces_school_id', $schoolId)->first();
+
+        if ($tenant === null) {
+            Log::warning('SSO: no aula tenant matches Eduplaces school', [
+                'eduplaces_school_id' => $schoolId,
+            ]);
+
+            return $this->frontendError('school_not_provisioned');
+        }
+
+        if (! $tenant->sso_enabled) {
+            return $this->frontendError('sso_disabled');
+        }
+
+        return $tenant;
+    }
+
     protected function stateSecret(): string
     {
         return config('app.key');
@@ -446,11 +642,17 @@ class SsoController extends Controller
         ]);
     }
 
-    protected function frontendRedirect(string $token): RedirectResponse
+    protected function frontendRedirect(string $token, ?string $instanceCode = null): RedirectResponse
     {
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
-
-        return redirect("{$frontendUrl}/oauth-login/{$token}");
+        $url = "{$frontendUrl}/oauth-login/{$token}";
+        if (! empty($instanceCode)) {
+            // Carry the resolved tenant back to the frontend so the OAuth
+            // landing page can populate localStorage for IdP-initiated
+            // launches that started without any instance context.
+            $url .= '?'.http_build_query(['code' => $instanceCode]);
+        }
+        return redirect($url);
     }
 
     protected function frontendError(string $code, array $extra = []): RedirectResponse
