@@ -24,8 +24,11 @@ class LegacyAuthTest extends TestCase
 
     public function test_jwt_service_generates_valid_tokens(): void
     {
-        $service = new class extends LegacyJwtService {
-            protected function getJwtKey(): string { return 'test_secret'; }
+        $service = new class () extends LegacyJwtService {
+            protected function getJwtKey(): string
+            {
+                return 'test_secret';
+            }
         };
 
         $user = new LegacyUser();
@@ -42,7 +45,7 @@ class LegacyAuthTest extends TestCase
 
         $validation = $service->validateToken($token);
         $this->assertTrue($validation['success']);
-        $this->assertEquals(1, $validation['payload']->user_id);
+        $this->assertEquals('test_hash_123', $validation['payload']->user_hash);
     }
 
     public function test_middleware_rejects_missing_token(): void
@@ -97,23 +100,6 @@ class LegacyAuthTest extends TestCase
 
         $user->refresh_token = true;
         $this->assertTrue($user->needsRefresh());
-    }
-
-    public function test_legacy_user_jwt_payload(): void
-    {
-        $user = new LegacyUser();
-        $user->id = 42;
-        $user->hash_id = 'hash_abc';
-        $user->userlevel = UserLevel::Moderator;
-        $user->roles = json_encode([['room' => 'room1', 'role' => 30]]);
-        $user->temp_pw = null;
-
-        $payload = $user->getJwtPayload();
-
-        $this->assertEquals(42, $payload['id']);
-        $this->assertEquals('hash_abc', $payload['hash_id']);
-        $this->assertEquals(30, $payload['userlevel']);
-        $this->assertFalse($payload['temp_pw']);
     }
 
     // -------------------------------------------------------------------------
@@ -255,8 +241,11 @@ class LegacyAuthTest extends TestCase
 
     public function test_token_matches_legacy_format(): void
     {
-        $service = new class extends LegacyJwtService {
-            protected function getJwtKey(): string { return 'test_key'; }
+        $service = new class () extends LegacyJwtService {
+            protected function getJwtKey(): string
+            {
+                return 'test_key';
+            }
         };
 
         $user = new LegacyUser();

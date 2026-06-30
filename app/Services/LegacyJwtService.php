@@ -95,27 +95,6 @@ class LegacyJwtService
     }
 
     /**
-     * Get the payload from a token without full validation.
-     * Useful for extracting user info before database checks.
-     */
-    public function getPayload(string $token): ?object
-    {
-        $tokenParts = explode('.', $token);
-
-        if (count($tokenParts) !== 3) {
-            return null;
-        }
-
-        $payload = base64_decode($tokenParts[1]);
-
-        if ($payload === false) {
-            return null;
-        }
-
-        return json_decode($payload);
-    }
-
-    /**
      * Extract the Bearer token from an Authorization header value.
      */
     public function extractBearerToken(?string $authHeader): ?string

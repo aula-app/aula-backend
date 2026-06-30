@@ -71,7 +71,7 @@ class LegacyUser extends Model implements Authenticatable
 
         $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
 
-        $user               = new self;
+        $user               = new self();
         $user->email        = $socialiteUser->getEmail();
         $user->sso_sub      = $socialiteUser->getId();
         $user->sso_provider = $provider;
@@ -113,20 +113,6 @@ class LegacyUser extends Model implements Authenticatable
 
         // Check hashed password using PHP's password_verify (bcrypt)
         return password_verify($password, $this->pw);
-    }
-
-    /**
-     * Get the payload data for JWT token generation.
-     */
-    public function getJwtPayload(): array
-    {
-        return [
-            'id' => $this->id,
-            'hash_id' => $this->hash_id,
-            'userlevel' => $this->userlevel?->value,
-            'roles' => $this->roles,
-            'temp_pw' => !empty($this->temp_pw),
-        ];
     }
 
     /**

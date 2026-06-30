@@ -151,7 +151,7 @@ class SsoControllerTest extends TestCase
             $this->assertNotNull($user);
             $this->assertEquals('sso_new@test.example', $user->email);
             $this->assertEquals('mock-iserv', $user->sso_provider);
-            $this->assertEquals(20, $user->userlevel);
+            $this->assertEquals(20, $user->userlevel->value);
         });
     }
 

@@ -18,7 +18,7 @@ class SsoUserServiceTest extends TestCase
     {
         parent::setUp();
         $this->ensureTestTenantExists();
-        $this->service = new SsoUserService;
+        $this->service = new SsoUserService();
     }
 
     protected function tearDown(): void
@@ -96,7 +96,7 @@ class SsoUserServiceTest extends TestCase
         $this->assertEquals('sub-prov-001', $user->sso_sub);
         $this->assertEquals('testuser', $user->username);
         $this->assertEquals('Test User', $user->displayname);
-        $this->assertEquals(20, $user->userlevel);
+        $this->assertEquals(20, $user->userlevel->value);
         $this->assertEquals(1, $user->status);
     }
 
@@ -145,7 +145,7 @@ class SsoUserServiceTest extends TestCase
 
     private function makeUser(string $email, ?string $sub): LegacyUser
     {
-        $user              = new LegacyUser;
+        $user              = new LegacyUser();
         $user->email       = $email;
         $user->sso_sub     = $sub;
         $user->status      = LegacyUser::STATUS_ACTIVE;
