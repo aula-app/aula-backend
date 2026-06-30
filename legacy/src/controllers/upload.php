@@ -85,7 +85,7 @@ if ($check_jwt) {
       throw new RuntimeException('Failed to move uploaded file.');
     } else {
       $jwt_payload = $jwt->payload();
-      $user_id = $jwt_payload->user_id;
+      $user_id = $jwt_payload->user_hash;
 
       $inserted_media = $media->addMedia($file_type, $file_path, 1, 0, $file_name, 1, $user_id);
     }

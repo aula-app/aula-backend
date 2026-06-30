@@ -20,7 +20,7 @@ $converters = new Converters($db);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $payload = $jwt->payload();
   $temp_pw = $payload->temp_pw;
-  $user_id = $converters->checkUserId($payload->user_id);
+  $user_id = $converters->checkUserId($payload->user_hash);
 
   $json = file_get_contents('php://input');
   $input = json_decode($json, true);
