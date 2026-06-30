@@ -9,12 +9,16 @@ use App\Models\SchoolType;
 use App\Models\Tenant;
 use App\Services\TenantsService;
 use Filament\Actions\Action as FormAction;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput\Actions\CopyAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Resources\ResourceConfiguration;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Set;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set as FilamentSet;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Actions\EditAction;
@@ -23,8 +27,14 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
+/**
+ * @extends Resource<Tenant,ResourceConfiguration>
+ */
 class TenantResource extends Resource
 {
+    /**
+     * @var ?class-string<Tenant>
+     */
     protected static ?string $model = Tenant::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
@@ -42,6 +52,9 @@ class TenantResource extends Resource
         return $schema->components([
             Section::make('Basic Information')
                 ->schema([
+                    Hidden::make('admin1_username_manual')->default(fn (mixed $state, callable $set, Get $get) => ! empty($get('admin1_username')))->reactive(),
+                    Hidden::make('admin2_username_manual')->default(fn (mixed $state, callable $set, Get $get) => ! empty($get('admin2_username')))->reactive(),
+
                     TextInput::make('name')
                         ->label('School / Organisation Name')
                         ->required()
@@ -60,7 +73,7 @@ class TenantResource extends Resource
                                     FormAction::make('regenerate')
                                         ->icon('heroicon-o-arrow-path')
                                         ->tooltip('Generate a new instance code')
-                                        ->action(fn (Set $set) => $set(
+                                        ->action(fn (FilamentSet $set): mixed => $set(
                                             'instance_code',
                                             app(TenantsService::class)->generateUniqueInstanceCode()
                                         ))
@@ -72,6 +85,8 @@ class TenantResource extends Resource
 
                     TextInput::make('api_base_url')
                         ->label('API Base URL')
+                        ->default(config('app.url'))
+                        ->placeholder(config('app.url'))
                         ->url()
                         ->maxLength(255),
 
@@ -93,23 +108,36 @@ class TenantResource extends Resource
                         ->label('Full Name')
                         ->maxLength(255),
 
-                    TextInput::make('admin1_username')
-                        ->label('Username')
-                        ->required()
-                        ->maxLength(255)
-                        ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
-
                     TextInput::make('admin1_email')
                         ->label('Email')
                         ->email()
                         ->required()
-                        ->maxLength(255)
-                        ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
+                        ->reactive()
+                        ->afterStateUpdated(function (?string $state, callable $set, Get $get): void {
+                            if ($get('admin1_username_manual') === false || empty($get('admin1_username'))) {
+                                $derived = TenantResource::deriveUsernameFromEmail($state);
+                                if ($derived !== '') {
+                                    $set('admin1_username', $derived);
+                                    $set('admin1_username_manual', false);
+                                }
+                            }
+                        })
+                        ->maxLength(255),
+
+                    TextInput::make('admin1_username')
+                        ->label('Username')
+                        ->required()
+                        ->reactive()
+                        ->afterStateUpdated(function (?string $state, callable $set): void {
+                            $set('admin1_username_manual', true);
+                        })
+                        ->maxLength(255),
 
                     TextInput::make('admin1_init_pass_url')
                         ->label('Password Setup URL')
                         ->disabled()
                         ->dehydrated(false)
+                        ->suffixAction(CopyAction::make())
                         ->visibleOn('edit'),
                 ]),
 
@@ -119,23 +147,36 @@ class TenantResource extends Resource
                         ->label('Full Name')
                         ->maxLength(255),
 
-                    TextInput::make('admin2_username')
-                        ->label('Username')
-                        ->required()
-                        ->maxLength(255)
-                        ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
-
                     TextInput::make('admin2_email')
                         ->label('Email')
                         ->email()
                         ->required()
-                        ->maxLength(255)
-                        ->when(!$isCreate, fn (TextInput $f) => $f->disabled()->dehydrated(false)),
+                        ->reactive()
+                        ->afterStateUpdated(function (?string $state, callable $set, Get $get): void {
+                            if ($get('admin2_username_manual') === false || empty($get('admin2_username'))) {
+                                $derived = TenantResource::deriveUsernameFromEmail($state);
+                                if ($derived !== '') {
+                                    $set('admin2_username', $derived);
+                                    $set('admin2_username_manual', false);
+                                }
+                            }
+                        })
+                        ->maxLength(255),
+
+                    TextInput::make('admin2_username')
+                        ->label('Username')
+                        ->required()
+                        ->reactive()
+                        ->afterStateUpdated(function (?string $state, callable $set): void {
+                            $set('admin2_username_manual', true);
+                        })
+                        ->maxLength(255),
 
                     TextInput::make('admin2_init_pass_url')
                         ->label('Password Setup URL')
                         ->disabled()
                         ->dehydrated(false)
+                        ->suffixAction(CopyAction::make())
                         ->visibleOn('edit'),
                 ]),
 
@@ -230,5 +271,26 @@ class TenantResource extends Resource
             'create' => Pages\CreateTenant::route('/create'),
             'edit' => Pages\EditTenant::route('/{record}/edit'),
         ];
+    }
+
+    private static function deriveUsernameFromEmail(?string $email): string
+    {
+        if ($email === null) {
+            return '';
+        }
+        $part = ($pos = strpos($email, '@')) !== false ? substr($email, 0, $pos) : $email;
+        // normalize to NFC (skip if normalization fails on malformed input)
+        if (function_exists('normalizer_normalize')) {
+            $normalized = normalizer_normalize($part, \Normalizer::FORM_C);
+            if ($normalized !== false) {
+                $part = $normalized;
+            }
+        }
+        // allow Unicode letters, numbers, dot, underscore, hyphen
+        $username = preg_replace('/[^\p{L}\p{N}._-]+/u', '_', $part);
+        if (!is_string($username)) {
+            $username = '';
+        }
+        return trim($username, '._-');
     }
 }
