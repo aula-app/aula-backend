@@ -175,6 +175,9 @@ class SsoController extends Controller
             $instanceCode = $tenant->instance_code;
         }
 
+        // Exactly one of the branches above resolves $tenant to a Tenant, but
+        // Psalm cannot correlate the two $idpInitiated checks to prove it.
+        /** @var Tenant $tenant */
         tenancy()->initialize($tenant);
 
         $idToken = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
