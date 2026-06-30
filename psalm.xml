@@ -1,4 +1,9 @@
 <?xml version="1.0"?>
+<!--
+  findUnusedBaselineEntry: is buggy, can create an invalid SARIF file that trips up CI/GH
+  (contains `"startLine":0,"endLine":0,"startColumn":0,"endColumn":0`)
+  set to true when https://github.com/vimeo/psalm/issues/9712 is fixed
+-->
 <psalm
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns="https://getpsalm.org/schema/config"
@@ -7,6 +12,7 @@
   findUnusedCode="false"
   ensureOverrideAttribute="false"
   errorBaseline="psalm-baseline.xml"
+  findUnusedBaselineEntry="false"
 >
   <projectFiles>
     <directory name="."/>

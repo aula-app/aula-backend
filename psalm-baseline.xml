@@ -22,24 +22,6 @@ Workflow:
       <code><![CDATA[Statistics]]></code>
     </MissingTemplateParam>
   </file>
-  <file src="app/Filament/Resources/TenantResource.php">
-    <MissingTemplateParam>
-      <code><![CDATA[TenantResource]]></code>
-    </MissingTemplateParam>
-    <UndefinedClass>
-      <code><![CDATA[Set]]></code>
-    </UndefinedClass>
-  </file>
-  <file src="app/Filament/Resources/TenantResource/Pages/CreateTenant.php">
-    <MissingTemplateParam>
-      <code><![CDATA[CreateTenant]]></code>
-    </MissingTemplateParam>
-  </file>
-  <file src="app/Filament/Resources/TenantResource/Pages/EditTenant.php">
-    <MissingTemplateParam>
-      <code><![CDATA[EditTenant]]></code>
-    </MissingTemplateParam>
-  </file>
   <file src="app/Models/LegacyUser.php">
     <InvalidNullableReturnType>
       <code><![CDATA[?string]]></code>
