@@ -28,18 +28,23 @@ class EduplacesClient
     private const IDM_PREFIX = '/idm/ep/v1';
 
     /**
-     * Resolve the Eduplaces school UUID that the given user (sub) belongs to.
+     * Resolve the Eduplaces school UUID that the given user (OIDC `sub`) belongs
+     * to by reverse lookup: list the schools that have enabled sync for this app
+     * (GET /idm/ep/v1/schools) and scan each school's "users with access" list
+     * (GET /idm/ep/v1/schools/{id}/users) for a user whose `id` equals the sub.
+     * IDM exposes no school id on the user object, so this scan is the only way
+     * to map a sub to a school from these endpoints. Result is cached per-sub.
      *
-     * Strategy: iterate the schools that have sync enabled for this app and
-     * check each school's user list for the sub. Eduplaces' IDM model does
-     * not expose a school id directly on the user object, so a reverse lookup
-     * over the schools is the only path available. Result is cached per-sub to
-     * keep the callback cheap.
+     * Endpoints: https://developer.eduplaces.de/idm/schools and
+     * https://developer.eduplaces.de/idm/users-with-access
      *
-     * Assumes a sub belongs to exactly one synced school: Eduplaces issues a
-     * distinct account (and therefore a distinct sub) per school, even for the
-     * same person, so the first matching school is unambiguous. If that ever
-     * stops holding, this returns whichever synced school is listed first.
+     * Caveat: Eduplaces' `sub` is a single permanent identifier per person, not
+     * scoped per school (https://developer.eduplaces.de/authentication/about-sso),
+     * so someone enrolled in several synced schools matches in each and this
+     * returns whichever is listed first. The live IdP-initiated login does NOT
+     * depend on this — it reads the school straight from the upstream id_token's
+     * `school` claim (see SsoController::resolveTenantFromEduplacesClaim) — so
+     * the ambiguity only bites if this helper is wired up on its own.
      *
      * Returns null when no synced school claims the user — caller decides
      * whether that's a hard error (no aula tenant for this school) or a
