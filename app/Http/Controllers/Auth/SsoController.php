@@ -180,6 +180,48 @@ class SsoController extends Controller
         /** @var Tenant $tenant */
         tenancy()->initialize($tenant);
 
+        $idTokenResult = $this->verifyCallbackIdToken($socialiteUser, $tenant, $instanceCode);
+
+        if ($idTokenResult instanceof RedirectResponse) {
+            return $idTokenResult;
+        }
+
+        $idToken = $idTokenResult;
+
+        /** @var Tenant $callbackTenant */
+        $callbackTenant = tenant();
+
+        $userResult = $this->resolveCallbackUser($socialiteUser, $callbackTenant, $instanceCode);
+
+        if ($userResult instanceof RedirectResponse) {
+            return $userResult;
+        }
+
+        $user = $userResult;
+
+        $user->sso_id_token      = $idToken;
+        $user->sso_refresh_token = $socialiteUser->refreshToken;
+        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
+        $user->save();
+
+        $token = $this->jwtService->generateToken($user);
+
+        return $this->frontendRedirect($token, $callbackTenant->instance_code);
+    }
+
+    /**
+     * Extract and verify the upstream id_token for a completed OAuth callback.
+     *
+     * Returns the raw id_token string on success, or a RedirectResponse carrying
+     * the appropriate frontend error when the token is missing, fails signature
+     * verification, or fails the tenant's email-verification policy.
+     *
+     * @param  \SocialiteProviders\Manager\OAuth2\User  $socialiteUser
+     * @return string|RedirectResponse
+     */
+    protected function verifyCallbackIdToken(\Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant, string $instanceCode): string|RedirectResponse
+    {
+        /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
         $idToken = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
 
         if ($idToken === null) {
@@ -212,10 +254,24 @@ class SsoController extends Controller
             return $this->frontendError('email_not_verified');
         }
 
-        /** @var Tenant $callbackTenant */
-        $callbackTenant = tenant();
-        $sub            = $socialiteUser->getId();
-        $email          = $socialiteUser->getEmail();
+        return $idToken;
+    }
+
+    /**
+     * Resolve the aula user for a verified SSO identity: match by sso_sub, fall
+     * back to email (provisioning a new user or requiring an explicit account
+     * link), and ensure the resulting account is active.
+     *
+     * Returns the active LegacyUser, or a RedirectResponse carrying the frontend
+     * error/flow signal (account_inactive, sub_collision, account_link_required).
+     *
+     * @param  \Laravel\Socialite\Two\User  $socialiteUser
+     * @return LegacyUser|RedirectResponse
+     */
+    protected function resolveCallbackUser(\Laravel\Socialite\Two\User $socialiteUser, Tenant $callbackTenant, string $instanceCode): LegacyUser|RedirectResponse
+    {
+        $sub   = $socialiteUser->getId();
+        $email = $socialiteUser->getEmail();
 
         $user = $this->ssoUserService->findBySub($sub);
 
@@ -260,14 +316,7 @@ class SsoController extends Controller
             return $this->frontendError('account_inactive');
         }
 
-        $user->sso_id_token      = $idToken;
-        $user->sso_refresh_token = $socialiteUser->refreshToken;
-        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
-        $user->save();
-
-        $token = $this->jwtService->generateToken($user);
-
-        return $this->frontendRedirect($token, $callbackTenant->instance_code);
+        return $user;
     }
 
     /**
@@ -576,7 +625,7 @@ class SsoController extends Controller
     {
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
         $url = "{$frontendUrl}/oauth-login/{$token}";
-        if ($instanceCode !== null && $instanceCode !== '') {
+        if (! empty($instanceCode)) {
             // Carry the resolved tenant back to the frontend so the OAuth
             // landing page can populate localStorage for IdP-initiated
             // launches that started without any instance context.
