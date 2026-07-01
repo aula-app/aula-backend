@@ -16,7 +16,8 @@ class LegacyJwtGuard implements Guard
     public function __construct(
         protected LegacyJwtService $jwtService,
         protected Request $request
-    ) {}
+    ) {
+    }
 
     /**
      * Determine if the current user is authenticated.
@@ -110,6 +111,8 @@ class LegacyJwtGuard implements Guard
         $user = LegacyUser::where('username', $username)->first();
 
         if ($user === null) {
+            // sleep between 2ms and 25ms to avoid user enumeration
+            usleep(microseconds: rand(2_000, 25_000));
             return false;
         }
 

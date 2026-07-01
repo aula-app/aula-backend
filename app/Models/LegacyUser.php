@@ -70,7 +70,7 @@ class LegacyUser extends Model implements Authenticatable
 
         $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
 
-        $user               = new self;
+        $user               = new self();
         $user->email        = $socialiteUser->getEmail();
         $user->sso_sub      = $socialiteUser->getId();
         $user->username     = $username;
@@ -104,8 +104,8 @@ class LegacyUser extends Model implements Authenticatable
      */
     public function checkPassword(string $password): bool
     {
-        // Check temporary password first (plain text match)
-        if (!empty($this->temp_pw) && strcmp($this->temp_pw, $password) === 0) {
+        // Check temporary password first (timing attack safe plain text match)
+        if (!empty($this->temp_pw) && hash_equals($this->temp_pw, $password)) {
             return true;
         }
 
