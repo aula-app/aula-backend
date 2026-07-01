@@ -12,7 +12,8 @@ class LegacyJwtMiddleware
 {
     public function __construct(
         protected LegacyJwtService $jwtService
-    ) {}
+    ) {
+    }
 
     /**
      * Handle an incoming request.
@@ -42,7 +43,7 @@ class LegacyJwtMiddleware
         $payload = $validation['payload'];
 
         // Verify user exists in database
-        $user = LegacyUser::find($payload->user_id);
+        $user = LegacyUser::where('hash_id', $payload->user_hash);
 
         if ($user === null) {
             return $this->errorResponse('user_not_found', 401);

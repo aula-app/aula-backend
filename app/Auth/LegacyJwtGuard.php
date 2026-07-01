@@ -80,6 +80,7 @@ class LegacyJwtGuard implements Guard
         }
 
         if ($user->needsRefresh()) {
+            // The API will abruptly return 401, and the client must know to re-login
             return null;
         }
 

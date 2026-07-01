@@ -17,7 +17,7 @@ class LegacyJwtServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->jwtService = new class extends LegacyJwtService {
+        $this->jwtService = new class () extends LegacyJwtService {
             protected function getJwtKey(): string
             {
                 return 'test_jwt_secret_key';
@@ -33,6 +33,7 @@ class LegacyJwtServiceTest extends TestCase
 
     /**
      * Create a mock LegacyUser for testing.
+     * @param array<int,mixed> $attributes
      */
     protected function createMockUser(array $attributes = []): LegacyUser
     {
@@ -91,7 +92,6 @@ class LegacyJwtServiceTest extends TestCase
         $payload = json_decode(base64_decode($parts[1]));
 
         $this->assertEquals(0, $payload->exp);
-        $this->assertEquals(42, $payload->user_id);
         $this->assertEquals('unique_hash_123', $payload->user_hash);
         $this->assertEquals(30, $payload->user_level);
         $this->assertIsArray($payload->roles);
@@ -118,8 +118,8 @@ class LegacyJwtServiceTest extends TestCase
         $result = $this->jwtService->validateToken($token);
 
         $this->assertTrue($result['success']);
-        $this->assertObjectHasProperty('user_id', $result['payload']);
-        $this->assertEquals($user->id, $result['payload']->user_id);
+        $this->assertObjectHasProperty('user_hash', $result['payload']);
+        $this->assertEquals($user->hash_id, $result['payload']->user_hash);
     }
 
     public function test_validateToken_rejects_invalid_format(): void
@@ -154,7 +154,7 @@ class LegacyJwtServiceTest extends TestCase
         // Tamper with the payload
         $parts = explode('.', $token);
         $payload = json_decode(base64_decode($parts[1]), true);
-        $payload['user_id'] = 999;  // Change user ID
+        $payload['user_hash'] = 'superadmin_666_fake';  // Change hash id
         $parts[1] = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(json_encode($payload)));
         $tamperedToken = implode('.', $parts);
 
