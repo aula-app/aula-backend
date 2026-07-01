@@ -6,7 +6,7 @@ use App\Models\LegacyUser;
 use App\Services\LegacyJwtService;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\JsonResponse;
 
 class LegacyJwtMiddleware
 {
@@ -18,9 +18,9 @@ class LegacyJwtMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param Closure(): void $next
+     * @param Closure(Request): JsonResponse $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): JsonResponse
     {
         // Handle CORS preflight requests
         if ($request->isMethod('OPTIONS')) {
@@ -81,7 +81,7 @@ class LegacyJwtMiddleware
     /**
      * Return a JSON error response matching legacy format.
      */
-    protected function errorResponse(string $error, int $statusCode): Response
+    protected function errorResponse(string $error, int $statusCode): JsonResponse
     {
         return response()->json([
             'success' => false,
