@@ -54,7 +54,9 @@ class LegacyJwtService
         [$headerEncoded, $payloadEncoded, $signatureProvided] = $tokenParts;
 
         // Decode header and payload
+        /** @var string|false $header **/
         $header = base64_decode($headerEncoded);
+        /** @var string|false $payload **/
         $payload = base64_decode($payloadEncoded);
 
         if ($header === false || $payload === false) {

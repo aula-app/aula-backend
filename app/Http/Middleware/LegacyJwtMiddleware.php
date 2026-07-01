@@ -19,9 +19,9 @@ class LegacyJwtMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param Closure(Request): JsonResponse $next
+     * @param Closure(Request): Response $next
      */
-    public function handle(Request $request, Closure $next): JsonResponse | Response
+    public function handle(Request $request, Closure $next): JsonResponse|Response
     {
         // Handle CORS preflight requests
         if ($request->isMethod('OPTIONS')) {
@@ -82,11 +82,11 @@ class LegacyJwtMiddleware
     /**
      * Return a JSON error response matching legacy format.
      */
-    protected function errorResponse(string $error, int $statusCode): JsonResponse
+    protected function errorResponse(?string $error, int $statusCode): JsonResponse
     {
         return response()->json([
             'success' => false,
-            'error' => $error,
+            'error' => $error ?? 'Unknown error',
         ], $statusCode);
     }
 }
