@@ -12,10 +12,13 @@ class LegacyJwtMiddleware
 {
     public function __construct(
         protected LegacyJwtService $jwtService
-    ) {}
+    ) {
+    }
 
     /**
      * Handle an incoming request.
+     *
+     * @param Closure(): void $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -42,7 +45,7 @@ class LegacyJwtMiddleware
         $payload = $validation['payload'];
 
         // Verify user exists in database
-        $user = LegacyUser::where('hash_id', $payload->user_hash);
+        $user = LegacyUser::where('hash_id', $payload->user_hash)->first();
 
 
         if ($user === null) {
