@@ -5,8 +5,9 @@ namespace App\Http\Middleware;
 use App\Models\LegacyUser;
 use App\Services\LegacyJwtService;
 use Closure;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class LegacyJwtMiddleware
 {
@@ -20,7 +21,7 @@ class LegacyJwtMiddleware
      *
      * @param Closure(Request): JsonResponse $next
      */
-    public function handle(Request $request, Closure $next): JsonResponse
+    public function handle(Request $request, Closure $next): JsonResponse | Response
     {
         // Handle CORS preflight requests
         if ($request->isMethod('OPTIONS')) {
