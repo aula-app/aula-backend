@@ -18,7 +18,7 @@ class SsoUserServiceTest extends TestCase
     {
         parent::setUp();
         $this->ensureTestTenantExists();
-        $this->service = new SsoUserService;
+        $this->service = new SsoUserService();
     }
 
     protected function tearDown(): void
@@ -145,7 +145,7 @@ class SsoUserServiceTest extends TestCase
 
     private function makeUser(string $email, ?string $sub): LegacyUser
     {
-        $user              = new LegacyUser;
+        $user              = new LegacyUser();
         $user->email       = $email;
         $user->sso_sub     = $sub;
         $user->status      = LegacyUser::STATUS_ACTIVE;

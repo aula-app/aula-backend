@@ -16,7 +16,7 @@ class LegacyJwtServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->jwtService = new class extends LegacyJwtService {
+        $this->jwtService = new class () extends LegacyJwtService {
             protected function getJwtKey(): string
             {
                 return 'test_jwt_secret_key';
@@ -161,24 +161,6 @@ class LegacyJwtServiceTest extends TestCase
 
         $this->assertFalse($result['success']);
         $this->assertEquals('invalid_signature', $result['error']);
-    }
-
-    public function test_getPayload_extracts_payload_without_validation(): void
-    {
-        $user = $this->createMockUser(['id' => 123]);
-        $token = $this->jwtService->generateToken($user);
-
-        $payload = $this->jwtService->getPayload($token);
-
-        $this->assertNotNull($payload);
-        $this->assertEquals(123, $payload->user_id);
-    }
-
-    public function test_getPayload_returns_null_for_invalid_token(): void
-    {
-        $payload = $this->jwtService->getPayload('invalid');
-
-        $this->assertNull($payload);
     }
 
     public function test_extractBearerToken_extracts_token_correctly(): void

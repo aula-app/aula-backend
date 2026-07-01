@@ -15,12 +15,14 @@ $db = new Database($instance);
 $crypt = new Crypt();
 $syslog = new Systemlog($db);
 $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
+$converters = new Converters($db);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $json = file_get_contents('php://input');
   $payload = $jwt->payload();
-  $user_id = $payload->user_id;
   $temp_pw = $payload->temp_pw;
+  $user_id = $converters->checkUserId($payload->user_hash);
+
+  $json = file_get_contents('php://input');
   $input = json_decode($json, true);
   $password = $input['password'];
   $new_password = $input['new_password'];
@@ -48,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $check_password = hash_equals($users[0]['temp_pw'], $password);
     if ($check_password) {
       $stmt = $db->query('UPDATE ' . $db->au_users_basedata . ' SET temp_pw = "" WHERE id = :user_id');
-      $db->bind(':user_id', $user_id); // blind index
+      $db->bind(':user_id', $user_id);
       $remove_temp_pw = $db->resultSet();
     }
   }

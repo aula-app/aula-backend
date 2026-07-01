@@ -20,6 +20,6 @@ $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 $check_jwt = $jwt->check_jwt();
 if ($check_jwt) {
   $payload = $jwt->payload();
-  $givenconsents = $user->checkHasUserGivenConsentsForUsage($payload->user_id);
+  $givenconsents = $user->checkHasUserGivenConsentsForUsage($payload->user_hash);
   echo json_encode($givenconsents);
 }

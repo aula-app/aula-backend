@@ -23,11 +23,11 @@ $check_jwt = $jwt->check_jwt(true);
 if ($check_jwt["success"]) {
   $jwt_payload = $jwt->payload();
 
-  $new_payload = $user->getUserPayload($jwt_payload->user_id);
+  $new_payload = $user->getUserPayload($jwt_payload->user_hash);
 
   if ($new_payload['success']) {
     $new_jwt = $jwt->gen_jwt($new_payload['data']);
-    $user->setRefresh($jwt_payload->user_id, false);
+    $user->setRefresh($jwt_payload->user_hash, false);
     echo json_encode(["success" => true, 'JWT' => $new_jwt]);
   } else {
     return [ "success" => false ];

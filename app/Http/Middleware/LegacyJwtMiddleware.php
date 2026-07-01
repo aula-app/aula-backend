@@ -5,19 +5,23 @@ namespace App\Http\Middleware;
 use App\Models\LegacyUser;
 use App\Services\LegacyJwtService;
 use Closure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Response;
 
 class LegacyJwtMiddleware
 {
     public function __construct(
         protected LegacyJwtService $jwtService
-    ) {}
+    ) {
+    }
 
     /**
      * Handle an incoming request.
+     *
+     * @param Closure(Request): Response $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): JsonResponse|Response
     {
         // Handle CORS preflight requests
         if ($request->isMethod('OPTIONS')) {
@@ -42,7 +46,8 @@ class LegacyJwtMiddleware
         $payload = $validation['payload'];
 
         // Verify user exists in database
-        $user = LegacyUser::find($payload->user_id);
+        $user = LegacyUser::where('hash_id', $payload->user_hash)->first();
+
 
         if ($user === null) {
             return $this->errorResponse('user_not_found', 401);
@@ -77,11 +82,11 @@ class LegacyJwtMiddleware
     /**
      * Return a JSON error response matching legacy format.
      */
-    protected function errorResponse(string $error, int $statusCode): Response
+    protected function errorResponse(?string $error, int $statusCode): JsonResponse
     {
         return response()->json([
             'success' => false,
-            'error' => $error,
+            'error' => $error ?? 'Unknown error',
         ], $statusCode);
     }
 }

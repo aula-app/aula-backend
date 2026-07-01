@@ -54,7 +54,9 @@ class LegacyJwtService
         [$headerEncoded, $payloadEncoded, $signatureProvided] = $tokenParts;
 
         // Decode header and payload
+        /** @var string|false $header **/
         $header = base64_decode($headerEncoded);
+        /** @var string|false $payload **/
         $payload = base64_decode($payloadEncoded);
 
         if ($header === false || $payload === false) {
@@ -92,27 +94,6 @@ class LegacyJwtService
             'success' => true,
             'payload' => $payloadData,
         ];
-    }
-
-    /**
-     * Get the payload from a token without full validation.
-     * Useful for extracting user info before database checks.
-     */
-    public function getPayload(string $token): ?object
-    {
-        $tokenParts = explode('.', $token);
-
-        if (count($tokenParts) !== 3) {
-            return null;
-        }
-
-        $payload = base64_decode($tokenParts[1]);
-
-        if ($payload === false) {
-            return null;
-        }
-
-        return json_decode($payload);
     }
 
     /**

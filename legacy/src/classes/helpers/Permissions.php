@@ -1347,18 +1347,22 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           $checks = $permissions_table[$model_name][$method]["checks"];
 
           $total_checks = 0;
-          foreach ($checks as $c) {
-            $cparts = explode(":", $c);
-            if ($cparts[0] != "method") {
-              if (${$cparts[0]} == $arguments[$cparts[1]]) {
-                $total_checks += 1;
+          foreach ($checks as $check) {
+            if ($check === "user_id:user_id") {
+              if (is_int($arguments["user_id"])) {
+                $total_checks += ($user_id === $arguments["user_id"]);
+              } else {
+                $total_checks += (array_key_exists("user_hash", $arguments) && $user_hash === $arguments["user_hash"] || $user_hash === $arguments["user_id"]);
               }
+              continue;
+            }
+
+            $check_parts = explode(":", $check);
+            if ($check_parts[0] != "method") {
+              $total_checks += (${$check_parts[0]} == $arguments[$check_parts[1]]);
             } else {
-              $check_method = $cparts[1];
-              $passed_check = $model->$check_method($user_id, $userlevel, $arguments);
-              if ($passed_check) {
-                 $total_checks += 1;
-              }
+              $check_method = $check_parts[1];
+              $total_checks += $model->$check_method($user_id, $userlevel, $arguments);
             }
           }
           if (count($checks) == $total_checks) {
