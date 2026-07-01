@@ -178,7 +178,6 @@ class SsoControllerTest extends TestCase
             $fresh = LegacyUser::find($existing->id);
             $this->assertNull($fresh->sso_sub);
             $this->assertNull($fresh->sso_id_token);
-            $this->assertNull($fresh->sso_provider);
         });
     }
 
@@ -448,7 +447,6 @@ class SsoControllerTest extends TestCase
             'user_id'           => $user->id,
             'email'             => $user->email,
             'sso_sub'           => 'sub-fresh-001',
-            'sso_provider'      => 'mock-iserv',
             'sso_id_token'      => 'aula-id-token-linktest',
             'sso_refresh_token' => 'refresh-token-linktest',
             'sso_idp_id_token'  => 'idp-id-token-linktest',
@@ -467,7 +465,6 @@ class SsoControllerTest extends TestCase
         self::$testTenant->run(function () use ($user) {
             $fresh = LegacyUser::find($user->id);
             $this->assertEquals('sub-fresh-001', $fresh->sso_sub);
-            $this->assertEquals('mock-iserv', $fresh->sso_provider);
             $this->assertEquals('aula-id-token-linktest', $fresh->sso_id_token);
             $this->assertEquals('refresh-token-linktest', $fresh->sso_refresh_token);
             $this->assertEquals('idp-id-token-linktest', $fresh->sso_idp_id_token);
@@ -487,7 +484,6 @@ class SsoControllerTest extends TestCase
             'user_id'       => $victim->id,
             'email'         => $victim->email,
             'sso_sub'       => 'sub-take-over',
-            'sso_provider'  => 'mock-iserv',
             'sso_id_token'  => 'tok',
             'instance_code' => self::INSTANCE_CODE,
         ]);
@@ -537,7 +533,6 @@ class SsoControllerTest extends TestCase
             'user_id'       => $user->id,
             'email'         => $user->email,
             'sso_sub'       => 'sub-oneshot',
-            'sso_provider'  => 'mock-iserv',
             'sso_id_token'  => 'tok',
             'instance_code' => self::INSTANCE_CODE,
         ]);
@@ -565,7 +560,6 @@ class SsoControllerTest extends TestCase
             'user_id'       => $user->id,
             'email'         => $user->email,
             'sso_sub'       => 'sub-different-new',
-            'sso_provider'  => 'mock-iserv',
             'sso_id_token'  => 'tok',
             'instance_code' => self::INSTANCE_CODE,
         ]);

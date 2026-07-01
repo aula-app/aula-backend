@@ -88,6 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $email_body = str_replace("<SECRET_KEY>", $secret, $email_body);
 
     $mail = $smtp->send($email, $headers, $email_body);
+  } else {
+    // sleep between 2ms and 25ms to avoid user enumeration
+    usleep(microseconds: rand(2_000, 25_000));
   };
 
   header('Content-Type: application/json; charset=utf-8');

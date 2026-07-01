@@ -112,6 +112,8 @@ class LegacyJwtGuard implements Guard
         $user = LegacyUser::where('username', $username)->first();
 
         if ($user === null) {
+            // sleep between 2ms and 25ms to avoid user enumeration
+            usleep(microseconds: rand(2_000, 25_000));
             return false;
         }
 

@@ -52,13 +52,12 @@ class LegacyUser extends Model implements Authenticatable
     /**
      * Build an unsaved user from SSO claims. Caller is responsible for ->save().
      */
-    public static function fromSocialiteUser(SocialiteUser $socialiteUser, ?string $provider): self
+    public static function fromSocialiteUser(SocialiteUser $socialiteUser): self
     {
         if ($socialiteUser->getNickname() === null) {
             Log::warning('SSO: nickname missing from upstream IdP — falling back to email for username.', [
-                'sub'      => $socialiteUser->getId(),
-                'email'    => $socialiteUser->getEmail(),
-                'provider' => $provider,
+                'sub'   => $socialiteUser->getId(),
+                'email' => $socialiteUser->getEmail(),
             ]);
         }
 
@@ -67,7 +66,6 @@ class LegacyUser extends Model implements Authenticatable
         $user               = new self();
         $user->email        = $socialiteUser->getEmail();
         $user->sso_sub      = $socialiteUser->getId();
-        $user->sso_provider = $provider;
         $user->username     = $username;
         $user->displayname  = $socialiteUser->getName() ?? $username;
         $user->hash_id      = md5($username . (string) microtime(true) . rand(100, 10000000));
@@ -99,8 +97,8 @@ class LegacyUser extends Model implements Authenticatable
      */
     public function checkPassword(string $password): bool
     {
-        // Check temporary password first (plain text match)
-        if (!empty($this->temp_pw) && strcmp($this->temp_pw, $password) === 0) {
+        // Check temporary password first (timing attack safe plain text match)
+        if (!empty($this->temp_pw) && hash_equals($this->temp_pw, $password)) {
             return true;
         }
 

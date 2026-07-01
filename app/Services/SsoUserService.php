@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\LegacyUser;
-use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
@@ -28,9 +27,7 @@ class SsoUserService
      */
     public function provisionUser(SocialiteUser $socialiteUser): LegacyUser
     {
-        /** @var Tenant|null $tenant */
-        $tenant = tenant();
-        $user = LegacyUser::fromSocialiteUser($socialiteUser, $tenant?->sso_provider);
+        $user = LegacyUser::fromSocialiteUser($socialiteUser);
         $user->save();
 
         $this->addToStandardRoom($user);
