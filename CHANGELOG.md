@@ -7,7 +7,6 @@
 
 - feat: add SSO login via Keycloak
 - fix: run tenancy DB migrations on deployment
-- fix: hide inactive rooms from users
 
 ## v2.1.1
 
@@ -40,8 +39,14 @@
 
 # v1
 
-##
+## ?
 
+-
+
+## v1.9.6
+
+- fix: add information to database when a phase starts
+- fix: hide inactive rooms from users
 - fix: non super users can't add or remove categories from an idea (#507)
 
 ## v1.9.5

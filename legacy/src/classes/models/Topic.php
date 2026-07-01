@@ -134,7 +134,7 @@ class Topic
     /* returns topic base data for a specified db id */
     $topic_id = $this->converters->checkTopicId($topic_id); // checks id and converts id to db id if necessary (when hash id was passed)
 
-    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.hash_id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_rooms . '. hash_id as room_hash_id,  ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_topics . '.id = :id');
+    $stmt = $this->db->query('SELECT ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.hash_id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_rooms . '. hash_id as room_hash_id,  ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.phase_start, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id  WHERE ' . $this->db->au_topics . '.id = :id');
     $this->db->bind(':id', $topic_id); // bind topic id
     $topics = $this->db->resultSet();
     if (count($topics) < 1) {
@@ -248,7 +248,7 @@ class Topic
       }
     }
 
-    $stmt = $this->db->query('SELECT count(' . $this->db->au_rel_topics_ideas . '.idea_id) as ideas_num, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.hash_id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_rooms . '. hash_id as room_hash_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.status, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_rel_topics_ideas . '.topic_id = ' . $this->db->au_topics . '.id  LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id WHERE ' . $this->db->au_topics . '.id > 0 ' . $extra_where . $search_query . ' GROUP BY ' . $this->db->au_topics . '.id ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
+    $stmt = $this->db->query('SELECT count(' . $this->db->au_rel_topics_ideas . '.idea_id) as ideas_num, ' . $this->db->au_topics . '.name, ' . $this->db->au_topics . '.id, ' . $this->db->au_topics . '.hash_id, ' . $this->db->au_topics . '.description_public, ' . $this->db->au_topics . '. room_id, ' . $this->db->au_rooms . '. hash_id as room_hash_id, ' . $this->db->au_topics . '. phase_id, ' . $this->db->au_topics . '.phase_start, ' . $this->db->au_topics . '.status, ' . $this->db->au_topics . '.last_update, ' . $this->db->au_topics . '.phase_duration_0, ' . $this->db->au_topics . '.phase_duration_1, ' . $this->db->au_topics . '.phase_duration_2, ' . $this->db->au_topics . '.phase_duration_3, ' . $this->db->au_topics . '.phase_duration_4, ' . $this->db->au_topics . '.created FROM ' . $this->db->au_topics . ' LEFT JOIN ' . $this->db->au_rel_topics_ideas . ' ON ' . $this->db->au_rel_topics_ideas . '.topic_id = ' . $this->db->au_topics . '.id  LEFT JOIN ' . $this->db->au_rooms . ' ON ' . $this->db->au_topics . '.room_id = ' . $this->db->au_rooms . '.id WHERE ' . $this->db->au_topics . '.id > 0 ' . $extra_where . $search_query . ' GROUP BY ' . $this->db->au_topics . '.id ORDER BY ' . $orderby_field . ' ' . $asc_field . ' ' . $limit_string);
     if ($limit) {
       // only bind if limit is set
       $this->db->bind(':offset', $offset); // bind limit
@@ -362,7 +362,9 @@ class Topic
     }
 
 
-    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_topics . ' (phase_id, phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4, name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:phase_id, :phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4, :name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
+    // phase_start marks when the current phase began; set to creation time so the
+    // initial phase countdown starts now (see editTopic/setTopicProperty for resets)
+    $stmt = $this->db->query('INSERT INTO ' . $this->db->au_topics . ' (phase_id, phase_start, phase_duration_0, phase_duration_1, phase_duration_2, phase_duration_3, phase_duration_4, name, description_internal, description_public, status, hash_id, created, last_update, updater_id, order_importance, room_id) VALUES (:phase_id, NOW(), :phase_duration_0, :phase_duration_1, :phase_duration_2, :phase_duration_3, :phase_duration_4, :name, :description_internal, :description_public, :status, :hash_id, NOW(), NOW(), :updater_id, :order_importance, :room_id)');
     // bind all VALUES
 
     $this->db->bind(':name', $this->crypt->encrypt($name));
@@ -448,6 +450,17 @@ class Topic
 
     if ($phase_id > -1) {
       $extra_query = $extra_query . ", phase_id = :phase_id";
+
+      // Only reset the phase countdown when the phase actually changes. A plain
+      // edit (e.g. description) re-sends the same phase_id and must NOT reset it,
+      // otherwise the remaining duration would be recomputed from scratch.
+      $current_phase = $this->getTopicPhase($topic_id);
+      $current_phase_id = ($current_phase['success'] && $current_phase['data'] !== false)
+        ? intval($current_phase['data'])
+        : -1;
+      if (intval($phase_id) !== $current_phase_id) {
+        $extra_query = $extra_query . ", phase_start = NOW()";
+      }
     }
 
     if ($room_id > 0) {
@@ -605,7 +618,20 @@ class Topic
     // sanitize
     $property = trim($property);
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_topics . ' SET ' . $property . '= :propvalue, last_update= NOW(), updater_id= :updater_id WHERE id= :topic_id');
+    // When the phase changes through the generic setter, reset the phase countdown
+    // start. Only reset on an actual change so unrelated updates don't restart it.
+    $phase_start_query = "";
+    if ($property === 'phase_id') {
+      $current_phase = $this->getTopicPhase($topic_id);
+      $current_phase_id = ($current_phase['success'] && $current_phase['data'] !== false)
+        ? intval($current_phase['data'])
+        : -1;
+      if (intval($propvalue) !== $current_phase_id) {
+        $phase_start_query = ", phase_start= NOW()";
+      }
+    }
+
+    $stmt = $this->db->query('UPDATE ' . $this->db->au_topics . ' SET ' . $property . '= :propvalue, last_update= NOW()' . $phase_start_query . ', updater_id= :updater_id WHERE id= :topic_id');
     // bind all VALUES
     $this->db->bind(':propvalue', $propvalue);
     $this->db->bind(':updater_id', $updater_id); // id of the user doing the update (i.e. admin)
