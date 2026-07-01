@@ -1352,7 +1352,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
               if (is_int($arguments["user_id"])) {
                 $total_checks += ($user_id === $arguments["user_id"]);
               } else {
-                $total_checks += ($user_hash === $arguments["user_hash"] || $user_hash === $arguments["user_id"]);
+                $total_checks += (array_key_exists("user_hash", $arguments) && $user_hash === $arguments["user_hash"] || $user_hash === $arguments["user_id"]);
               }
               continue;
             }

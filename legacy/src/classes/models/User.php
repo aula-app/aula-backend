@@ -190,6 +190,7 @@ class User
     // auto convert
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $text_id = $this->converters->checkTextId($text_id);
+    $updater_id = $this->converters->checkUserId($updater_id);
 
     // check if user and topic exist
     $user_exist = $this->converters->checkUserExist($user_id);
@@ -199,7 +200,6 @@ class User
       // everything ok, users and text exists
 
       // add relation to database (consent)
-
       $stmt = $this->db->query('INSERT INTO ' . $this->db->au_consent . ' (user_id, text_id, consent, status, created, last_update, date_consent, updater_id) VALUES (:user_id, :text_id, :consent, 1, NOW(), NOW(), NOW(), :updater_id) ON DUPLICATE KEY UPDATE user_id = :user_id, text_id = :text_id, consent = :consent, status = 1, last_update = NOW(), updater_id = :updater_id');
 
       // bind all VALUES
@@ -210,48 +210,34 @@ class User
 
 
       $err = false; // set error variable to false
-
       try {
         $action = $this->db->execute(); // do the query
-
       } catch (Exception $e) {
-
         $err = true;
       }
 
       if (!$err) {
-        // set consent cache value in db - increment
-        if ($this->converters->getTextConsentValue($text_id) == 2 && $consent_value == 1) {
-          $this->changeGivenConsent($user_id, 1);
-        }
-
         $this->syslog->addSystemEvent(0, "Added consent for user " . $user_id . " for text " . $text_id, 0, "", 1);
         $returnvalue['success'] = true; // set return value
         $returnvalue['error_code'] = 0; //db  error code
         $returnvalue['data'] = 1; // returned data
         $returnvalue['count'] = 1; // returned count of datasets
-
         return $returnvalue;
-
-
       } else {
         $returnvalue['success'] = false; // set return value
         $returnvalue['error_code'] = 1; //db  error code
         $returnvalue['data'] = false; // returned data
         $returnvalue['count'] = 0; // returned count of datasets
-
         return $returnvalue;
-
       }
 
     } else {
+      // if !(user_exist == 1 && text_exist == 1)
       $returnvalue['success'] = true; // set return value
       $returnvalue['error_code'] = 2; //db  error code
       $returnvalue['data'] = $user_exist . $text_exist; // returned data
       $returnvalue['count'] = 0; // returned count of datasets
-
       return $returnvalue;
-
     }
 
   } // end function
@@ -744,6 +730,7 @@ class User
     /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
     returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $room_id = $this->converters->checkRoomId($room_id); // checks room id and converts room id to db room id if necessary (when room hash id was passed)
     // check if user and room exist
     $user_exist = $this->converters->checkUserExist($user_id);
@@ -825,6 +812,7 @@ class User
     /* adds a user to a room, accepts user_id (by hash or id) and room id (by hash or id)
     returns 1,1 = ok, 0,1 = user id not in db 0,2 room id not in db 0,3 user id not in db room id not in db */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     // check if user and room exist
     $user_exist = $this->converters->checkUserExist($user_id);
@@ -1064,6 +1052,7 @@ class User
       Parses CSV and adds all users to all rooms. If a User already exists with the same fields, its user_id is reused. If a User exists with some of the fields from CSV not matching the ones in the database, this is an error and the whole operation will not be committed.
      */
 
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     try {
       $rooms = $this->roomRepository->getRoomsByHashIds($room_ids);
       if (count($rooms) != count($room_ids)) {
@@ -1301,6 +1290,7 @@ class User
     /* adds a user to a group, accepts user_id (by hash or id) and group id (by hash or id)
     returns 1,1 = ok, 0,1 = user id not in db 0,2 group id not in db 0,3 user id not in db group id not in db */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $group_id = $this->converters->checkGroupId($group_id); // checks id and converts id to db id if necessary (when hash id was passed)
     // check if user and group exist
     $user_exist = $this->converters->checkUserExist($user_id);
@@ -1848,9 +1838,9 @@ class User
     $email = strtolower(trim($email));
     $about_me = trim($about_me);
     $password = trim($password);
-    $updater_id = intval($updater_id);
     $status = intval($status);
     $userlevel = intval($userlevel);
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     // @TODO: validate input, for example Commands can fail if username or realname contains ";" which is used as
     //   a separator in Command parameters
@@ -2012,6 +2002,7 @@ class User
     */
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $status = intval($status);
     $email = strtolower(trim($email));
 
@@ -2235,6 +2226,7 @@ class User
   public function setUserRoles($user_id, $roles, $updater_id = 0)
   {
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW(), updater_id= :updater_id WHERE id = :user_id');
     $this->db->bind(':user_id', $user_id);
     $this->db->bind(':roles', $roles);
@@ -2274,6 +2266,7 @@ class User
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     // sanitize
     $infinite = intval($infinite);
     if ($infinite > 1) {
@@ -2334,6 +2327,7 @@ class User
      updater_id is the id of the user that commits the update (i.E. admin )
     */
     $about_me = $this->crypt->encrypt(trim($about_me)); // sanitize and encrypt about text
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
@@ -2380,6 +2374,7 @@ class User
      realname = actual name of the user
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET realname= :realname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
     // bind all VALUES
@@ -2423,6 +2418,7 @@ class User
      displayname = shown name of the user in the system
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET displayname= :displayname, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
     // bind all VALUES
@@ -2467,6 +2463,7 @@ class User
      email = email address of the user
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $email = strtolower(trim($email));
 
     if (strlen($email) > 0) {
@@ -2514,6 +2511,7 @@ class User
      username = username of the user in the system
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET username= :username, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
     // bind all VALUES
@@ -2558,6 +2556,7 @@ class User
      pw = pw in clear text
     */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET pw= :pw, last_update= NOW(), updater_id= :updater_id WHERE id= :userid');
 
@@ -2608,6 +2607,7 @@ class User
      */
 
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
     $stmt = $this->db->query('DELETE FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
     $this->db->bind(':id', $user_id);
