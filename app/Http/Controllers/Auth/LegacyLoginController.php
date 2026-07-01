@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -13,7 +14,8 @@ class LegacyLoginController extends Controller
 {
     public function __construct(
         protected LegacyJwtService $jwtService
-    ) {}
+    ) {
+    }
 
     /**
      * Handle a login request.
@@ -100,7 +102,7 @@ class LegacyLoginController extends Controller
      */
     protected function getReactivationDate(LegacyUser $user): ?string
     {
-        if ($user->status !== LegacyUser::STATUS_SUSPENDED) {
+        if ($user->status !== UserStatus::Suspended->value) {
             return null;
         }
 

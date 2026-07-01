@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Services\SsoUserService;
 use Mockery;
@@ -18,7 +20,7 @@ class SsoUserServiceTest extends TestCase
     {
         parent::setUp();
         $this->ensureTestTenantExists();
-        $this->service = new SsoUserService;
+        $this->service = new SsoUserService();
     }
 
     protected function tearDown(): void
@@ -96,8 +98,8 @@ class SsoUserServiceTest extends TestCase
         $this->assertEquals('sub-prov-001', $user->sso_sub);
         $this->assertEquals('testuser', $user->username);
         $this->assertEquals('Test User', $user->displayname);
-        $this->assertEquals(20, $user->userlevel->value);
-        $this->assertEquals(1, $user->status);
+        $this->assertEquals(UserLevel::User, $user->userlevel);
+        $this->assertEquals(UserStatus::Active, $user->status);
     }
 
     public function test_provision_user_falls_back_to_email_when_nickname_is_null(): void
@@ -113,6 +115,7 @@ class SsoUserServiceTest extends TestCase
     // addToStandardRoom
     // =========================================================
 
+    // @FIXME: we shouldn't have conditional tests - ensure std. room exists for this test case
     public function test_add_to_standard_room_inserts_membership_when_standard_room_exists(): void
     {
         self::$testTenant->run(function () {
@@ -145,13 +148,13 @@ class SsoUserServiceTest extends TestCase
 
     private function makeUser(string $email, ?string $sub): LegacyUser
     {
-        $user              = new LegacyUser;
+        $user              = new LegacyUser();
         $user->email       = $email;
         $user->sso_sub     = $sub;
-        $user->status      = LegacyUser::STATUS_ACTIVE;
+        $user->status      = UserStatus::Active;
         $user->username    = $email;
         $user->hash_id     = md5($email . microtime(true));
-        $user->userlevel   = 20;
+        $user->userlevel   = UserLevel::User;
         $user->roles       = json_encode([]);
         $user->refresh_token = false;
         $user->save();

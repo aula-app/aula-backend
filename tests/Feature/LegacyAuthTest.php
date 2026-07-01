@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Services\LegacyJwtService;
 use Tests\Concerns\CreatesTestTenant;
@@ -24,8 +25,11 @@ class LegacyAuthTest extends TestCase
 
     public function test_jwt_service_generates_valid_tokens(): void
     {
-        $service = new class extends LegacyJwtService {
-            protected function getJwtKey(): string { return 'test_secret'; }
+        $service = new class () extends LegacyJwtService {
+            protected function getJwtKey(): string
+            {
+                return 'test_secret';
+            }
         };
 
         $user = new LegacyUser();
@@ -75,16 +79,16 @@ class LegacyAuthTest extends TestCase
     {
         $user = new LegacyUser();
 
-        $user->status = LegacyUser::STATUS_ACTIVE;
+        $user->status = UserStatus::Active;
         $this->assertTrue($user->isActive());
 
-        $user->status = LegacyUser::STATUS_INACTIVE;
+        $user->status = UserStatus::Inactive;
         $this->assertFalse($user->isActive());
 
-        $user->status = LegacyUser::STATUS_SUSPENDED;
+        $user->status = UserStatus::Suspended;
         $this->assertFalse($user->isActive());
 
-        $user->status = LegacyUser::STATUS_ARCHIVED;
+        $user->status = UserStatus::Archived;
         $this->assertFalse($user->isActive());
     }
 
@@ -132,7 +136,7 @@ class LegacyAuthTest extends TestCase
             $user = new LegacyUser();
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash($password, PASSWORD_DEFAULT);
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->hash_id = 'phpunit_hash_' . uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
@@ -175,7 +179,7 @@ class LegacyAuthTest extends TestCase
             $user = new LegacyUser();
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash('correctpass', PASSWORD_DEFAULT);
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->hash_id = 'phpunit_hash_' . uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
@@ -225,7 +229,7 @@ class LegacyAuthTest extends TestCase
             $user = new LegacyUser();
             $user->username = 'phpunit_inactive';
             $user->pw = password_hash('testpass', PASSWORD_DEFAULT);
-            $user->status = LegacyUser::STATUS_SUSPENDED;
+            $user->status = UserStatus::Suspended;
             $user->hash_id = 'phpunit_hash_' . uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
@@ -242,8 +246,8 @@ class LegacyAuthTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'success'     => true,
-                'user_status' => LegacyUser::STATUS_SUSPENDED,
+                'success' => true,
+                'user_status' => UserStatus::Suspended->value,
             ])
             ->assertJsonMissing(['JWT'])
             ->assertJsonMissingPath('error_code');
@@ -255,8 +259,11 @@ class LegacyAuthTest extends TestCase
 
     public function test_token_matches_legacy_format(): void
     {
-        $service = new class extends LegacyJwtService {
-            protected function getJwtKey(): string { return 'test_key'; }
+        $service = new class () extends LegacyJwtService {
+            protected function getJwtKey(): string
+            {
+                return 'test_key';
+            }
         };
 
         $user = new LegacyUser();

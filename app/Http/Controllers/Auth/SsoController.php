@@ -27,7 +27,8 @@ class SsoController extends Controller
         protected LegacyJwtService $jwtService,
         protected SsoUserService $ssoUserService,
         protected IdTokenVerifier $idTokenVerifier,
-    ) {}
+    ) {
+    }
 
     // =========================================================
     // Public endpoints

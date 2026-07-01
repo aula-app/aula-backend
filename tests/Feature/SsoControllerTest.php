@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
@@ -150,7 +152,8 @@ class SsoControllerTest extends TestCase
             $user = LegacyUser::where('sso_sub', 'sub-new-001')->first();
             $this->assertNotNull($user);
             $this->assertEquals('sso_new@test.example', $user->email);
-            $this->assertEquals(20, $user->userlevel->value);
+            $this->assertEquals('mock-iserv', $user->sso_provider);
+            $this->assertEquals(UserLevel::User, $user->userlevel);
         });
     }
 
@@ -181,7 +184,7 @@ class SsoControllerTest extends TestCase
     public function test_callback_with_email_match_to_inactive_user_rejects_account_inactive_not_link(): void
     {
         self::$testTenant->run(function () {
-            $this->createUser('sso_inactive_email@test.example', null, LegacyUser::STATUS_SUSPENDED);
+            $this->createUser('sso_inactive_email@test.example', null, UserStatus::Suspended);
         });
 
         $this->mockSocialiteCallback('sub-inactive-email-001', 'sso_inactive_email@test.example', 'Inactive', 'inactive');
@@ -242,7 +245,7 @@ class SsoControllerTest extends TestCase
     public function test_callback_inactive_user_redirects_to_account_inactive_error(): void
     {
         self::$testTenant->run(function () {
-            $this->createUser('sso_inactive@test.example', 'sub-inactive-001', LegacyUser::STATUS_SUSPENDED);
+            $this->createUser('sso_inactive@test.example', 'sub-inactive-001', UserStatus::Inactive);
         });
 
         Http::fake(['*/broker/*/token' => Http::response([], 200)]);
@@ -613,7 +616,7 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => false]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_logout@test.example', 'sub-logout-001', LegacyUser::STATUS_ACTIVE, ['sso_id_token' => 'idtoken']));
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_logout@test.example', 'sub-logout-001', UserStatus::Active, ['sso_id_token' => 'idtoken']));
 
         $jwt = $this->jwtForUser($user);
 
@@ -629,7 +632,7 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => true]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', LegacyUser::STATUS_ACTIVE, [
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', UserStatus::Active, [
             'sso_id_token'      => 'aula-id-token',
             'sso_refresh_token' => 'refresh-token',
             'sso_idp_id_token'  => null,
@@ -657,7 +660,7 @@ class SsoControllerTest extends TestCase
     // Helpers
     // =========================================================
 
-    private function createUser(string $email, ?string $sub, int $status = LegacyUser::STATUS_ACTIVE, array $extra = []): LegacyUser
+    private function createUser(string $email, ?string $sub, UserStatus $status = UserStatus::Active, array $extra = []): LegacyUser
     {
         $user = new LegacyUser();
         $user->email      = $email;

@@ -22,7 +22,8 @@ class LegacyJwtService
 
         $payload = [
             'exp' => 0,
-            'user_id' => $user->id,
+            // @NOTE: old FE won't work without user_id in JWT (but then again, old FE won't use this endpoint)
+            /* 'user_id' => $user->id, */
             'user_hash' => $user->hash_id,
             'user_level' => $user->userlevel?->value,
             'roles' => json_decode($user->roles ?? '[]'),

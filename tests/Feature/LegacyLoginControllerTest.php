@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -71,8 +72,8 @@ class LegacyLoginControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertJson(['success' => false, 'error' => 'tenant_requires_sso']);
-        $response->assertJsonMissingPath('JWT');
-        $response->assertJsonMissingPath('error_code');
+        $response->assertJsonMissingPath('$.JWT');
+        $response->assertJsonMissingPath('$.error_code');
     }
 
     public function test_login_refused_for_wrong_password_returns_generic_error(): void
@@ -91,11 +92,11 @@ class LegacyLoginControllerTest extends TestCase
 
     private function createUser(string $email, string $username, ?string $sub): LegacyUser
     {
-        $user                = new LegacyUser;
+        $user                = new LegacyUser();
         $user->email         = $email;
         $user->username      = $username;
         $user->sso_sub       = $sub;
-        $user->status        = LegacyUser::STATUS_ACTIVE;
+        $user->status        = UserStatus::Active;
         $user->hash_id       = md5($email . microtime(true));
         $user->userlevel     = 20;
         $user->roles         = json_encode([]);

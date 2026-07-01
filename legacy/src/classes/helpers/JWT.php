@@ -89,7 +89,7 @@ class JWT
             return ["success" => true];
           }
 
-          $refresh = $this->user->checkRefresh($p->user_id);
+          $refresh = $this->user->checkRefresh($p->user_hash);
 
           if ($refresh) {
             return ["success" => false, "error" => "refresh_token"];
