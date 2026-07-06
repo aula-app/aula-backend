@@ -49,6 +49,8 @@ Route::name('aula.')
         /* \Illuminate\View\Middleware\ShareErrorsFromSession::class, */
         InitializeTenancyByRequestData::class,
         /* 'auth:api', // our 'api' guard should be configured to use 'passport' */
+        // TODO: replace with passport?
+        'legacy.jwt',
     ])
     ->prefix('/api/v2')
     ->group(base_path('routes/tenant/api/v2/aula.php'));

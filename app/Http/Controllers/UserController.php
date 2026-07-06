@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+
 use App\Data\User\DomainUserData;
 use App\Data\User\Requests\StoreUserData;
 use App\Data\User\Requests\UpdateUserData;
+use App\Http\Middleware\LegacyUserRequireAdminMiddleware;
 use App\UseCases\User\CreateUserUseCase;
 use App\UseCases\User\DeleteUserUseCase;
 use App\UseCases\User\ListUsersUseCase;
@@ -14,7 +17,7 @@ use App\UseCases\User\ShowUserUseCase;
 use App\UseCases\User\UpdateUserUseCase;
 use Spatie\LaravelData\DataCollection;
 
-class UserController extends Controller
+class UserController extends Controller implements HasMiddleware
 {
     public function __construct(
         protected CreateUserUseCase $createUserUseCase,
@@ -23,6 +26,15 @@ class UserController extends Controller
         protected UpdateUserUseCase $updateUserUseCase,
         protected DeleteUserUseCase $deleteUserUseCase,
     ) {
+    }
+
+    // note: can't use #[Middleware], needs Laravel>=13
+    // note: can't use Closure, Tenancy trips over it
+    public static function middleware(): array
+    {
+        return [
+            LegacyUserRequireAdminMiddleware::class
+        ];
     }
 
     public function index(): DataCollection

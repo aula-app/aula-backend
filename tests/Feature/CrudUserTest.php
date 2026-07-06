@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
+use App\Models\LegacyUser;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Depends;
@@ -28,13 +29,95 @@ class CrudUserTest extends TestCase
         'about_me' => 'About me!',
     ];
 
-    private const array HEADERS = ['aula-instance-code' => 'TEST001'];
+    private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->ensureTestTenantExists();
-        $this->withHeaders(self::HEADERS);
+
+        $adminUser = $this->createUserIfNotExists(UserLevel::TechAdmin, UserStatus::Active);
+        $adminJwt = $this->jwtForUser($adminUser);
+
+        $this->withHeaders([
+            ...self::TENANT_HEADERS,
+            ...['Authorization' => "Bearer {$adminJwt}"],
+        ]);
+    }
+
+    private function createUserIfNotExists(UserLevel $userLevel, UserStatus $userStatus)
+    {
+        return self::$testTenant->run(function () use ($userLevel, $userStatus) {
+            $existingUser = LegacyUser::where([
+                'userlevel' => $userLevel->value,
+                'status' => $userStatus->value
+            ]);
+            if ($existingUser->exists()) {
+                return $existingUser->first();
+            }
+            $user = new LegacyUser();
+            $email = "e2e_test_level{$userLevel->value}_status{$userStatus->value}@aula.de";
+            $user->email         = $email;
+            $user->displayname   = 'TestAdmin';
+            $user->realname      = 'Test Admin';
+            $user->about_me      = 'I am a test admin.';
+            $user->sso_sub       = null;
+            $user->status        = $userStatus;
+            $user->username      = $email;
+            $user->hash_id       = md5($email . microtime(true));
+            $user->userlevel     = $userLevel;
+            $user->roles         = json_encode([]);
+            $user->refresh_token = false;
+            $user->save();
+            return $user;
+        });
+    }
+
+    private function jwtForUser(LegacyUser $user): string
+    {
+        return self::$testTenant->run(
+            fn () => app(\App\Services\LegacyJwtService::class)->generateToken($user)
+        ) ?? '';
+    }
+
+    public function test_authz_nonadmin()
+    {
+        $nonAdminUser = $this->createUserIfNotExists(UserLevel::Moderator, UserStatus::Active);
+        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
+        $this->getJson(
+            '/api/v2/users',
+            // override default admin headers
+            ['Authorization' => "Bearer {$nonAdminJwt}"]
+        )
+            ->assertForbidden();
+        $this->postJson(
+            '/api/v2/users',
+            [],
+            ['Authorization' => "Bearer {$nonAdminJwt}"]
+        )
+            ->assertForbidden();
+    }
+
+    public function test_authz_inactive()
+    {
+        $inActiveUser = $this->createUserIfNotExists(UserLevel::TechAdmin, UserStatus::Inactive);
+        $inActiveJwt = $this->jwtForUser($inActiveUser);
+        $this->getJson(
+            '/api/v2/users',
+            ['Authorization' => "Bearer {$inActiveJwt}"]
+        )
+            ->assertJson(['error' => 'user_not_active'])
+            ->assertUnauthorized();
+    }
+
+    public function test_authz_unauthorized()
+    {
+        $this->getJson(
+            '/api/v2/users',
+            ['Authorization' => null]
+        )
+            ->assertJson(['error' => 'Authorization header missing or invalid'])
+            ->assertUnauthorized();
     }
 
     public function test_create()
