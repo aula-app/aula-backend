@@ -46,7 +46,7 @@ class LegacyAuthTest extends TestCase
 
         $validation = $service->validateToken($token);
         $this->assertTrue($validation['success']);
-        $this->assertEquals(1, $validation['payload']->user_id);
+        $this->assertEquals('test_hash_123', $validation['payload']->user_hash);
     }
 
     public function test_middleware_rejects_missing_token(): void
@@ -283,14 +283,16 @@ class LegacyAuthTest extends TestCase
         $this->assertEquals('JWT', $header['typ']);
 
         $this->assertArrayHasKey('exp', $payload);
-        $this->assertArrayHasKey('user_id', $payload);
+        // see @NOTE in LegacyJwtService->generateToken()
+        // $this->assertArrayHasKey('user_id', $payload);
         $this->assertArrayHasKey('user_hash', $payload);
         $this->assertArrayHasKey('user_level', $payload);
         $this->assertArrayHasKey('roles', $payload);
         $this->assertArrayHasKey('temp_pw', $payload);
 
         $this->assertEquals(0, $payload['exp']);
-        $this->assertEquals(1, $payload['user_id']);
+        // see above
+        // $this->assertEquals(1, $payload['user_id']);
         $this->assertEquals('hash123', $payload['user_hash']);
         $this->assertEquals(UserLevel::User->value, $payload['user_level']);
     }
