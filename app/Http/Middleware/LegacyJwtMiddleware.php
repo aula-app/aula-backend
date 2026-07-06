@@ -43,7 +43,7 @@ class LegacyJwtMiddleware
         $payload = $validation['payload'];
 
         // Verify user exists in database
-        $user = LegacyUser::where('hash_id', $payload->user_hash);
+        $user = LegacyUser::where('hash_id', $payload->user_hash)->first();
 
         if ($user === null) {
             return $this->errorResponse('user_not_found', 401);
@@ -66,7 +66,6 @@ class LegacyJwtMiddleware
 
         // Attach JWT payload and user info to request
         $request->attributes->set('jwt_payload', $payload);
-        $request->attributes->set('user_id', $payload->user_id);
         $request->attributes->set('user_level', $payload->user_level);
         $request->attributes->set('user_hash', $payload->user_hash);
         $request->attributes->set('roles', $payload->roles ?? []);

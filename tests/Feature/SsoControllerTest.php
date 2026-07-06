@@ -604,7 +604,7 @@ class SsoControllerTest extends TestCase
         // Should authenticate as the sso_sub user, not the email user
         $this->assertRedirectAuthenticatesUser($response, $subUser);
         $payload = $this->decodeRedirectToken($response);
-        $this->assertNotEquals($emailUser->id, $payload->user_id);
+        $this->assertNotEquals($emailUser->hash_id, $payload->user_hash);
     }
 
     // =========================================================
