@@ -21,26 +21,18 @@ services:
       CENTRAL_DB_USER: ${CENTRAL_DB_USER:-aula_user}
       CENTRAL_DB_PASS: ${CENTRAL_DB_PASS:-example}
     volumes:
-      - type: bind
-        source: ./app
-        target: /opt/laravel/app
-        bind:
-          create_host_path: false
-      - type: bind
-        source: ./config
-        target: /opt/laravel/config
-        bind:
-          create_host_path: false
-      - type: bind
-        source: ./routes
-        target: /opt/laravel/routes
-        bind:
-          create_host_path: false
-      - type: bind
-        source: ./database
-        target: /opt/laravel/database
-        bind:
-          create_host_path: false
+      - ./app:/opt/laravel/app
+      - ./config:/opt/laravel/config
+      - ./public:/opt/laravel/public
+      - ./resources:/opt/laravel/resources
+      - ./routes:/opt/laravel/routes
+      - ./database:/opt/laravel/database
+      - ./bootstrap:/opt/laravel/bootstrap
+      # dockerized and cli/artisan (with require-dev) seem to need separate caches
+      - type: tmpfs
+        target: /opt/laravel/bootstrap/cache
+        tmpfs:
+          mode: 0o01777
       - type: bind
         source: ./.env
         target: /opt/laravel/.env
