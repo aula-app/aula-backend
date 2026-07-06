@@ -66,6 +66,9 @@ services:
         condition: service_healthy
     networks:
       - aula_local
+    extra_hosts:
+      # for resolution on Linux
+      - "host.docker.internal:host-gateway"
 
   nginx:
     image: nginx:stable-alpine-slim
