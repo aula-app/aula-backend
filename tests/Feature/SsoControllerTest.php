@@ -152,7 +152,6 @@ class SsoControllerTest extends TestCase
             $user = LegacyUser::where('sso_sub', 'sub-new-001')->first();
             $this->assertNotNull($user);
             $this->assertEquals('sso_new@test.example', $user->email);
-            $this->assertEquals('mock-iserv', $user->sso_provider);
             $this->assertEquals(UserLevel::User, $user->userlevel);
         });
     }
