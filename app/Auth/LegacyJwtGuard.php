@@ -69,13 +69,9 @@ class LegacyJwtGuard implements Guard
         }
 
         $payload = $validation['payload'];
-        $user = LegacyUser::find($payload->user_id);
+        $user = LegacyUser::firstWhere(['hash_id' => $payload->user_hash]);
 
         if ($user === null || !$user->isActive()) {
-            return null;
-        }
-
-        if ($user->hash_id !== $payload->user_hash) {
             return null;
         }
 

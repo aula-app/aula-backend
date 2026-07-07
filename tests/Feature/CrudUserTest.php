@@ -95,6 +95,13 @@ class CrudUserTest extends TestCase
             [],
             ['Authorization' => "Bearer {$nonAdminJwt}"]
         )
+            // validation happens *before* Gate
+            ->assertUnprocessable();
+        $this->postJson(
+            '/api/v2/users',
+            self::NEW_USER_DATA,
+            ['Authorization' => "Bearer {$nonAdminJwt}"]
+        )
             ->assertForbidden();
     }
 
