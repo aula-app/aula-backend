@@ -7,11 +7,15 @@ namespace App\UseCases\User;
 use App\Data\User\DomainUserData;
 use App\Data\User\Requests\UpdateUserData;
 use App\Models\LegacyUser;
+use Illuminate\Support\Facades\Gate;
 
 class UpdateUserUseCase
 {
     public function execute(string $hashId, UpdateUserData $userUpdateData): DomainUserData
     {
+        Gate::authorize('update-users', $hashId);
+        // Gate::authorize('user-self', $publicId);
+
         /* TODO: DB::transaction */
         $legacyUser = LegacyUser::where('hash_id', $hashId)->firstOrFail();
 

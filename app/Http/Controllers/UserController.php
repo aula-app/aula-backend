@@ -31,36 +31,39 @@ class UserController extends Controller
     // note: can't use #[Authorize], needs Laravel>=13
     public function index(Request $request): DataCollection
     {
+        Gate::authorize('index-users');
+        // Gate::authorize('admin');
         // TODO: implement
         // - pagination
         // - sorting
         // - filter by status, userlevel, room_id?
-        Gate::authorize('admin');
         return $this->listUsersUseCase->execute();
     }
 
     // TODO? public_id is nullable in DB
     public function show(string $publicId): DomainUserData
     {
-        Gate::authorize('admin');
+        // authz in UseCase
         return $this->showUserUseCase->execute($publicId);
     }
 
     public function store(StoreUserData $userStoreData): DomainUserData
     {
-        Gate::authorize('admin');
+        // Gate::authorize('admin');
+        Gate::authorize('store-users');
         return $this->createUserUseCase->execute($userStoreData);
     }
 
     public function update(string $publicId, UpdateUserData $userUpdateData): DomainUserData
     {
-        Gate::authorize('admin');
+        // authz in usecase
         return $this->updateUserUseCase->execute($publicId, $userUpdateData);
     }
 
     public function destroy(string $publicId): void
     {
         Gate::authorize('admin');
+        // Gate::authorize('destroy-users');
         $this->deleteUserUseCase->execute($publicId);
     }
 }

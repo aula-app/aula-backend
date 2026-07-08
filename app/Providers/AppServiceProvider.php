@@ -20,5 +20,34 @@ class AppServiceProvider extends ServiceProvider
                 UserLevel::TechAdmin,
             ]);
         });
+
+        Gate::before(function (LegacyUser $user): bool|null {
+            return $user->isAdmin() ? true : null;
+        });
+
+        Gate::define('user-self', function (LegacyUser $user, string $publicId) {
+            return $user->hash_id === $publicId;
+        });
+
+        Gate::define('index-users', function () {
+            return false;
+        });
+
+        Gate::define('show-users', function (LegacyUser $user, string $publicId) {
+            return $user->hash_id === $publicId;
+        });
+
+        Gate::define('store-users', function () {
+            return false;
+        });
+
+        Gate::define('update-users', function (LegacyUser $user, string $publicId) {
+            return $user->hash_id === $publicId;
+        });
+
+        Gate::define('destroy-users', function () {
+            return false;
+        });
+
     }
 }

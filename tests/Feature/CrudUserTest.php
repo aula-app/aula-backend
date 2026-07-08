@@ -45,7 +45,7 @@ class CrudUserTest extends TestCase
         ]);
     }
 
-    private function createUserIfNotExists(UserLevel $userLevel, UserStatus $userStatus)
+    private function createUserIfNotExists(UserLevel $userLevel, UserStatus $userStatus): LegacyUser
     {
         return self::$testTenant->run(function () use ($userLevel, $userStatus) {
             $existingUser = LegacyUser::where([
@@ -101,6 +101,24 @@ class CrudUserTest extends TestCase
             '/api/v2/users',
             self::NEW_USER_DATA,
             ['Authorization' => "Bearer {$nonAdminJwt}"]
+        )
+            ->assertForbidden();
+    }
+
+    public function test_authz_show_self()
+    {
+        $user = $this->createUserIfNotExists(UserLevel::Moderator, UserStatus::Active);
+        $otherUser = $this->createUserIfNotExists(UserLevel::User, UserStatus::Active);
+        $this->assertNotEquals($user->hash_id, $otherUser->hash_id);
+        $jwt = $this->jwtForUser($user);
+        $this->getJson(
+            "/api/v2/users/{$user->hash_id}",
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertOk();
+        $this->getJson(
+            "/api/v2/users/{$otherUser->hash_id}",
+            ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertForbidden();
     }

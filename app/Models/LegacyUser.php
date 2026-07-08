@@ -83,6 +83,14 @@ class LegacyUser extends Model implements Authenticatable
         return $this->status === UserStatus::Active;
     }
 
+    public function isAdmin(): bool
+    {
+        return \in_array($this->userlevel, [
+            UserLevel::Admin,
+            UserLevel::TechAdmin,
+        ]);
+    }
+
     /**
      * Check if the user needs to refresh their token.
      */
