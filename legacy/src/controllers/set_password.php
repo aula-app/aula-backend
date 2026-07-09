@@ -21,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
   $stmt = $db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
   $db->bind(':secret', $secret);
+  // sleep between 2ms and 25ms to avoid timing attacks
+  usleep(microseconds: rand(2_000, 25_000));
 
   if (count($db->resultSet()) > 0) {
     header('Content-Type: application/json; charset=utf-8');
@@ -30,14 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $json = file_get_contents('php://input');
   $input = json_decode($json, true);
 
-  $secret =  $input["secret"];
+  $secret = $input["secret"];
   $stmt = $db->query('SELECT user_id FROM au_change_password WHERE secret = :secret');
   $db->bind(':secret', $secret);
+  // sleep between 2ms and 25ms to avoid timing attacks
+  usleep(microseconds: rand(2_000, 25_000));
 
   if (count($db->resultSet()) > 0) {
     $user_id = $db->resultSet()[0]["user_id"];
     $password = $input['password'];
-    
+
     // Validate minimum password length
     $min_password_length = 12; // Configure minimum password length here
     if (strlen($password) < $min_password_length) {
@@ -45,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
       echo json_encode(["success" => false, "error" => "Password must be at least {$min_password_length} characters long"]);
       return;
     }
-    
+
     $user = new User($db, $crypt, $syslog);
     $user->setUserPW($user_id, $password);
     // Delete secret from db
