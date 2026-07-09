@@ -142,6 +142,24 @@ class SsoController extends Controller
             return $this->frontendError('invalid_state');
         }
 
+        // Keycloak (or the upstream IdP) can redirect back with an OAuth error
+        // instead of an authorization code — most commonly `access_denied` when the
+        // user cancels the login at the identity provider. There is no code to
+        // exchange, so surface it to the frontend rather than letting the token
+        // exchange in Socialite blow up.
+        $oauthError = $request->query('error');
+        if ($oauthError !== null && $oauthError !== '') {
+            Log::info('SSO: identity provider returned an OAuth error', [
+                'tenant'            => $instanceCode,
+                'error'             => $oauthError,
+                'error_description' => $request->query('error_description'),
+            ]);
+
+            return $this->frontendError(
+                $oauthError === 'access_denied' ? 'login_cancelled' : 'sso_provider_error',
+            );
+        }
+
         $session = $this->completeOauthAndResolveTenant($instanceCode);
 
         if ($session instanceof RedirectResponse) {
