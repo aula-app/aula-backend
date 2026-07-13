@@ -1,5 +1,7 @@
 <?php
 
+// TODO delete after discussion
+
 namespace App\Policies;
 
 use App\Data\User\Requests\StoreUserData;
