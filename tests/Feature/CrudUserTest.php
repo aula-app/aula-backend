@@ -58,12 +58,12 @@ class CrudUserTest extends TestCase
             $user = new LegacyUser();
             $email = "e2e_test_level{$userLevel->value}_status{$userStatus->value}@aula.de";
             $user->email         = $email;
-            $user->displayname   = 'TestAdmin';
-            $user->realname      = 'Test Admin';
-            $user->about_me      = 'I am a test admin.';
+            $user->displayname   = self::NEW_USER_DATA['displayName'];
+            $user->realname      = self::NEW_USER_DATA['realName'];
+            $user->about_me      = self::USER_DATA_UPDATE['aboutMe'];
             $user->sso_sub       = null;
             $user->status        = $userStatus;
-            $user->username      = $email;
+            $user->username      = self::NEW_USER_DATA['userName'];
             $user->hash_id       = md5($email . microtime(true));
             $user->userlevel     = $userLevel;
             $user->roles         = json_encode([]);
@@ -421,5 +421,37 @@ class CrudUserTest extends TestCase
             ->assertNotFound();
         $this->deleteJson('/api/v2/users/foo', [])
             ->assertNotFound();
+    }
+
+    public function test_show_gdpr_info()
+    {
+        $user = $this->createUserIfNotExists(UserLevel::User, UserStatus::Active);
+        $this->getJson('/api/v2/user-gdpr-info/'.$user->hash_id)
+            ->assertOk()
+            ->assertJsonMissingPath('id')
+            ->assertJson([
+                'user' => self::NEW_USER_DATA,
+                // TODO: how to test ideas & comments? create here?
+                'userIdeas' => '',
+                'userComments' => '',
+            ]);
+    }
+
+    public function test_authz_show_gdpr_info_self()
+    {
+        $user = $this->createUserIfNotExists(UserLevel::Moderator, UserStatus::Active);
+        $otherUser = $this->createUserIfNotExists(UserLevel::User, UserStatus::Active);
+        $this->assertNotEquals($user->hash_id, $otherUser->hash_id);
+        $jwt = $this->jwtForUser($user);
+        $this->getJson(
+            "/api/v2/user-gdpr-info/{$user->hash_id}",
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertOk();
+        $this->getJson(
+            "/api/v2/user-gdpr-info/{$otherUser->hash_id}",
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertForbidden();
     }
 }

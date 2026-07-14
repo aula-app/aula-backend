@@ -67,5 +67,9 @@ class AuthzServiceProvider extends ServiceProvider
         });
 
         Gate::define(Gates::DeleteUser, fn () => false);
+
+        Gate::define(Gates::ShowUserGdprInfo, function (LegacyUser $user, string $publicId) {
+            return $user->hash_id === $publicId;
+        });
     }
 }
