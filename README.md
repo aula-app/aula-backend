@@ -19,11 +19,21 @@ Thank you for your interest. See contribution guidelines at [`CONTRIBUTION.md`](
 
 ### Running
 
+Requirements:
+
+- Your machine's PHP needs extensions `intl`and `sodium` installed and enabled.
+
 First time setup:
 
 ```bash
 # Copy example configs for legacy
 make prepare-legacy-local
+
+cp .env.example .env
+# and edit .env
+# for use with mariadb from docker compose, set DB_PORT=3307
+
+composer install
 # Generate keypair for oauth
 php artisan passport:keys -q
 ```
