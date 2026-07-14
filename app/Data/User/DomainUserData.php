@@ -29,10 +29,12 @@ class DomainUserData extends AbstractUserData
     public readonly string|null $email;
 
     #[MapName('userlevel')]
-    public readonly UserLevel $userLevel;
+    // LegacyUser's fields are basically all NULLable, including userlevel, about_me and created_at (see below).
+    // TODO: To work with legacy data, we need to allow null here, or, have sane defaults?
+    public readonly UserLevel|null $userLevel;
 
     #[MapName('about_me')]
-    public readonly string $aboutMe;
+    public readonly string|null $aboutMe;
 
     // Input+Output not synonymous here:
     // Input: from legacyUser
