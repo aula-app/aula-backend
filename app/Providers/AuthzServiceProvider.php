@@ -11,6 +11,7 @@ class AuthzServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        error_log('jheyyyy');
         Gate::define('admin', function (LegacyUser $user) {
             return \in_array($user->userlevel, [
                 UserLevel::Admin,
@@ -46,5 +47,8 @@ class AuthzServiceProvider extends ServiceProvider
             return false;
         });
 
+        Gate::define('show-user-gdpr-info', function (LegacyUser $user, string $publicId) {
+            return $user->hash_id === $publicId;
+        });
     }
 }
