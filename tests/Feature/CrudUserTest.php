@@ -29,6 +29,14 @@ class CrudUserTest extends TestCase
         'aboutMe' => 'About me!',
     ];
 
+    private const array NEW_ROOM_DATA = [
+        'room_name' => 'Testroom',
+        'description_public' => 'Public test description',
+        'description_internal' => 'Internal test description',
+        'phase_duration_1' => 14,
+        'phase_duration_3' => 14,
+    ];
+
     private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
 
     protected function setUp(): void
@@ -421,5 +429,22 @@ class CrudUserTest extends TestCase
             ->assertNotFound();
         $this->deleteJson('/api/v2/users/foo', [])
             ->assertNotFound();
+    }
+
+    public function test_create_room()
+    {
+        $result = $this->postJson(
+            '/api/v2/rooms',
+            self::NEW_ROOM_DATA,
+        )
+            ->assertCreated()
+            ->assertJsonMissingPath('id')
+            ->assertJson(self::NEW_ROOM_DATA);
+        $newRoomDecoded = $result->decodeResponseJson();
+        $this->assertIsString($newRoomDecoded['created_at']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newRoomDecoded['created_at']));
+        $newRoomPublicId = $newRoomDecoded['public_id'];
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newRoomPublicId);
+        return $newRoomPublicId;
     }
 }
