@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
  */
 
 // Public routes (no authentication required)
-Route::post('/login', [LegacyLoginController::class, 'login'])->name('login');
+Route::post('/login', LegacyLoginController::class)->name('login');
 
 
 // Protected routes (require valid JWT, but allow refresh_token error)
