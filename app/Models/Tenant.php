@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Idp\IdpProviders;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Contracts\TenantWithDatabase;
@@ -34,8 +35,29 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'sso_force_logout',
             'sso_required',
             'sso_require_email_verified',
-            'eduplaces_school_id',
+            'idp_school_id',
+            'idp_import_status',
+            'idp_import_rooms',
+            'idp_import_users',
+            'idp_import_error',
+            'idp_import_started_at',
+            'idp_import_finished_at',
         ]);
+    }
+
+    /**
+     * Whether this tenant's users and rooms come from an identity provider's
+     * directory.
+     *
+     * Keyed on `sso_provider` — the same alias Keycloak brokers under — so it
+     * is true from tenant creation. The provider's school id is not known until
+     * the first person signs in and tells us, so it cannot be what identifies a
+     * synced tenant.
+     */
+    public function usesIdpDirectory(): bool
+    {
+        return $this->idp_school_id !== null
+            || app(IdpProviders::class)->isConfigured($this->sso_provider);
     }
 
     public function schoolType(): BelongsTo
