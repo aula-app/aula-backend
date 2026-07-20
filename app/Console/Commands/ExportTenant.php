@@ -71,6 +71,7 @@ class ExportTenant extends Command
                 return self::FAILURE;
             }
 
+            // Should match docker/mariadb/950_init-user-privileges.sh
             $grants = implode(', ', [
                 'ALTER', 'ALTER ROUTINE', 'CREATE', 'CREATE ROUTINE', 'CREATE TEMPORARY TABLES', 'CREATE VIEW',
                 'DELETE', 'DROP', 'EVENT', 'EXECUTE', 'INDEX', 'INSERT', 'LOCK TABLES', 'REFERENCES', 'SELECT',
