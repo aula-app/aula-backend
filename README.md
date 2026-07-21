@@ -21,7 +21,7 @@ Thank you for your interest. See contribution guidelines at [`CONTRIBUTION.md`](
 
 Requirements:
 
-- Your machine's PHP needs extensions `intl`and `sodium` installed and enabled.
+- Your machine's PHP needs extensions `intl` and `sodium` installed and enabled.
 
 First time setup:
 
