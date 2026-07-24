@@ -17,7 +17,7 @@ use Tests\TestCase;
  * Covers the IdP-initiated (OIDC third-party initiated login) entry point
  * that Eduplaces' marketplace launcher hits. The callback resolves the
  * aula tenant from the upstream id_token's `school` claim and maps it to
- * `tenants.eduplaces_school_id`.
+ * `tenants.idp_school_id`.
  */
 class SsoIdpInitiatedTest extends TestCase
 {
@@ -47,7 +47,7 @@ class SsoIdpInitiatedTest extends TestCase
             'sso_provider'               => self::EDUPLACES_IDP_ALIAS,
             'sso_force_logout'           => false,
             'sso_require_email_verified' => false,
-            'eduplaces_school_id'        => self::EDUPLACES_SCHOOL,
+            'idp_school_id'        => self::EDUPLACES_SCHOOL,
         ]);
 
         config([
@@ -65,7 +65,12 @@ class SsoIdpInitiatedTest extends TestCase
 
     protected function tearDown(): void
     {
-        self::$testTenant->run(fn () => LegacyUser::where('email', 'like', 'idp_%@test.example')->delete());
+        self::$testTenant->run(function () {
+            LegacyUser::where('email', 'like', 'idp_%@test.example')->delete();
+            // Webhook-provisioned rows carry no email, so they need clearing by
+            // the identifier that does exist.
+            LegacyUser::where('idp_user_id', 'like', 'eduplaces-person-%')->delete();
+        });
         parent::tearDown();
     }
 
@@ -190,8 +195,235 @@ class SsoIdpInitiatedTest extends TestCase
     }
 
     // =========================================================
+    // idp_user_id stamping
+    // =========================================================
+
+    public function test_callback_records_the_idp_user_id(): void
+    {
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-77', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-person77', 'idp_person77@test.example', 'Person 77', 'person77');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('sso_sub', 'keycloak-sub-person77')->first();
+
+            $this->assertNotNull($user);
+            // sso_sub stays the Keycloak subject; the Eduplaces person id is
+            // what webhooks reference and lives in its own column.
+            $this->assertSame('keycloak-sub-person77', $user->sso_sub);
+            $this->assertSame('eduplaces-person-77', $user->idp_user_id);
+        });
+    }
+
+    public function test_callback_refreshes_a_stale_idp_user_id(): void
+    {
+        self::$testTenant->run(function () {
+            $user = LegacyUser::fromSocialiteUser($this->stubSocialiteUser('keycloak-sub-stale', 'idp_stale@test.example'));
+            $user->idp_user_id = 'eduplaces-person-old';
+            $user->save();
+        });
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-new', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-stale', 'idp_stale@test.example', 'Stale', 'stale');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('sso_sub', 'keycloak-sub-stale')->first();
+            $this->assertSame('eduplaces-person-new', $user->idp_user_id);
+        });
+    }
+
+    public function test_callback_leaves_the_person_id_alone_when_another_user_holds_it(): void
+    {
+        self::$testTenant->run(function () {
+            $squatter = LegacyUser::fromSocialiteUser($this->stubSocialiteUser('keycloak-sub-squatter', 'idp_squatter@test.example'));
+            $squatter->idp_user_id = 'eduplaces-person-contested';
+            $squatter->save();
+        });
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-contested', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-contender', 'idp_contender@test.example', 'Contender', 'contender');
+
+        $state = $this->buildIdpInitiatedState();
+
+        // The login itself must still succeed: a contested person id is an
+        // operational problem to triage, not a reason to lock the user out.
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('/oauth-login/', $response->headers->get('Location'));
+
+        self::$testTenant->run(function () {
+            $contender = LegacyUser::where('sso_sub', 'keycloak-sub-contender')->first();
+            $squatter  = LegacyUser::where('sso_sub', 'keycloak-sub-squatter')->first();
+
+            $this->assertNull($contender->idp_user_id);
+            $this->assertSame('eduplaces-person-contested', $squatter->idp_user_id);
+        });
+    }
+
+    public function test_callback_survives_an_upstream_token_without_a_sub(): void
+    {
+        $this->fakeBrokerUpstreamIdToken(['school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-nosub', 'idp_nosub@test.example', 'No Sub', 'nosub');
+
+        $state = $this->buildIdpInitiatedState();
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('/oauth-login/', $response->headers->get('Location'));
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('sso_sub', 'keycloak-sub-nosub')->first();
+
+            $this->assertNotNull($user);
+            $this->assertNull($user->idp_user_id);
+        });
+    }
+
+    // =========================================================
+    // Adopting webhook-provisioned accounts
+    // =========================================================
+
+    public function test_callback_adopts_a_webhook_provisioned_account(): void
+    {
+        // What an IDM person webhook leaves behind: an Eduplaces person id and
+        // nothing else to identify the row by.
+        $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-pre');
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-pre', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-adopt', 'idp_adopt@test.example', 'Adopted', 'adopted');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        self::$testTenant->run(function () use ($seededId) {
+            $rows = LegacyUser::where('idp_user_id', 'eduplaces-person-pre')->get();
+
+            $this->assertCount(1, $rows, 'the login must not have created a second row');
+            $this->assertSame($seededId, $rows[0]->id, 'the pre-provisioned row should have been claimed');
+            $this->assertSame('keycloak-sub-adopt', $rows[0]->sso_sub);
+        });
+    }
+
+    public function test_adoption_matches_on_person_id_rather_than_email(): void
+    {
+        // The seeded row has no email at all, and the id_token carries one that
+        // matches nothing. Adoption still has to happen: the Eduplaces person
+        // id is the identifier, not the address.
+        $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-noemail');
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-noemail', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-noemail', 'idp_unrelated@test.example', 'No Email', 'noemail');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        self::$testTenant->run(function () use ($seededId) {
+            $user = LegacyUser::find($seededId);
+
+            $this->assertSame('keycloak-sub-noemail', $user->sso_sub);
+            $this->assertSame(1, LegacyUser::where('sso_sub', 'keycloak-sub-noemail')->count());
+        });
+    }
+
+    public function test_does_not_adopt_an_account_that_has_a_password(): void
+    {
+        // A row with a local credential is a real account someone could have
+        // been using, so it is not free to claim — it must go through the
+        // normal password-proof linking rules instead.
+        $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-haspw', password: 'a-real-password-hash');
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-haspw', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-haspw', 'idp_haspw@test.example', 'Has Pw', 'haspw');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        self::$testTenant->run(function () use ($seededId) {
+            $this->assertNull(LegacyUser::find($seededId)->sso_sub, 'a credentialed row must not be silently claimed');
+        });
+    }
+
+    public function test_does_not_adopt_an_account_already_bound_to_another_sub(): void
+    {
+        $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-bound', ssoSub: 'keycloak-sub-incumbent');
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-bound', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-usurper', 'idp_usurper@test.example', 'Usurper', 'usurper');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        self::$testTenant->run(function () use ($seededId) {
+            $this->assertSame('keycloak-sub-incumbent', LegacyUser::find($seededId)->sso_sub);
+        });
+    }
+
+    public function test_does_not_adopt_across_a_person_id_mismatch(): void
+    {
+        // Someone else's pre-provisioned row must not be handed to this login.
+        $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-someone-else');
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-me', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-mine', 'idp_mine@test.example', 'Mine', 'mine');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        self::$testTenant->run(function () use ($seededId) {
+            $this->assertNull(LegacyUser::find($seededId)->sso_sub);
+            // A fresh row for the person who actually logged in.
+            $this->assertSame('eduplaces-person-me', LegacyUser::where('sso_sub', 'keycloak-sub-mine')->firstOrFail()->idp_user_id);
+        });
+    }
+
+    // =========================================================
     // Helpers
     // =========================================================
+
+    /**
+     * Seed the kind of row a `person` webhook leaves behind: an Eduplaces person
+     * id, a derived username, and no email, password or sso_sub.
+     *
+     * @return int the au_users_basedata row id
+     */
+    private function seedDirectoryProvisionedUser(string $personId, ?string $password = null, ?string $ssoSub = null): int
+    {
+        return (int) self::$testTenant->run(function () use ($personId, $password, $ssoSub) {
+            $user = new \App\Models\LegacyUser();
+            $user->idp_user_id = $personId;
+            $user->username            = 'pre.'.substr(md5($personId), 0, 8);
+            $user->displayname         = 'Pre Provisioned';
+            $user->email               = null;
+            $user->pw                  = $password;
+            $user->sso_sub             = $ssoSub;
+            $user->userlevel           = 20;
+            $user->status              = \App\Models\LegacyUser::STATUS_ACTIVE;
+            $user->hash_id             = md5($personId.microtime(true));
+            $user->save();
+
+            return $user->id;
+        });
+    }
+
+    /**
+     * Minimal Socialite user for seeding rows via LegacyUser::fromSocialiteUser().
+     */
+    private function stubSocialiteUser(string $sub, string $email): \Laravel\Socialite\Two\User
+    {
+        $user = \Mockery::mock(\Laravel\Socialite\Two\User::class);
+        $user->shouldReceive('getId')->andReturn($sub);
+        $user->shouldReceive('getEmail')->andReturn($email);
+        $user->shouldReceive('getName')->andReturn($email);
+        $user->shouldReceive('getNickname')->andReturn($email);
+
+        return $user;
+    }
 
     private function fakeBrokerUpstreamIdToken(array $claims): void
     {

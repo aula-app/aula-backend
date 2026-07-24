@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\SsoController;
+use App\Http\Controllers\Idp\ImportStatusController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 
@@ -32,11 +34,16 @@ Route::name('sso.')
     ])
     ->prefix('/api/v2/auth')
     ->group(function () {
-        Route::get('/sso/initiate', [\App\Http\Controllers\Auth\SsoController::class, 'initiate'])->name('initiate');
+        Route::get('/sso/initiate', [SsoController::class, 'initiate'])->name('initiate');
 
         Route::middleware('legacy.jwt')->group(function () {
-            Route::post('/sso/logout', [\App\Http\Controllers\Auth\SsoController::class, 'logout'])->name('sso.logout');
-            Route::post('/sso/link', [\App\Http\Controllers\Auth\SsoController::class, 'link'])->name('sso.link');
+            Route::post('/sso/logout', [SsoController::class, 'logout'])->name('sso.logout');
+            Route::post('/sso/link', [SsoController::class, 'link'])->name('sso.link');
+
+            // Polled by the frontend after an SSO login so it can hold the user
+            // on a setup screen until the school import has finished.
+            Route::get('/idp/import-status', [ImportStatusController::class, 'show'])
+                ->name('idp.import_status');
         });
     });
 

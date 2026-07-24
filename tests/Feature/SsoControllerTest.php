@@ -31,6 +31,9 @@ class SsoControllerTest extends TestCase
             'sso_provider'                => 'mock-iserv',
             'sso_force_logout'            => false,
             'sso_require_email_verified'  => true,
+            // Explicit: TEST001 is shared with Eduplaces test classes, and this
+            // class asserts the behaviour of a tenant that is not on Eduplaces.
+            'idp_school_id'         => null,
         ]);
 
         config([
@@ -677,6 +680,27 @@ class SsoControllerTest extends TestCase
         $this->assertNotNull($logoutUrl);
         $this->assertStringContainsString('openid-connect/logout', $logoutUrl);
         $this->assertStringContainsString('id_token_hint=aula-id-token', $logoutUrl);
+    }
+
+    // =========================================================
+    // idp_user_id
+    // =========================================================
+
+    public function test_callback_does_not_record_a_person_id_for_a_non_eduplaces_tenant(): void
+    {
+        // This tenant is on mock-iserv with no idp_school_id, so the
+        // Eduplaces person lookup must not run at all.
+        $this->mockSocialiteCallback('sso-sub-iserv-only', 'sso_iservonly@test.example', 'IServ Only', 'iservonly');
+
+        $state = $this->buildState(self::INSTANCE_CODE);
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('sso_sub', 'sso-sub-iserv-only')->first();
+
+            $this->assertNotNull($user);
+            $this->assertNull($user->idp_user_id);
+        });
     }
 
     // =========================================================
