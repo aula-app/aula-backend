@@ -18,7 +18,17 @@ class AuthzServiceProvider extends ServiceProvider
             ]);
         });
 
-        Gate::before(function (LegacyUser $user): bool|null {
+        // Runs for *every* gate check in the application, not just the API v2
+        // ones defined here. The Filament manager panel authenticates
+        // AulaManagerUser on the `web` guard and reaches these callbacks
+        // directly (filament/helpers.php invades Gate::callBeforeCallbacks),
+        // so a LegacyUser type hint 500s every /manager route. Narrow inside
+        // the closure instead, and fall through for anything else.
+        Gate::before(function (mixed $user, string $ability): bool|null {
+            if (!$user instanceof LegacyUser) {
+                return null;
+            }
+
             return $user->isAdmin() ? true : null;
         });
 
