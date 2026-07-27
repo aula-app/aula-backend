@@ -10,4 +10,23 @@ A: Controllers should handle:
 
 ## Q: When to put authoriZation logic where?
 
-A: if the rule depends on HTTP details (headers, session) keep it in controller; if it depends on domain state or user+resource relationships, put it in UseCase.
+A: **All of it in the UseCase**, none in the Controller.
+
+The earlier rule ("HTTP details in the Controller, domain state in the UseCase")
+sounds right but splits the checks per action, so a reader has to open two files
+to answer "is this endpoint guarded?". Worse, a UseCase whose only guard lives in
+its Controller is unguarded for every other caller.
+
+Reasons for the UseCase:
+
+* it is the boundary that *everything* crosses: HTTP, console commands, queued
+  jobs, and whatever v1 to v2 shim we end up with. The Controller only covers HTTP.
+* it is where the resource is loaded. Rules that depend on the resource
+  (ownership, room-scoped roles, which fields may change) cannot be expressed
+  before the row exists.
+* it makes the invariant checkable: every `execute()` opens with an `authorize`,
+  so a missing one is visible.
+
+The Controller keeps transport only (see above). If a check genuinely needs
+something that never reaches the UseCase, pass it in as an argument rather than
+moving the decision back up.
