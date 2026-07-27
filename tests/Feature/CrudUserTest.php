@@ -73,6 +73,48 @@ class CrudUserTest extends TestCase
         });
     }
 
+    /**
+     * Unlike createUserIfNotExists(), this always inserts a fresh row, so tests
+     * that mutate their subject can't clobber each other's fixtures.
+     */
+    private function createDistinctUser(UserLevel $userLevel, UserStatus $userStatus): LegacyUser
+    {
+        return self::$testTenant->run(function () use ($userLevel, $userStatus) {
+            $email = 'e2e_distinct_' . bin2hex(random_bytes(8)) . '@aula.de';
+            $user = new LegacyUser();
+            $user->email         = $email;
+            $user->displayname   = 'Distinct';
+            $user->realname      = 'Distinct User';
+            $user->about_me      = 'About me.';
+            $user->sso_sub       = null;
+            $user->status        = $userStatus;
+            $user->username      = $email;
+            $user->hash_id       = md5($email);
+            $user->userlevel     = $userLevel;
+            $user->roles         = json_encode([]);
+            $user->refresh_token = false;
+            $user->save();
+            return $user;
+        });
+    }
+
+    /**
+     * A full PUT body echoing the user's current state, so individual tests can
+     * override just the field under test.
+     */
+    private function putBodyFor(LegacyUser $user): array
+    {
+        return [
+            'displayname' => $user->displayname,
+            'username' => $user->username,
+            'realname' => $user->realname,
+            'status' => $user->status->value,
+            'email' => $user->email,
+            'userlevel' => $user->userlevel->value,
+            'about_me' => $user->about_me,
+        ];
+    }
+
     private function jwtForUser(LegacyUser $user): string
     {
         return self::$testTenant->run(
@@ -121,6 +163,68 @@ class CrudUserTest extends TestCase
             ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertForbidden();
+    }
+
+    public function test_authz_self_update_cannot_escalate_userlevel()
+    {
+        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+        $jwt = $this->jwtForUser($user);
+
+        $this->putJson(
+            "/api/v2/users/{$user->hash_id}",
+            [...$this->putBodyFor($user), 'userlevel' => UserLevel::TechAdmin->value],
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertForbidden();
+
+        $this->assertSame(
+            UserLevel::User,
+            self::$testTenant->run(fn () => LegacyUser::where('hash_id', $user->hash_id)->sole()->userlevel)
+        );
+    }
+
+    public function test_authz_self_update_cannot_change_status()
+    {
+        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+        $jwt = $this->jwtForUser($user);
+
+        $this->putJson(
+            "/api/v2/users/{$user->hash_id}",
+            [...$this->putBodyFor($user), 'status' => UserStatus::Suspended->value],
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertForbidden();
+    }
+
+    public function test_authz_self_update_allows_own_profile_fields()
+    {
+        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+        $jwt = $this->jwtForUser($user);
+
+        $this->putJson(
+            "/api/v2/users/{$user->hash_id}",
+            [...$this->putBodyFor($user), 'realname' => 'Renamed Self'],
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertOk()
+            ->assertJson(['realname' => 'Renamed Self', 'userlevel' => UserLevel::User->value]);
+    }
+
+    public function test_admin_update_may_change_userlevel_and_status()
+    {
+        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+
+        // setUp() installs admin credentials as the default headers
+        $this->putJson("/api/v2/users/{$user->hash_id}", [
+            ...$this->putBodyFor($user),
+            'userlevel' => UserLevel::Moderator->value,
+            'status' => UserStatus::Suspended->value,
+        ])
+            ->assertOk()
+            ->assertJson([
+                'userlevel' => UserLevel::Moderator->value,
+                'status' => UserStatus::Suspended->value,
+            ]);
     }
 
     public function test_authz_inactive()
