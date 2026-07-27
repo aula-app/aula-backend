@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 
 use App\Data\User\DomainUserData;
 use App\Data\User\Requests\StoreUserData;
@@ -28,11 +27,9 @@ class UserController extends Controller
     ) {
     }
 
-    // note: can't use #[Authorize], needs Laravel>=13
+    // Authorization lives in the use cases -- see the README in this directory.
     public function index(Request $request): DataCollection
     {
-        Gate::authorize('index-users');
-        // Gate::authorize('admin');
         // TODO: implement
         // - pagination
         // - sorting
@@ -43,27 +40,21 @@ class UserController extends Controller
     // TODO? public_id is nullable in DB
     public function show(string $publicId): DomainUserData
     {
-        // authz in UseCase
         return $this->showUserUseCase->execute($publicId);
     }
 
     public function store(StoreUserData $userStoreData): DomainUserData
     {
-        // Gate::authorize('admin');
-        Gate::authorize('store-users');
         return $this->createUserUseCase->execute($userStoreData);
     }
 
     public function update(string $publicId, UpdateUserData $userUpdateData): DomainUserData
     {
-        // authz in usecase
         return $this->updateUserUseCase->execute($publicId, $userUpdateData);
     }
 
     public function destroy(string $publicId): void
     {
-        Gate::authorize('admin');
-        // Gate::authorize('destroy-users');
         $this->deleteUserUseCase->execute($publicId);
     }
 }

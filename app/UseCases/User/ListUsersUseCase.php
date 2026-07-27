@@ -6,6 +6,7 @@ namespace App\UseCases\User;
 
 use App\Data\User\DomainUserData;
 use App\Models\LegacyUser;
+use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelData\DataCollection;
 
 class ListUsersUseCase
@@ -17,6 +18,8 @@ class ListUsersUseCase
      */
     public function execute(): DataCollection
     {
+        Gate::authorize('index-users');
+
         $all = LegacyUser::all();
         return DomainUserData::collect($all, DataCollection::class);
     }

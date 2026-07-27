@@ -8,12 +8,15 @@ use App\Data\User\DomainUserData;
 use App\Data\User\Requests\StoreUserData;
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class CreateUserUseCase
 {
     public function execute(StoreUserData $userStoreData): DomainUserData
     {
+        Gate::authorize('store-users');
+
         $legacyUser = new LegacyUser();
         $legacyUser->hash_id = Str::random(32);
         $legacyUser->displayname = $userStoreData->displayName;
