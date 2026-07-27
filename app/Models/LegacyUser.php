@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
+use App\Relations\RoomUser;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
@@ -48,6 +50,11 @@ class LegacyUser extends Model implements Authenticatable
         'last_update' => 'datetime',
         'last_login' => 'datetime',
     ];
+
+    public function rooms(): BelongsToMany
+    {
+        return $this->belongsToMany(LegacyRoom::class, 'au_rel_rooms_users', 'user_id', 'room_id')->using(RoomUser::class)->withPivot('room_user_level');
+    }
 
     /**
      * Build an unsaved user from SSO claims. Caller is responsible for ->save().
