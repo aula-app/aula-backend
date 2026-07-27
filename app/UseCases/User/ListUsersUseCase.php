@@ -15,7 +15,7 @@ class ListUsersUseCase
      * @psalm-suppress InvalidReturnStatement
      * @return DataCollection
      */
-    public static function execute(): DataCollection
+    public function execute(): DataCollection
     {
         $all = LegacyUser::all();
         return DomainUserData::collect($all, DataCollection::class);
