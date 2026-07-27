@@ -13,11 +13,11 @@ class ListUsersUseCase
     /**
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement
-     * @return DataCollection
+     * @return DataCollection<array-key, DomainUserData>
      */
     public static function execute(): DataCollection
     {
-        $all = LegacyUser::all();
+        $all = LegacyUser::with('rooms:hash_id')->get();
         return DomainUserData::collect($all, DataCollection::class);
     }
 }

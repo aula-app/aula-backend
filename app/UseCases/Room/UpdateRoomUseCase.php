@@ -13,8 +13,6 @@ class UpdateRoomUseCase
 {
     public function execute(string $hashId, UpdateRoomData $userUpdateData): DomainRoomData
     {
-        // TODO
-        Gate::authorize('admin');
         $legacyRoom = LegacyRoom::where('hash_id', $hashId)->firstOrFail();
 
         $legacyRoom->room_name = $storeRoomData->name;

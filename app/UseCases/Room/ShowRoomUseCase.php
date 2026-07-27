@@ -12,8 +12,6 @@ class ShowRoomUseCase
 {
     public function execute(string $publicId): DomainRoomData
     {
-        // TODO
-        Gate::authorize('admin');
         $legacyRoom = LegacyRoom::where('hash_id', $publicId)->firstOrFail();
         return DomainRoomData::from($legacyRoom);
     }

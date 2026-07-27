@@ -28,18 +28,17 @@ class RoomController extends Controller
     ) {
     }
 
-    // note: can't use #[Authorize], needs Laravel>=13
+    // TODO proper authz
+
     public function index(Request $request): DataCollection
     {
         Gate::authorize('admin');
         return $this->listRoomsUseCase->execute();
     }
 
-    // TODO? public_id is nullable in DB
     public function show(string $publicId): DomainRoomData
     {
         Gate::authorize('admin');
-        // TODO authz in UseCase
         return $this->showRoomUseCase->execute($publicId);
     }
 
@@ -52,7 +51,6 @@ class RoomController extends Controller
     public function update(string $publicId, UpdateRoomData $userUpdateData): DomainRoomData
     {
         Gate::authorize('admin');
-        // TODO authz in usecase
         return $this->updateRoomUseCase->execute($publicId, $userUpdateData);
     }
 

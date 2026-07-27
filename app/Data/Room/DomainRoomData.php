@@ -18,6 +18,8 @@ class DomainRoomData extends AbstractRoomData
     #[MapOutputName('public_id')]
     public readonly string $publicId;
 
+    #[MapInputName('room_name')]
+    #[MapOutputName('room_name')]
     public readonly null|string $name;
 
     public readonly null|int $status;

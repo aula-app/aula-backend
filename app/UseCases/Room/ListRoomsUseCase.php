@@ -13,7 +13,7 @@ class ListRoomsUseCase
     /**
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement
-     * @return DataCollection
+     * @return DataCollection<array-key, DomainRoomData>
      */
     public static function execute(): DataCollection
     {
