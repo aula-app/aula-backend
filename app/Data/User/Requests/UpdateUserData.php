@@ -7,9 +7,12 @@ namespace App\Data\User\Requests;
 use DateTimeImmutable;
 use App\Data\User\AbstractUserData;
 use App\Enums\UserLevel;
+use Illuminate\Database\Eloquent\Collection;
+use Spatie\LaravelData\Attributes\Hidden;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Rule;
+use App\Relations\RoomUser;
 
 class UpdateUserData extends AbstractUserData
 {
@@ -39,4 +42,8 @@ class UpdateUserData extends AbstractUserData
     #[Rule('missing')]
     #[MapInputName('updated_at')]
     public readonly null|DateTimeImmutable $updatedAt;
+
+    /** @var null|Collection<int, RoomUser>*/
+    #[Hidden]
+    public readonly null|Collection $rooms;
 }

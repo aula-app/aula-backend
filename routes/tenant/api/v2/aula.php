@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\RoomUserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoomController;
@@ -21,3 +22,8 @@ Route::apiResource('rooms', RoomController::class)
     ->except(['update']);
 Route::put('rooms/{room}', [RoomController::class, 'update'])
     ->name('rooms.update');
+
+Route::get('rooms/{room}/users', [RoomUserController::class, 'index']);
+Route::get('rooms/{room}/users/{user}', [RoomUserController::class, 'show']);
+Route::put('rooms/{room}/users/{user}', [RoomUserController::class, 'store']);
+Route::delete('rooms/{room}/users/{user}', [RoomUserController::class, 'destroy']);
