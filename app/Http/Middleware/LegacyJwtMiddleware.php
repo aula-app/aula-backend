@@ -69,6 +69,7 @@ class LegacyJwtMiddleware
         $request->attributes->set('user_level', $payload->user_level);
         $request->attributes->set('user_hash', $payload->user_hash);
         $request->attributes->set('roles', $payload->roles ?? []);
+        $request->attributes->set('temp_pw', $payload->temp_pw);
         $request->attributes->set('authenticated_user', $user);
 
         return $next($request);
