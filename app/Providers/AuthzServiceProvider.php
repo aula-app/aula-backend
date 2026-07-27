@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Data\User\Requests\UpdateUserData;
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
 use Illuminate\Support\ServiceProvider;
@@ -38,8 +39,22 @@ class AuthzServiceProvider extends ServiceProvider
             return false;
         });
 
-        Gate::define('update-users', function (LegacyUser $user, string $publicId) {
-            return $user->hash_id === $publicId;
+        // Takes the loaded row rather than a public id, because the rule is not
+        // only "who" but "which fields": a user may edit their own record, but
+        // never the fields that grant access. Admins bypass via Gate::before
+        // and so never reach this closure.
+        //
+        // PUT makes the client send every field, so an unprivileged caller has
+        // to echo back the current userlevel/status. Only an actual change is
+        // an escalation attempt.
+        Gate::define('update-users', function (
+            LegacyUser $user,
+            LegacyUser $subject,
+            UpdateUserData $userUpdateData,
+        ) {
+            return $user->hash_id === $subject->hash_id
+                && $userUpdateData->userLevel === $subject->userlevel
+                && $userUpdateData->status === $subject->status;
         });
 
         Gate::define('destroy-users', function () {

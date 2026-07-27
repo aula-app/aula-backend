@@ -13,17 +13,19 @@ class UpdateUserUseCase
 {
     public function execute(string $hashId, UpdateUserData $userUpdateData): DomainUserData
     {
-        Gate::authorize('update-users', $hashId);
-        // Gate::authorize('user-self', $publicId);
-
         /* TODO: DB::transaction */
+        // Loaded before the check: the rule depends on the row's current
+        // userlevel/status, not just on the id.
         $legacyUser = LegacyUser::where('hash_id', $hashId)->firstOrFail();
+
+        Gate::authorize('update-users', [$legacyUser, $userUpdateData]);
 
         $legacyUser->displayname = $userUpdateData->displayName;
         $legacyUser->realname = $userUpdateData->realName;
         $legacyUser->username = $userUpdateData->userName;
         $legacyUser->email = $userUpdateData->email;
         $legacyUser->userlevel = $userUpdateData->userLevel;
+        $legacyUser->status = $userUpdateData->status;
         $legacyUser->about_me = $userUpdateData->aboutMe;
         $legacyUser->save();
         /* / DB::transaction */
