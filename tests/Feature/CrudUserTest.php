@@ -67,12 +67,12 @@ class CrudUserTest extends TestCase
             $user = new LegacyUser();
             $email = "e2e_test_level{$userLevel->value}_status{$userStatus->value}@aula.de";
             $user->email         = $email;
-            $user->displayname   = 'TestAdmin';
-            $user->realname      = 'Test Admin';
-            $user->about_me      = 'I am a test admin.';
+            $user->displayname   = self::NEW_USER_DATA['displayname'];
+            $user->realname      = self::NEW_USER_DATA['realname'];
+            $user->about_me      = self::USER_DATA_UPDATE['about_me'];
             $user->sso_sub       = null;
             $user->status        = $userStatus;
-            $user->username      = $email;
+            $user->username      = self::NEW_USER_DATA['username'];
             $user->hash_id       = md5($email . microtime(true));
             $user->userlevel     = $userLevel;
             $user->roles         = json_encode([]);
@@ -349,10 +349,10 @@ class CrudUserTest extends TestCase
             ->assertNotFound();
     }
 
-    #[Depends('test_create')]
-    public function test_show_gdpr_info($newUserPublicId)
+    public function test_show_gdpr_info()
     {
-        $this->getJson('/api/v2/user-gdpr-info/'.$newUserPublicId)
+        $user = $this->createUserIfNotExists();
+        $this->getJson('/api/v2/user-gdpr-info/'.$user->hash_id)
             ->assertOk()
             ->assertJsonMissingPath('id')
             ->assertJson([
