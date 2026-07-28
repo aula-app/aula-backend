@@ -32,6 +32,28 @@ test:
 	docker compose -f docker-compose.test.yml down
 	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from app-test
 
+.PHONY: xdebug-v2-docker-setup
+xdebug-v2-docker-setup:
+	docker compose exec aula-backend.v2 true
+	docker compose exec aula-backend.v2 sh -c 'apk add php84-pecl-xdebug; echo -e "zend_extension=/usr/lib/php84/modules/xdebug.so\nxdebug.mode=develop,debug\nxdebug.start_with_request=yes\nxdebug.client_host=host.docker.internal\nxdebug.client_port=9013\ndefault_socket_timeout=600" > /usr/local/etc/php/conf.d/docker-xdebug.ini'
+	docker compose restart aula-backend.v2
+	docker compose exec aula-backend.v2 php -i | grep xdebug.client_
+	@echo "Note: ephemeral, might need to rerun after docker compose restart/up/down!"
+
+.PHONY: xdebug-v2-docker-check
+xdebug-v2-docker-check:
+	docker compose exec aula-backend.v2 php -i \
+		| grep -E 'xdebug.(client_|start_with_request|mode)'
+	@echo "VSCode/launch.json expects host:docker-internal:9013 mode=develop,debug start_with_request=yes"
+
+.PHONY: xdebug-v2-cli-check
+xdebug-v2-cli-check:
+	php -i \
+		| grep -E 'xdebug.(client_|start_with_request|mode)'
+	./artisan tinker --execute 'phpinfo();' \
+		| grep -E 'xdebug.(client_|start_with_request|mode)'
+	@echo "VSCode/launch.json expects localhost:9003 mode=develop,debug start_with_request=yes"
+
 # Simplistic tasks that mirror the scans in .github/workflows/main-pr-vuln-scan.yml
 
 .PHONY: trivy
