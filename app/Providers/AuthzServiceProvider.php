@@ -6,6 +6,7 @@ use App\Data\User\Requests\UpdateUserData;
 use App\Models\LegacyUser;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use App\Enums\Gates;
 
 class AuthzServiceProvider extends ServiceProvider
 {
@@ -39,17 +40,13 @@ class AuthzServiceProvider extends ServiceProvider
             return $user->hash_id === $publicId;
         });
 
-        Gate::define('index-users', function () {
-            return false;
-        });
+        Gate::define(Gates::ListUsers, fn () => false);
 
-        Gate::define('show-users', function (LegacyUser $user, string $publicId) {
+        Gate::define(Gates::ShowUser, function (LegacyUser $user, string $publicId) {
             return $user->hash_id === $publicId;
         });
 
-        Gate::define('store-users', function () {
-            return false;
-        });
+        Gate::define(Gates::CreateUser, fn () => false);
 
         // Takes the loaded row rather than a public id, because the rule is not
         // only "who" but "which fields": a user may edit their own record, but
@@ -59,7 +56,7 @@ class AuthzServiceProvider extends ServiceProvider
         // PUT makes the client send every field, so an unprivileged caller has
         // to echo back the current userlevel/status. Only an actual change is
         // an escalation attempt.
-        Gate::define('update-users', function (
+        Gate::define(Gates::UpdateUser, function (
             LegacyUser $user,
             LegacyUser $subject,
             UpdateUserData $userUpdateData,
@@ -69,12 +66,20 @@ class AuthzServiceProvider extends ServiceProvider
                 && $userUpdateData->status === $subject->status;
         });
 
-        Gate::define('destroy-users', function () {
-            return false;
-        });
+        Gate::define(Gates::DeleteUser, fn () => false);
 
         Gate::define('show-user-gdpr-info', function (LegacyUser $user, string $publicId) {
             return $user->hash_id === $publicId;
         });
+
+        Gate::define(Gates::ListRooms,  fn () => false);
+        Gate::define(Gates::CreateRoom, fn () => false);
+        Gate::define(Gates::DeleteRoom, fn () => false);
+        Gate::define(Gates::ShowRoom,   fn () => false);
+
+        Gate::define(Gates::ListRoomUser,   fn () => false);
+        Gate::define(Gates::CreateRoomUser, fn () => false);
+        Gate::define(Gates::DeleteRoomUser, fn () => false);
+        Gate::define(Gates::ShowRoomUser,   fn () => false);
     }
 }

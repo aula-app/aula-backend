@@ -6,12 +6,13 @@ namespace App\UseCases\User;
 
 use App\Models\LegacyUser;
 use Illuminate\Support\Facades\Gate;
+use App\Enums\Gates;
 
 class DeleteUserUseCase
 {
     public function execute(string $publicId): void
     {
-        Gate::authorize('destroy-users', $publicId);
+        Gate::authorize(Gates::DeleteUser, $publicId);
 
         LegacyUser::where('hash_id', $publicId)->firstOrFail()->deleteOrFail();
 
