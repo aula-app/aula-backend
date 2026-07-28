@@ -502,6 +502,18 @@ class CrudUserTest extends TestCase
         return $newRoomPublicId;
     }
 
+    public function test_create_room_authz()
+    {
+        $nonAdminUser = $this->createUserIfNotExists(UserLevel::Moderator, UserStatus::Active);
+        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
+        $this->getJson(
+            '/api/v2/rooms',
+            // override default admin headers
+            ['Authorization' => "Bearer {$nonAdminJwt}"]
+        )
+            ->assertForbidden();
+    }
+
     // TODO create seperate functions
     public function test_roomuser()
     {
