@@ -15,12 +15,12 @@ class UpdateRoomUseCase
     {
         $legacyRoom = LegacyRoom::where('hash_id', $hashId)->firstOrFail();
 
-        $legacyRoom->room_name = $storeRoomData->name;
-        $legacyRoom->status = $storeRoomData->status;
-        $legacyRoom->description_public = $storeRoomData->descriptionPublic;
-        $legacyRoom->description_internal = $storeRoomData->descriptionInternal;
-        $legacyRoom->phase_duration_1 = $storeRoomData->phaseDuration1;
-        $legacyRoom->phase_duration_3 = $storeRoomData->phaseDuration3;
+        $legacyRoom->room_name = $userUpdateData->name;
+        $legacyRoom->status = $userUpdateData->status;
+        $legacyRoom->description_public = $userUpdateData->descriptionPublic;
+        $legacyRoom->description_internal = $userUpdateData->descriptionInternal;
+        $legacyRoom->phase_duration_1 = $userUpdateData->phaseDuration1;
+        $legacyRoom->phase_duration_3 = $userUpdateData->phaseDuration3;
 
         $legacyRoom->save();
         $legacyRoom->refresh();
