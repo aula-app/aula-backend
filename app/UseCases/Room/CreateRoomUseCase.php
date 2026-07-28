@@ -17,6 +17,7 @@ class CreateRoomUseCase
     {
         Gate::authorize(Gates::CreateRoom);
 
+        // TODO these need defaults (or need to be required)
         $legacyRoom = new LegacyRoom();
         $legacyRoom->hash_id = Str::random(32);
         $legacyRoom->room_name = $storeRoomData->name;
