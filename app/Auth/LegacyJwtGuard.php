@@ -69,7 +69,18 @@ class LegacyJwtGuard implements Guard
         }
 
         $payload = $validation['payload'];
-        $user = LegacyUser::firstWhere(['hash_id' => $payload->user_hash]);
+
+        // hash_id is the sole identifying claim since user_id left the payload.
+        // An empty one must not reach the query: Eloquent turns `= null` into
+        // `IS NULL`, and au_users_basedata.hash_id is nullable, so a blank claim
+        // would authenticate as an arbitrary hash-less user.
+        $userHash = $payload->user_hash ?? null;
+
+        if (!is_string($userHash) || $userHash === '') {
+            return null;
+        }
+
+        $user = LegacyUser::firstWhere(['hash_id' => $userHash]);
 
         if ($user === null || !$user->isActive()) {
             return null;
