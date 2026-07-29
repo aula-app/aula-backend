@@ -22,6 +22,7 @@ class StoreRoomData extends AbstractRoomData
     #[Max(1024)]
     public readonly null|string $name;
 
+    // TODO create RoomStatus
     public readonly null|int $status;
 
     #[MapInputName('description_public')]
