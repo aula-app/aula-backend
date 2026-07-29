@@ -241,7 +241,6 @@ class SsoController extends Controller
     {
         $user->sso_id_token      = $idToken;
         $user->sso_refresh_token = $socialiteUser->refreshToken;
-        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
         $user->save();
 
         $token = $this->jwtService->generateToken($user);
@@ -405,7 +404,6 @@ class SsoController extends Controller
             $fresh->sso_sub           = $intent['sso_sub'];
             $fresh->sso_id_token      = $intent['sso_id_token'] ?? null;
             $fresh->sso_refresh_token = $intent['sso_refresh_token'] ?? null;
-            $fresh->sso_idp_id_token  = $intent['sso_idp_id_token'] ?? null;
             $fresh->save();
         });
 
@@ -421,6 +419,13 @@ class SsoController extends Controller
      * logout URL that the frontend must navigate to in order to end the
      * user's Keycloak session (RP-initiated logout).
      *
+     * Logging the user out of the upstream IdP is Keycloak's job, not ours:
+     * configuring the IdP's end_session_endpoint as the identity provider's
+     * "Logout URL" makes Keycloak chain the logout itself, using a static
+     * post_logout_redirect_uri (its own broker logout_response endpoint) that
+     * the IdP can whitelist. Chaining it here instead produced a redirect URI
+     * carrying a per-logout id_token_hint, which no IdP can ever whitelist.
+     *
      * When disabled, returns null so the frontend can proceed with a
      * normal local logout.
      */
@@ -433,21 +438,20 @@ class SsoController extends Controller
             return response()->json(['logout_url' => null]);
         }
 
-        /** @var \App\Models\LegacyUser $user */
+        /** @var \App\Models\LegacyUser|null $user */
         $user = $request->attributes->get('authenticated_user');
-
-        $this->revokeKeycloakSession($user?->sso_refresh_token);
 
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
 
-        $aulaLogoutUrl = $this->buildKeycloakLogoutUrl($user?->sso_id_token, $frontendUrl);
+        $logoutUrl = $this->buildKeycloakLogoutUrl($user?->sso_id_token, $frontendUrl);
 
-        $logoutUrl = $aulaLogoutUrl;
-        if ($user?->sso_idp_id_token && $aulaLogoutUrl) {
-            $idpLogoutUrl = $this->buildIdpLogoutUrl($user->sso_idp_id_token, $aulaLogoutUrl);
-            if ($idpLogoutUrl) {
-                $logoutUrl = $idpLogoutUrl;
-            }
+        // The front-channel redirect is what triggers Keycloak's IdP logout
+        // propagation, so it needs a live session to act on. Revoking the
+        // session server-side first would leave Keycloak nothing to propagate,
+        // which makes back-channel revocation a fallback for the case where we
+        // cannot build that URL at all.
+        if ($logoutUrl === null) {
+            $this->revokeKeycloakSession($user?->sso_refresh_token);
         }
 
         return response()->json(['logout_url' => $logoutUrl]);
@@ -631,35 +635,6 @@ class SsoController extends Controller
         return $payload;
     }
 
-    /**
-     * Build an IdP logout URL by discovering the OIDC end_session_endpoint.
-     * Works for any OIDC-compliant provider (Keycloak realms, iServ, VIDIS, etc.)
-     */
-    protected function buildIdpLogoutUrl(?string $idpIdToken, string $redirectUri): ?string
-    {
-        $payload = $this->decodeIdTokenPayload($idpIdToken);
-        $issuer  = rtrim($payload['iss'] ?? '', '/');
-
-        if (! $issuer) {
-            return null;
-        }
-
-        $discovery = Http::get("{$issuer}/.well-known/openid-configuration");
-        if (! $discovery->ok()) {
-            return null;
-        }
-
-        $endSessionEndpoint = $discovery->json('end_session_endpoint');
-        if (! $endSessionEndpoint) {
-            return null;
-        }
-
-        return $endSessionEndpoint . '?' . http_build_query([
-            'post_logout_redirect_uri' => $redirectUri,
-            'id_token_hint'            => $idpIdToken,
-        ]);
-    }
-
     protected function frontendRedirect(string $token, ?string $instanceCode = null): RedirectResponse
     {
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
@@ -698,7 +673,6 @@ class SsoController extends Controller
             'sso_sub'           => $socialiteUser->getId(),
             'sso_id_token'      => $socialiteUser->accessTokenResponseBody['id_token'] ?? null,
             'sso_refresh_token' => $socialiteUser->refreshToken,
-            'sso_idp_id_token'  => $this->fetchIdpIdToken($socialiteUser->token, $tenant->sso_provider),
             'instance_code'     => $tenant->instance_code,
         ], now()->addMinutes(self::LINK_INTENT_TTL_MINUTES));
 
