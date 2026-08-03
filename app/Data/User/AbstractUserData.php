@@ -21,6 +21,10 @@ abstract class AbstractUserData extends Data
     */
     abstract public null|string $publicId { get; }
 
+    abstract public null|string $displayName { get; }
+    abstract public string $userName { get; }
+    abstract public null|string $realName { get; }
+
     abstract public null|UserLevel $userLevel { get; }
 
     // Validation (#[Email]) of abstract must be done in child
@@ -34,15 +38,9 @@ abstract class AbstractUserData extends Data
 
     public function __construct(
         null|string $publicId,
-        #[MapName('displayname')]
-        #[Max(400)]
-        public readonly string $displayName,
-        #[MapName('username')]
-        #[Max(400)]
-        public readonly string $userName,
-        #[MapName('realname')]
-        #[Max(400)]
-        public readonly string $realName,
+        null|string $displayName,
+        string $userName,
+        null|string $realName,
         public readonly UserStatus $status,
 
         // N.B. truly nullable; can have value null
@@ -54,6 +52,9 @@ abstract class AbstractUserData extends Data
     ) {
         // abstract are unpromotable, need to be set up sans sugar
         $this->publicId = $publicId;
+        $this->displayName = $displayName;
+        $this->userName = $userName;
+        $this->realName = $realName;
         $this->email = $email;
         $this->userLevel = $userLevel;
         $this->aboutMe = $aboutMe;

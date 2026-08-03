@@ -17,16 +17,16 @@ class CrudUserTest extends TestCase
     use CreatesTestTenant;
 
     private const array NEW_USER_DATA = [
-        'displayname' => 'Firstnamé',
-        'username' => 'aula_testuser',
-        'realname' => 'Firstnamé Lastname',
+        'displayName' => 'Firstnamé',
+        'userName' => 'aula_testuser',
+        'realName' => 'Firstnamé Lastname',
         'status' => UserStatus::Active->value,
     ];
 
     private const array USER_DATA_UPDATE = [
-        'userlevel' => UserLevel::Guest->value,
+        'userLevel' => UserLevel::Guest->value,
         'email' => 'featuretest@aula.de',
-        'about_me' => 'About me!',
+        'aboutMe' => 'About me!',
     ];
 
     private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
@@ -105,13 +105,13 @@ class CrudUserTest extends TestCase
     private function putBodyFor(LegacyUser $user): array
     {
         return [
-            'displayname' => $user->displayname,
-            'username' => $user->username,
-            'realname' => $user->realname,
+            'displayName' => $user->displayname,
+            'userName' => $user->username,
+            'realName' => $user->realname,
             'status' => $user->status->value,
             'email' => $user->email,
-            'userlevel' => $user->userlevel->value,
-            'about_me' => $user->about_me,
+            'userLevel' => $user->userlevel->value,
+            'aboutMe' => $user->about_me,
         ];
     }
 
@@ -172,7 +172,7 @@ class CrudUserTest extends TestCase
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
-            [...$this->putBodyFor($user), 'userlevel' => UserLevel::TechAdmin->value],
+            [...$this->putBodyFor($user), 'userLevel' => UserLevel::TechAdmin->value],
             ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertForbidden();
@@ -203,11 +203,11 @@ class CrudUserTest extends TestCase
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
-            [...$this->putBodyFor($user), 'realname' => 'Renamed Self'],
+            [...$this->putBodyFor($user), 'realName' => 'Renamed Self'],
             ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertOk()
-            ->assertJson(['realname' => 'Renamed Self', 'userlevel' => UserLevel::User->value]);
+            ->assertJson(['realName' => 'Renamed Self', 'userLevel' => UserLevel::User->value]);
     }
 
     public function test_admin_update_may_change_userlevel_and_status()
@@ -217,12 +217,12 @@ class CrudUserTest extends TestCase
         // setUp() installs admin credentials as the default headers
         $this->putJson("/api/v2/users/{$user->hash_id}", [
             ...$this->putBodyFor($user),
-            'userlevel' => UserLevel::Moderator->value,
+            'userLevel' => UserLevel::Moderator->value,
             'status' => UserStatus::Suspended->value,
         ])
             ->assertOk()
             ->assertJson([
-                'userlevel' => UserLevel::Moderator->value,
+                'userLevel' => UserLevel::Moderator->value,
                 'status' => UserStatus::Suspended->value,
             ]);
     }
@@ -259,9 +259,9 @@ class CrudUserTest extends TestCase
             ->assertJsonMissingPath('id')
             ->assertJson(self::NEW_USER_DATA);
         $newUserDecoded = $result->decodeResponseJson();
-        $this->assertIsString($newUserDecoded['created_at']);
-        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newUserDecoded['created_at']));
-        $newUserPublicId = $newUserDecoded['public_id'];
+        $this->assertIsString($newUserDecoded['createdAt']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newUserDecoded['createdAt']));
+        $newUserPublicId = $newUserDecoded['publicId'];
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserPublicId);
         return $newUserPublicId;
     }
@@ -274,7 +274,7 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJson(self::USER_DATA_UPDATE);
-        $newUserPublicId = $result->decodeResponseJson()['public_id'];
+        $newUserPublicId = $result->decodeResponseJson()['publicId'];
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserPublicId);
         return $newUserPublicId;
     }
@@ -303,7 +303,7 @@ class CrudUserTest extends TestCase
         $allUsers = $this->getJson('/api/v2/users/')
             ->assertOk()->json();
 
-        $allUserPublicIds = array_column($allUsers, 'public_id');
+        $allUserPublicIds = array_column($allUsers, 'publicId');
         $this->assertContains($newUserPublicId1, $allUserPublicIds);
         $this->assertContains($newUserPublicId2, $allUserPublicIds);
     }
@@ -314,7 +314,7 @@ class CrudUserTest extends TestCase
         $changedUserData = [
             ...self::NEW_USER_DATA,
             ...self::USER_DATA_UPDATE,
-            ...['realname' => 'Changed Name'],
+            ...['realName' => 'Changed Name'],
         ];
 
         $result = $this->putJson(
@@ -325,10 +325,10 @@ class CrudUserTest extends TestCase
             ->assertJsonMissingPath('id')
             ->assertJson($changedUserData);
         $updatedUserDecoded = $result->decodeResponseJson();
-        $this->assertIsString($updatedUserDecoded['updated_at']);
-        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['updated_at']));
-        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['created_at']));
-        $this->assertGreaterThanOrEqual($updatedUserDecoded['created_at'], $updatedUserDecoded['updated_at']);
+        $this->assertIsString($updatedUserDecoded['updatedAt']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['updatedAt']));
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedUserDecoded['createdAt']));
+        $this->assertGreaterThanOrEqual($updatedUserDecoded['createdAt'], $updatedUserDecoded['updatedAt']);
     }
 
     #[Depends('test_create')]
@@ -339,7 +339,7 @@ class CrudUserTest extends TestCase
             self::NEW_USER_DATA
         );
         $result
-            ->assertInvalid(['email', 'userlevel', 'about_me'])
+            ->assertInvalid(['email', 'userLevel', 'aboutMe'])
             ->assertUnprocessable();
     }
 
@@ -350,13 +350,13 @@ class CrudUserTest extends TestCase
             ...self::NEW_USER_DATA,
             ...self::USER_DATA_UPDATE,
             ...['email' => 'bad@mail_huh.com'],
-            ...['userlevel' => 1000],
+            ...['userLevel' => 1000],
         ];
         $this->putJson(
             '/api/v2/users/'.$newUserPublicId,
             $changedUserData,
         )
-            ->assertInvalid(['email', 'userlevel'])
+            ->assertInvalid(['email', 'userLevel'])
             ->assertUnprocessable();
     }
 
@@ -373,19 +373,19 @@ class CrudUserTest extends TestCase
     public function test_create_validation()
     {
         foreach ([
-            ['created_at' => '2001-01-23T12:34:56Z'],
-            ['created_at' => 'nondate'],
-            ['created_at' => ''],
-            // created, last_update, public_id musst be *missing* from request
-            ['public_id' => ''],
-            ['public_id' => null],
-            ['updated_at' => ''],
-            ['username' => null],
-            ['username' => ''],
-            ['displayname' => str_repeat('A', 500)],
+            ['createdAt' => '2001-01-23T12:34:56Z'],
+            ['createdAt' => 'nondate'],
+            ['createdAt' => ''],
+            // created, last_update, publicId musst be *missing* from request
+            ['publicId' => ''],
+            ['publicId' => null],
+            ['updatedAt' => ''],
+            ['userName' => null],
+            ['userName' => ''],
+            ['displayName' => str_repeat('A', 500)],
             ['email' => 'bad@mail_huh.com'],
-            ['userlevel' => '1000'],
-            ['userlevel' => 1000],
+            ['userLevel' => '1000'],
+            ['userLevel' => 1000],
             ['status' => 5],
             ['status' => '5'],
         ] as $kv) {

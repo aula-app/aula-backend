@@ -9,17 +9,23 @@ use App\Data\User\AbstractUserData;
 use App\Enums\UserLevel;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\Validation\Email;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Rule;
 
 class UpdateUserData extends AbstractUserData
 {
+    #[Max(400)]
+    public readonly string $displayName;
+    #[Max(400)]
+    public readonly string $userName;
+    #[Max(400)]
+    public readonly string $realName;
+
     #[Email]
     public readonly string $email;
 
-    #[MapInputName('userlevel')]
     public readonly UserLevel $userLevel;
 
-    #[MapInputName('about_me')]
     public readonly string $aboutMe;
 
     // ======================================================
@@ -29,14 +35,11 @@ class UpdateUserData extends AbstractUserData
     // It can't be subset to null only, either.
     // =====================================================
     #[Rule('missing')]
-    #[MapInputName('public_id')]
     public readonly null|string $publicId;
 
     #[Rule('missing')]
-    #[MapInputName('created_at')]
     public readonly null|DateTimeImmutable $createdAt;
 
     #[Rule('missing')]
-    #[MapInputName('updated_at')]
     public readonly null|DateTimeImmutable $updatedAt;
 }

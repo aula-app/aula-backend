@@ -22,30 +22,37 @@ class DomainUserData extends AbstractUserData
 
     // different Input vs Output, see `created` below
     #[MapInputName('hash_id')]
-    #[MapOutputName('public_id')]
     public readonly string $publicId;
+
+    #[MapInputName('displayname')]
+    public readonly string|null $displayName;
+
+    #[MapInputName('username')]
+    public readonly string $userName;
+
+    #[MapInputName('realname')]
+    public readonly string|null $realName;
 
     // N.b. true nullable (not only to signal optional)
     public readonly string|null $email;
 
-    #[MapName('userlevel')]
+    #[MapInputName('userlevel')]
     // LegacyUser's fields are basically all NULLable, including userlevel, about_me and created_at (see below).
     // TODO: To work with legacy data, we need to allow null here, or, have sane defaults?
     public readonly UserLevel|null $userLevel;
 
-    #[MapName('about_me')]
+    #[MapInputName('about_me')]
     public readonly string|null $aboutMe;
 
     // Input+Output not synonymous here:
     // Input: from legacyUser
     #[MapInputName('created')]
     // Output: to API, as JSON Resource
-    #[MapOutputName('created_at')]
+    // #[MapOutputName('created_at')]
     // cf. UserStore/UpdateData only have Input
     public readonly DateTimeImmutable $createdAt;
 
     #[MapInputName('last_update')]
-    #[MapOutputName('updated_at')]
     // unlike created, this can still be null (at creation)
     public readonly DateTimeImmutable|null $updatedAt;
 }

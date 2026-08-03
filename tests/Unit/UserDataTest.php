@@ -13,19 +13,19 @@ use Tests\TestCase;
 class UserDataTest extends TestCase
 {
     public const INPUT = [
-        'displayname' => 'Firstnamé',
-        'username' => 'aula_testuser',
-        'realname' => 'Firstnamé Lastname',
+        'displayName' => 'Firstnamé',
+        'userName' => 'aula_testuser',
+        'realName' => 'Firstnamé Lastname',
         'status' => UserStatus::Active->value,
-        'userlevel' => UserLevel::Guest->value,
+        'userLevel' => UserLevel::Guest->value,
         'email' => 'featuretest@aula.de',
-        'about_me' => 'About me!',
+        'aboutMe' => 'About me!',
     ];
 
     public function test_it_casts_properly(): void
     {
         $this->assertTrue(\is_int(self::INPUT['status']));
-        $this->assertTrue(\is_int(self::INPUT['userlevel']));
+        $this->assertTrue(\is_int(self::INPUT['userLevel']));
         $userUpdateData = UpdateUserData::from(self::INPUT);
         $this->assertTrue($userUpdateData->userLevel instanceof UserLevel);
         $this->assertEquals(UserLevel::Guest, $userUpdateData->userLevel);
@@ -51,34 +51,34 @@ class UserDataTest extends TestCase
     public function test_it_has_proper_store_validation_rules(): void
     {
         $rules = StoreUserData::getValidationRules([]);
-        $this->assertArrayHasKey('userlevel', $rules);
-        $this->assertNotContains('required', $rules['userlevel']);
-        $this->assertContains('nullable', $rules['userlevel']);
-        $this->assertContains('missing', $rules['created_at']);
-        $this->assertNotContains('sometimes', $rules['created_at']);
-        $this->assertContains('missing', $rules['updated_at']);
-        $this->assertNotContains('sometimes', $rules['updated_at']);
-        $this->assertContains('missing', $rules['public_id']);
-        $this->assertNotContains('sometimes', $rules['public_id']);
+        $this->assertArrayHasKey('userLevel', $rules);
+        $this->assertNotContains('required', $rules['userLevel']);
+        $this->assertContains('nullable', $rules['userLevel']);
+        $this->assertContains('missing', $rules['createdAt']);
+        $this->assertNotContains('sometimes', $rules['createdAt']);
+        $this->assertContains('missing', $rules['updatedAt']);
+        $this->assertNotContains('sometimes', $rules['updatedAt']);
+        $this->assertContains('missing', $rules['publicId']);
+        $this->assertNotContains('sometimes', $rules['publicId']);
         $this->assertTrue(array_any(
-            $rules['userlevel'],
+            $rules['userLevel'],
             fn ($r) => $r instanceof \Illuminate\Validation\Rules\Enum
         ));
     }
     public function test_it_has_proper_update_validation_rules(): void
     {
         $rules = UpdateUserData::getValidationRules([]);
-        $this->assertArrayHasKey('userlevel', $rules);
-        $this->assertContains('required', $rules['userlevel']);
-        $this->assertNotContains('sometimes', $rules['userlevel']);
-        $this->assertContains('missing', $rules['created_at']);
-        $this->assertNotContains('sometimes', $rules['created_at']);
-        $this->assertContains('missing', $rules['updated_at']);
-        $this->assertNotContains('sometimes', $rules['updated_at']);
-        $this->assertContains('missing', $rules['public_id']);
-        $this->assertNotContains('sometimes', $rules['public_id']);
+        $this->assertArrayHasKey('userLevel', $rules);
+        $this->assertContains('required', $rules['userLevel']);
+        $this->assertNotContains('sometimes', $rules['userLevel']);
+        $this->assertContains('missing', $rules['createdAt']);
+        $this->assertNotContains('sometimes', $rules['createdAt']);
+        $this->assertContains('missing', $rules['updatedAt']);
+        $this->assertNotContains('sometimes', $rules['updatedAt']);
+        $this->assertContains('missing', $rules['publicId']);
+        $this->assertNotContains('sometimes', $rules['publicId']);
         $this->assertTrue(array_any(
-            $rules['userlevel'],
+            $rules['userLevel'],
             fn ($r) => $r instanceof \Illuminate\Validation\Rules\Enum
         ));
     }
