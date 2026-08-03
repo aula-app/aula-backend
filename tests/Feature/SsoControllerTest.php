@@ -133,6 +133,32 @@ class SsoControllerTest extends TestCase
     }
 
     // =========================================================
+    // callback — IdP / Keycloak OAuth error responses
+    // =========================================================
+
+    public function test_callback_with_access_denied_error_redirects_to_login_cancelled(): void
+    {
+        // User cancelled at the IdP: Keycloak redirects back with error=access_denied
+        // and no authorization code — the callback must not attempt a token exchange.
+        $state = $this->buildState(self::INSTANCE_CODE);
+
+        $response = $this->get("/api/v2/auth/sso/callback?error=access_denied&error_description=&state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=login_cancelled', $response->headers->get('Location'));
+    }
+
+    public function test_callback_with_generic_idp_error_redirects_to_provider_error(): void
+    {
+        $state = $this->buildState(self::INSTANCE_CODE);
+
+        $response = $this->get("/api/v2/auth/sso/callback?error=server_error&state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=sso_provider_error', $response->headers->get('Location'));
+    }
+
+    // =========================================================
     // callback — user provisioning and lookup
     // =========================================================
 

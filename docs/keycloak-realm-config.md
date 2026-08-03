@@ -10,6 +10,11 @@ This document covers how the Keycloak instance at `sso.aula.de` is set up and ho
 | `aula` | Production realm — all tenants share this |
 | `mock-iserv` | Simulated IServ IdP for development/testing |
 
+> **Minimum Keycloak version: 26.6.1.** Below this, cancelling login at a brokered IdP
+> (`error=access_denied`) triggers an infinite redirect loop back into the IdP when
+> `kc_idp_hint` is used ([keycloak#47955](https://github.com/keycloak/keycloak/issues/47955)).
+> Pin an explicit tag (e.g. `quay.io/keycloak/keycloak:26.6.1`) rather than `latest`.
+
 ---
 
 ## Realm Configuration
@@ -201,6 +206,18 @@ Browser navigates to logout_url:
 ```
 
 ---
+
+## Login cancelled at the IdP (`access_denied`)
+
+When a user clicks **cancel** at the upstream IdP, it returns `error=access_denied` to
+Keycloak's broker endpoint. Keycloak does **not** forward that error to the client on its
+own — it shows its own login/error page. To make the browser return to aula instead, deploy
+the **Aula IdP Error Authenticator** and add it to the browser flow.
+
+- Provider + build/deploy/flow-config instructions: [`keycloak/idp-error-authenticator/`](../keycloak/idp-error-authenticator/README.md)
+- On success the browser lands on `{frontend}/login?sso_error=login_cancelled`; the backend
+  maps the OAuth error in `SsoController::callback()` (`login_cancelled` / `sso_provider_error`).
+- The frontend must handle those `sso_error` codes on the login page.
 
 ## Troubleshooting
 
