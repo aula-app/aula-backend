@@ -6,6 +6,7 @@ namespace App\UseCases\User;
 
 use App\Data\User\DomainUserData;
 use App\Data\User\Requests\UpdateUserData;
+use App\Enums\Gates;
 use App\Models\LegacyUser;
 use Illuminate\Support\Facades\Gate;
 
@@ -18,7 +19,7 @@ class UpdateUserUseCase
         // userlevel/status, not just on the id.
         $legacyUser = LegacyUser::where('hash_id', $hashId)->firstOrFail();
 
-        Gate::authorize('update-users', [$legacyUser, $userUpdateData]);
+        Gate::authorize(Gates::UpdateUser, [$legacyUser, $userUpdateData]);
 
         $legacyUser->displayname = $userUpdateData->displayName;
         $legacyUser->realname = $userUpdateData->realName;

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\UseCases\User;
 
-use App\Data\User\DomainUserData;
 use App\Data\User\Requests\StoreUserData;
+use App\Data\User\DomainUserData;
+use App\Enums\Gates;
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
 use Illuminate\Support\Facades\Gate;
@@ -15,7 +16,7 @@ class CreateUserUseCase
 {
     public function execute(StoreUserData $userStoreData): DomainUserData
     {
-        Gate::authorize('store-users');
+        Gate::authorize(Gates::CreateUser);
 
         $legacyUser = new LegacyUser();
         $legacyUser->hash_id = Str::random(32);
@@ -40,6 +41,7 @@ class CreateUserUseCase
         $legacyUser->save();
         // for unmanaged createdAt/created timestamp
         $legacyUser->refresh();
+
         return DomainUserData::from($legacyUser);
     }
 
