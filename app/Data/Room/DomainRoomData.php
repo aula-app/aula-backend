@@ -15,33 +15,29 @@ use Spatie\LaravelData\Attributes\MapOutputName;
 class DomainRoomData extends AbstractRoomData
 {
     #[MapInputName('hash_id')]
-    #[MapOutputName('public_id')]
     public readonly string $publicId;
 
     #[MapInputName('room_name')]
-    #[MapOutputName('room_name')]
     public readonly null|string $name;
 
     public readonly null|int $status;
 
-    #[MapName('description_public')]
+    #[MapInputName('description_public')]
     public readonly null|string $descriptionPublic;
 
     // TODO: when/for whom is this visible?
-    #[MapName('description_internal')]
+    #[MapInputName('description_internal')]
     public readonly null|string $descriptionInternal;
 
-    #[MapName('phase_duration_1')]
+    #[MapInputName('phase_duration_1')]
     public readonly null|int $phaseDuration1;
 
-    #[MapName('phase_duration_3')]
+    #[MapInputName('phase_duration_3')]
     public readonly null|int $phaseDuration3;
 
     #[MapInputName('created')]
-    #[MapOutputName('created_at')]
     public readonly null|DateTimeImmutable $createdAt;
 
     #[MapInputName('last_update')]
-    #[MapOutputName('updated_at')]
     public readonly null|DateTimeImmutable $updatedAt;
 }

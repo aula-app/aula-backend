@@ -18,23 +18,18 @@ class UpdateRoomData extends AbstractRoomData
 
     // TODO check if required
 
-    #[MapInputName('room_name')]
     #[Max(1024)]
     public readonly string $name;
 
     public readonly int $status;
 
-    #[MapInputName('description_public')]
     public readonly string $descriptionPublic;
 
-    #[MapInputName('description_internal')]
     public readonly string $descriptionInternal;
 
-    #[MapInputName('phase_duration_1')]
     #[Min(1)]
     public readonly int $phaseDuration1;
 
-    #[MapInputName('phase_duration_3')]
     #[Min(1)]
     public readonly int $phaseDuration3;
 

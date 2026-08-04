@@ -22,6 +22,6 @@ class StoreRoomUserData extends AbstractRoomUserData
     #[Hidden]
     public readonly null|string $userPublicId;
 
-    #[MapName('room_user_level')]
+    #[MapOutputName('room_user_level')]
     public readonly RoomUserLevel $roomUserLevel;
 }
