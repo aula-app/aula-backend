@@ -25,62 +25,47 @@ class CrudUserTest extends TestCase
 
     private const array USER_DATA_UPDATE = [
         'userLevel' => UserLevel::Guest->value,
-        'email' => 'featuretest@aula.de',
+        'email' => 'e2e_distinct_changed@aula.de',
         'aboutMe' => 'About me!',
     ];
 
     private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
+
+    private LegacyUser $adminUser;
+    private string $adminJwt;
+    private array $adminHeaders;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->ensureTestTenantExists();
 
-        $adminUser = $this->createUserIfNotExists(UserLevel::TechAdmin, UserStatus::Active);
-        $adminJwt = $this->jwtForUser($adminUser);
+        $this->adminUser = $this->createDistinctUser(UserLevel::Admin, UserStatus::Active);
+        $this->adminJwt = $this->jwtForUser($this->adminUser);
+        $this->adminHeaders = ['Authorization' => "Bearer {$this->adminJwt}"];
 
         $this->withHeaders([
             ...self::TENANT_HEADERS,
-            ...['Authorization' => "Bearer {$adminJwt}"],
+            ...$this->adminHeaders,
         ]);
     }
 
-    private function createUserIfNotExists(UserLevel $userLevel, UserStatus $userStatus): LegacyUser
+    public static function tearDownAfterClass(): void
     {
-        return self::$testTenant->run(function () use ($userLevel, $userStatus) {
-            $existingUser = LegacyUser::where([
-                'userlevel' => $userLevel->value,
-                'status' => $userStatus->value
-            ]);
-            if ($existingUser->exists()) {
-                return $existingUser->first();
-            }
-            $user = new LegacyUser();
-            $email = "e2e_test_level{$userLevel->value}_status{$userStatus->value}@aula.de";
-            $user->email         = $email;
-            $user->displayname   = 'TestAdmin';
-            $user->realname      = 'Test Admin';
-            $user->about_me      = 'I am a test admin.';
-            $user->sso_sub       = null;
-            $user->status        = $userStatus;
-            $user->username      = $email;
-            $user->hash_id       = md5($email . microtime(true));
-            $user->userlevel     = $userLevel;
-            $user->roles         = json_encode([]);
-            $user->refresh_token = false;
-            $user->save();
-            return $user;
+        self::cleanUp();
+    }
+
+    public static function cleanUp(): void
+    {
+        self::$testTenant->run(function () {
+            LegacyUser::whereLike('email', 'e2e_distinct_%@aula.de')->delete();
         });
     }
 
-    /**
-     * Unlike createUserIfNotExists(), this always inserts a fresh row, so tests
-     * that mutate their subject can't clobber each other's fixtures.
-     */
     private function createDistinctUser(UserLevel $userLevel, UserStatus $userStatus): LegacyUser
     {
         return self::$testTenant->run(function () use ($userLevel, $userStatus) {
-            $email = 'e2e_distinct_' . bin2hex(random_bytes(8)) . '@aula.de';
+            $email = "e2e_distinct_{$userLevel->name}_" . bin2hex(random_bytes(8)) . '@aula.de';
             $user = new LegacyUser();
             $user->email         = $email;
             $user->displayname   = 'Distinct';
@@ -124,7 +109,14 @@ class CrudUserTest extends TestCase
 
     public function test_authz_nonadmin()
     {
-        $nonAdminUser = $this->createUserIfNotExists(UserLevel::Moderator, UserStatus::Active);
+        // Note: we can't sanity check by get'ing as admin here first,
+        // somehow the first getJson's headers infect all that follow
+        // like: only one Bearer per test (function body)...
+        //   $res = $this->getJson(
+        //     '/api/v2/users',
+        //     $this->adminHeaders
+        //   )->assertOk();
+        $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
         $nonAdminJwt = $this->jwtForUser($nonAdminUser);
         $this->getJson(
             '/api/v2/users',
@@ -134,23 +126,35 @@ class CrudUserTest extends TestCase
             ->assertForbidden();
         $this->postJson(
             '/api/v2/users',
-            [],
-            ['Authorization' => "Bearer {$nonAdminJwt}"]
-        )
-            // validation happens *before* Gate
-            ->assertUnprocessable();
-        $this->postJson(
-            '/api/v2/users',
             self::NEW_USER_DATA,
             ['Authorization' => "Bearer {$nonAdminJwt}"]
         )
             ->assertForbidden();
     }
 
-    public function test_authz_show_self()
+    public function test_authz_early_validation()
     {
-        $user = $this->createUserIfNotExists(UserLevel::Moderator, UserStatus::Active);
-        $otherUser = $this->createUserIfNotExists(UserLevel::User, UserStatus::Active);
+        $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
+        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
+        $this->postJson(
+            '/api/v2/users',
+            [/* empty body! */],
+            ['Authorization' => "Bearer {$nonAdminJwt}"]
+        )
+            // *not* assertForbidden, because validation (laravel-data) happens *before* Gate
+            ->assertUnprocessable();
+        // same for admin
+        $this->postJson(
+            '/api/v2/users',
+            [/* empty body! */],
+        )
+            ->assertUnprocessable();
+    }
+
+    public function test_authz_show_self_and_not_other()
+    {
+        $user = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
+        $otherUser = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
         $this->assertNotEquals($user->hash_id, $otherUser->hash_id);
         $jwt = $this->jwtForUser($user);
         $this->getJson(
@@ -172,7 +176,7 @@ class CrudUserTest extends TestCase
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
-            [...$this->putBodyFor($user), 'userLevel' => UserLevel::TechAdmin->value],
+            [...$this->putBodyFor($user), 'userLevel' => UserLevel::Admin->value],
             ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertForbidden();
@@ -194,6 +198,11 @@ class CrudUserTest extends TestCase
             ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertForbidden();
+
+        $this->assertSame(
+            UserStatus::Active,
+            self::$testTenant->run(fn () => LegacyUser::where('hash_id', $user->hash_id)->sole()->status)
+        );
     }
 
     public function test_authz_self_update_allows_own_profile_fields()
@@ -208,6 +217,11 @@ class CrudUserTest extends TestCase
         )
             ->assertOk()
             ->assertJson(['realName' => 'Renamed Self', 'userLevel' => UserLevel::User->value]);
+
+        $this->assertSame(
+            'Renamed Self',
+            self::$testTenant->run(fn () => LegacyUser::where('hash_id', $user->hash_id)->sole()->realname)
+        );
     }
 
     public function test_admin_update_may_change_userlevel_and_status()
@@ -227,16 +241,18 @@ class CrudUserTest extends TestCase
             ]);
     }
 
-    public function test_authz_inactive()
+    public function test_authz_not_active_statuses()
     {
-        $inActiveUser = $this->createUserIfNotExists(UserLevel::TechAdmin, UserStatus::Inactive);
-        $inActiveJwt = $this->jwtForUser($inActiveUser);
-        $this->getJson(
-            '/api/v2/users',
-            ['Authorization' => "Bearer {$inActiveJwt}"]
-        )
-            ->assertJson(['error' => 'user_not_active'])
-            ->assertUnauthorized();
+        foreach ([UserStatus::Inactive, UserStatus::Suspended, UserStatus::Archived] as $userStatus) {
+            $inActiveUser = $this->createDistinctUser(UserLevel::Admin, $userStatus);
+            $inActiveJwt = $this->jwtForUser($inActiveUser);
+            $this->getJson(
+                '/api/v2/users',
+                ['Authorization' => "Bearer {$inActiveJwt}"]
+            )
+                ->assertJson(['error' => 'user_not_active'])
+                ->assertUnauthorized();
+        }
     }
 
     public function test_authz_unauthorized()
@@ -279,6 +295,11 @@ class CrudUserTest extends TestCase
         return $newUserPublicId;
     }
 
+    // The tests in this file are brittle in terms of order --
+    // they need to be run in order "of appearance",
+    // the order Depends creates is not sufficient to allow
+    // specific tests solitarily, out of order.
+    // TODO: make them more isolated (self::cleanUp is not enough)
     #[Depends('test_create')]
     public function test_show($newUserPublicId)
     {
@@ -349,7 +370,7 @@ class CrudUserTest extends TestCase
         $changedUserData = [
             ...self::NEW_USER_DATA,
             ...self::USER_DATA_UPDATE,
-            ...['email' => 'bad@mail_huh.com'],
+            ...['email' => 'bad@mail_cannothaveunderscores.com'],
             ...['userLevel' => 1000],
         ];
         $this->putJson(
@@ -358,6 +379,27 @@ class CrudUserTest extends TestCase
         )
             ->assertInvalid(['email', 'userLevel'])
             ->assertUnprocessable();
+    }
+
+    #[Depends('test_create')]
+    public function test_authz_delete_admin_only($newUserPublicId1)
+    {
+        $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
+        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
+        // non admin tries do delete other
+        $this->deleteJson(
+            '/api/v2/users/'.$newUserPublicId1,
+            [],
+            ['Authorization' => "Bearer {$nonAdminJwt}"]
+        )
+            ->assertForbidden();
+        // non admin tries to delete self
+        $this->deleteJson(
+            '/api/v2/users/'.$nonAdminUser->hash_id,
+            [],
+            ['Authorization' => "Bearer {$nonAdminJwt}"]
+        )
+            ->assertForbidden();
     }
 
     #[Depends('test_create')]
@@ -383,7 +425,7 @@ class CrudUserTest extends TestCase
             ['userName' => null],
             ['userName' => ''],
             ['displayName' => str_repeat('A', 500)],
-            ['email' => 'bad@mail_huh.com'],
+            ['email' => 'bad@mail_cannothaveunderscores.com'],
             ['userLevel' => '1000'],
             ['userLevel' => 1000],
             ['status' => 5],
