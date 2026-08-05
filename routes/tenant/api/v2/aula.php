@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\IdeaController;
 use App\Http\Controllers\RoomUserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -27,3 +28,7 @@ Route::get('rooms/{room}/users', [RoomUserController::class, 'index']);
 Route::get('rooms/{room}/users/{user}', [RoomUserController::class, 'show']);
 Route::put('rooms/{room}/users/{user}', [RoomUserController::class, 'store']);
 Route::delete('rooms/{room}/users/{user}', [RoomUserController::class, 'destroy']);
+
+Route::get('ideas', [IdeaController::class, 'index']);
+Route::get('ideas/mine/{room?}/{phase?}', [IdeaController::class, 'indexMine']);
+Route::get('ideas/inmyrooms/{phase?}', [IdeaController::class, 'indexInMyRooms']);

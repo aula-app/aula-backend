@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\UseCases\Idea;
 
 use App\Data\Idea\DomainIdeaData;
-use App\Models\Idea;
+use App\Models\LegacyIdea;
 use App\Models\LegacyUser;
 use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelData\DataCollection;
@@ -24,7 +24,7 @@ class ListIdeasInMyRoomsUseCase
         Gate::authorize(Gates::ListIdeasInMyRooms);
 
         // TODO: probably not idiomatic? somehow querybuilderize?
-        $ideas = Idea::whereIn('room_id', $user->rooms->pluck('id'));
+        $ideas = LegacyIdea::whereIn('room_id', $user->rooms->pluck('id'));
 
         if ($phaseId !== null) {
             // $ideas->whereAttachedTo()

@@ -22,4 +22,8 @@ enum Gates
     case CreateRoomUser;
     case ShowRoomUser;
     case DeleteRoomUser;
+
+    case ListIdeas;
+    case ListIdeasMine;
+    case ListIdeasInMyRooms;
 }

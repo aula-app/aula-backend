@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Data\Room;
+namespace App\Data\Idea;
 
 use DateTimeImmutable;
-use App\Data\Room\AbstractRoomData;
+use App\Enums\IdeaStatus;
+use App\Data\Idea\AbstractIdeaData;
+use App\Data\Room\DomainRoomData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Attributes\Hidden;
 use Spatie\LaravelData\Attributes\MapName;
@@ -15,7 +17,6 @@ use Spatie\LaravelData\Attributes\MapOutputName;
 class DomainIdeaData extends AbstractIdeaData
 {
     #[MapInputName('hash_id')]
-    #[MapOutputName('public_id')]
     public readonly string $publicId;
 
     public readonly null|string $title;
@@ -25,10 +26,12 @@ class DomainIdeaData extends AbstractIdeaData
     public readonly null|IdeaStatus $status;
 
     #[MapInputName('created')]
-    #[MapOutputName('created_at')]
     public readonly null|DateTimeImmutable $createdAt;
 
     #[MapInputName('last_update')]
-    #[MapOutputName('updated_at')]
     public readonly null|DateTimeImmutable $updatedAt;
+
+    public readonly null|DomainRoomData $room;
+    #[MapInputName('room->publicId')]
+    public readonly null|string $roomId;
 }
