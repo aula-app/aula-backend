@@ -2,16 +2,34 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Listen for Xdebug",
+      "name": "Listen for Xdebug: legacy, Docker, :9003",
       "type": "php",
       "request": "launch",
       "port": 9003,
       "pathMappings": {
+        "/var/www/html/api/classes/": "${workspaceFolder}/legacy/src/classes/",
+        "/var/www/html/api/controllers/": "${workspaceFolder}/legacy/src/controllers/",
         "/var/www/html/api": "${workspaceFolder}/legacy/src",
         "/var/www/html/config": "${workspaceFolder}/legacy/config",
         "/var/www/html/cron.php": "${workspaceFolder}/legacy/cron.php"
       },
       "log": true
+    },
+    {
+      "name": "Listen for Xdebug: v2, Docker, :9013",
+      "type": "php",
+      "request": "launch",
+      "port": 9013,
+      "pathMappings": {
+        "/opt/laravel": "${workspaceFolder}",
+        "/opt/laravel/app": "${workspaceFolder}/app"
+      }
+    },
+    {
+      "name": "Listen for Xdebug: v2, cli/artisan, :9003",
+      "type": "php",
+      "request": "launch",
+      "port": 9003
     }
   ]
 }
