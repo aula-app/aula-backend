@@ -14,10 +14,11 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /build
 COPY pom.xml .
 COPY src ./src
+ENV KC_HEALTH_ENABLED=true
 RUN mvn -B -q clean package
 
 # ---- Stage 2: Keycloak image with the provider ----
-FROM quay.io/keycloak/keycloak:26.6.1
+FROM quay.io/keycloak/keycloak:26.5.5
 COPY --from=build /build/target/aula-idp-error-authenticator.jar /opt/keycloak/providers/
 # Augment the server at build time so the container starts pre-built and immutable.
 # Bake the build-time options that match the runtime env (KC_DB, KC_HTTP_RELATIVE_PATH)
