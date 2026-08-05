@@ -57,11 +57,11 @@ class AuthzServiceProvider extends ServiceProvider
         // to echo back the current userlevel/status. Only an actual change is
         // an escalation attempt.
         Gate::define(Gates::UpdateUser, function (
-            LegacyUser $user,
+            LegacyUser $updater,
             LegacyUser $subject,
             UpdateUserData $userUpdateData,
         ) {
-            return $user->hash_id === $subject->hash_id
+            return $updater->hash_id === $subject->hash_id
                 && $userUpdateData->userLevel === $subject->userlevel
                 && $userUpdateData->status === $subject->status;
         });
