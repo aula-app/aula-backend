@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
         <!-- Must match the Keycloak version you deploy to. -->
-        <keycloak.version>26.5.5</keycloak.version>
+        <keycloak.version>26.6.1</keycloak.version>
     </properties>
 
     <dependencies>

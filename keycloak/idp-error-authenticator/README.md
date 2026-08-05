@@ -46,11 +46,11 @@ your running Keycloak.
 ```bash
 mvn -f keycloak/idp-error-authenticator/pom.xml clean package
 docker build -f keycloak/idp-error-authenticator/Dockerfile \
-  -t aulaapp/aula-keycloak:26.5.5-aula keycloak/idp-error-authenticator
-docker push aulaapp/aula-keycloak:26.5.5-aula
+  -t aulaapp/aula-keycloak:26.6.1-aula keycloak/idp-error-authenticator
+docker push aulaapp/aula-keycloak:26.6.1-aula
 ```
 
-Point your Keycloak service at `aulaapp/aula-keycloak:26.5.5-aula` instead of
+Point your Keycloak service at `aulaapp/aula-keycloak:26.6.1-aula` instead of
 `quay.io/keycloak/keycloak:latest` and recreate the container. Config lives in the DB, so
 nothing is lost.
 
