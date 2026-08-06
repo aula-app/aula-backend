@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Manager\CentralClient;
 use Carbon\CarbonInterval;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -23,10 +24,10 @@ class PassportServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Passport::useClientModel(CentralClient::class);
         Route::group([
             'as' => 'passport.',
             'middleware' => [
-                'universal',
                 InitializeTenancyByRequestData::class,
             ],
             'prefix' => config('passport.path', '/api/v2/oauth'),

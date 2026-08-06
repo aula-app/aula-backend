@@ -7,10 +7,14 @@ use App\Enums\UserStatus;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
-class LegacyUser extends Model implements Authenticatable
+class LegacyUser extends Model implements Authenticatable, OAuthenticatable
 {
+    use HasApiTokens;
+
     /**
      * The table associated with the model.
      */
@@ -203,4 +207,5 @@ class LegacyUser extends Model implements Authenticatable
     {
         return 'pw';
     }
+
 }
