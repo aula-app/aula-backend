@@ -4,7 +4,7 @@
     "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
     "This file is @generated automatically"
   ],
-  "content-hash": "9adcfdd63fca9ce313e3b3fab099aee3",
+  "content-hash": "73ee8cc801a1355cbd619b6e8f8a5644",
   "packages": [
     {
       "name": "blade-ui-kit/blade-heroicons",
@@ -446,6 +446,70 @@
         }
       ],
       "time": "2026-03-20T21:10:52+00:00"
+    },
+    {
+      "name": "corbosman/laravel-passport-claims",
+      "version": "9.0.0",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/corbosman/laravel-passport-claims.git",
+        "reference": "3208e5b0ee3ed32e0e62bf664e5a73c1274b2b13"
+      },
+      "dist": {
+        "type": "zip",
+        "url": "https://api.github.com/repos/corbosman/laravel-passport-claims/zipball/3208e5b0ee3ed32e0e62bf664e5a73c1274b2b13",
+        "reference": "3208e5b0ee3ed32e0e62bf664e5a73c1274b2b13",
+        "shasum": ""
+      },
+      "require": {
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "laravel/passport": "^11.2|^12.0|^13.0",
+        "nesbot/carbon": "^3"
+      },
+      "require-dev": {
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^3.7",
+        "phpseclib/phpseclib": "^3.0",
+        "phpseclib/phpseclib2_compat": "^1.0"
+      },
+      "type": "library",
+      "extra": {
+        "laravel": {
+          "providers": [
+            "CorBosman\\Passport\\ServiceProvider"
+          ]
+        }
+      },
+      "autoload": {
+        "psr-4": {
+          "CorBosman\\Passport\\": "src/"
+        }
+      },
+      "notification-url": "https://packagist.org/downloads/",
+      "license": [
+        "MIT"
+      ],
+      "authors": [
+        {
+          "name": "Cor Bosman",
+          "email": "cor@in.ter.net"
+        }
+      ],
+      "description": "Add claims to Laravel Passport JWT Tokens",
+      "homepage": "https://github.com/corbosman/laravel-passport-claims",
+      "keywords": [
+        "claim",
+        "jwt",
+        "laravel",
+        "laravel-passport-claims",
+        "passport"
+      ],
+      "support": {
+        "issues": "https://github.com/corbosman/laravel-passport-claims/issues",
+        "source": "https://github.com/corbosman/laravel-passport-claims/tree/9.0.0"
+      },
+      "time": "2026-03-23T21:06:30+00:00"
     },
     {
       "name": "danharrin/date-format-converter",
