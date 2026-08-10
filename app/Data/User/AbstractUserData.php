@@ -6,7 +6,6 @@ namespace App\Data\User;
 
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Collection;
-use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\Max;
@@ -42,9 +41,6 @@ abstract class AbstractUserData extends Data
     /** @var null|Collection<int, RoomUser> */
     abstract public null|Collection $rooms { get; }
 
-    #[Computed]
-    public readonly null|string $rooms_json;
-
     /**
      * @param null|Collection<int, RoomUser> $rooms
      */
@@ -75,15 +71,5 @@ abstract class AbstractUserData extends Data
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
         $this->rooms = $rooms;
-
-        $rooms_json = $this->rooms
-            ? json_encode(
-                $this->rooms->map(fn($r) => [
-                    "room" => $r->hash_id,
-                    "role" => $r->pivot->room_user_level,
-                ])
-            )
-            : null;
-        $this->rooms_json = \is_string($rooms_json) ? $rooms_json : null;
     }
 }

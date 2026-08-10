@@ -23,6 +23,15 @@ class CreateRoomUserUseCase
         } else {
             $legacyRoom->users()->attach($legacyUser->id, $storeRoomUserData->toArray());
         }
+
+        // update legacy json field
+        $legacyRoles = $legacyUser->rooms->map(fn($r) => [
+            "room" => $r->hash_id,
+            "role" => $r->pivot->room_user_level,
+        ]);
+        $legacyUser->roles = json_encode($legacyRoles);
+        $legacyUser->saveOrFail();
+
         return new DomainRoomUserData(
             $roomPublicId,
             $userPublicId,
