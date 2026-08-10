@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\UseCases\UserGdprInfo;
+namespace App\UseCases\User;
 
 use App\Data\User\DomainUserData;
 use App\Enums\Gates;
@@ -10,11 +10,11 @@ use App\Models\LegacyUser;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 
-class ShowUserGdprInfoUseCase
+class ExportUserGdprInfoUseCase
 {
     public function execute(string $publicId): array
     {
-        Gate::authorize(Gates::ShowUserGdprInfo, [$publicId]);
+        Gate::authorize(Gates::ExportUserGdprInfo, [$publicId]);
 
         $legacyUser = LegacyUser::where('hash_id', $publicId)->firstOrFail();
         $user = DomainUserData::from($legacyUser);

@@ -12,5 +12,5 @@ enum Gates
     case UpdateUser;
     case DeleteUser;
 
-    case ShowUserGdprInfo;
+    case ExportUserGdprInfo;
 }

@@ -10,5 +10,5 @@ Route::apiResource('users', UserController::class)
 Route::put('users/{user}', [UserController::class, 'update'])
     ->name('users.update');
 
-Route::get('user-gdpr-info/{user}', [UserGdprInfoController::class, 'show'])
-    ->name('user-gdpr-info.show');
+Route::get('users/{user}/export', [UserController::class, 'export'])
+    ->name('users.export');

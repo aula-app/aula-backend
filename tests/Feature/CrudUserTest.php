@@ -423,14 +423,17 @@ class CrudUserTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_show_gdpr_info()
+    public function test_export_gdpr_info()
     {
-        $user = $this->createUserIfNotExists(UserLevel::User, UserStatus::Active);
-        $this->getJson('/api/v2/user-gdpr-info/'.$user->hash_id)
+        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+        $this->getJson("/api/v2/users/{$user->hash_id}/export")
             ->assertOk()
             ->assertJsonMissingPath('id')
             ->assertJson([
-                'user' => self::NEW_USER_DATA,
+                'user' => [
+                    'displayName' => 'Distinct',
+                    'realName' => 'Distinct User',
+                ],
                 // TODO: how to test ideas & comments? create here?
                 'userIdeas' => '',
                 'userComments' => '',
