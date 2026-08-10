@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $clientRepo = new ClientRepository();
         // when confidential:false is set, we don't need client_secret
         $client = $clientRepo->createPasswordGrantClient('password_grants_tenant_users', 'aula_users', false);
+
         $this->command->info("Client ID:     {$client->id}");
         $this->command->info('Client Secret: N/A');
 
