@@ -31,11 +31,11 @@ class CrudUserTest extends TestCase
     ];
 
     private const array NEW_ROOM_DATA = [
-        'room_name' => 'Testroom',
-        'description_public' => 'Public test description',
-        'description_internal' => 'Internal test description',
-        'phase_duration_1' => 14,
-        'phase_duration_3' => 14,
+        'name' => 'Testroom',
+        'descriptionPublic' => 'Public test description',
+        'descriptionInternal' => 'Internal test description',
+        'phaseDuration1' => 14,
+        'phaseDuration3' => 14,
     ];
 
     private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
@@ -463,9 +463,9 @@ class CrudUserTest extends TestCase
             ->assertJsonMissingPath('id')
             ->assertJson(self::NEW_ROOM_DATA);
         $newRoomDecoded = $result->decodeResponseJson();
-        $this->assertIsString($newRoomDecoded['created_at']);
-        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newRoomDecoded['created_at']));
-        $newRoomPublicId = $newRoomDecoded['public_id'];
+        $this->assertIsString($newRoomDecoded['createdAt']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newRoomDecoded['createdAt']));
+        $newRoomPublicId = $newRoomDecoded['publicId'];
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newRoomPublicId);
         return $newRoomPublicId;
     }
@@ -490,19 +490,19 @@ class CrudUserTest extends TestCase
         $newUserPublicId = $user->hash_id;
         $newRoomPublicId = $room->hash_id;
         $expect = [
-            "room_public_id" => $newRoomPublicId,
-            "user_public_id" => $newUserPublicId,
-            "room_user_level" => 10,
+            "roomPublicId" => $newRoomPublicId,
+            "userPublicId" => $newUserPublicId,
+            "roomUserLevel" => 10,
         ];
         $this->putJson(
             "/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}",
-            ["room_user_level" => 10]
+            ["roomUserLevel" => 10]
         )
             ->assertOk()
             ->assertExactJson($expect);
         $this->putJson(
             "/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}",
-            ["room_user_level" => 101]
+            ["roomUserLevel" => 101]
         )
             ->assertUnprocessable();
         $this->getJson("/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}")
@@ -512,10 +512,10 @@ class CrudUserTest extends TestCase
         $this->getJson("/api/v2/rooms/{$newRoomPublicId}/users")
             ->assertOk()
             ->assertExactJson([$expect]);
-        $expect["room_user_level"] = 20;
+        $expect["roomUserLevel"] = 20;
         $this->putJson(
             "/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}",
-            ["room_user_level" => 20]
+            ["roomUserLevel" => 20]
         )
             ->assertOk()
             ->assertExactJson($expect);
