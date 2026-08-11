@@ -3,25 +3,36 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserStatus;
-use App\Http\Controllers\Controller;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\LegacyJwtService;
-use Illuminate\Http\JsonResponse;
+use Http\Discovery\Psr17Factory;
 use Illuminate\Http\Request;
+use Laravel\Passport\Http\Controllers\AccessTokenController;
+use Laravel\Passport\Http\Controllers\ConvertsPsrResponses;
+use League\OAuth2\Server\AuthorizationServer;
+use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
+use Symfony\Component\HttpFoundation\Response;
 
-class LegacyLoginController extends Controller
+class LegacyLoginController extends AccessTokenController
 {
+    use ConvertsPsrResponses;
+
+    private PsrHttpFactory $psrHttpFactory;
+
     public function __construct(
-        protected LegacyJwtService $jwtService
+        protected LegacyJwtService $jwtService,
+        // used in parent class, needs to be injected here
+        protected AuthorizationServer $server,
     ) {
+        $this->psrHttpFactory = new PsrHttpFactory(new Psr17Factory());
     }
 
     /**
      * Handle a login request.
      * Matches the legacy login.php behavior.
      */
-    public function login(Request $request): JsonResponse
+    public function login(Request $request): Response
     {
         $request->validate([
             'username' => 'required|string',
@@ -31,69 +42,76 @@ class LegacyLoginController extends Controller
         $username = $request->input('username');
         $password = $request->input('password');
 
-        /** @var Tenant|null $tenant */
-        $tenant = tenant();
+        if ($request->grant_type === 'password') {
+            /** @var Tenant|null $tenant */
+            $tenant = tenant();
 
-        // Tenants flagged sso_required reject password login for everyone, regardless
-        // of whether the specific user has finished SSO linking yet.
-        if ($tenant && $tenant->sso_required) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'tenant_requires_sso',
-            ]);
+            // Tenants flagged sso_required reject password login for everyone, regardless
+            // of whether the specific user has finished SSO linking yet.
+            if ($tenant && $tenant->sso_required) {
+                return response()->json([
+                    'success' => false,
+                    'error'   => 'tenant_requires_sso',
+                ], 400);
+            }
+
+            // Find user by username
+            /** @var LegacyUser|null $user */
+            $user = LegacyUser::where('username', $username)->first();
+
+            if ($user === null) {
+                return response()->json([
+                    'success' => false,
+                    'error'   => 'bad_credentials',
+                ], 400);
+            }
+
+            // SSO-linked users must authenticate via the IdP. A local password is bypass
+            // surface — refuse the login so the local secret can never substitute for the
+            // IdP session.
+            if ($user->sso_sub !== null) {
+                return response()->json([
+                    'success' => false,
+                    'error'   => 'use_sso',
+                ], 400);
+            }
+
+            // Check if user is active
+            if (!$user->isActive()) {
+                return response()->json([
+                    'success'     => true,
+                    'user_status' => $user->status,
+                    'user_id'     => $user->id,
+                    'data'        => $this->getReactivationDate($user),
+                    'count'       => 1,
+                ], 400);
+            }
+
+            // Verify password
+            if (!$user->checkPassword($password)) {
+                return response()->json([
+                    'success' => false,
+                    'error'   => 'bad_credentials',
+                ], 400);
+            }
+
+            // Clear refresh token flag if set
+            if ($user->needsRefresh()) {
+                $user->clearRefreshToken();
+            }
+
+            /* // Generate JWT token */
+            /* $token = $this->jwtService->generateToken($user); */
+            /**/
+            /* return response()->json([ */
+            /*     'success' => true, */
+            /*     'JWT' => $token, */
+            /* ]); */
         }
 
-        // Find user by username
-        $user = LegacyUser::where('username', $username)->first();
-
-        if ($user === null) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'bad_credentials',
-            ]);
-        }
-
-        // SSO-linked users must authenticate via the IdP. A local password is bypass
-        // surface — refuse the login so the local secret can never substitute for the
-        // IdP session.
-        if ($user->sso_sub !== null) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'use_sso',
-            ]);
-        }
-
-        // Check if user is active
-        if (!$user->isActive()) {
-            return response()->json([
-                'success'     => true,
-                'user_status' => $user->status,
-                'user_id'     => $user->id,
-                'data'        => $this->getReactivationDate($user),
-                'count'       => 1,
-            ]);
-        }
-
-        // Verify password
-        if (!$user->checkPassword($password)) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'bad_credentials',
-            ]);
-        }
-
-        // Clear refresh token flag if set
-        if ($user->needsRefresh()) {
-            $user->clearRefreshToken();
-        }
-
-        // Generate JWT token
-        $token = $this->jwtService->generateToken($user);
-
-        return response()->json([
-            'success' => true,
-            'JWT' => $token,
-        ]);
+        $psrRequest = $this->psrHttpFactory->createRequest($request);
+        $psrResponse = $this->psrHttpFactory->createResponse(response()->make());
+        return $this->issueToken($psrRequest, $psrResponse);
     }
 
     /**

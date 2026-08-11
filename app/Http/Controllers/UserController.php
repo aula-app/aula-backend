@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use App\Data\User\DomainUserData;
 use App\Data\User\Requests\StoreUserData;
 use App\Data\User\Requests\UpdateUserData;

@@ -6,6 +6,7 @@ use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
 use Laravel\Passport\Contracts\OAuthenticatable;
 use Laravel\Passport\HasApiTokens;
@@ -14,6 +15,7 @@ use Laravel\Socialite\Contracts\User as SocialiteUser;
 class LegacyUser extends Model implements Authenticatable, OAuthenticatable
 {
     use HasApiTokens;
+    use Notifiable;
 
     /**
      * The table associated with the model.

@@ -12,15 +12,17 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 class PassportServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Register Passport services.
      */
     public function register(): void
     {
+        // The routes are manually setup in boot() override below, due
+        // to the need to resolve the Tenant before Passport is used for authN
         Passport::ignoreRoutes();
     }
 
     /**
-     * Bootstrap any application services.
+     * Bootstrap the Passport related services.
      */
     public function boot(): void
     {
@@ -34,14 +36,18 @@ class PassportServiceProvider extends ServiceProvider
             'namespace' => 'Laravel\Passport\Http\Controllers',
         ], function () {
             $this->loadRoutesFrom(__DIR__.'/../../vendor/laravel/passport/src/../routes/web.php');
+            Route::post('/token', [
+                'uses' => '\App\Http\Controllers\Auth\LegacyLoginController@login',
+                'as' => 'token',
+                'middleware' => 'throttle',
+            ]);
         });
 
-        // For now, we'll have only single internal Password Client to authenticate with username+password
+        // For now, we'll have only single central Password Client using which
+        // all Users of all Tenants could authenticate with username+password
         Passport::enablePasswordGrant();
 
         // @TODO: nikola - after testing extend to 30-60 mins or so, to cover usual session length
-        Passport::tokensExpireIn(CarbonInterval::minutes(1));
         Passport::refreshTokensExpireIn(CarbonInterval::days(60));
-        /* Passport::personalAccessTokensExpireIn(CarbonInterval::months(6)); */
     }
 }
