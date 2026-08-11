@@ -111,6 +111,9 @@ class ResetIdpTenant extends Command
             // makes the next login the tenant's first.
             DB::table('au_users_basedata')->update(['sso_sub' => null, 'idp_user_id' => null]);
 
+            // A proposal describes rows that no longer exist.
+            DB::table('idp_merge_candidates')->truncate();
+
             $this->stripRolesForRooms($rooms->pluck('hash_id')->all());
         });
     }
@@ -149,6 +152,10 @@ class ResetIdpTenant extends Command
     {
         $tenant->update([
             'idp_school_id' => null,
+            // A tenant left part-way through a migration never bootstraps on a
+            // first login again, so without this the reset hands back a tenant
+            // that cannot do the thing it was reset for.
+            'idp_migration_status' => null,
             'idp_import_status' => null,
             'idp_import_error' => null,
             'idp_import_rooms' => 0,

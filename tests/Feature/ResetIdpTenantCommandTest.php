@@ -93,6 +93,45 @@ class ResetIdpTenantCommandTest extends TestCase
         ));
     }
 
+    public function test_it_leaves_the_tenant_able_to_bootstrap_again(): void
+    {
+        $this->seedImportedSchool();
+        Tenant::where('id', self::$testTenant->id)
+            ->update(['idp_migration_status' => Tenant::IDP_MIGRATION_CONNECTED]);
+
+        $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
+
+        // A tenant still part-way through a migration refuses to bootstrap on a
+        // first login, which is exactly what this command exists to set up.
+        $tenant = self::$testTenant->fresh();
+        $this->assertNull($tenant->idp_migration_status);
+        $this->assertFalse($tenant->isMigratingToIdp());
+    }
+
+    public function test_it_discards_a_merge_proposal(): void
+    {
+        $this->seedImportedSchool();
+        self::$testTenant->run(fn () => DB::table('idp_merge_candidates')->insert([
+            'kind' => 'user',
+            'idp_id' => 'person-stale',
+            'idp_name' => 'Stale',
+            'idp_name_kind' => 'real',
+            'local_id' => null,
+            'local_name' => null,
+            'outcome' => 'none',
+            'decision' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]));
+
+        $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
+
+        // The proposal describes rows the reset has just deleted.
+        $this->assertSame(0, self::$testTenant->run(
+            fn () => DB::table('idp_merge_candidates')->count(),
+        ));
+    }
+
     public function test_it_strips_roles_only_for_rooms_it_deleted(): void
     {
         [$roomId] = $this->seedImportedSchool();
