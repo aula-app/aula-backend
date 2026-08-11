@@ -204,7 +204,11 @@ class TenantResource extends Resource
                         ->helperText('When on, refuse legacy username+password login for everyone in this tenant. Only flip on AFTER all users have completed account linking — while on, the link flow itself is unreachable.')
                         ->default(false),
 
-                    Toggle::make('idp_migration_flagged')
+                    // Named for the column it writes. A name of its own would be
+                    // saved as one, and on a tenant model an unknown attribute
+                    // lands in the `data` blob rather than failing, so the
+                    // toggle would appear to work while the app read NULL.
+                    Toggle::make('idp_migration_status')
                         ->label('Migrate existing accounts to the IdP')
                         ->helperText('Turn on for a school that ALREADY uses aula before it starts syncing from the IdP. Its admin then runs the import from Settings, matching existing accounts instead of duplicating them. Leave off for a brand new school, which sets itself up on the first SSO login.')
                         ->default(false)
