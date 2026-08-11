@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Auth\SsoController;
 use App\Http\Controllers\Idp\ImportStatusController;
+use App\Http\Controllers\Idp\MergeProposalController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 
@@ -46,6 +47,19 @@ Route::name('sso.')
             // migrating a school that already uses aula.
             Route::get('/idp/connect', [SsoController::class, 'connectIdentity'])
                 ->name('idp.connect');
+
+            // The review an admin works through before a school's directory
+            // is imported over its existing accounts.
+            Route::post('/idp/merge-proposal', [MergeProposalController::class, 'build'])
+                ->name('idp.proposal.build');
+            Route::get('/idp/merge-proposal', [MergeProposalController::class, 'index'])
+                ->name('idp.proposal.index');
+            Route::post('/idp/merge-proposal/decisions', [MergeProposalController::class, 'decide'])
+                ->name('idp.proposal.decide');
+            Route::post('/idp/merge-proposal/apply', [MergeProposalController::class, 'apply'])
+                ->name('idp.proposal.apply');
+            Route::get('/idp/migration-progress', [MergeProposalController::class, 'progress'])
+                ->name('idp.migration_progress');
 
             Route::get('/idp/import-status', [ImportStatusController::class, 'show'])
                 ->name('idp.import_status');
