@@ -35,6 +35,11 @@ Route::name('sso.')
     ])
     ->prefix('/api/v2/auth')
     ->group(function () {
+        // Completing a claim as somebody new: authenticated by the one-shot
+        // token, since they have no aula account to authenticate with yet.
+        Route::post('/sso/link/decline', [SsoController::class, 'declineAccountClaim'])
+            ->name('sso.link_decline');
+
         Route::get('/sso/initiate', [SsoController::class, 'initiate'])->name('initiate');
 
         Route::middleware('legacy.jwt')->group(function () {

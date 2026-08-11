@@ -423,6 +423,18 @@ class SsoController extends Controller
             $user = $this->bootstrapIdpTenant($socialiteUser, $callbackTenant, $instanceCode);
         }
 
+        if ($user === null && $callbackTenant->isMigratingToIdp()) {
+            // A school mid-migration holds accounts that predate the provider.
+            // The row waiting for this identity may be an empty one the import
+            // made, while the person's real account sits unmatched beside it —
+            // so ask before handing them the empty one.
+            $claim = $this->offerAccountClaim($socialiteUser, $callbackTenant, $instanceCode);
+
+            if ($claim !== null) {
+                return $claim;
+            }
+        }
+
         if ($user === null) {
             // Imported by the school import, or announced by a webhook, before
             // this person ever signed in. Claim the row, do not duplicate it.
@@ -494,6 +506,10 @@ class SsoController extends Controller
 
         if (! is_array($intent)) {
             return response()->json(['success' => false, 'error' => 'link_intent_not_found'], 404);
+        }
+
+        if (($intent['claimable'] ?? false) === true) {
+            return $this->completeAccountClaim($intent, $authUser, $token);
         }
 
         if (($intent['user_id'] ?? null) !== $authUser->id) {
@@ -1021,6 +1037,166 @@ class SsoController extends Controller
         return $byUsername ?? LegacyUser::where('userlevel', '>=', UserLevel::Admin->value)
             ->orderBy('id')
             ->first();
+    }
+
+    /**
+     * Attach a claimed provider identity to the account whose password was
+     * just proved, and discard the empty row the import had waiting.
+     *
+     * @param  array<string, mixed>  $intent
+     */
+    protected function completeAccountClaim(array $intent, LegacyUser $authUser, string $token): JsonResponse
+    {
+        $personId = (string) ($intent['idp_user_id'] ?? '');
+        $fresh = LegacyUser::find($authUser->id);
+
+        if ($fresh === null) {
+            return response()->json(['success' => false, 'error' => 'user_not_found'], 404);
+        }
+
+        if ($fresh->sso_sub !== null && $fresh->sso_sub !== $intent['sso_sub']) {
+            return response()->json(['success' => false, 'error' => 'already_linked'], 409);
+        }
+
+        $holder = LegacyUser::where('idp_user_id', $personId)->where('id', '!=', $fresh->id)->first();
+
+        if ($holder !== null && (! empty($holder->pw) || $holder->sso_sub !== null)) {
+            // Somebody real already owns this identity. Two accounts claiming
+            // one person needs a human, not a silent reassignment.
+            Log::warning('SSO: refusing to move a provider identity off a real account', [
+                'idp_user_id' => $personId,
+                'existing_user_id' => $holder->id,
+            ]);
+
+            return response()->json(['success' => false, 'error' => 'idp_identity_taken'], 409);
+        }
+
+        DB::transaction(function () use ($fresh, $intent, $personId, $holder): void {
+            if ($holder !== null) {
+                // An import-made row has no content by construction, so the
+                // identity moves to the real account and the empty one goes.
+                DB::table('au_rel_rooms_users')->where('user_id', $holder->id)->delete();
+                $holder->delete();
+            }
+
+            $fresh->sso_sub = $intent['sso_sub'];
+            $fresh->idp_user_id = $personId;
+            $fresh->sso_id_token = $intent['sso_id_token'] ?? null;
+            $fresh->sso_refresh_token = $intent['sso_refresh_token'] ?? null;
+            $fresh->sso_idp_id_token = $intent['sso_idp_id_token'] ?? null;
+            $fresh->save();
+        });
+
+        Cache::forget($this->linkIntentCacheKey($token));
+
+        Log::info('SSO: a migrating user claimed their existing account', [
+            'user_id' => $fresh->id,
+            'idp_user_id' => $personId,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Ask someone mid-migration whether they already have an aula account.
+     *
+     * Name matching cannot reach everybody — a person the review could not
+     * match has an empty row waiting for their provider identity and a real
+     * account, with all their work, sitting unlinked. Adoption would silently
+     * give them the empty one.
+     *
+     * So: no session yet. They either prove an existing password, or say they
+     * are new. Logging them in first and asking afterwards would make
+     * dismissing the question the easiest path, and produce the duplicate
+     * quietly.
+     *
+     * Returns null when there is nothing to ask about.
+     */
+    protected function offerAccountClaim(\Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant, string $instanceCode): ?RedirectResponse
+    {
+        $personId = $this->idpClaim($this->idpClaims($socialiteUser, $tenant), $tenant, 'user');
+
+        if ($personId === null) {
+            return null;
+        }
+
+        $candidate = $this->ssoUserService->findByIdpUserId($personId);
+
+        // Nothing local yet, or a real account already carrying this identity:
+        // the ordinary paths handle both.
+        if ($candidate === null || $candidate->sso_sub !== null || ! empty($candidate->pw)) {
+            return null;
+        }
+
+        $token = $this->storeAccountClaimIntent($personId, (int) $candidate->id, $socialiteUser, $tenant);
+
+        Log::info('SSO: asking a migrating school whether this person already has an account', [
+            'tenant' => $instanceCode,
+            'idp_user_id' => $personId,
+        ]);
+
+        return $this->frontendError('account_link_required', ['sso_link' => $token, 'claimable' => 1]);
+    }
+
+    /**
+     * An intent nobody owns yet.
+     *
+     * Unlike a link started from a known account, this one is claimed by
+     * whoever proves an aula password — which is exactly the assertion being
+     * made: "that provider identity is me". Possession of the account is still
+     * what gets proved, so the trust model is unchanged.
+     */
+    protected function storeAccountClaimIntent(string $personId, int $shellUserId, \Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant): string
+    {
+        $token = bin2hex(random_bytes(16));
+
+        Cache::put($this->linkIntentCacheKey($token), [
+            'claimable' => true,
+            'idp_user_id' => $personId,
+            'shell_user_id' => $shellUserId,
+            'sso_sub' => $socialiteUser->getId(),
+            'sso_id_token' => $socialiteUser->accessTokenResponseBody['id_token'] ?? null,
+            'sso_refresh_token' => $socialiteUser->refreshToken,
+            'sso_idp_id_token' => $this->fetchIdpIdToken($socialiteUser->token, $tenant->sso_provider),
+            'instance_code' => $tenant->instance_code,
+        ], now()->addMinutes(self::LINK_INTENT_TTL_MINUTES));
+
+        return $token;
+    }
+
+    /**
+     * Complete a claim for somebody who has no aula account yet.
+     *
+     * Authenticated by the one-shot token alone: they have just proved an
+     * identity at the provider and have no aula credentials to offer. Without
+     * this, a new pupil would loop on the link prompt forever.
+     */
+    public function declineAccountClaim(Request $request): JsonResponse
+    {
+        $request->validate(['sso_link_token' => 'required|string']);
+
+        $token = (string) $request->input('sso_link_token');
+        $intent = Cache::get($this->linkIntentCacheKey($token));
+
+        if (! is_array($intent) || ($intent['claimable'] ?? false) !== true) {
+            return response()->json(['success' => false, 'error' => 'link_intent_not_found'], 404);
+        }
+
+        $user = LegacyUser::find($intent['shell_user_id'] ?? 0);
+
+        if ($user === null) {
+            return response()->json(['success' => false, 'error' => 'user_not_found'], 404);
+        }
+
+        $user->sso_sub = $intent['sso_sub'];
+        $user->sso_id_token = $intent['sso_id_token'] ?? null;
+        $user->sso_refresh_token = $intent['sso_refresh_token'] ?? null;
+        $user->sso_idp_id_token = $intent['sso_idp_id_token'] ?? null;
+        $user->save();
+
+        Cache::forget($this->linkIntentCacheKey($token));
+
+        return response()->json(['success' => true, 'JWT' => $this->jwtService->generateToken($user)]);
     }
 
     /**
