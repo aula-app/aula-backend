@@ -9,26 +9,26 @@ use App\Models\SchoolType;
 use App\Models\Tenant;
 use App\Services\TenantsService;
 use Filament\Actions\Action as FormAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput\Actions\CopyAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\ResourceConfiguration;
+use Filament\Forms\Components\TextInput\Actions\CopyAction;
 use Filament\Forms\Components\Toggle;
+use Filament\Resources\Resource;
+use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set as FilamentSet;
 use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
-use Filament\Actions\EditAction;
-use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 /**
- * @extends Resource<Tenant,ResourceConfiguration>
+ * @extends resource<Tenant,ResourceConfiguration>
  */
 class TenantResource extends Resource
 {
@@ -182,7 +182,7 @@ class TenantResource extends Resource
 
             Section::make('Single Sign-On')
                 ->description('OIDC/Keycloak integration. Leave SSO disabled to keep this tenant on legacy username+password login only.')
-                ->collapsed(fn (?Tenant $record) => !($record?->sso_enabled))
+                ->collapsed(fn (?Tenant $record) => ! ($record?->sso_enabled))
                 ->schema([
                     Toggle::make('sso_enabled')
                         ->label('SSO enabled')
@@ -203,6 +203,26 @@ class TenantResource extends Resource
                         ->label('SSO required (no password login)')
                         ->helperText('When on, refuse legacy username+password login for everyone in this tenant. Only flip on AFTER all users have completed account linking — while on, the link flow itself is unreachable.')
                         ->default(false),
+
+                    Toggle::make('idp_migration_flagged')
+                        ->label('Migrate existing accounts to the IdP')
+                        ->helperText('Turn on for a school that ALREADY uses aula before it starts syncing from the IdP. Its admin then runs the import from Settings, matching existing accounts instead of duplicating them. Leave off for a brand new school, which sets itself up on the first SSO login.')
+                        ->default(false)
+                        // The column is a state machine the app advances; the
+                        // operator only ever starts or cancels a migration.
+                        ->formatStateUsing(fn (?Tenant $record): bool => $record?->idp_migration_status !== null)
+                        ->dehydrateStateUsing(fn (bool $state, ?Tenant $record): ?string => $state
+                            ? ($record?->idp_migration_status ?? Tenant::IDP_MIGRATION_FLAGGED)
+                            : null)
+                        // Once the school's admin has connected, turning this
+                        // off would strand a half-finished migration.
+                        ->disabled(fn (?Tenant $record): bool => $record?->idp_migration_status !== null
+                            && $record->idp_migration_status !== Tenant::IDP_MIGRATION_FLAGGED),
+
+                    Placeholder::make('idp_migration_state')
+                        ->label('Migration state')
+                        ->content(fn (?Tenant $record): string => $record?->idp_migration_status ?? 'not migrating')
+                        ->visible(fn (?Tenant $record): bool => $record?->idp_migration_status !== null),
 
                     Toggle::make('sso_require_email_verified')
                         ->label('Require verified email from IdP')
@@ -288,9 +308,10 @@ class TenantResource extends Resource
         }
         // allow Unicode letters, numbers, dot, underscore, hyphen
         $username = preg_replace('/[^\p{L}\p{N}._-]+/u', '_', $part);
-        if (!is_string($username)) {
+        if (! is_string($username)) {
             $username = '';
         }
+
         return trim($username, '._-');
     }
 }

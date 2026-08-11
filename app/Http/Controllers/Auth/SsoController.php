@@ -101,6 +101,79 @@ class SsoController extends Controller
     }
 
     /**
+     * A migrating school becomes `connected` once its admin has linked and the
+     * school id is known — the point from which an import can be prepared.
+     */
+    protected function advanceMigrationAfterConnect(LegacyUser $user): void
+    {
+        /** @var Tenant|null $tenant */
+        $tenant = tenant();
+
+        if ($tenant === null
+            || $tenant->idp_migration_status !== Tenant::IDP_MIGRATION_FLAGGED
+            || $tenant->idp_school_id === null
+            || ($user->userlevel?->value ?? 0) < UserLevel::Admin->value) {
+            return;
+        }
+
+        $tenant->update(['idp_migration_status' => Tenant::IDP_MIGRATION_CONNECTED]);
+
+        Log::info('SSO: school connected to its identity provider', [
+            'tenant' => $tenant->instance_code,
+            'user_id' => $user->id,
+        ]);
+    }
+
+    /**
+     * Start connecting an admin's own aula account to the identity provider.
+     *
+     * The first step of migrating a school that already uses aula: the admin
+     * proves who they are on the provider, which both links their account and
+     * establishes which school this tenant is. Everything after it — the
+     * import, the review — depends on that school id being known, and knowing
+     * it by proof rather than by someone picking from a list.
+     *
+     * Possession of the aula account is already proved: this route is behind
+     * the bearer token. The callback still goes through the ordinary link
+     * intent, which re-checks it.
+     */
+    public function connectIdentity(Request $request): JsonResponse
+    {
+        /** @var Tenant $tenant */
+        $tenant = tenant();
+
+        /** @var LegacyUser $user */
+        $user = $request->attributes->get('authenticated_user');
+
+        if (($user->userlevel?->value ?? 0) < UserLevel::Admin->value) {
+            return response()->json(['error' => 'admin_required'], 403);
+        }
+
+        if (! $tenant->usesIdpDirectory()) {
+            return response()->json(['error' => 'no_idp_configured'], 422);
+        }
+
+        $params = [
+            'state' => $this->buildSignedState($tenant->instance_code, (int) $user->id),
+            // Force a fresh authentication: the point is to capture *this*
+            // person's provider identity, not to reuse a session that might
+            // belong to whoever used the browser last.
+            'prompt' => 'login',
+        ];
+
+        if ($tenant->sso_provider) {
+            $params['kc_idp_hint'] = $tenant->sso_provider;
+        }
+
+        /** @var AbstractProvider $driver */
+        $driver = Socialite::driver('keycloak');
+
+        return response()->json([
+            'url' => $driver->stateless()->with($params)->redirect()->getTargetUrl(),
+        ]);
+    }
+
+    /**
      * Handle an IdP-initiated SSO launch (OIDC third-party initiated login).
      *
      * Eduplaces' marketplace launcher hits this endpoint with `iss` and
@@ -202,6 +275,13 @@ class SsoController extends Controller
 
         /** @var Tenant $callbackTenant */
         $callbackTenant = tenant();
+
+        // An admin connecting their own account: link rather than resolve.
+        $linkUserId = $this->stateLinkUserId((string) $request->query('state', ''));
+
+        if ($linkUserId !== null) {
+            return $this->completeIdentityConnection($linkUserId, $socialiteUser, $callbackTenant, $instanceCode);
+        }
 
         $user = $this->resolveCallbackUser($socialiteUser, $callbackTenant, $instanceCode);
 
@@ -450,6 +530,8 @@ class SsoController extends Controller
 
         Cache::forget($this->linkIntentCacheKey($token));
 
+        $this->advanceMigrationAfterConnect($fresh);
+
         return response()->json(['success' => true]);
     }
 
@@ -500,12 +582,21 @@ class SsoController extends Controller
      * Build a signed state payload containing the instance_code.
      * Format: base64(json) . '.' . hmac_signature
      */
-    protected function buildSignedState(string $instanceCode): string
+    /**
+     * @param  int|null  $linkUserId  when set, the callback links the provider
+     *                                identity to this aula account instead of
+     *                                resolving or creating one. Safe to carry
+     *                                here because the payload is HMAC-signed by
+     *                                us, and /sso/link re-checks it against the
+     *                                bearer token anyway.
+     */
+    protected function buildSignedState(string $instanceCode, ?int $linkUserId = null): string
     {
-        $payload = base64_encode(json_encode([
+        $payload = base64_encode(json_encode(array_filter([
             'instance_code' => $instanceCode,
+            'link_user_id' => $linkUserId,
             'nonce' => Str::random(16),
-        ]));
+        ], fn ($value): bool => $value !== null)));
 
         $signature = hash_hmac('sha256', $payload, $this->stateSecret());
 
@@ -534,6 +625,29 @@ class SsoController extends Controller
         $data = json_decode(base64_decode($payload), true);
 
         return $data['instance_code'] ?? null;
+    }
+
+    /**
+     * The aula account a callback was told to link to, if any.
+     */
+    protected function stateLinkUserId(string $state): ?int
+    {
+        $parts = explode('.', $state, 2);
+
+        if (count($parts) !== 2) {
+            return null;
+        }
+
+        [$payload, $signature] = $parts;
+
+        if (! hash_equals(hash_hmac('sha256', $payload, $this->stateSecret()), $signature)) {
+            return null;
+        }
+
+        $data = json_decode(base64_decode($payload), true);
+        $id = is_array($data) ? ($data['link_user_id'] ?? null) : null;
+
+        return is_int($id) || (is_string($id) && ctype_digit($id)) ? (int) $id : null;
     }
 
     /**
@@ -671,6 +785,65 @@ class SsoController extends Controller
         }
 
         $user->idp_user_id = $personId;
+    }
+
+    /**
+     * Finish an admin's account connection.
+     *
+     * Learns which school this tenant is from the claim, then hands back an
+     * ordinary link intent so the frontend can complete it against the bearer
+     * token. No session is issued here: the admin already has one.
+     */
+    protected function completeIdentityConnection(int $userId, \Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant, string $instanceCode): RedirectResponse
+    {
+        $user = LegacyUser::find($userId);
+
+        if ($user === null) {
+            return $this->frontendError('link_user_not_found');
+        }
+
+        $claims = $this->idpClaims($socialiteUser, $tenant);
+        $personId = $this->idpClaim($claims, $tenant, 'user');
+
+        if ($personId === null) {
+            return $this->frontendError('idp_user_missing');
+        }
+
+        if (! $this->learnSchoolId($tenant, $claims, $instanceCode)) {
+            return $this->frontendError('idp_school_missing');
+        }
+
+        $conflict = LegacyUser::where('idp_user_id', $personId)
+            ->where('id', '!=', $user->id)
+            ->first();
+
+        if ($conflict !== null) {
+            Log::warning('SSO: provider identity already belongs to another aula account', [
+                'tenant' => $instanceCode,
+                'idp_user_id' => $personId,
+                'existing_user_id' => $conflict->id,
+            ]);
+
+            return $this->frontendError('idp_identity_taken');
+        }
+
+        $token = $this->storeLinkIntent($user, $socialiteUser, $tenant);
+
+        return $this->frontendRedirectToSettings($token, $tenant->instance_code);
+    }
+
+    /**
+     * Send the admin back to where they started the connection, carrying the
+     * one-shot token their browser needs to complete it.
+     */
+    protected function frontendRedirectToSettings(string $linkToken, string $instanceCode): RedirectResponse
+    {
+        $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
+
+        return redirect("{$frontendUrl}/settings/idp-sync?".http_build_query([
+            'sso_link' => $linkToken,
+            'code' => $instanceCode,
+        ]));
     }
 
     /**

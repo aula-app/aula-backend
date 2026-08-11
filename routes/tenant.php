@@ -42,6 +42,11 @@ Route::name('sso.')
 
             // Polled by the frontend after an SSO login so it can hold the user
             // on a setup screen until the school import has finished.
+            // An admin connecting their own account is the first step of
+            // migrating a school that already uses aula.
+            Route::get('/idp/connect', [SsoController::class, 'connectIdentity'])
+                ->name('idp.connect');
+
             Route::get('/idp/import-status', [ImportStatusController::class, 'show'])
                 ->name('idp.import_status');
         });
