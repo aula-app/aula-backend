@@ -697,6 +697,13 @@ class SsoController extends Controller
             return null;
         }
 
+        // A school that already used aula gets migrated deliberately, by an
+        // admin who proves who they are. Bootstrapping it would hand the
+        // school's real admin account to whoever signed in first.
+        if ($tenant->isMigratingToIdp()) {
+            return null;
+        }
+
         $claims = $this->idpClaims($socialiteUser, $tenant);
         $personId = $this->idpClaim($claims, $tenant, 'user');
 
@@ -717,6 +724,20 @@ class SsoController extends Controller
         if ($admin === null) {
             Log::warning('SSO: no admin row for the first SSO login to take over', [
                 'tenant' => $instanceCode,
+            ]);
+
+            return null;
+        }
+
+        // Belt and braces for a school nobody remembered to flag as migrating.
+        // A tenant holding anyone beyond its seeded admins is already in use,
+        // and claiming its admin account would be a takeover by whoever signed
+        // in first. Password presence is not the signal — tenant creation can
+        // pre-set one — but having other people is.
+        if ($this->hasUsersBeyondSeededAdmins($tenant)) {
+            Log::warning('SSO: refusing to bootstrap a tenant that already has users', [
+                'tenant' => $instanceCode,
+                'user_id' => $admin->id,
             ]);
 
             return null;
@@ -799,6 +820,19 @@ class SsoController extends Controller
         ]);
 
         return true;
+    }
+
+    /**
+     * Whether anyone uses this school beyond the accounts tenant creation made.
+     */
+    protected function hasUsersBeyondSeededAdmins(Tenant $tenant): bool
+    {
+        $seeded = array_filter([$tenant->admin1_username, $tenant->admin2_username]);
+
+        return LegacyUser::when(
+            $seeded !== [],
+            fn ($query) => $query->whereNotIn('username', $seeded),
+        )->exists();
     }
 
     /**

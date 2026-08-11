@@ -98,6 +98,7 @@ class IdpBootstrapTest extends TestCase
         Tenant::where('id', self::$testTenant->id)->update([
             'idp_school_id' => null,
             'idp_import_status' => null,
+            'idp_migration_status' => null,
         ]);
         parent::tearDown();
     }
@@ -148,6 +149,52 @@ class IdpBootstrapTest extends TestCase
             'aula-instance-code' => 'TEST001',
             'Authorization' => "Bearer {$jwt}",
         ])->assertOk()->assertJsonPath('ready', false)->assertJsonPath('status', null);
+    }
+
+    public function test_it_refuses_to_bootstrap_a_school_that_already_has_users(): void
+    {
+        // An existing school's admin is a person's real account. Whoever signs
+        // in through the provider first must not inherit it, even if nobody
+        // remembered to flag the tenant as migrating.
+        self::$testTenant->run(function () {
+            $pupil = new LegacyUser;
+            $pupil->username = 'existing.pupil';
+            $pupil->displayname = 'Existing Pupil';
+            $pupil->status = LegacyUser::STATUS_ACTIVE;
+            $pupil->userlevel = 20;
+            $pupil->hash_id = md5('existing.pupil');
+            $pupil->save();
+        });
+
+        $this->login('kc-sub-outsider', 'person-teacher');
+
+        self::$testTenant->run(function () {
+            $admin = LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail();
+
+            $this->assertNull($admin->sso_sub, 'the admin account must not have been claimed');
+            $this->assertNull($admin->idp_user_id);
+        });
+
+        // And nothing was imported off the back of it.
+        $this->assertNull(self::$testTenant->fresh()->idp_import_status);
+    }
+
+    public function test_it_does_not_bootstrap_a_school_that_is_being_migrated(): void
+    {
+        // Migration is an admin-driven flow; the first login must not pre-empt
+        // it by adopting an account and importing the roster.
+        Tenant::where('id', self::$testTenant->id)
+            ->update(['idp_migration_status' => Tenant::IDP_MIGRATION_FLAGGED]);
+
+        $this->login('kc-sub-early', 'person-teacher');
+
+        self::$testTenant->run(function () {
+            $this->assertNull(
+                LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail()->sso_sub,
+            );
+        });
+        $this->assertNull(self::$testTenant->fresh()->idp_school_id, 'the school must not be learned yet');
+        $this->assertNull(self::$testTenant->fresh()->idp_import_status);
     }
 
     public function test_the_login_queues_the_import_rather_than_running_it_inline(): void
@@ -409,8 +456,27 @@ class IdpBootstrapTest extends TestCase
         });
     }
 
+    /**
+     * Reduce the shared tenant to what tenant creation would have left: the
+     * seeded admin and nobody else.
+     *
+     * This class is about a school nobody has used yet, and the bootstrap
+     * deliberately refuses to run on one that already has users — so anything
+     * another test class left behind has to go, or the fixture is not the
+     * scenario under test.
+     */
     private function cleanTenant(): void
     {
+        self::$testTenant->run(function () {
+            $strays = LegacyUser::where('username', '!=', self::ADMIN_USERNAME)->pluck('id')->all();
+
+            if ($strays !== []) {
+                DB::table('au_rel_rooms_users')->whereIn('user_id', $strays)->delete();
+                DB::table('au_rel_groups_users')->whereIn('user_id', $strays)->delete();
+                LegacyUser::whereIn('id', $strays)->delete();
+            }
+        });
+
         self::$testTenant->run(function () {
             $userIds = LegacyUser::whereNotNull('idp_user_id')
                 ->orWhere('username', self::ADMIN_USERNAME)
