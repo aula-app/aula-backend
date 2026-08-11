@@ -53,7 +53,8 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
-    'frontend_url' => env('APP_FRONTEND_URL', config('app.url') ?? 'http://localhost:3000'),
+    'frontend_url' => env('APP_FRONTEND_URL', config('app.url', 'http://localhost:3000')),
+    'version' => env('APP_VERSION', 'unknown'),
 
     /*
     |--------------------------------------------------------------------------

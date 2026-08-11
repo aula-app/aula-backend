@@ -12,7 +12,8 @@ class LegacyJwtMiddleware
 {
     public function __construct(
         protected LegacyJwtService $jwtService
-    ) {}
+    ) {
+    }
 
     /**
      * Handle an incoming request.
@@ -41,8 +42,18 @@ class LegacyJwtMiddleware
 
         $payload = $validation['payload'];
 
+        // hash_id is the sole identifying claim since user_id left the payload.
+        // An empty one must not reach the query: Eloquent turns `= null` into
+        // `IS NULL`, and au_users_basedata.hash_id is nullable, so a blank claim
+        // would authenticate as an arbitrary hash-less user.
+        $userHash = $payload->user_hash ?? null;
+
+        if (!is_string($userHash) || $userHash === '') {
+            return $this->errorResponse('invalid_token', 401);
+        }
+
         // Verify user exists in database
-        $user = LegacyUser::find($payload->user_id);
+        $user = LegacyUser::where('hash_id', $userHash)->first();
 
         if ($user === null) {
             return $this->errorResponse('user_not_found', 401);
@@ -65,7 +76,6 @@ class LegacyJwtMiddleware
 
         // Attach JWT payload and user info to request
         $request->attributes->set('jwt_payload', $payload);
-        $request->attributes->set('user_id', $payload->user_id);
         $request->attributes->set('user_level', $payload->user_level);
         $request->attributes->set('user_hash', $payload->user_hash);
         $request->attributes->set('roles', $payload->roles ?? []);
