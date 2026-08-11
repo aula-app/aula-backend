@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as LaravelSocialiteUser;
+use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
 
 class SsoController extends Controller
 {
@@ -35,7 +37,8 @@ class SsoController extends Controller
         protected LegacyJwtService $jwtService,
         protected SsoUserService $ssoUserService,
         protected IdTokenVerifier $idTokenVerifier,
-    ) {}
+    ) {
+    }
 
     // =========================================================
     // Public endpoints
@@ -137,7 +140,6 @@ class SsoController extends Controller
     public function callback(Request $request): RedirectResponse
     {
         $instanceCode = $this->verifySignedState($request->query('state', ''));
-
         if ($instanceCode === null) {
             return $this->frontendError('invalid_state');
         }
@@ -161,7 +163,6 @@ class SsoController extends Controller
         }
 
         $session = $this->completeOauthAndResolveTenant($instanceCode);
-
         if ($session instanceof RedirectResponse) {
             return $session;
         }
@@ -171,16 +172,13 @@ class SsoController extends Controller
         tenancy()->initialize($tenant);
 
         $idToken = $this->verifyCallbackIdToken($socialiteUser, $tenant, $instanceCode);
-
         if ($idToken instanceof RedirectResponse) {
             return $idToken;
         }
 
         /** @var Tenant $callbackTenant */
         $callbackTenant = tenant();
-
         $user = $this->resolveCallbackUser($socialiteUser, $callbackTenant, $instanceCode);
-
         if ($user instanceof RedirectResponse) {
             return $user;
         }
@@ -195,7 +193,7 @@ class SsoController extends Controller
      * OAuth round-trip. The IdP-initiated flow can only resolve its tenant
      * afterwards, from the upstream id_token's `school` claim.
      *
-     * @return array{0: Tenant, 1: \SocialiteProviders\Manager\OAuth2\User, 2: string}|RedirectResponse
+     * @return array{0: Tenant, 1: SocialiteOAuth2User, 2: string}|RedirectResponse
      */
     protected function completeOauthAndResolveTenant(string $instanceCode): array|RedirectResponse
     {
@@ -211,7 +209,7 @@ class SsoController extends Controller
 
         /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
         $driver = Socialite::driver('keycloak');
-        /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
+        /** @var SocialiteOAuth2User $socialiteUser */
         $socialiteUser = $driver->stateless()->user();
 
         if ($idpInitiated) {
@@ -235,13 +233,13 @@ class SsoController extends Controller
      * Persist the SSO tokens on the user, issue an aula JWT and redirect to the
      * frontend OAuth landing page.
      *
-     * @param  \Laravel\Socialite\Two\User  $socialiteUser
+     * @param  LaravelSocialiteUser  $socialiteUser
      */
-    protected function issueSsoSession(LegacyUser $user, \Laravel\Socialite\Two\User $socialiteUser, string $idToken, Tenant $callbackTenant): RedirectResponse
+    protected function issueSsoSession(LegacyUser $user, \Laravel\Socialite\Two\User $laravelSocialiteUser, string $idToken, Tenant $callbackTenant): RedirectResponse
     {
         $user->sso_id_token      = $idToken;
-        $user->sso_refresh_token = $socialiteUser->refreshToken;
-        $user->sso_idp_id_token  = $this->fetchIdpIdToken($socialiteUser->token, $callbackTenant->sso_provider);
+        $user->sso_refresh_token = $laravelSocialiteUser->refreshToken;
+        $user->sso_idp_id_token  = $this->fetchIdpIdToken($laravelSocialiteUser->token, $callbackTenant->sso_provider);
         $user->save();
 
         $token = $this->jwtService->generateToken($user);
@@ -256,12 +254,12 @@ class SsoController extends Controller
      * the appropriate frontend error when the token is missing, fails signature
      * verification, or fails the tenant's email-verification policy.
      *
-     * @param  \SocialiteProviders\Manager\OAuth2\User  $socialiteUser
+     * @param  SocialiteOAuth2User  $socialiteUser
      * @return string|RedirectResponse
      */
-    protected function verifyCallbackIdToken(\Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant, string $instanceCode): string|RedirectResponse
+    protected function verifyCallbackIdToken(SocialiteOAuth2User $socialiteUser, Tenant $tenant, string $instanceCode): string|RedirectResponse
     {
-        /** @var \SocialiteProviders\Manager\OAuth2\User $socialiteUser */
+        /** @var SocialiteOAuth2User $socialiteUser */
         $idToken = $socialiteUser->accessTokenResponseBody['id_token'] ?? null;
 
         if ($idToken === null) {
@@ -305,13 +303,13 @@ class SsoController extends Controller
      * Returns the active LegacyUser, or a RedirectResponse carrying the frontend
      * error/flow signal (account_inactive, sub_collision, account_link_required).
      *
-     * @param  \Laravel\Socialite\Two\User  $socialiteUser
+     * @param  LaravelSocialiteUser  $laravelSocialiteUser
      * @return LegacyUser|RedirectResponse
      */
-    protected function resolveCallbackUser(\Laravel\Socialite\Two\User $socialiteUser, Tenant $callbackTenant, string $instanceCode): LegacyUser|RedirectResponse
+    protected function resolveCallbackUser(LaravelSocialiteUser $laravelSocialiteUser, Tenant $callbackTenant, string $instanceCode): LegacyUser|RedirectResponse
     {
-        $sub   = $socialiteUser->getId();
-        $email = $socialiteUser->getEmail();
+        $sub   = $laravelSocialiteUser->getId();
+        $email = $laravelSocialiteUser->getEmail();
 
         $user = $this->ssoUserService->findBySub($sub);
 
@@ -319,7 +317,7 @@ class SsoController extends Controller
             $emailMatch = $this->ssoUserService->findByEmail($email);
 
             if ($emailMatch === null) {
-                $user = $this->ssoUserService->provisionUser($socialiteUser);
+                $user = $this->ssoUserService->provisionUser($laravelSocialiteUser);
             } else {
                 if (! $emailMatch->isActive()) {
                     return $this->frontendError('account_inactive');
@@ -336,7 +334,7 @@ class SsoController extends Controller
                     return $this->frontendError('sub_collision');
                 }
 
-                $linkToken = $this->storeLinkIntent($emailMatch, $socialiteUser, $callbackTenant);
+                $linkToken = $this->storeLinkIntent($emailMatch, $laravelSocialiteUser, $callbackTenant);
 
                 return $this->frontendError('account_link_required', ['sso_link' => $linkToken]);
             }
@@ -502,10 +500,11 @@ class SsoController extends Controller
      * the `school` claim from the upstream id_token. Tenants are mapped to
      * Eduplaces schools by the `eduplaces_school_id` column.
      *
+     * @param LaravelSocialiteUser $socialiteUser
      * @return Tenant|RedirectResponse Tenant on success; a RedirectResponse with a
      *                                  frontend error code on failure.
      */
-    protected function resolveTenantFromEduplacesClaim(\Laravel\Socialite\Two\User $socialiteUser): Tenant|RedirectResponse
+    protected function resolveTenantFromEduplacesClaim(LaravelSocialiteUser $socialiteUser): Tenant|RedirectResponse
     {
         $idpAlias = (string) config('services.eduplaces.idp_alias', 'eduplaces');
 
@@ -686,9 +685,9 @@ class SsoController extends Controller
      * The intent carries everything the link endpoint needs to stamp the row
      * once the user has proven legacy-account possession via password.
      *
-     * @param  \SocialiteProviders\Manager\OAuth2\User  $socialiteUser
+     * @param  SocialiteOAuth2User  $socialiteUser
      */
-    protected function storeLinkIntent(LegacyUser $emailMatch, \Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant): string
+    protected function storeLinkIntent(LegacyUser $emailMatch, SocialiteOAuth2User $socialiteUser, Tenant $tenant): string
     {
         $token = bin2hex(random_bytes(16));
 
