@@ -7,8 +7,10 @@ namespace Tests\Feature;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\LegacyJwtService;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
@@ -154,6 +156,45 @@ class IdpConnectIdentityTest extends TestCase
         $this->assertStringContainsString('sso_error=idp_identity_taken', $response->headers->get('Location'));
     }
 
+    public function test_a_school_another_tenant_holds_says_so(): void
+    {
+        $adminId = $this->seedUser(self::ADMIN, 50);
+        $otherId = $this->seedRivalTenant(self::SCHOOL);
+
+        try {
+            $response = $this->connectCallback($adminId, 'kc-sub-admin', 'person-admin');
+
+            // Reporting this as a missing school sends the operator looking for
+            // a broken claim, when the real answer is the wrong instance code.
+            $this->assertStringContainsString('sso_error=idp_school_taken', $response->headers->get('Location'));
+            $this->assertNull(self::$testTenant->fresh()->idp_school_id);
+        } finally {
+            // The callback leaves tenancy initialised, so an unqualified query
+            // here would look for `tenants` inside the tenant's own database
+            // and leak the row into every test that follows.
+            $this->central()->table('tenants')->where('id', $otherId)->delete();
+        }
+    }
+
+    public function test_a_login_with_no_school_claim_still_says_missing(): void
+    {
+        $adminId = $this->seedUser(self::ADMIN, 50);
+
+        $this->fakeUpstreamWithoutSchool('person-admin');
+        $this->mockSocialiteUser('kc-sub-admin');
+
+        $payload = base64_encode((string) json_encode([
+            'instance_code' => 'TEST001',
+            'link_user_id' => $adminId,
+            'nonce' => 'connectnonce',
+        ]));
+        $state = $payload.'.'.hash_hmac('sha256', $payload, (string) config('app.key'));
+
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $this->assertStringContainsString('sso_error=idp_school_missing', $response->headers->get('Location'));
+    }
+
     public function test_the_connect_callback_issues_no_session(): void
     {
         $adminId = $this->seedUser(self::ADMIN, 50);
@@ -191,6 +232,47 @@ class IdpConnectIdentityTest extends TestCase
         $state = $payload.'.'.hash_hmac('sha256', $payload, (string) config('app.key'));
 
         return $this->get("/api/v2/auth/sso/callback?state={$state}");
+    }
+
+    private function central(): ConnectionInterface
+    {
+        return DB::connection(config('tenancy.database.central_connection'));
+    }
+
+    /**
+     * A central row only, inserted past the model so no database is built for
+     * a tenant that exists purely to own a school id.
+     */
+    private function seedRivalTenant(string $schoolId): string
+    {
+        $id = 'rival-'.substr(md5($schoolId), 0, 8);
+
+        $this->central()->table('tenants')->where('id', $id)->delete();
+        $this->central()->table('tenants')->insert([
+            'id' => $id,
+            'name' => 'Rival '.$id,
+            'api_base_url' => 'http://rival.test',
+            'admin1_username' => 'rival_admin',
+            'admin1_email' => 'rival@rival.test',
+            'instance_code' => substr($id, 0, 10),
+            'idp_school_id' => $schoolId,
+            'data' => '{}',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $id;
+    }
+
+    private function fakeUpstreamWithoutSchool(string $personId): void
+    {
+        $header = rtrim(strtr(base64_encode((string) json_encode(['alg' => 'RS256'])), '+/', '-_'), '=');
+        $body = rtrim(strtr(base64_encode((string) json_encode(['sub' => $personId])), '+/', '-_'), '=');
+
+        Http::fake([
+            '*/protocol/openid-connect/certs' => Http::response($this->jwksDocument()),
+            '*/broker/eduplaces/token' => Http::response(['id_token' => "{$header}.{$body}.sig"]),
+        ]);
     }
 
     private function fakeUpstream(string $personId): void

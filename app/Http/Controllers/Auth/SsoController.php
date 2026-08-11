@@ -694,12 +694,12 @@ class SsoController extends Controller
         }
 
         if (! is_string($schoolId) || $schoolId === '') {
-            Log::warning('SSO: IdP-initiated Eduplaces login has no school claim', [
+            Log::warning('SSO: IdP-initiated login has no school claim', [
                 'keycloak_sub' => $socialiteUser->getId(),
                 'claim_keys' => is_array($payload) ? array_keys($payload) : null,
             ]);
 
-            return $this->frontendError('eduplaces_school_missing');
+            return $this->frontendError('idp_school_missing');
         }
 
         $tenant = Tenant::where('idp_school_id', $schoolId)->first();
@@ -825,8 +825,10 @@ class SsoController extends Controller
             return $this->frontendError('idp_user_missing');
         }
 
-        if (! $this->learnSchoolId($tenant, $claims, $instanceCode)) {
-            return $this->frontendError('idp_school_missing');
+        $schoolError = $this->learnSchoolId($tenant, $claims, $instanceCode);
+
+        if ($schoolError !== null) {
+            return $this->frontendError($schoolError);
         }
 
         $conflict = LegacyUser::where('idp_user_id', $personId)
@@ -904,7 +906,7 @@ class SsoController extends Controller
             return null;
         }
 
-        if (! $this->learnSchoolId($tenant, $claims, $instanceCode)) {
+        if ($this->learnSchoolId($tenant, $claims, $instanceCode) !== null) {
             return null;
         }
 
@@ -965,10 +967,15 @@ class SsoController extends Controller
      * UUID up and configure it by hand: the first person through the door tells
      * us which school they came from, and that is what gets imported.
      *
+     * The two ways this fails look identical from the outside and are not: a
+     * login with no school claim at all is a configuration problem, while a
+     * school another tenant already holds is usually the wrong instance code.
+     * Reporting both as "missing" sends the operator looking in the wrong place.
+     *
      * @param  array<string, mixed>|null  $claims
-     * @return bool false when the school cannot be established or is taken
+     * @return string|null an error code, or null when the school is established
      */
-    protected function learnSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): bool
+    protected function learnSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
     {
         $schoolId = $this->idpClaim($claims, $tenant, 'school');
 
@@ -978,11 +985,11 @@ class SsoController extends Controller
                 'claim_keys' => is_array($claims) ? array_keys($claims) : null,
             ]);
 
-            return false;
+            return 'idp_school_missing';
         }
 
         if ($tenant->idp_school_id === $schoolId) {
-            return true;
+            return null;
         }
 
         // The column is unique: one school, one tenant. Someone signing into the
@@ -998,7 +1005,7 @@ class SsoController extends Controller
                 'idp_school_id' => $schoolId,
             ]);
 
-            return false;
+            return 'idp_school_taken';
         }
 
         $tenant->update(['idp_school_id' => $schoolId]);
@@ -1008,7 +1015,7 @@ class SsoController extends Controller
             'idp_school_id' => $schoolId,
         ]);
 
-        return true;
+        return null;
     }
 
     /**

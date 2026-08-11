@@ -165,7 +165,7 @@ class SsoIdpInitiatedTest extends TestCase
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
-        $this->assertStringContainsString('sso_error=eduplaces_school_missing', $response->headers->get('Location'));
+        $this->assertStringContainsString('sso_error=idp_school_missing', $response->headers->get('Location'));
     }
 
     public function test_callback_rejects_when_no_aula_tenant_matches_school(): void
