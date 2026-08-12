@@ -247,6 +247,20 @@ class CrudUserTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_authz_not_active_statuses()
+    {
+        foreach ([UserStatus::Inactive, UserStatus::Suspended, UserStatus::Archived] as $userStatus) {
+            $inActiveUser = $this->createDistinctUser(UserLevel::Admin, $userStatus);
+            $inActiveJwt = $this->jwtForUser($inActiveUser);
+            $this->getJson(
+                '/api/v2/users',
+                ['Authorization' => "Bearer {$inActiveJwt}"]
+            )
+                ->assertJson(['error' => 'user_not_active'])
+                ->assertUnauthorized();
+        }
+    }
+
     public function test_create()
     {
         $result = $this->post(

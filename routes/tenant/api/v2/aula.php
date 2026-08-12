@@ -7,7 +7,6 @@ use App\Http\Controllers\UserController;
 // Passport-authenticated routes with prefix('/api/v2')
 // ===================
 
-// TODO: GET /api/v2/users/ without header is 500ing with TenantCouldNotBeIdentifiedByRequestDataException, should probably 400/404?
 Route::apiResource('users', UserController::class)
     ->except(['update']);
 Route::put('users/{user}', [UserController::class, 'update'])
