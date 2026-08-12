@@ -4,6 +4,13 @@ WORKDIR /opt/laravel
 RUN apk --no-cache add icu-dev icu-libs libzip-dev \
     && docker-php-ext-install pdo pdo_mysql intl zip
 
+# The app runs on 256M (conf.d/php/php.ini); this image never picked that up and
+# ran the suite on the 128M default. One process runs every test, so the ceiling
+# is reached by accumulation and the suite dies in whichever class happens to be
+# next rather than in anything at fault. Set as an ini so it reaches the process
+# `artisan test` spawns, which a -d flag on the parent does not.
+RUN echo "memory_limit = 256M" > /usr/local/etc/php/conf.d/zz-memory.ini
+
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 
 COPY composer.json composer.lock ./

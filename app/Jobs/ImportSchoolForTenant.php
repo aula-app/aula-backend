@@ -52,6 +52,48 @@ class ImportSchoolForTenant implements ShouldQueue
         }
 
         $tenant->run(fn () => $import->run($tenant));
+
+        $this->advanceMigration($tenant);
+    }
+
+    /**
+     * Move a migrating school on once its directory has landed.
+     *
+     * Only the migration path has a state to advance: a greenfield school has
+     * no `idp_migration_status` at all and is finished when the import is. Left
+     * undone, a migrating school sits on `importing` for good — the import is
+     * complete, every screen still says it is running, and nothing will ever
+     * say otherwise.
+     */
+    private function advanceMigration(Tenant $tenant): void
+    {
+        $tenant->refresh();
+
+        if ($tenant->idp_migration_status !== Tenant::IDP_MIGRATION_IMPORTING) {
+            return;
+        }
+
+        if ($tenant->idp_import_status === SchoolImport::STATUS_FAILED) {
+            // Back to the review: that is where an admin can look at the
+            // proposal again and retry.
+            $tenant->update(['idp_migration_status' => Tenant::IDP_MIGRATION_REVIEWING]);
+
+            return;
+        }
+
+        if ($tenant->idp_import_status !== SchoolImport::STATUS_COMPLETED) {
+            return;
+        }
+
+        // The directory is in. What remains is people linking their own
+        // accounts, which happens as they sign in over the following days.
+        $tenant->update(['idp_migration_status' => Tenant::IDP_MIGRATION_LINKING]);
+
+        Log::info('IdP: import finished, school is now linking accounts', [
+            'tenant' => $tenant->instance_code,
+            'rooms' => $tenant->idp_import_rooms,
+            'users' => $tenant->idp_import_users,
+        ]);
     }
 
     /**
@@ -78,6 +120,12 @@ class ImportSchoolForTenant implements ShouldQueue
                 'idp_import_error' => substr($e->getMessage(), 0, 1000),
                 'idp_import_finished_at' => now(),
             ]);
+        }
+
+        // A migration that gave up belongs back at the review, not stranded on
+        // a progress screen that will never finish.
+        if ($tenant->idp_migration_status === Tenant::IDP_MIGRATION_IMPORTING) {
+            $tenant->update(['idp_migration_status' => Tenant::IDP_MIGRATION_REVIEWING]);
         }
     }
 }

@@ -176,8 +176,14 @@ class MergeProposalController extends Controller
             return $denied;
         }
 
-        /** @var Tenant $tenant */
-        $tenant = tenant();
+        /** @var Tenant $resolved */
+        $resolved = tenant();
+
+        // Read through, not from the resolved instance: tenancy caches it for
+        // the request, and this endpoint is polled while a queued import is
+        // changing exactly this column. A cached copy reports `importing`
+        // forever, however long the import has been finished.
+        $tenant = $resolved->fresh() ?? $resolved;
 
         return response()->json([
             'migration_status' => $tenant->idp_migration_status,

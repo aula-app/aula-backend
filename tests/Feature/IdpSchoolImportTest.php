@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\ImportSchoolForTenant;
 use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -79,6 +80,7 @@ class SchoolImportTest extends TestCase
         Tenant::where('id', self::$testTenant->id)->update([
             'idp_school_id' => null,
             'idp_import_status' => null,
+            'idp_migration_status' => null,
         ]);
         parent::tearDown();
     }
@@ -230,6 +232,44 @@ class SchoolImportTest extends TestCase
         $this->assertNull($tenant->idp_import_error);
     }
 
+    public function test_a_migrating_school_moves_on_when_the_import_lands(): void
+    {
+        $this->seedSchool();
+        Tenant::where('id', self::$testTenant->id)
+            ->update(['idp_migration_status' => Tenant::IDP_MIGRATION_IMPORTING]);
+
+        $this->runImportJob();
+
+        // Without this the school sits on `importing` for good: the import is
+        // done and every screen still says it is running.
+        $this->assertSame(Tenant::IDP_MIGRATION_LINKING, self::$testTenant->fresh()->idp_migration_status);
+    }
+
+    public function test_a_greenfield_school_has_no_migration_state_to_advance(): void
+    {
+        $this->seedSchool();
+
+        $this->runImportJob();
+
+        $tenant = self::$testTenant->fresh();
+        $this->assertNull($tenant->idp_migration_status);
+        $this->assertSame(SchoolImport::STATUS_COMPLETED, $tenant->idp_import_status);
+    }
+
+    public function test_a_migration_whose_import_gave_up_goes_back_to_the_review(): void
+    {
+        Tenant::where('id', self::$testTenant->id)
+            ->update(['idp_migration_status' => Tenant::IDP_MIGRATION_IMPORTING]);
+
+        (new ImportSchoolForTenant(self::$testTenant->id))->failed(new \RuntimeException('worker died'));
+
+        // The review is where an admin can look at the proposal and try again;
+        // a progress screen that never finishes is not.
+        $tenant = self::$testTenant->fresh();
+        $this->assertSame(Tenant::IDP_MIGRATION_REVIEWING, $tenant->idp_migration_status);
+        $this->assertSame(SchoolImport::STATUS_FAILED, $tenant->idp_import_status);
+    }
+
     public function test_a_second_run_changes_nothing(): void
     {
         $this->seedSchool();
@@ -360,6 +400,15 @@ class SchoolImportTest extends TestCase
         $tenant = self::$testTenant->fresh();
 
         $tenant->run(fn () => $this->app->make(SchoolImport::class)->run($tenant));
+    }
+
+    /**
+     * Through the job rather than the service: advancing the migration is the
+     * job's responsibility, so calling the service alone would not see it.
+     */
+    private function runImportJob(): void
+    {
+        (new ImportSchoolForTenant(self::$testTenant->id))->handle($this->app->make(SchoolImport::class));
     }
 
     private function seedSchool(): void
