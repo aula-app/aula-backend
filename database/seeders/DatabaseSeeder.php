@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Manager\AulaManagerUser;
 use Illuminate\Database\Seeder;
 use Laravel\Passport\ClientRepository;
 
@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info("Client ID:     {$client->id}");
         $this->command->info('Client Secret: N/A');
 
-        $user = User::firstOrCreate(
+        $user = AulaManagerUser::firstOrCreate(
             ['email' => 'dev@aula.de'],
             [
                 'name' => 'aula devs test',
@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
                 'password' => 'password',
             ]
         );
-        $this->command->info("User Email:    {$user->email}");
-        $this->command->info('User Password: password');
+        $this->command->info("Manager (Central) User Email:    {$user->email}");
+        $this->command->info('Manager (Central) User Password: password');
     }
 }
