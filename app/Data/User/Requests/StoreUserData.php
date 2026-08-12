@@ -48,7 +48,6 @@ class StoreUserData extends AbstractUserData
     #[Rule('missing')]
     public readonly null|DateTimeImmutable $updatedAt;
 
-    /** @var null|Collection<int, RoomUser>*/
     #[Hidden]
-    public readonly null|Collection $rooms;
+    public readonly null $pivot;
 }

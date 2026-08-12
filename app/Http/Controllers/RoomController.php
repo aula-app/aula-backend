@@ -10,11 +10,13 @@ use Illuminate\Http\Request;
 use App\Data\Room\DomainRoomData;
 use App\Data\Room\Requests\StoreRoomData;
 use App\Data\Room\Requests\UpdateRoomData;
+use App\Data\User\DomainUserDataWithRoomLevel;
 use App\UseCases\Room\CreateRoomUseCase;
 use App\UseCases\Room\DeleteRoomUseCase;
 use App\UseCases\Room\ListRoomsUseCase;
 use App\UseCases\Room\ShowRoomUseCase;
 use App\UseCases\Room\UpdateRoomUseCase;
+use App\UseCases\Room\ListRoomMembershipUseCase;
 use App\UseCases\Room\PatchRoomMembershipUseCase;
 use Spatie\LaravelData\DataCollection;
 
@@ -26,6 +28,7 @@ class RoomController extends Controller
         protected ListRoomsUseCase $listRoomsUseCase,
         protected UpdateRoomUseCase $updateRoomUseCase,
         protected DeleteRoomUseCase $deleteRoomUseCase,
+        protected ListRoomMembershipUseCase $listRoomMembershipUseCase,
         protected PatchRoomMembershipUseCase $patchRoomMembershipUseCase,
     ) {
     }
@@ -53,6 +56,15 @@ class RoomController extends Controller
     public function destroy(string $publicId): void
     {
         $this->deleteRoomUseCase->execute($publicId);
+    }
+
+    /**
+     * @param string $room
+     * @return DataCollection<array-key, DomainUserDataWithRoomLevel>
+     */
+    public function indexMembership(string $room): DataCollection
+    {
+        return $this->listRoomMembershipUseCase->execute($room);
     }
 
     public function patchMembership(string $room, BatchRoomMembershipData $batchRoomMembershipData): DomainRoomData

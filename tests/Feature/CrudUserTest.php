@@ -30,14 +30,6 @@ class CrudUserTest extends TestCase
         'aboutMe' => 'About me!',
     ];
 
-    private const array NEW_ROOM_DATA = [
-        'name' => 'Testroom',
-        'descriptionPublic' => 'Public test description',
-        'descriptionInternal' => 'Internal test description',
-        'phaseDuration1' => 14,
-        'phaseDuration3' => 14,
-    ];
-
     private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
 
     protected function setUp(): void
@@ -79,27 +71,6 @@ class CrudUserTest extends TestCase
             $user->refresh_token = false;
             $user->save();
             return $user;
-        });
-    }
-
-    private function createRoomIfNotExists(): LegacyRoom
-    {
-        return self::$testTenant->run(function () {
-            $existingRoom = LegacyRoom::first();
-            if ($existingRoom) {
-                return $existingRoom;
-            }
-            $room = new LegacyRoom();
-            $room->hash_id = Str::random(32);
-            $room->room_name = 'TestRoom';
-            /*
-            $room->description_public = "...";
-            $room->description_internal = "...";
-            $room->phase_duration_1 = 14;
-            $room->phase_duration_3 = 14;
-            */
-            $room->save();
-            return $room;
         });
     }
 
@@ -287,6 +258,7 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJsonMissingPath('id')
+            ->assertJsonMissingPath('roomLevel')
             ->assertJson(self::NEW_USER_DATA);
         $newUserDecoded = $result->decodeResponseJson();
         $this->assertIsString($newUserDecoded['createdAt']);
@@ -451,80 +423,5 @@ class CrudUserTest extends TestCase
             ->assertNotFound();
         $this->deleteJson('/api/v2/users/foo', [])
             ->assertNotFound();
-    }
-
-    public function test_create_room()
-    {
-        $result = $this->postJson(
-            '/api/v2/rooms',
-            self::NEW_ROOM_DATA,
-        )
-            ->assertCreated()
-            ->assertJsonMissingPath('id')
-            ->assertJson(self::NEW_ROOM_DATA);
-        $newRoomDecoded = $result->decodeResponseJson();
-        $this->assertIsString($newRoomDecoded['createdAt']);
-        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $newRoomDecoded['createdAt']));
-        $newRoomPublicId = $newRoomDecoded['publicId'];
-        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newRoomPublicId);
-        return $newRoomPublicId;
-    }
-
-    public function test_create_room_authz()
-    {
-        $nonAdminUser = $this->createUserIfNotExists(UserLevel::Moderator, UserStatus::Active);
-        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
-        $this->getJson(
-            '/api/v2/rooms',
-            // override default admin headers
-            ['Authorization' => "Bearer {$nonAdminJwt}"]
-        )
-            ->assertForbidden();
-    }
-
-    // TODO create seperate functions
-    public function test_roomuser()
-    {
-        $user = $this->createUserIfNotExists();
-        $room = $this->createRoomIfNotExists();
-        $newUserPublicId = $user->hash_id;
-        $newRoomPublicId = $room->hash_id;
-        $expect = [
-            "roomPublicId" => $newRoomPublicId,
-            "userPublicId" => $newUserPublicId,
-            "roomUserLevel" => 10,
-        ];
-        $this->putJson(
-            "/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}",
-            ["roomUserLevel" => 10]
-        )
-            ->assertOk()
-            ->assertExactJson($expect);
-        $this->putJson(
-            "/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}",
-            ["roomUserLevel" => 101]
-        )
-            ->assertUnprocessable();
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}")
-            ->assertOk()
-            ->assertExactJson($expect);
-        // TODO: put same again, test that they do not add up
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/users")
-            ->assertOk()
-            ->assertExactJson([$expect]);
-        $expect["roomUserLevel"] = 20;
-        $this->putJson(
-            "/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}",
-            ["roomUserLevel" => 20]
-        )
-            ->assertOk()
-            ->assertExactJson($expect);
-        $this->deleteJson(
-            "/api/v2/rooms/{$newRoomPublicId}/users/{$newUserPublicId}",
-        )
-            ->assertOk();
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/users")
-            ->assertOk()
-            ->assertExactJson([]);
     }
 }

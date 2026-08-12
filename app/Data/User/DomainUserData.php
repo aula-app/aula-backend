@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Data\User;
 
+use App\Enums\RoomUserLevel;
 use DateTimeImmutable;
 use App\Data\User\AbstractUserData;
 use App\Enums\UserLevel;
@@ -13,6 +14,7 @@ use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\MapOutputName;
 use App\Relations\RoomUser;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class DomainUserData extends AbstractUserData
 {
@@ -59,7 +61,6 @@ class DomainUserData extends AbstractUserData
     // unlike created, this can still be null (at creation)
     public readonly DateTimeImmutable|null $updatedAt;
 
-    /** @var null|Collection<int, RoomUser>*/
     #[Hidden]
-    public readonly null|Collection $rooms;
+    public readonly null|Pivot $pivot;
 }

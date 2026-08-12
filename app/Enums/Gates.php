@@ -18,6 +18,7 @@ enum Gates
     case UpdateRoom;
     case DeleteRoom;
 
+    case ListRoomMembership;
     case PatchRoomMembership;
 
     case ListRoomMember;
