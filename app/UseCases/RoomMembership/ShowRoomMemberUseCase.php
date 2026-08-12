@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Gate;
 
 class ShowRoomMemberUseCase
 {
+    /**
+     * @psalm-suppress UndefinedMagicPropertyFetch
+     */
     public static function execute(string $roomPublicId, string $userPublicId): DomainRoomMemberData
     {
         Gate::authorize(Gates::ShowRoomMember);

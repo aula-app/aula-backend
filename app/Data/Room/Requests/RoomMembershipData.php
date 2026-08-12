@@ -9,7 +9,7 @@ use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Attributes\Hidden;
 use Spatie\LaravelData\Attributes\MapOutputName;
 
-class RoomMemberShipData extends Data
+class RoomMembershipData extends Data
 {
     public function __construct(
         #[Hidden]

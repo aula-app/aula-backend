@@ -6,9 +6,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 use App\Relations\RoomMember;
 
+/**
+ * Appease psalm
+ * @see App\Models\LegacyUser
+ * @property-read Pivot|RoomMember $pivot
+ */
 class LegacyRoom extends Model
 {
     protected $table = 'au_rooms';

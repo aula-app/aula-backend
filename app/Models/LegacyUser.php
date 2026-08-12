@@ -8,9 +8,14 @@ use App\Relations\RoomMember;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
+/**
+ * Appease psalm https://github.com/psalm/psalm-plugin-laravel/issues/641
+ * @property-read Pivot $pivot
+ */
 class LegacyUser extends Model implements Authenticatable
 {
     /**
@@ -211,6 +216,9 @@ class LegacyUser extends Model implements Authenticatable
         return 'pw';
     }
 
+    /**
+     * @psalm-suppress UndefinedMagicPropertyFetch
+     */
     public function updateRolesJson(): void
     {
         $legacyRoles = $this->rooms->map(fn($r) => [

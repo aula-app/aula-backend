@@ -15,6 +15,7 @@ class ListRoomMemberUseCase
     /**
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress UndefinedMagicPropertyFetch
      * @return DataCollection<array-key, DomainRoomMemberData>
      */
     public static function execute(string $roomPublicId): DataCollection

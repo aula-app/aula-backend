@@ -16,6 +16,8 @@ use Spatie\LaravelData\DataCollection;
 class ListRoomMembershipUseCase
 {
     /**
+     * @psalm-suppress InvalidReturnType
+     * @psalm-suppress InvalidReturnStatement
      * @param string $roomPublicId
      * @return DataCollection<array-key, DomainUserDataWithRoomLevel>
      */
