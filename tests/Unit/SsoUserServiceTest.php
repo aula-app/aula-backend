@@ -117,7 +117,6 @@ class SsoUserServiceTest extends TestCase
     // addToStandardRoom
     // =========================================================
 
-    // @FIXME: we shouldn't have conditional tests - ensure std. room exists for this test case
     public function test_add_to_standard_room_inserts_membership_when_standard_room_exists(): void
     {
         self::$testTenant->run(function () {
@@ -127,13 +126,14 @@ class SsoUserServiceTest extends TestCase
             $standardRoom = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
 
             if ($standardRoom === null) {
-                $standardRoom = DB::table('au_rooms')->insert([
+                DB::table('au_rooms')->insert([
                     'room_name' => 'Schule',
                     'description_internal' => null,
                     'hash_id' => Str::random(30),
                     'status' => 1,
                     'type' => 1,
                 ]);
+                $standardRoom = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
             }
 
             $this->service->addToStandardRoom($user);
