@@ -6,6 +6,8 @@ use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Services\SsoUserService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Mockery;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -122,10 +124,16 @@ class SsoUserServiceTest extends TestCase
             $user = $this->makeUser('unit_room@sso.test', 'sub-room');
 
             // Ensure there is at least one standard room (type=1)
-            $standardRoom = \Illuminate\Support\Facades\DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
+            $standardRoom = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
 
             if ($standardRoom === null) {
-                $this->markTestSkipped('No standard room (type=1) in test tenant.');
+                $standardRoom = DB::table('au_rooms')->insert([
+                    'room_name' => 'Schule',
+                    'description_internal' => null,
+                    'hash_id' => Str::random(30),
+                    'status' => 1,
+                    'type' => 1,
+                ]);
             }
 
             $this->service->addToStandardRoom($user);

@@ -7,7 +7,6 @@ use App\Filament\Resources\TenantResource;
 function deriveUsername(?string $email): string
 {
     $method = new ReflectionMethod(TenantResource::class, 'deriveUsernameFromEmail');
-    $method->setAccessible(true);
 
     return $method->invoke(null, $email);
 }
