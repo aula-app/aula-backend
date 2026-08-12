@@ -102,7 +102,7 @@ class LegacyLoginController extends Controller
      */
     protected function getReactivationDate(LegacyUser $user): ?string
     {
-        if ($user->status !== UserStatus::Suspended->value) {
+        if ($user->status !== UserStatus::Suspended) {
             return null;
         }
 

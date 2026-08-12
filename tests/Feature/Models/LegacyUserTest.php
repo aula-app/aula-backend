@@ -30,7 +30,7 @@ class LegacyUserTest extends TestCase
             $user = new LegacyUser();
             $user->username = 'phpunit_enum_user';
             $user->pw = password_hash('secret123', PASSWORD_DEFAULT);
-            $user->status = UserStatus::Active->value;
+            $user->status = UserStatus::Active;
             $user->hash_id = 'phpunit_enum_'.uniqid();
             $user->userlevel = UserLevel::PrincipalPlus;
             $user->roles = json_encode([]);

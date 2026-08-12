@@ -33,6 +33,8 @@ return new class extends Migration
                 ->change();
         });
 
+        $this->assertNoDuplicateHashIds();
+
         Schema::table(self::TABLE, function (Blueprint $table) {
             $table->unique('hash_id', self::INDEX);
         });
