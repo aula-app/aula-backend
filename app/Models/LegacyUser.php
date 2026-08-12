@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
-use App\Relations\RoomUser;
+use App\Relations\RoomMember;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -53,7 +53,7 @@ class LegacyUser extends Model implements Authenticatable
 
     public function rooms(): BelongsToMany
     {
-        return $this->belongsToMany(LegacyRoom::class, 'au_rel_rooms_users', 'user_id', 'room_id')->using(RoomUser::class)->withPivot('room_user_level');
+        return $this->belongsToMany(LegacyRoom::class, 'au_rel_rooms_users', 'user_id', 'room_id')->using(RoomMember::class)->withPivot('room_user_level');
     }
 
     /**
@@ -209,5 +209,14 @@ class LegacyUser extends Model implements Authenticatable
     public function getAuthPasswordName(): string
     {
         return 'pw';
+    }
+
+    public function updateRolesJson(): void
+    {
+        $legacyRoles = $this->rooms->map(fn($r) => [
+            "room" => $r->hash_id,
+            "role" => $r->pivot->room_user_level,
+        ]);
+        $this->roles = json_encode($legacyRoles);
     }
 }

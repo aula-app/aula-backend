@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Data\Room\Requests\BatchRoomMembershipData;
 use Illuminate\Http\Request;
 
 use App\Data\Room\DomainRoomData;
@@ -14,6 +15,7 @@ use App\UseCases\Room\DeleteRoomUseCase;
 use App\UseCases\Room\ListRoomsUseCase;
 use App\UseCases\Room\ShowRoomUseCase;
 use App\UseCases\Room\UpdateRoomUseCase;
+use App\UseCases\Room\PatchRoomMembershipUseCase;
 use Spatie\LaravelData\DataCollection;
 
 class RoomController extends Controller
@@ -24,6 +26,7 @@ class RoomController extends Controller
         protected ListRoomsUseCase $listRoomsUseCase,
         protected UpdateRoomUseCase $updateRoomUseCase,
         protected DeleteRoomUseCase $deleteRoomUseCase,
+        protected PatchRoomMembershipUseCase $patchRoomMembershipUseCase,
     ) {
     }
 
@@ -50,6 +53,11 @@ class RoomController extends Controller
     public function destroy(string $publicId): void
     {
         $this->deleteRoomUseCase->execute($publicId);
+    }
+
+    public function patchMembership(string $room, BatchRoomMembershipData $batchRoomMembershipData): DomainRoomData
+    {
+        return $this->patchRoomMembershipUseCase->execute($room, $batchRoomMembershipData);
     }
 }
 

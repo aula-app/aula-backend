@@ -1,16 +1,16 @@
 <?php
 
-namespace App\UseCases\RoomUser;
+namespace App\UseCases\RoomMembership;
 
 use App\Enums\Gates;
 use App\Models\LegacyRoom;
 use Illuminate\Support\Facades\Gate;
 
-class DeleteRoomUserUseCase
+class DeleteRoomMemberUseCase
 {
     public function execute(string $roomPublicId, string $userPublicId): void
     {
-        Gate::authorize(Gates::DeleteRoomUser);
+        Gate::authorize(Gates::DeleteRoomMember);
 
         $legacyRoom = LegacyRoom::with('users:hash_id')
             ->where('hash_id', $roomPublicId)

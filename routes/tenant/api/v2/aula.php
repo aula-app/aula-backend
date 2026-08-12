@@ -1,11 +1,10 @@
 <?php
 
-use App\Http\Controllers\RoomUserController;
+use App\Http\Controllers\RoomMembershipController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoomController;
 
-// TODO: GET /api/v2/users/ without header is 500ing with TenantCouldNotBeIdentifiedByRequestDataException, should probably 400/404?
 Route::apiResource('users', UserController::class)
     ->except(['update']);
 /** n.b. {user} and {room} have patterns
@@ -19,7 +18,12 @@ Route::apiResource('rooms', RoomController::class)
 Route::put('rooms/{room}', [RoomController::class, 'update'])
     ->name('rooms.update');
 
-Route::get('rooms/{room}/users', [RoomUserController::class, 'index']);
-Route::get('rooms/{room}/users/{user}', [RoomUserController::class, 'show']);
-Route::put('rooms/{room}/users/{user}', [RoomUserController::class, 'store']);
-Route::delete('rooms/{room}/users/{user}', [RoomUserController::class, 'destroy']);
+Route::patch('rooms/{room}/membership', [RoomController::class, 'patchMembership'])
+    ->name('rooms.patch.membership');
+
+// TODO proably remove; left here for comparison of the PATCH add/remove method above
+//   then also rename route above
+Route::get('rooms/{room}/members', [RoomMembershipController::class, 'index']);
+Route::get('rooms/{room}/members/{user}', [RoomMembershipController::class, 'show']);
+Route::put('rooms/{room}/members/{user}', [RoomMembershipController::class, 'store']);
+Route::delete('rooms/{room}/members/{user}', [RoomMembershipController::class, 'destroy']);

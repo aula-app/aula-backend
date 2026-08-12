@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Data\RoomUser;
+namespace App\Data\RoomMembership;
 
 use App\Enums\RoomUserLevel;
-use Spatie\LaravelData\Attributes\MapOutputName;
 
-class DomainRoomUserData extends AbstractRoomUserData
+class DomainRoomMemberData extends AbstractRoomMemberData
 {
     public readonly string $roomPublicId;
 

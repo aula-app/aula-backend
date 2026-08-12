@@ -2,33 +2,33 @@
 
 declare(strict_types=1);
 
-namespace App\UseCases\RoomUser;
+namespace App\UseCases\RoomMembership;
 
-use App\Data\RoomUser\DomainRoomUserData;
+use App\Data\RoomMembership\DomainRoomMemberData;
 use App\Enums\Gates;
 use App\Models\LegacyRoom;
 use Spatie\LaravelData\DataCollection;
 use Illuminate\Support\Facades\Gate;
 
-class ListRoomUserUseCase
+class ListRoomMemberUseCase
 {
     /**
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement
-     * @return DataCollection<array-key, DomainRoomUserData>
+     * @return DataCollection<array-key, DomainRoomMemberData>
      */
     public static function execute(string $roomPublicId): DataCollection
     {
-        Gate::authorize(Gates::ListRoomUser);
+        Gate::authorize(Gates::ListRoomMember);
 
         $legacyRoom = LegacyRoom::with('users:hash_id')
             ->where('hash_id', $roomPublicId)->firstOrFail();
-        $roomUsers = $legacyRoom->users->map(fn ($user) => new DomainRoomUserData(
+        $roomUsers = $legacyRoom->users->map(fn ($user) => new DomainRoomMemberData(
             $roomPublicId,
             $user->hash_id,
             $user->pivot->room_user_level
         ));
-        return DomainRoomUserData::collect($roomUsers, DataCollection::class);
+        return DomainRoomMemberData::collect($roomUsers, DataCollection::class);
     }
 }
 

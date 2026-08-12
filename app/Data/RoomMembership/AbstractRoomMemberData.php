@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Data\RoomUser;
+namespace App\Data\RoomMembership;
 
 use App\Enums\RoomUserLevel;
 use Spatie\LaravelData\Data;
 
-abstract class AbstractRoomUserData extends Data
+abstract class AbstractRoomMemberData extends Data
 {
     abstract public null|string $roomPublicId { get; }
     abstract public null|string $userPublicId { get; }

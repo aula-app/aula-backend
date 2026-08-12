@@ -6,7 +6,6 @@ namespace App\Data\Room;
 
 use DateTimeImmutable;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Attributes\MapName;
 
 abstract class AbstractRoomData extends Data
 {
