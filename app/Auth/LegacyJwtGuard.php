@@ -3,18 +3,18 @@
 namespace App\Auth;
 
 use App\Models\LegacyUser;
-use App\Services\LegacyJwtService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Http\Request;
 
+// @TODO: rename guard and get rid of most of stuff.. user should already be authenticated and we just need to check isActive and needsRefresh
+// @TODO: create FE task to stop using current implementation of needsRefresh and move to OAuth2.0 refresh tokens usage
 class LegacyJwtGuard implements Guard
 {
     protected ?Authenticatable $user = null;
     protected bool $validated = false;
 
     public function __construct(
-        protected LegacyJwtService $jwtService,
         protected Request $request
     ) {
     }

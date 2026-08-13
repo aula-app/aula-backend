@@ -91,18 +91,10 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
 
     public function isAdmin(): bool
     {
-        return \in_array($this->userlevel, [
+        return in_array($this->userlevel, [
             UserLevel::Admin,
             UserLevel::TechAdmin,
         ]);
-    }
-
-    /**
-     * Check if the user needs to refresh their token.
-     */
-    public function needsRefresh(): bool
-    {
-        return (bool) $this->refresh_token;
     }
 
     /**
@@ -210,4 +202,20 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
         return 'pw';
     }
 
+    /**
+     * Needs a custom override because AccessTokenController::issueToken is looking for matching 'email' with
+     * provided $username from the HTTP request body.
+     *
+     * Additionally, we can put all other unauthenticated exceptions here: status not active, sso in use.
+     *
+     * @param string $username
+     */
+    public function findForPassport(string $username): ?LegacyUser
+    {
+        return $this
+            ->where('username', $username)
+            ->where('status', UserStatus::Active)
+            ->where('sso_sub', null)
+            ->first();
+    }
 }

@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Passport\Passport;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -16,6 +17,7 @@ use DateTimeImmutable;
 class CrudUserTest extends TestCase
 {
     use CreatesTestTenant;
+    use DatabaseTransactions;
 
     private const array NEW_USER_DATA = [
         'displayName' => 'Firstnamé',
@@ -48,11 +50,6 @@ class CrudUserTest extends TestCase
     }
 
     public static function tearDownAfterClass(): void
-    {
-        self::cleanUp();
-    }
-
-    public static function cleanUp(): void
     {
         self::$testTenant->run(function () {
             LegacyUser::whereLike('email', 'e2e_distinct_%@aula.de')->delete();
@@ -247,17 +244,21 @@ class CrudUserTest extends TestCase
             ->assertUnauthorized();
     }
 
+    // This test doesn't make too much sense, because it's testing whether inactive users
+    // can access GET /users. The real question is whether inactive users would have any
+    // active (unrevoked) Access Tokens. This test uses Passport::actingAs($user) to
+    // check the authZ for GET /users, but that's only a fallback check - our first line
+    // of defense is not issuing (and revoking) tokens to non-Active users.
     public function test_authz_not_active_statuses()
     {
         foreach ([UserStatus::Inactive, UserStatus::Suspended, UserStatus::Archived] as $userStatus) {
+            /* // Necessary to clean up the cached $user from \Illuminate\Auth\RequestGuard */
+            /* $this->refreshApplication(); */
+            /* parent::setUp(); */
             $inActiveUser = $this->createDistinctUser(UserLevel::Admin, $userStatus);
-            $inActiveJwt = $this->jwtForUser($inActiveUser);
-            $this->getJson(
-                '/api/v2/users',
-                ['Authorization' => "Bearer {$inActiveJwt}"]
-            )
-                ->assertJson(['error' => 'user_not_active'])
-                ->assertUnauthorized();
+            $this->jwtForUser($inActiveUser);
+            $this->getJson('/api/v2/users')
+                ->assertForbidden();
         }
     }
 
@@ -317,7 +318,7 @@ class CrudUserTest extends TestCase
     #[Depends('test_create_optional')]
     public function test_index($newUserPublicId1, $newUserPublicId2)
     {
-        $allUsers = $this->getJson('/api/v2/users/')
+        $allUsers = $this->getJson('/api/v2/users')
             ->assertOk()->json();
 
         $allUserPublicIds = array_column($allUsers, 'publicId');

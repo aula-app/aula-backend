@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
-use App\Models\Tenant;
-use App\Services\LegacyJwtService;
 use Http\Discovery\Psr17Factory;
 use Illuminate\Http\Request;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
@@ -21,9 +19,8 @@ class LegacyLoginController extends AccessTokenController
     private PsrHttpFactory $psrHttpFactory;
 
     public function __construct(
-        protected LegacyJwtService $jwtService,
         // used in parent class, needs to be injected here
-        protected AuthorizationServer $server,
+        protected AuthorizationServer $server
     ) {
         $this->psrHttpFactory = new PsrHttpFactory(new Psr17Factory());
     }
@@ -42,18 +39,18 @@ class LegacyLoginController extends AccessTokenController
         $username = $request->input('username');
         $password = $request->input('password');
 
-        if ($request->grant_type === 'password') {
-            /** @var Tenant|null $tenant */
-            $tenant = tenant();
+        // Tenants flagged sso_required reject issuing OAuth tokens directly for
+        // everyone, regardless of whether the specific user has finished SSO linking yet.
+        /** @var bool|null $isSsoRequired */
+        $isSsoRequired = tenant('sso_required');
+        if ($isSsoRequired) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'tenant_requires_sso',
+            ], 400);
+        }
 
-            // Tenants flagged sso_required reject password login for everyone, regardless
-            // of whether the specific user has finished SSO linking yet.
-            if ($tenant && $tenant->sso_required) {
-                return response()->json([
-                    'success' => false,
-                    'error'   => 'tenant_requires_sso',
-                ], 400);
-            }
+        if ($request->grant_type === 'password') {
 
             // Find user by username
             /** @var LegacyUser|null $user */
@@ -79,34 +76,12 @@ class LegacyLoginController extends AccessTokenController
             // Check if user is active
             if (!$user->isActive()) {
                 return response()->json([
-                    'success'     => true,
+                    'error' => 'user_not_active',
                     'user_status' => $user->status,
-                    'user_id'     => $user->id,
-                    'data'        => $this->getReactivationDate($user),
-                    'count'       => 1,
+                    /* 'reactivation_date' => $this->getReactivationDate($user), */
                 ], 400);
             }
-
-            // Verify password
-            if (!$user->checkPassword($password)) {
-                return response()->json([
-                    'success' => false,
-                    'error'   => 'bad_credentials',
-                ], 400);
-            }
-
-            // Clear refresh token flag if set
-            if ($user->needsRefresh()) {
-                $user->clearRefreshToken();
-            }
-
-            /* // Generate JWT token */
-            /* $token = $this->jwtService->generateToken($user); */
-            /**/
-            /* return response()->json([ */
-            /*     'success' => true, */
-            /*     'JWT' => $token, */
-            /* ]); */
+        } elseif ($request->grant_type === 'refresh_token') {
         }
 
         $psrRequest = $this->psrHttpFactory->createRequest($request);

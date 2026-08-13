@@ -47,7 +47,7 @@ class PassportServiceProvider extends ServiceProvider
         // all Users of all Tenants could authenticate with username+password
         Passport::enablePasswordGrant();
 
-        // @TODO: nikola - after testing extend to 30-60 mins or so, to cover usual session length
+        Passport::tokensExpireIn(CarbonInterval::hours(4));
         Passport::refreshTokensExpireIn(CarbonInterval::days(60));
     }
 }

@@ -163,7 +163,7 @@ class TokenCreateTest extends TestCase
             ->assertJsonMissingPath('JWT')
             ->assertJson([
                 'user_status' => UserStatus::Suspended->value,
-                'error' => 'user_not_active',
+                'error' => 'user_not_active'
                 /* 'reactivation_date' => '2027-01-01', */
             ]);
     }

@@ -45,15 +45,4 @@ class LegacyUserUnitTest extends TestCase
         $user->status = UserStatus::Archived;
         $this->assertFalse($user->isActive());
     }
-
-    public function test_legacy_user_refresh_token_flag(): void
-    {
-        $user = new LegacyUser();
-
-        $user->refresh_token = false;
-        $this->assertFalse($user->needsRefresh());
-
-        $user->refresh_token = true;
-        $this->assertTrue($user->needsRefresh());
-    }
 }
