@@ -240,6 +240,29 @@ Symptom when only the code fix is deployed and neither step is done: logout succ
 returns you to the aula login screen, but signing in again takes one click at Eduplaces
 instead of asking for credentials — Keycloak's session ended, Eduplaces' did not.
 
+### 3A.0 The client must not do front-channel logout
+
+`AuthenticationManager.browserLogout()` logs the clients out first and returns early if
+that produced a response. The identity-provider logout is only reached afterwards, so a
+client with **Front channel logout** enabled silently prevents any brokered logout from
+ever happening — the IdP's Logout URL is correct and simply never consulted.
+
+Clients → **aula-backend** → Settings → Logout settings → **Front channel logout: off**.
+
+The client had it on with no `frontchannel.logout.url` set, so it was doing nothing except
+short-circuiting the logout. Observed in the server log as:
+
+```
+Logging out: <user> (<session>)
+frontchannel logout to: aula-backend
+All clients have been logged out ...
+LOGOUT
+```
+
+with no `org.keycloak.broker` activity at all. If brokered logout ever stops working
+again, look for that pattern first: a clean `LOGOUT` event with no broker lines means the
+IdP step was skipped, not that it failed.
+
 ### 3A.1 Keycloak: give the IdP a Logout URL
 
 Admin console → realm **aula** → **Identity providers** → **eduplaces** → **Logout URL**.
