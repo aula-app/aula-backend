@@ -302,6 +302,29 @@ it, read the value Keycloak actually sends: set the Logout URL, attempt one logo
 Eduplaces rejects it the error page's own URL contains the exact
 `post_logout_redirect_uri` it received. Copy that verbatim into the allowlist.
 
+### 3A.2b What the Eduplaces sandbox does not honour
+
+Measured 2026-08-13 against `auth.sandbox.eduplaces.dev`. Both findings are theirs, not
+ours, and neither is fixable from aula or Keycloak:
+
+- **`end_session` does not end the session.** A direct `GET /oauth2/sessions/logout`
+  redirects to `explore.sandbox.eduplaces.dev/de` and leaves the session live. (A bare
+  request with no `id_token_hint` is one an OP may ignore, so this is strong evidence
+  rather than proof.)
+- **`prompt=login` is ignored.** aula sets `sso_force_login` at logout, the next login
+  sends `force_login=true`, the backend turns that into `prompt=login`, and Keycloak
+  forwards it — confirmed by following the redirect chain, which reaches
+  `https://auth.sandbox.eduplaces.dev/oauth2/auth` carrying `prompt=login`. Eduplaces
+  still re-uses the existing session without re-authenticating.
+
+Consequence: after logging out of aula, the next SSO login needs one click rather than
+credentials, because the Eduplaces session outlives everything we control. On a shared
+device the next person inherits it. Raise it with Eduplaces; there is no configuration on
+our side that changes it.
+
+Do **not** bother adding `prompt` to the identity provider's *Forwarded query parameters* —
+it is already forwarded without any configuration.
+
 ### 3A.3 Verify
 
 Log in through Eduplaces, then log out of aula. Expected: no Eduplaces error page, and a
