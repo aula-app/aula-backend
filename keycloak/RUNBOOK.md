@@ -213,6 +213,67 @@ not just cancelled ones.
 
 ---
 
+## 3A. Logout: let Keycloak chain it to the IdP
+
+Separate from the cancel handling, and needed for **logout** to work at all.
+
+aula used to build the Eduplaces `end_session` URL itself and pass the whole aula Keycloak
+logout URL as `post_logout_redirect_uri`. That value carries a fresh `id_token_hint` on
+every logout, so it differs each time and no allowlist entry can ever match it. Eduplaces
+answered:
+
+```
+Logout failed because query parameter post_logout_redirect_uri is not a
+whitelisted as a post_logout_redirect_uri for the client.
+```
+
+Propagating a brokered logout is Keycloak's job. `fix/463-sso-logout-idp-propagation`
+removes aula's hand-built chain (and the `sso_idp_id_token` column it needed); the backend
+now returns only the aula Keycloak logout URL. Two pieces of configuration make Keycloak
+carry it upstream, and both are one-time.
+
+### 3A.1 Keycloak: give the IdP a Logout URL
+
+Admin console → realm **aula** → **Identity providers** → **eduplaces** → **Logout URL**.
+
+Set it to the provider's `end_session_endpoint`, which for the sandbox is:
+
+```
+https://auth.sandbox.eduplaces.dev/oauth2/sessions/logout
+```
+
+Confirm the current value from the provider's own discovery document rather than trusting
+this file:
+
+```bash
+curl -s https://auth.sandbox.eduplaces.dev/.well-known/openid-configuration \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['end_session_endpoint'])"
+```
+
+Production Eduplaces is a different issuer — read its discovery document the same way.
+
+### 3A.2 Eduplaces: whitelist Keycloak's logout response endpoint
+
+With a Logout URL set, Keycloak sends its **own** static endpoint as
+`post_logout_redirect_uri`:
+
+```
+https://sso.aula.de/auth/realms/aula/broker/eduplaces/endpoint/logout_response
+```
+
+That URL never changes, so Eduplaces can register it once. Add it as an allowed
+post-logout redirect URI for the aula client in the Eduplaces app configuration. Until
+that is done, logout keeps failing with the message above — this half cannot be done from
+our side.
+
+### 3A.3 Verify
+
+Log in through Eduplaces, then log out of aula. Expected: no Eduplaces error page, and a
+second login prompts for credentials again rather than signing straight back in. If it
+signs straight back in, the Eduplaces session was not ended — check 3A.1.
+
+---
+
 ## 4. Rollback
 
 ```bash
