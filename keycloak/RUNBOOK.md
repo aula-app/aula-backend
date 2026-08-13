@@ -232,6 +232,14 @@ removes aula's hand-built chain (and the `sso_idp_id_token` column it needed); t
 now returns only the aula Keycloak logout URL. Two pieces of configuration make Keycloak
 carry it upstream, and both are one-time.
 
+**Do 3A.2 before 3A.1.** Setting the Logout URL is what makes Keycloak start calling
+Eduplaces; if the allowlist entry is not there yet, logout goes straight back to the
+Eduplaces error page. Registering the URI first means there is no broken window.
+
+Symptom when only the code fix is deployed and neither step is done: logout succeeds and
+returns you to the aula login screen, but signing in again takes one click at Eduplaces
+instead of asking for credentials — Keycloak's session ended, Eduplaces' did not.
+
 ### 3A.1 Keycloak: give the IdP a Logout URL
 
 Admin console → realm **aula** → **Identity providers** → **eduplaces** → **Logout URL**.
@@ -262,9 +270,14 @@ https://sso.aula.de/auth/realms/aula/broker/eduplaces/endpoint/logout_response
 ```
 
 That URL never changes, so Eduplaces can register it once. Add it as an allowed
-post-logout redirect URI for the aula client in the Eduplaces app configuration. Until
-that is done, logout keeps failing with the message above — this half cannot be done from
-our side.
+post-logout redirect URI for the aula client in the Eduplaces app configuration. This half
+cannot be done from our side.
+
+The path above is Keycloak's documented shape (`{base}/realms/{realm}/broker/{alias}/
+endpoint/logout_response`, with `/auth` from `KC_HTTP_RELATIVE_PATH`). Rather than trust
+it, read the value Keycloak actually sends: set the Logout URL, attempt one logout, and if
+Eduplaces rejects it the error page's own URL contains the exact
+`post_logout_redirect_uri` it received. Copy that verbatim into the allowlist.
 
 ### 3A.3 Verify
 
