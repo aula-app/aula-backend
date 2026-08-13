@@ -72,6 +72,36 @@ class IdpAccountClaimTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_a_merged_account_is_the_one_that_signs_in(): void
+    {
+        // What an applied merge leaves behind: the person's real account, with
+        // their password and everything they have written, now carrying the
+        // provider identity an admin confirmed is theirs.
+        $realId = $this->seedRealUser('claim_merged');
+        self::$testTenant->run(
+            fn () => LegacyUser::where('id', $realId)->update(['idp_user_id' => 'p1']),
+        );
+
+        $response = $this->signIn('kc-sub-1', 'p1');
+
+        self::$testTenant->run(function () use ($realId) {
+            $merged = LegacyUser::find($realId);
+
+            // The merge is the assertion of ownership. If the login will not
+            // honour it, the review an admin worked through bought nothing.
+            $this->assertSame('kc-sub-1', $merged->sso_sub, 'the merged account should be the one signed in');
+
+            // And nothing new should have been invented for this person.
+            $this->assertSame(
+                1,
+                LegacyUser::where('idp_user_id', 'p1')->count(),
+                'a second row for a person who already has an account is a duplicate',
+            );
+        });
+
+        $this->assertStringContainsString('/oauth-login/', (string) $response->headers->get('Location'));
+    }
+
     public function test_it_asks_before_handing_over_an_imported_row(): void
     {
         $this->seedShell('p1');
@@ -277,7 +307,15 @@ class IdpAccountClaimTest extends TestCase
     private function clean(): void
     {
         self::$testTenant->run(function () {
-            $ids = LegacyUser::where('username', 'like', 'claim_%')->pluck('id')->all();
+            // Also by provider identity, not only by name: a login that ends in
+            // a freshly provisioned row names that row after the person rather
+            // than this class's prefix, so it would outlive the test that
+            // produced it and answer the next test's lookup.
+            $ids = LegacyUser::where('username', 'like', 'claim_%')
+                ->orWhereIn('idp_user_id', ['p1', 'p2'])
+                ->orWhereIn('sso_sub', ['kc-sub-1', 'kc-sub-2'])
+                ->pluck('id')
+                ->all();
 
             if ($ids !== []) {
                 DB::table('au_rel_rooms_users')->whereIn('user_id', $ids)->delete();

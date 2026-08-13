@@ -1207,13 +1207,20 @@ class SsoController extends Controller
     }
 
     /**
-     * Claim a row that an IDM webhook created before this person ever signed in.
+     * Hand this person the account that already carries their identity.
      *
-     * Such rows are shells: the IDM API exposes no email address, so they carry
-     * no email, no password and no sso_sub. Adopting one is safe precisely
-     * because there is no local credential to prove possession of — nobody can
-     * have been using it. A row that does have a password or an sso_sub is a
-     * real account and falls through to the normal linking rules instead.
+     * Usually a shell the import or a webhook made before they ever signed in.
+     * It can also be a real account with a password and everything they have
+     * written, if a migrating school's admin confirmed the two are the same
+     * person — and that confirmation is the whole point of the merge review, so
+     * the login honours it rather than asking them to prove it again.
+     *
+     * `idp_user_id` is never guessed. It is written by the import, by an applied
+     * merge, by a claim the person proved with their password, or by an admin
+     * connecting their own account: each one a deliberate assertion that this
+     * provider identity is this account. An `sso_sub` already set is the one
+     * case left alone, since re-binding it would move the account to a
+     * different person at the provider.
      */
     protected function adoptDirectoryProvisionedUser(\Laravel\Socialite\Two\User $socialiteUser, Tenant $tenant, string $instanceCode): ?LegacyUser
     {
@@ -1230,11 +1237,11 @@ class SsoController extends Controller
 
         $candidate = $this->ssoUserService->findByIdpUserId($personId);
 
-        if ($candidate === null || $candidate->sso_sub !== null || ! empty($candidate->pw)) {
+        if ($candidate === null || $candidate->sso_sub !== null) {
             return null;
         }
 
-        Log::info('SSO: adopting a webhook-provisioned account', [
+        Log::info('SSO: adopting a directory-provisioned account', [
             'tenant' => $instanceCode,
             'user_id' => $candidate->id,
             'idp_user_id' => $personId,
