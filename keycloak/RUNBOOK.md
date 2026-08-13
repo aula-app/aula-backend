@@ -1,12 +1,4 @@
-# Keycloak at sso.aula.de — how to keep it running correctly
-
-Production SSO for every aula school. Host `aula-sso`, SSH on port 2244, stack under
-`/opt/keycloak` (`docker-compose.yml`), Postgres 16 alongside in `keycloak-keycloak-db-1`.
-
-The same host also runs the aula app itself (backend, legacy backend, frontend, MariaDB)
-under `/opt/aula`. Restarting Keycloak does not touch those, but be aware they share a box.
-
----
+# Keycloak at sso.aula.de 
 
 ## 1. Why the image is custom
 
@@ -45,9 +37,7 @@ Keep these three in sync when upgrading:
 
 ## 2. Deploy or upgrade
 
-Everything below runs on the host. `ssh -i <key> -p 2244 ansible@sso.aula.de`.
-
-### 2.1 Back up first — always
+### 2.1 Back up first, always
 
 The first start of a new Keycloak migrates the database schema, and that is not reversible
 without a restore.
@@ -69,7 +59,7 @@ Also export the auth flows before touching them (see 3.3).
 
 The source lives at `/opt/keycloak/idp-error-authenticator` on the host (mirror of this
 repo's `keycloak/idp-error-authenticator/`). The Dockerfile compiles the provider with
-Maven in stage 1, so no JDK is needed on the host — only Docker.
+Maven in stage 1, so no JDK is needed on the host, only Docker.
 
 ```bash
 cd /opt/keycloak/idp-error-authenticator
@@ -97,7 +87,7 @@ sudo docker compose up -d keycloak
 ```
 
 Downtime is roughly a minute: SSO logins fail while the container restarts and migrates.
-Password logins to aula are unaffected — they never touch Keycloak.
+Password logins to aula are unaffected: they never touch Keycloak.
 
 ### 2.4 Verify
 
@@ -121,7 +111,7 @@ Both must be `200`.
 
 ## 3. Wire the authenticator into the browser flow
 
-Deploying the provider is not enough — it has to be an execution in the realm's browser
+Deploying the provider is not enough, it has to be an execution in the realm's browser
 flow, **after** the Identity Provider Redirector. Config lives in the database, so it
 survives image changes; it only needs doing once (and again after any restore).
 
@@ -135,7 +125,7 @@ Easier than the API and does the same thing.
    **Add step**
 4. Search for **`Aula: Forward IdP Error to Client`** (category *Brokering*, provider id
    `aula-idp-error-handler`). If it is not in the list, the image does not carry the
-   provider — go back to section 2.2.
+   provider, go back to section 2.2.
 5. Drag it so it sits **immediately below Identity Provider Redirector**, still at the top
    level of the flow, above the `forms` subflow
 6. Set its requirement to **Alternative**
@@ -164,7 +154,7 @@ TOK=$(sudo docker exec keycloak-keycloak-1 curl -s \
 ```
 
 The `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD` values in `docker-compose.yml` are the
-literal strings `admin` / `CHANGE_ME_ADMIN` and are **not** the live credentials — those
+literal strings `admin` / `CHANGE_ME_ADMIN` and are **not** the live credentials. Those
 env vars only seed an admin on a first-ever start. The real password lives in the database.
 
 ### 3.2 Find the flow and the redirector's position
@@ -198,7 +188,7 @@ Then move it directly below **Identity Provider Redirector** with repeated
 `…/executions/<id>/raise-priority` calls, and set its requirement to `ALTERNATIVE`
 (via `PUT …/authentication/flows/browser/executions`).
 
-Confirm with the same GET as 3.2 — the handler must sit immediately after the redirector
+Confirm with the same GET as 3.2, the handler must sit immediately after the redirector
 and before the forms subflow.
 
 ### 3.5 Smoke test
@@ -208,7 +198,7 @@ login screen showing "Sign-in was cancelled…", URL `…/login?sso_error=login_
 Not expected: a Keycloak "We are sorry…" page.
 
 Then do a *successful* SSO login too. The authenticator must be a no-op on the happy path,
-and that is the failure mode worth catching — a misplaced execution can break every login,
+and that is the failure mode worth catching: a misplaced execution can break every login,
 not just cancelled ones.
 
 ---
@@ -238,14 +228,14 @@ Eduplaces error page. Registering the URI first means there is no broken window.
 
 Symptom when only the code fix is deployed and neither step is done: logout succeeds and
 returns you to the aula login screen, but signing in again takes one click at Eduplaces
-instead of asking for credentials — Keycloak's session ended, Eduplaces' did not.
+instead of asking for credentials. Keycloak's session ended, Eduplaces' did not.
 
 ### 3A.0 The client must not do front-channel logout
 
 `AuthenticationManager.browserLogout()` logs the clients out first and returns early if
 that produced a response. The identity-provider logout is only reached afterwards, so a
 client with **Front channel logout** enabled silently prevents any brokered logout from
-ever happening — the IdP's Logout URL is correct and simply never consulted.
+ever happening: the IdP's Logout URL is correct and simply never consulted.
 
 Clients → **aula-backend** → Settings → Logout settings → **Front channel logout: off**.
 
@@ -281,7 +271,7 @@ curl -s https://auth.sandbox.eduplaces.dev/.well-known/openid-configuration \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['end_session_endpoint'])"
 ```
 
-Production Eduplaces is a different issuer — read its discovery document the same way.
+Production Eduplaces is a different issuer, read its discovery document the same way.
 
 ### 3A.2 Eduplaces: whitelist Keycloak's logout response endpoint
 
@@ -313,7 +303,7 @@ ours, and neither is fixable from aula or Keycloak:
   rather than proof.)
 - **`prompt=login` is ignored.** aula sets `sso_force_login` at logout, the next login
   sends `force_login=true`, the backend turns that into `prompt=login`, and Keycloak
-  forwards it — confirmed by following the redirect chain, which reaches
+  forwards it, confirmed by following the redirect chain, which reaches
   `https://auth.sandbox.eduplaces.dev/oauth2/auth` carrying `prompt=login`. Eduplaces
   still re-uses the existing session without re-authenticating.
 
@@ -322,14 +312,14 @@ credentials, because the Eduplaces session outlives everything we control. On a 
 device the next person inherits it. Raise it with Eduplaces; there is no configuration on
 our side that changes it.
 
-Do **not** bother adding `prompt` to the identity provider's *Forwarded query parameters* —
+Do **not** bother adding `prompt` to the identity provider's *Forwarded query parameters*,
 it is already forwarded without any configuration.
 
 ### 3A.3 Verify
 
 Log in through Eduplaces, then log out of aula. Expected: no Eduplaces error page, and a
 second login prompts for credentials again rather than signing straight back in. If it
-signs straight back in, the Eduplaces session was not ended — check 3A.1.
+signs straight back in, the Eduplaces session was not ended, so check 3A.1.
 
 ---
 
@@ -355,29 +345,3 @@ sudo docker compose up -d keycloak
 ```
 
 ---
-
-## 5. Known issues on this host
-
-- **Placeholder secrets in `docker-compose.yml`.** `KC_DB_PASSWORD: CHANGE_ME` and
-  `KEYCLOAK_ADMIN_PASSWORD: CHANGE_ME_ADMIN` are committed literally. The admin one is
-  inert (the live password is in the database), but the database password is the value
-  Keycloak actually connects with. Rotate both, ideally in the same maintenance window as
-  an upgrade.
-- **`.docker-compose.yml.swp` is present**, meaning someone has or had the file open in
-  vim. Check for a stale editor session before editing, or two people will overwrite each
-  other.
-- **A commented-out service block near the top** of `docker-compose.yml` also carries an
-  `image:` line, so a careless `sed` over the file rewrites it too. Harmless, but check
-  `git diff`-style before committing changes.
-- **The authenticator SPI is internal to Keycloak.** Every upgrade needs the smoke test in
-  3.5, not just a health check.
-
----
-
-## 6. History
-
-| When | What |
-|---|---|
-| 2026-07-07 | Authenticator written and built; jar staged on the host, never deployed |
-| 2026-08-06 | An orphaned `aula-idp-error-handler` execution was found in the browser flow with no provider behind it, so Keycloak could not instantiate it and **all** SSO logins failed with a 400. Execution deleted, flows backed up to `backup-flows-20260806-164842.json` |
-| 2026-08-13 | Upgraded 26.5.5 → 26.6.1 on the custom `aula-keycloak` image with the provider baked in. DB backed up to `upgrade-backup-20260813-094109/` |
