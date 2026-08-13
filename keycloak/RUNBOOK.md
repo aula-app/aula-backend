@@ -125,6 +125,34 @@ Deploying the provider is not enough — it has to be an execution in the realm'
 flow, **after** the Identity Provider Redirector. Config lives in the database, so it
 survives image changes; it only needs doing once (and again after any restore).
 
+### 3.0 The quick way: admin console
+
+Easier than the API and does the same thing.
+
+1. https://sso.aula.de/auth/admin/ → realm **aula** → **Authentication**
+2. **Flows** tab → open **browser**
+3. On the **Identity Provider Redirector** row, use the **+** (or the row's kebab menu) →
+   **Add step**
+4. Search for **`Aula: Forward IdP Error to Client`** (category *Brokering*, provider id
+   `aula-idp-error-handler`). If it is not in the list, the image does not carry the
+   provider — go back to section 2.2.
+5. Drag it so it sits **immediately below Identity Provider Redirector**, still at the top
+   level of the flow, above the `forms` subflow
+6. Set its requirement to **Alternative**
+7. Changes save immediately; no restart needed
+
+Then run the smoke test in 3.5. Target layout:
+
+```
+browser
+├── Cookie                                  Alternative
+├── Kerberos                                Disabled
+├── Identity Provider Redirector            Alternative
+├── Aula: Forward IdP Error to Client       Alternative   ← here
+└── forms                                   Alternative
+    └── …
+```
+
 ### 3.1 Get an admin token
 
 ```bash
