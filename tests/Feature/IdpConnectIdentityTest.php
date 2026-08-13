@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\LegacyJwtService;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\User;
+use SocialiteProviders\Manager\OAuth2\User;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
@@ -144,7 +145,7 @@ class IdpConnectIdentityTest extends TestCase
             $other->username = 'connect_other';
             $other->displayname = 'Other';
             $other->idp_user_id = 'person-admin';
-            $other->status = LegacyUser::STATUS_ACTIVE;
+            $other->status = UserStatus::Active;
             $other->userlevel = 20;
             $other->hash_id = md5('connect_other');
             $other->save();
@@ -335,7 +336,7 @@ class IdpConnectIdentityTest extends TestCase
             $user->username = $username;
             $user->displayname = $username;
             $user->pw = password_hash('secret', PASSWORD_BCRYPT);
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = $level;
             $user->hash_id = md5($username.microtime(true));
             $user->save();

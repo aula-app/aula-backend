@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\User;
+use SocialiteProviders\Manager\OAuth2\User;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
@@ -138,9 +139,8 @@ class IdpBootstrapTest extends TestCase
     public function test_the_import_status_endpoint_blocks_before_the_first_login(): void
     {
         // An Eduplaces tenant with no import yet is not ready, even though its
-        // school is still unknown.
-        $this->seedTenantAdmin();
-
+        // school is still unknown. setUp already seeded the admin, and hash_id
+        // is unique, so seeding it again here would collide.
         $jwt = self::$testTenant->run(fn () => app(LegacyJwtService::class)->generateToken(
             LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail(),
         ));
@@ -160,7 +160,7 @@ class IdpBootstrapTest extends TestCase
             $pupil = new LegacyUser;
             $pupil->username = 'existing.pupil';
             $pupil->displayname = 'Existing Pupil';
-            $pupil->status = LegacyUser::STATUS_ACTIVE;
+            $pupil->status = UserStatus::Active;
             $pupil->userlevel = 20;
             $pupil->hash_id = md5('existing.pupil');
             $pupil->save();
@@ -450,7 +450,7 @@ class IdpBootstrapTest extends TestCase
             $user->email = 'bootstrap_admin@test.example';
             $user->pw = password_hash('initial', PASSWORD_BCRYPT);
             $user->userlevel = 50;
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->hash_id = md5(self::ADMIN_USERNAME);
             $user->save();
         });

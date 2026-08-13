@@ -18,6 +18,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 |
 */
 
+
 // Legacy JWT Authentication routes (public + protected)
 Route::name('auth.')
     ->middleware([
@@ -74,11 +75,14 @@ Route::name('sso.')
 // Passport-authenticated routes (existing)
 Route::name('aula.')
     ->middleware([
-        'api', // 'api' is including parameter substitution
+        /* 'api', // 'api' is including parameter substitution */
         /* \Illuminate\Session\Middleware\StartSession::class, */
         /* \Illuminate\View\Middleware\ShareErrorsFromSession::class, */
         InitializeTenancyByRequestData::class,
-        'auth:api', // our 'api' guard should be configured to use 'passport'
-    ]) // , 'can:is-admin'
-    ->prefix('/api/v2/')
+        /* 'auth:api', // our 'api' guard should be configured to use 'passport' */
+        // TODO: replace with passport?
+        'legacy.jwt',
+        'auth:apiv2',
+    ])
+    ->prefix('/api/v2')
     ->group(base_path('routes/tenant/api/v2/aula.php'));

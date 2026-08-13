@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Idp;
 
 use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -174,7 +175,7 @@ final class SchoolImport
 
         $user->displayname = $displayName !== '' ? $displayName : (string) $user->username;
         $user->realname = $person->realName() ?? $user->realname;
-        $user->status = $person->isActive() ? LegacyUser::STATUS_ACTIVE : LegacyUser::STATUS_ARCHIVED;
+        $user->status = $person->isActive() ? UserStatus::Active : UserStatus::Archived;
 
         // Never demote an admin. The first person to sign in takes over the
         // tenant admin, and to the provider they are an ordinary teacher —

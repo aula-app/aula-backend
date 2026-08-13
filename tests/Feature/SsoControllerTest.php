@@ -2,12 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserLevel;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
+use App\Services\LegacyJwtService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
+use SocialiteProviders\Manager\OAuth2\User;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
@@ -18,8 +23,11 @@ class SsoControllerTest extends TestCase
     use SignsIdTokens;
 
     private const INSTANCE_CODE = 'TEST001';
+
     private const KEYCLOAK_BASE = 'https://sso.test.local';
+
     private const KEYCLOAK_REALM = 'aula-test';
+
     private const KEYCLOAK_CLIENT_ID = 'aula-backend-test';
 
     protected function setUp(): void
@@ -27,18 +35,18 @@ class SsoControllerTest extends TestCase
         parent::setUp();
         $this->ensureTestTenantExists();
         self::$testTenant->update([
-            'sso_enabled'                 => true,
-            'sso_provider'                => 'mock-iserv',
-            'sso_force_logout'            => false,
-            'sso_require_email_verified'  => true,
+            'sso_enabled' => true,
+            'sso_provider' => 'mock-iserv',
+            'sso_force_logout' => false,
+            'sso_require_email_verified' => true,
             // Explicit: TEST001 is shared with Eduplaces test classes, and this
             // class asserts the behaviour of a tenant that is not on Eduplaces.
-            'idp_school_id'         => null,
+            'idp_school_id' => null,
         ]);
 
         config([
-            'services.keycloak.base_url'  => self::KEYCLOAK_BASE,
-            'services.keycloak.realms'    => self::KEYCLOAK_REALM,
+            'services.keycloak.base_url' => self::KEYCLOAK_BASE,
+            'services.keycloak.realms' => self::KEYCLOAK_REALM,
             'services.keycloak.client_id' => self::KEYCLOAK_CLIENT_ID,
         ]);
 
@@ -92,6 +100,7 @@ class SsoControllerTest extends TestCase
             $this->assertIsArray($params);
             $this->assertArrayHasKey('prompt', $params);
             $capturedParams = $params;
+
             return $provider;
         });
         $provider->shouldReceive('redirect')->andReturn(new RedirectResponse('https://sso.example'));
@@ -179,7 +188,7 @@ class SsoControllerTest extends TestCase
             $user = LegacyUser::where('sso_sub', 'sub-new-001')->first();
             $this->assertNotNull($user);
             $this->assertEquals('sso_new@test.example', $user->email);
-            $this->assertEquals(20, $user->userlevel->value);
+            $this->assertEquals(UserLevel::User, $user->userlevel);
         });
     }
 
@@ -191,7 +200,7 @@ class SsoControllerTest extends TestCase
 
         $this->mockSocialiteCallback('sub-link-001', 'sso_link@test.example', 'Linker', 'linker');
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -210,12 +219,12 @@ class SsoControllerTest extends TestCase
     public function test_callback_with_email_match_to_inactive_user_rejects_account_inactive_not_link(): void
     {
         self::$testTenant->run(function () {
-            $this->createUser('sso_inactive_email@test.example', null, LegacyUser::STATUS_SUSPENDED);
+            $this->createUser('sso_inactive_email@test.example', null, UserStatus::Suspended);
         });
 
         $this->mockSocialiteCallback('sub-inactive-email-001', 'sso_inactive_email@test.example', 'Inactive', 'inactive');
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -232,7 +241,7 @@ class SsoControllerTest extends TestCase
 
         $this->mockSocialiteCallback('intruder-sub-bbb', 'sso_owned@test.example', 'Intruder', 'intruder');
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -271,7 +280,7 @@ class SsoControllerTest extends TestCase
     public function test_callback_inactive_user_redirects_to_account_inactive_error(): void
     {
         self::$testTenant->run(function () {
-            $this->createUser('sso_inactive@test.example', 'sub-inactive-001', LegacyUser::STATUS_SUSPENDED);
+            $this->createUser('sso_inactive@test.example', 'sub-inactive-001', UserStatus::Inactive);
         });
 
         Http::fake(['*/broker/*/token' => Http::response([], 200)]);
@@ -291,14 +300,14 @@ class SsoControllerTest extends TestCase
     public function test_callback_rejects_when_email_verified_is_false(): void
     {
         $idToken = $this->makeIdToken([
-            'sub'            => 'sub-unverified-001',
-            'email'          => 'sso_unverified@test.example',
+            'sub' => 'sub-unverified-001',
+            'email' => 'sso_unverified@test.example',
             'email_verified' => false,
         ]);
 
         $this->mockSocialiteCallback('sub-unverified-001', 'sso_unverified@test.example', 'Unverified', 'unverified', $idToken);
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -313,13 +322,13 @@ class SsoControllerTest extends TestCase
     public function test_callback_rejects_when_email_verified_claim_is_missing(): void
     {
         $idToken = $this->makeIdToken([
-            'sub'   => 'sub-missing-claim-001',
+            'sub' => 'sub-missing-claim-001',
             'email' => 'sso_missingclaim@test.example',
         ]);
 
         $this->mockSocialiteCallback('sub-missing-claim-001', 'sso_missingclaim@test.example', 'Missing Claim', 'missingclaim', $idToken);
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -335,14 +344,14 @@ class SsoControllerTest extends TestCase
         self::$testTenant->update(['sso_require_email_verified' => false]);
 
         $idToken = $this->makeIdToken([
-            'sub'            => 'sub-unverified-allowed',
-            'email'          => 'sso_unverified_allowed@test.example',
+            'sub' => 'sub-unverified-allowed',
+            'email' => 'sso_unverified_allowed@test.example',
             'email_verified' => false,
         ]);
 
         $this->mockSocialiteCallback('sub-unverified-allowed', 'sso_unverified_allowed@test.example', 'Allowed', 'allowed', $idToken);
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -360,13 +369,13 @@ class SsoControllerTest extends TestCase
         self::$testTenant->update(['sso_require_email_verified' => false]);
 
         $idToken = $this->makeIdToken([
-            'sub'   => 'sub-missing-allowed',
+            'sub' => 'sub-missing-allowed',
             'email' => 'sso_missing_allowed@test.example',
         ]);
 
         $this->mockSocialiteCallback('sub-missing-allowed', 'sso_missing_allowed@test.example', 'Missing Allowed', 'missingallowed', $idToken);
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -380,14 +389,14 @@ class SsoControllerTest extends TestCase
         self::$testTenant->update(['sso_require_email_verified' => false]);
 
         $idToken = $this->makeIdToken([
-            'sub'   => 'sub-still-strict',
+            'sub' => 'sub-still-strict',
             'email' => 'sso_strict@test.example',
-            'iss'   => 'https://impostor.example/realms/aula-test',
+            'iss' => 'https://impostor.example/realms/aula-test',
         ]);
 
         $this->mockSocialiteCallback('sub-still-strict', 'sso_strict@test.example', 'Strict', 'strict', $idToken);
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -396,7 +405,7 @@ class SsoControllerTest extends TestCase
 
     public function test_callback_rejects_when_id_token_is_missing(): void
     {
-        $socialiteUser = \Mockery::mock(\Laravel\Socialite\Two\User::class);
+        $socialiteUser = \Mockery::mock(User::class);
         $socialiteUser->token = 'access-token-mock';
         $socialiteUser->refreshToken = 'refresh-token-mock';
         $socialiteUser->accessTokenResponseBody = [];
@@ -411,7 +420,7 @@ class SsoControllerTest extends TestCase
 
         Socialite::shouldReceive('driver')->with('keycloak')->andReturn($provider);
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -422,7 +431,7 @@ class SsoControllerTest extends TestCase
     {
         $this->mockSocialiteCallback('sub-malformed-001', 'sso_malformed@test.example', 'Malformed', 'malformed', 'not.a.valid.jwt');
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -431,13 +440,13 @@ class SsoControllerTest extends TestCase
 
     public function test_callback_rejects_when_id_token_signature_is_tampered(): void
     {
-        $valid    = $this->makeIdToken(['sub' => 'sub-tampered', 'email' => 'sso_tampered@test.example']);
-        [$h, $p]  = explode('.', $valid);
-        $tampered = "{$h}.{$p}." . strtr(base64_encode('not-the-real-signature'), '+/', '-_');
+        $valid = $this->makeIdToken(['sub' => 'sub-tampered', 'email' => 'sso_tampered@test.example']);
+        [$h, $p] = explode('.', $valid);
+        $tampered = "{$h}.{$p}.".strtr(base64_encode('not-the-real-signature'), '+/', '-_');
 
         $this->mockSocialiteCallback('sub-tampered', 'sso_tampered@test.example', 'Tampered', 'tampered', $tampered);
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -447,14 +456,14 @@ class SsoControllerTest extends TestCase
     public function test_callback_rejects_when_id_token_issuer_is_unexpected(): void
     {
         $idToken = $this->makeIdToken([
-            'sub'   => 'sub-bad-iss',
+            'sub' => 'sub-bad-iss',
             'email' => 'sso_badiss@test.example',
-            'iss'   => 'https://impostor.example/realms/aula-test',
+            'iss' => 'https://impostor.example/realms/aula-test',
         ]);
 
         $this->mockSocialiteCallback('sub-bad-iss', 'sso_badiss@test.example', 'Bad Iss', 'badiss', $idToken);
 
-        $state    = $this->buildState(self::INSTANCE_CODE);
+        $state = $this->buildState(self::INSTANCE_CODE);
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -470,19 +479,19 @@ class SsoControllerTest extends TestCase
         $user = self::$testTenant->run(fn () => $this->createUser('sso_linkme@test.example', null));
 
         $linkToken = $this->primeLinkIntent([
-            'user_id'           => $user->id,
-            'email'             => $user->email,
-            'sso_sub'           => 'sub-fresh-001',
-            'sso_id_token'      => 'aula-id-token-linktest',
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'sso_sub' => 'sub-fresh-001',
+            'sso_id_token' => 'aula-id-token-linktest',
             'sso_refresh_token' => 'refresh-token-linktest',
-            'instance_code'     => self::INSTANCE_CODE,
+            'instance_code' => self::INSTANCE_CODE,
         ]);
 
         $jwt = $this->jwtForUser($user);
 
         $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertOk()->assertJson(['success' => true]);
@@ -505,10 +514,10 @@ class SsoControllerTest extends TestCase
         });
 
         $linkToken = $this->primeLinkIntent([
-            'user_id'       => $victim->id,
-            'email'         => $victim->email,
-            'sso_sub'       => 'sub-take-over',
-            'sso_id_token'  => 'tok',
+            'user_id' => $victim->id,
+            'email' => $victim->email,
+            'sso_sub' => 'sub-take-over',
+            'sso_id_token' => 'tok',
             'instance_code' => self::INSTANCE_CODE,
         ]);
 
@@ -516,7 +525,7 @@ class SsoControllerTest extends TestCase
 
         $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertForbidden();
@@ -530,11 +539,11 @@ class SsoControllerTest extends TestCase
     public function test_link_endpoint_rejects_invalid_or_expired_token(): void
     {
         $user = self::$testTenant->run(fn () => $this->createUser('sso_bad@test.example', null));
-        $jwt  = $this->jwtForUser($user);
+        $jwt = $this->jwtForUser($user);
 
         $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => 'does-not-exist-12345'], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertStatus(404);
@@ -554,10 +563,10 @@ class SsoControllerTest extends TestCase
         $user = self::$testTenant->run(fn () => $this->createUser('sso_oneshot@test.example', null));
 
         $linkToken = $this->primeLinkIntent([
-            'user_id'       => $user->id,
-            'email'         => $user->email,
-            'sso_sub'       => 'sub-oneshot',
-            'sso_id_token'  => 'tok',
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'sso_sub' => 'sub-oneshot',
+            'sso_id_token' => 'tok',
             'instance_code' => self::INSTANCE_CODE,
         ]);
 
@@ -565,13 +574,13 @@ class SsoControllerTest extends TestCase
 
         $first = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
         $first->assertOk();
 
         $second = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
         $second->assertStatus(404);
     }
@@ -581,10 +590,10 @@ class SsoControllerTest extends TestCase
         $user = self::$testTenant->run(fn () => $this->createUser('sso_alreadylinked@test.example', 'sub-already-set'));
 
         $linkToken = $this->primeLinkIntent([
-            'user_id'       => $user->id,
-            'email'         => $user->email,
-            'sso_sub'       => 'sub-different-new',
-            'sso_id_token'  => 'tok',
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'sso_sub' => 'sub-different-new',
+            'sso_id_token' => 'tok',
             'instance_code' => self::INSTANCE_CODE,
         ]);
 
@@ -592,7 +601,7 @@ class SsoControllerTest extends TestCase
 
         $response = $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $linkToken], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertStatus(409);
@@ -629,7 +638,7 @@ class SsoControllerTest extends TestCase
         // Should authenticate as the sso_sub user, not the email user
         $this->assertRedirectAuthenticatesUser($response, $subUser);
         $payload = $this->decodeRedirectToken($response);
-        $this->assertNotEquals($emailUser->id, $payload->user_id);
+        $this->assertNotEquals($emailUser->hash_id, $payload->user_hash);
     }
 
     // =========================================================
@@ -640,13 +649,13 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => false]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_logout@test.example', 'sub-logout-001', LegacyUser::STATUS_ACTIVE, ['sso_id_token' => 'idtoken']));
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_logout@test.example', 'sub-logout-001', UserStatus::Active, ['sso_id_token' => 'idtoken']));
 
         $jwt = $this->jwtForUser($user);
 
         $response = $this->postJson('/api/v2/auth/sso/logout', [], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertOk()->assertJson(['logout_url' => null]);
@@ -656,8 +665,8 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => true]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', LegacyUser::STATUS_ACTIVE, [
-            'sso_id_token'      => 'aula-id-token',
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', UserStatus::Active, [
+            'sso_id_token' => 'aula-id-token',
             'sso_refresh_token' => 'refresh-token',
         ]));
 
@@ -669,7 +678,7 @@ class SsoControllerTest extends TestCase
 
         $response = $this->postJson('/api/v2/auth/sso/logout', [], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertOk();
@@ -690,8 +699,8 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => true]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_nochain@test.example', 'sub-nochain-001', LegacyUser::STATUS_ACTIVE, [
-            'sso_id_token'      => 'aula-id-token',
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_nochain@test.example', 'sub-nochain-001', UserStatus::Active, [
+            'sso_id_token' => 'aula-id-token',
             'sso_refresh_token' => 'refresh-token',
         ]));
 
@@ -701,13 +710,13 @@ class SsoControllerTest extends TestCase
 
         $response = $this->postJson('/api/v2/auth/sso/logout', [], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $logoutUrl = $response->assertOk()->json('logout_url');
 
         $keycloakBase = rtrim((string) config('services.keycloak.base_url'), '/');
-        $frontendUrl  = rtrim((string) config('app.frontend_url'), '/');
+        $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
 
         $this->assertStringStartsWith($keycloakBase, $logoutUrl);
 
@@ -724,8 +733,8 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => true]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_norevoke@test.example', 'sub-norevoke-001', LegacyUser::STATUS_ACTIVE, [
-            'sso_id_token'      => 'aula-id-token',
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_norevoke@test.example', 'sub-norevoke-001', UserStatus::Active, [
+            'sso_id_token' => 'aula-id-token',
             'sso_refresh_token' => 'refresh-token',
         ]));
 
@@ -735,7 +744,7 @@ class SsoControllerTest extends TestCase
 
         $response = $this->postJson('/api/v2/auth/sso/logout', [], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertOk();
@@ -752,8 +761,8 @@ class SsoControllerTest extends TestCase
     {
         self::$testTenant->update(['sso_force_logout' => true]);
 
-        $user = self::$testTenant->run(fn () => $this->createUser('sso_revoke@test.example', 'sub-revoke-001', LegacyUser::STATUS_ACTIVE, [
-            'sso_id_token'      => null,
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_revoke@test.example', 'sub-revoke-001', UserStatus::Active, [
+            'sso_id_token' => null,
             'sso_refresh_token' => 'refresh-token',
         ]));
 
@@ -765,7 +774,7 @@ class SsoControllerTest extends TestCase
 
         $response = $this->postJson('/api/v2/auth/sso/logout', [], [
             'aula-instance-code' => self::INSTANCE_CODE,
-            'Authorization'      => "Bearer {$jwt}",
+            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertOk()->assertJson(['logout_url' => null]);
@@ -799,16 +808,16 @@ class SsoControllerTest extends TestCase
     // Helpers
     // =========================================================
 
-    private function createUser(string $email, ?string $sub, int $status = LegacyUser::STATUS_ACTIVE, array $extra = []): LegacyUser
+    private function createUser(string $email, ?string $sub, UserStatus $status = UserStatus::Active, array $extra = []): LegacyUser
     {
-        $user = new LegacyUser();
-        $user->email      = $email;
-        $user->sso_sub    = $sub;
-        $user->status     = $status;
-        $user->username   = $email;
-        $user->hash_id    = md5($email . microtime(true));
-        $user->userlevel  = 20;
-        $user->roles      = json_encode([]);
+        $user = new LegacyUser;
+        $user->email = $email;
+        $user->sso_sub = $sub;
+        $user->status = $status;
+        $user->username = $email;
+        $user->hash_id = md5($email.microtime(true));
+        $user->userlevel = 20;
+        $user->roles = json_encode([]);
         $user->refresh_token = false;
 
         foreach ($extra as $col => $val) {
@@ -816,6 +825,7 @@ class SsoControllerTest extends TestCase
         }
 
         $user->save();
+
         return $user;
     }
 
@@ -823,15 +833,16 @@ class SsoControllerTest extends TestCase
     {
         $payload = base64_encode(json_encode([
             'instance_code' => $instanceCode,
-            'nonce'         => 'testnonce',
+            'nonce' => 'testnonce',
         ]));
         $signature = hash_hmac('sha256', $payload, config('app.key'));
-        return $payload . '.' . $signature;
+
+        return $payload.'.'.$signature;
     }
 
     private function mockSocialiteCallback(string $sub, string $email, string $name, string $nickname, ?string $idToken = null): void
     {
-        $socialiteUser = \Mockery::mock(\Laravel\Socialite\Two\User::class);
+        $socialiteUser = \Mockery::mock(User::class);
         $socialiteUser->token = 'access-token-mock';
         $socialiteUser->refreshToken = 'refresh-token-mock';
         $socialiteUser->accessTokenResponseBody = [
@@ -859,8 +870,9 @@ class SsoControllerTest extends TestCase
     {
         $token = bin2hex(random_bytes(16));
         self::$testTenant->run(function () use ($token, $intent) {
-            \Illuminate\Support\Facades\Cache::put("sso_link:{$token}", $intent, now()->addMinutes(10));
+            Cache::put("sso_link:{$token}", $intent, now()->addMinutes(10));
         });
+
         return $token;
     }
 
@@ -873,7 +885,7 @@ class SsoControllerTest extends TestCase
     private function makeIdToken(array $claims): string
     {
         return $this->signIdToken(array_merge([
-            'iss' => self::KEYCLOAK_BASE . '/realms/' . self::KEYCLOAK_REALM,
+            'iss' => self::KEYCLOAK_BASE.'/realms/'.self::KEYCLOAK_REALM,
             'aud' => self::KEYCLOAK_CLIENT_ID,
             'azp' => self::KEYCLOAK_CLIENT_ID,
             'iat' => time() - 30,
@@ -884,7 +896,7 @@ class SsoControllerTest extends TestCase
     private function jwtForUser(LegacyUser $user): string
     {
         return self::$testTenant->run(
-            fn () => app(\App\Services\LegacyJwtService::class)->generateToken($user)
+            fn () => app(LegacyJwtService::class)->generateToken($user)
         );
     }
 
@@ -892,7 +904,7 @@ class SsoControllerTest extends TestCase
      * Extract the JWT token from an /oauth-login/{token} redirect and
      * validate it against LegacyJwtService.
      */
-    private function decodeRedirectToken(\Illuminate\Testing\TestResponse $response): object
+    private function decodeRedirectToken(TestResponse $response): object
     {
         $response->assertRedirect();
         $location = $response->headers->get('Location');
@@ -903,17 +915,18 @@ class SsoControllerTest extends TestCase
         $this->assertNotEmpty($token, 'redirect did not contain a JWT token');
 
         $result = self::$testTenant->run(
-            fn () => app(\App\Services\LegacyJwtService::class)->validateToken($token)
+            fn () => app(LegacyJwtService::class)->validateToken($token)
         );
 
-        $this->assertTrue($result['success'], 'JWT in redirect failed validation: ' . ($result['error'] ?? ''));
+        $this->assertTrue($result['success'], 'JWT in redirect failed validation: '.($result['error'] ?? ''));
+
         return $result['payload'];
     }
 
-    private function assertRedirectAuthenticatesUser(\Illuminate\Testing\TestResponse $response, LegacyUser $user): void
+    private function assertRedirectAuthenticatesUser(TestResponse $response, LegacyUser $user): void
     {
         $payload = $this->decodeRedirectToken($response);
-        $this->assertEquals($user->id, $payload->user_id);
+        // $this->assertEquals($user->id, $payload->user_id);
         $this->assertEquals($user->hash_id, $payload->user_hash);
     }
 }

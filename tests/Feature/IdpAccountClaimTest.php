@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\LegacyJwtService;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\User;
+use SocialiteProviders\Manager\OAuth2\User;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
@@ -265,7 +266,7 @@ class IdpAccountClaimTest extends TestCase
             $shell->username = 'claim_shell_'.$personId;
             $shell->displayname = 'Imported '.$personId;
             $shell->idp_user_id = $personId;
-            $shell->status = LegacyUser::STATUS_ACTIVE;
+            $shell->status = UserStatus::Active;
             $shell->userlevel = 20;
             $shell->hash_id = md5($shell->username);
             $shell->save();
@@ -283,7 +284,7 @@ class IdpAccountClaimTest extends TestCase
             $user->username = $username;
             $user->displayname = $username;
             $user->pw = password_hash('secret', PASSWORD_BCRYPT);
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = 20;
             $user->hash_id = md5($username.microtime(true));
             $user->save();

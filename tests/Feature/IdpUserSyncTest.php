@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
 use App\Models\IdpDirectoryEntry;
 use App\Models\IdpWebhookEvent;
@@ -92,7 +93,7 @@ class UserSyncTest extends TestCase
         $this->assertSame('Max Mustermann', $user->displayname);
         $this->assertSame('Maximilian Mustermann', $user->realname);
         $this->assertSame(20, $user->userlevel->value);
-        $this->assertSame(LegacyUser::STATUS_ACTIVE, $user->status);
+        $this->assertSame(UserStatus::Active, $user->status);
         // The IDM exposes no address, so the row waits for the first login.
         $this->assertNull($user->email);
     }
@@ -176,7 +177,7 @@ class UserSyncTest extends TestCase
         $this->setPerson(['role' => 'STUDENT', 'status' => 'INACTIVE', 'name' => ['last' => 'Leaver']]);
         $this->process($this->event('update', properties: ['status']));
 
-        $this->assertSame(LegacyUser::STATUS_ARCHIVED, $this->syncedUser()->status);
+        $this->assertSame(UserStatus::Archived, $this->syncedUser()->status);
     }
 
     public function test_applies_the_same_event_twice_without_changing_anything(): void
@@ -215,7 +216,7 @@ class UserSyncTest extends TestCase
         // Legacy tables reference user rows; the history has to survive.
         $this->assertNotNull($user, 'the row must still exist');
         $this->assertSame($userId, $user->id);
-        $this->assertSame(LegacyUser::STATUS_ARCHIVED, $user->status);
+        $this->assertSame(UserStatus::Archived, $user->status);
     }
 
     public function test_delete_does_not_call_the_idm(): void
@@ -239,7 +240,7 @@ class UserSyncTest extends TestCase
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Returner']]);
         $this->process($this->event('restore'));
 
-        $this->assertSame(LegacyUser::STATUS_ACTIVE, $this->syncedUser()->status);
+        $this->assertSame(UserStatus::Active, $this->syncedUser()->status);
     }
 
     public function test_deleting_a_person_we_never_had_is_a_skip_not_a_failure(): void

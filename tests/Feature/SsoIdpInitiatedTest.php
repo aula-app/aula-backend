@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\User;
+use SocialiteProviders\Manager\OAuth2\User;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
@@ -415,7 +416,7 @@ class SsoIdpInitiatedTest extends TestCase
             $user->pw = $password;
             $user->sso_sub = $ssoSub;
             $user->userlevel = 20;
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->hash_id = md5($personId.microtime(true));
             $user->save();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
@@ -328,7 +329,7 @@ class SchoolImportTest extends TestCase
             $u->displayname = 'Import Admin';
             $u->idp_user_id = 'person-teacher';
             $u->userlevel = 50;
-            $u->status = LegacyUser::STATUS_ACTIVE;
+            $u->status = UserStatus::Active;
             $u->hash_id = md5('import.admin');
             $u->save();
 

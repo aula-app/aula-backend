@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
 use App\Models\IdpDirectoryEntry;
 use App\Models\IdpWebhookEvent;
@@ -282,7 +283,7 @@ class GroupSyncTest extends TestCase
             $user->username = 'roomtest.'.($personId ?? 'native').'.'.random_int(1000, 999999);
             $user->displayname = $user->username;
             $user->idp_user_id = $personId;
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = 20;
             $user->hash_id = md5($user->username);
             $user->save();

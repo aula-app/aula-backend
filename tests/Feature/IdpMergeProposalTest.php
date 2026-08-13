@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Migration\MergeProposalBuilder;
@@ -186,7 +187,7 @@ class IdpMergeProposalTest extends TestCase
             $user->displayname = 'Schon Verknuepft';
             $user->realname = 'Schon Verknuepft';
             $user->idp_user_id = 'p-linked';
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = 50;
             $user->hash_id = md5('proposal.linked');
             $user->save();
@@ -264,7 +265,7 @@ class IdpMergeProposalTest extends TestCase
             $user->username = 'proposal.'.md5($realname.microtime(true));
             $user->displayname = $realname;
             $user->realname = $realname;
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = 20;
             $user->hash_id = md5($user->username);
             $user->save();

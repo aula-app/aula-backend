@@ -7,7 +7,6 @@ use App\Services\LegacyJwtService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Keycloak\KeycloakExtendSocialite;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
@@ -19,7 +18,7 @@ class AuthServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(LegacyJwtService::class, function ($app) {
-            return new LegacyJwtService;
+            return new LegacyJwtService();
         });
     }
 

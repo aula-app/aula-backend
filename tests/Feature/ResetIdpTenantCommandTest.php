@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -146,7 +147,7 @@ class ResetIdpTenantCommandTest extends TestCase
             $user = new LegacyUser;
             $user->username = 'reset.roles.'.random_int(1000, 999999);
             $user->displayname = $user->username;
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = 20;
             $user->hash_id = md5($user->username);
             $user->roles = json_encode([
@@ -224,7 +225,7 @@ class ResetIdpTenantCommandTest extends TestCase
             $user->username = 'reset.imported.'.random_int(1000, 999999);
             $user->displayname = $user->username;
             $user->idp_user_id = 'person-reset-1';
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = 20;
             $user->hash_id = md5($user->username);
             $user->save();
@@ -252,7 +253,7 @@ class ResetIdpTenantCommandTest extends TestCase
             $user->pw = password_hash('secret', PASSWORD_BCRYPT);
             // Signed in via SSO at some point, but not created by the import.
             $user->sso_sub = 'kc-sub-native';
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = 20;
             $user->hash_id = md5($user->username);
             $user->save();

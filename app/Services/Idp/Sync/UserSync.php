@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Idp\Sync;
 
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
@@ -57,7 +58,7 @@ final class UserSync
 
         if ($event->action === IdpEvent::ACTION_RESTORE && ! $user->isActive()) {
             // A restore says active even if the directory has not caught up.
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->save();
         }
 
@@ -88,7 +89,7 @@ final class UserSync
             return SyncOutcome::skipped('user_not_local');
         }
 
-        $user->status = LegacyUser::STATUS_ARCHIVED;
+        $user->status = UserStatus::Archived;
         $user->save();
 
         // Drop them out of the synced rooms and clear the matching entries in

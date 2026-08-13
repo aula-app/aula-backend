@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\UserStatus;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -106,7 +107,7 @@ class IdpMergeApplyTest extends TestCase
             $shell->username = 'apply_shell';
             $shell->displayname = 'Shell';
             $shell->idp_user_id = 'p1';
-            $shell->status = LegacyUser::STATUS_ACTIVE;
+            $shell->status = UserStatus::Active;
             $shell->userlevel = 20;
             $shell->hash_id = md5('apply_shell');
             $shell->save();
@@ -216,7 +217,7 @@ class IdpMergeApplyTest extends TestCase
             $user->username = $username;
             $user->displayname = $username;
             $user->pw = password_hash('secret', PASSWORD_BCRYPT);
-            $user->status = LegacyUser::STATUS_ACTIVE;
+            $user->status = UserStatus::Active;
             $user->userlevel = $level;
             $user->hash_id = md5($username.microtime(true));
             $user->save();
