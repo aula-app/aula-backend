@@ -475,7 +475,6 @@ class SsoControllerTest extends TestCase
             'sso_sub'           => 'sub-fresh-001',
             'sso_id_token'      => 'aula-id-token-linktest',
             'sso_refresh_token' => 'refresh-token-linktest',
-            'sso_idp_id_token'  => 'idp-id-token-linktest',
             'instance_code'     => self::INSTANCE_CODE,
         ]);
 
@@ -493,7 +492,6 @@ class SsoControllerTest extends TestCase
             $this->assertEquals('sub-fresh-001', $fresh->sso_sub);
             $this->assertEquals('aula-id-token-linktest', $fresh->sso_id_token);
             $this->assertEquals('refresh-token-linktest', $fresh->sso_refresh_token);
-            $this->assertEquals('idp-id-token-linktest', $fresh->sso_idp_id_token);
         });
     }
 
@@ -661,7 +659,6 @@ class SsoControllerTest extends TestCase
         $user = self::$testTenant->run(fn () => $this->createUser('sso_forcelogout@test.example', 'sub-forcelogout-001', LegacyUser::STATUS_ACTIVE, [
             'sso_id_token'      => 'aula-id-token',
             'sso_refresh_token' => 'refresh-token',
-            'sso_idp_id_token'  => null,
         ]));
 
         Http::fake([
@@ -680,6 +677,101 @@ class SsoControllerTest extends TestCase
         $this->assertNotNull($logoutUrl);
         $this->assertStringContainsString('openid-connect/logout', $logoutUrl);
         $this->assertStringContainsString('id_token_hint=aula-id-token', $logoutUrl);
+    }
+
+    /**
+     * The logout URL must point at the aula realm and carry the frontend as
+     * post_logout_redirect_uri. Wrapping it in an upstream IdP logout, as an
+     * earlier version did, produced a redirect URI containing a per-logout
+     * id_token_hint that no IdP can whitelist. Propagating the logout to the
+     * upstream IdP is Keycloak's job, configured on the identity provider.
+     */
+    public function test_logout_url_targets_keycloak_and_redirects_to_the_frontend(): void
+    {
+        self::$testTenant->update(['sso_force_logout' => true]);
+
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_nochain@test.example', 'sub-nochain-001', LegacyUser::STATUS_ACTIVE, [
+            'sso_id_token'      => 'aula-id-token',
+            'sso_refresh_token' => 'refresh-token',
+        ]));
+
+        Http::fake();
+
+        $jwt = $this->jwtForUser($user);
+
+        $response = $this->postJson('/api/v2/auth/sso/logout', [], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+
+        $logoutUrl = $response->assertOk()->json('logout_url');
+
+        $keycloakBase = rtrim((string) config('services.keycloak.base_url'), '/');
+        $frontendUrl  = rtrim((string) config('app.frontend_url'), '/');
+
+        $this->assertStringStartsWith($keycloakBase, $logoutUrl);
+
+        parse_str((string) parse_url($logoutUrl, PHP_URL_QUERY), $query);
+        $this->assertSame($frontendUrl, $query['post_logout_redirect_uri'] ?? null);
+    }
+
+    /**
+     * Revoking the Keycloak session server-side kills the very session the
+     * front-channel redirect needs in order to trigger Keycloak's IdP logout
+     * propagation, so it must not run when we hand a logout URL to the browser.
+     */
+    public function test_logout_does_not_revoke_the_session_when_a_logout_url_is_returned(): void
+    {
+        self::$testTenant->update(['sso_force_logout' => true]);
+
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_norevoke@test.example', 'sub-norevoke-001', LegacyUser::STATUS_ACTIVE, [
+            'sso_id_token'      => 'aula-id-token',
+            'sso_refresh_token' => 'refresh-token',
+        ]));
+
+        Http::fake();
+
+        $jwt = $this->jwtForUser($user);
+
+        $response = $this->postJson('/api/v2/auth/sso/logout', [], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+
+        $response->assertOk();
+        $this->assertNotNull($response->json('logout_url'));
+
+        Http::assertNothingSent();
+    }
+
+    /**
+     * Without an id_token there is no front-channel logout to redirect to, so
+     * back-channel revocation is the only way to end the Keycloak session.
+     */
+    public function test_logout_falls_back_to_session_revocation_without_an_id_token(): void
+    {
+        self::$testTenant->update(['sso_force_logout' => true]);
+
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_revoke@test.example', 'sub-revoke-001', LegacyUser::STATUS_ACTIVE, [
+            'sso_id_token'      => null,
+            'sso_refresh_token' => 'refresh-token',
+        ]));
+
+        Http::fake([
+            '*/openid-connect/logout' => Http::response([], 204),
+        ]);
+
+        $jwt = $this->jwtForUser($user);
+
+        $response = $this->postJson('/api/v2/auth/sso/logout', [], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization'      => "Bearer {$jwt}",
+        ]);
+
+        $response->assertOk()->assertJson(['logout_url' => null]);
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/protocol/openid-connect/logout')
+            && $request['refresh_token'] === 'refresh-token');
     }
 
     // =========================================================
