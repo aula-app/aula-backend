@@ -176,14 +176,6 @@ class RoomTest extends TestCase
     #[Depends('test_create_room')]
     public function test_room_membership_batch_validation($newRoomPublicId)
     {
-        // must only use one verb
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            ["add" => 1, "remove" => 1],
-        )
-            ->assertInvalid(["add", "remove"])
-            ->assertUnprocessable();
-
         foreach([
             [["add" => ["nonempty"]], ["add.0"]],
             [["add" => [["nonempty"]]], ["add.0.publicId"]],
@@ -207,10 +199,6 @@ class RoomTest extends TestCase
         $user2 = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
         $newUserPublicId1 = $user1->hash_id;
         $newUserPublicId2 = $user2->hash_id;
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            [ "replace" => [] ]
-        )->assertOk();
         $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
             ->assertExactJson([]);
         $this->patchJson(
@@ -238,6 +226,18 @@ class RoomTest extends TestCase
                 ]
             ]
         )->assertOk();
+        // test transaction; add 404s, so remove, which runs first, should be rolled back
+        $this->patchJson(
+            "/api/v2/rooms/{$newRoomPublicId}/membership",
+            [
+                "add" => [
+                    ["publicId" => "not_found", "level" => 10],
+                ],
+                "remove" => [
+                    [$newUserPublicId1]
+                ]
+            ]
+        )->assertNotFound();
         $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
             ->assertOk()
             ->assertJson(
