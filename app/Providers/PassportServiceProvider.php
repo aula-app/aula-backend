@@ -37,7 +37,7 @@ class PassportServiceProvider extends ServiceProvider
         ], function () {
             $this->loadRoutesFrom(__DIR__.'/../../vendor/laravel/passport/src/../routes/web.php');
             Route::post('/token', [
-                'uses' => '\App\Http\Controllers\Auth\LegacyLoginController@login',
+                'uses' => '\App\Http\Controllers\Auth\SsoAwareAccessTokenController@login',
                 'as' => 'token',
                 'middleware' => 'throttle',
             ]);

@@ -12,7 +12,7 @@ use League\OAuth2\Server\AuthorizationServer;
 use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Component\HttpFoundation\Response;
 
-class LegacyLoginController extends AccessTokenController
+class SsoAwareAccessTokenController extends AccessTokenController
 {
     use ConvertsPsrResponses;
 
