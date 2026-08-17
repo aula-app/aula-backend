@@ -112,38 +112,6 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
         return password_verify($password, $this->pw);
     }
 
-    /**
-     * Get the payload data for JWT token generation.
-     */
-    public function getJwtPayload(): array
-    {
-        return [
-            'id' => $this->id,
-            'hash_id' => $this->hash_id,
-            'userlevel' => $this->userlevel?->value,
-            'roles' => $this->roles,
-            'temp_pw' => !empty($this->temp_pw),
-        ];
-    }
-
-    /**
-     * Clear the refresh token flag.
-     */
-    public function clearRefreshToken(): bool
-    {
-        $this->refresh_token = false;
-        return $this->save();
-    }
-
-    /**
-     * Set the refresh token flag.
-     */
-    public function setRefreshToken(bool $value = true): bool
-    {
-        $this->refresh_token = $value;
-        return $this->save();
-    }
-
     // Authenticatable interface methods
 
     /**
@@ -206,7 +174,9 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
      * Needs a custom override because AccessTokenController::issueToken is looking for matching 'email' with
      * provided $username from the HTTP request body.
      *
-     * Additionally, we can put all other unauthenticated exceptions here: status not active, sso in use.
+     * Additionally, we can put all other unauthenticated exceptions here: status not active, sso in use. We accept
+     * that failing those checks doesn't produce a more specific error message because that would be leaking
+     * unnecessary information to the API client, enabling potential user enumeration et al.
      *
      * @param string $username
      */
