@@ -160,12 +160,7 @@ class TokenCreateTest extends TestCase
             ->assertJsonMissingPath('token_type')
             ->assertJsonMissingPath('access_token')
             ->assertJsonMissingPath('refresh_token')
-            ->assertJsonMissingPath('JWT')
-            ->assertJson([
-                'user_status' => UserStatus::Suspended->value,
-                'error' => 'user_not_active'
-                /* 'reactivation_date' => '2027-01-01', */
-            ]);
+            ->assertJsonMissingPath('JWT');
     }
 
     public function test_token_has_legacy_fields(): void

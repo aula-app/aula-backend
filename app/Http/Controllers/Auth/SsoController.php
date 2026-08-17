@@ -373,6 +373,7 @@ class SsoController extends Controller
 
         $intent = Cache::get($this->linkIntentCacheKey($token));
         if (! is_array($intent)) {
+            // TODO: change response - remove "success" field, double-check http status codes and errors
             return response()->json(['success' => false, 'error' => 'link_intent_not_found'], 404);
         }
         if (($intent['user_id'] ?? null) !== $authUser->id) {
