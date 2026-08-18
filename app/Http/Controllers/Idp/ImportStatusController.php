@@ -33,12 +33,7 @@ class ImportStatusController extends Controller
         $status = $tenant->idp_import_status;
 
         return response()->json([
-            // Tenants that sync from no directory have no import and are never
-            // blocked. A synced tenant is blocked until its import has
-            // finished — including before the first login, when the school is
-            // still unknown and the import has not begun.
-            'ready' => ! $tenant->usesIdpDirectory()
-                || $status === SchoolImport::STATUS_COMPLETED,
+            'ready' => $this->isReady($tenant, $status),
             'provider' => $tenant->sso_provider,
             'status' => $status,
             'rooms' => (int) $tenant->idp_import_rooms,
@@ -47,5 +42,32 @@ class ImportStatusController extends Controller
             'started_at' => $tenant->idp_import_started_at,
             'finished_at' => $tenant->idp_import_finished_at,
         ]);
+    }
+
+    /**
+     * Whether the school is usable, or its users have to wait for an import.
+     */
+    private function isReady(Tenant $tenant, ?string $status): bool
+    {
+        // Tenants that sync from no directory have no import to wait for.
+        if (! $tenant->usesIdpDirectory()) {
+            return true;
+        }
+
+        if ($status === SchoolImport::STATUS_COMPLETED) {
+            return true;
+        }
+
+        // A school that already ran on aula stays open throughout its
+        // migration: it is a working school, and holding its users on a setup
+        // screen would lock them out of it. Only the import that applying the
+        // merge starts is worth waiting for.
+        if ($tenant->isMigratingToIdp()) {
+            return ! in_array($status, [SchoolImport::STATUS_PENDING, SchoolImport::STATUS_RUNNING], true);
+        }
+
+        // Greenfield: blocked until the import has finished, including before
+        // the first login, when the school is still unknown.
+        return false;
     }
 }
