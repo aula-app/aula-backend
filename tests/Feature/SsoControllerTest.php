@@ -910,7 +910,9 @@ class SsoControllerTest extends TestCase
         $location = $response->headers->get('Location');
         $this->assertStringContainsString('/oauth-login/', $location);
 
-        $parts = explode('/oauth-login/', $location, 2);
+        // The redirect carries the resolved tenant as `?code=`, which is not
+        // part of the token: signing it in would fail every validation here.
+        $parts = explode('/oauth-login/', (string) parse_url($location, PHP_URL_PATH), 2);
         $token = $parts[1] ?? '';
         $this->assertNotEmpty($token, 'redirect did not contain a JWT token');
 

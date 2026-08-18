@@ -115,6 +115,27 @@ class IdpAccountClaimTest extends TestCase
         $this->assertStringNotContainsString('/oauth-login/', $location);
     }
 
+    public function test_it_asks_even_before_the_import_has_made_a_row(): void
+    {
+        // A school between being flagged and applying its merge: nothing
+        // carries a provider id yet, and everybody still has only the password
+        // account they have always had.
+        $realId = $this->seedRealUser('claim_pupil');
+
+        $response = $this->signIn('kc-sub-1', 'p1');
+
+        $location = (string) $response->headers->get('Location');
+        $this->assertStringContainsString('sso_error=account_link_required', $location);
+        $this->assertStringNotContainsString('/oauth-login/', $location);
+
+        self::$testTenant->run(function () use ($realId) {
+            // Provisioning here is the duplicate the question exists to
+            // prevent: the person's real account is sitting right there.
+            $this->assertSame(0, LegacyUser::where('idp_user_id', 'p1')->count());
+            $this->assertNotNull(LegacyUser::find($realId));
+        });
+    }
+
     public function test_proving_a_password_moves_the_identity_to_the_real_account(): void
     {
         $shellId = $this->seedShell('p1');
@@ -151,6 +172,29 @@ class IdpAccountClaimTest extends TestCase
 
         self::$testTenant->run(function () use ($shellId) {
             $this->assertSame('kc-sub-1', LegacyUser::find($shellId)->sso_sub);
+        });
+    }
+
+    public function test_declaring_yourself_new_provisions_an_account_when_nothing_was_waiting(): void
+    {
+        // Same window as above: nothing local holds this identity, and this
+        // person really is new, so there is no password for them to prove.
+        $token = $this->claimToken($this->signIn('kc-sub-1', 'p1'));
+
+        $this->fakeDirectoryPerson('p1', 'Neue', 'Person');
+
+        $this->postJson('/api/v2/auth/sso/link/decline', ['sso_link_token' => $token], [
+            'aula-instance-code' => 'TEST001',
+        ])->assertOk()->assertJsonStructure(['JWT']);
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('idp_user_id', 'p1')->first();
+
+            // Provisioned through the import's own path, so arriving before
+            // the roster does not produce a lesser account.
+            $this->assertNotNull($user);
+            $this->assertSame('kc-sub-1', $user->sso_sub);
+            $this->assertSame('Neue Person', $user->displayname);
         });
     }
 
@@ -257,6 +301,36 @@ class IdpAccountClaimTest extends TestCase
         $state = $payload.'.'.hash_hmac('sha256', $payload, (string) config('app.key'));
 
         return $this->get("/api/v2/auth/sso/callback?state={$state}");
+    }
+
+    /**
+     * Answer the IDM lookups the newcomer path makes. Registered after the
+     * login's own fake, which does not match these paths.
+     */
+    private function fakeDirectoryPerson(string $personId, string $first, string $last): void
+    {
+        $person = [
+            'id' => $personId,
+            'name' => ['firstFull' => $first, 'firstCall' => $first, 'last' => $last],
+            'role' => 'STUDENT',
+            'status' => 'ACTIVE',
+            'groups' => [],
+        ];
+
+        config([
+            'idp.providers.eduplaces.auth_url' => 'https://idm.test.local',
+            'idp.providers.eduplaces.api_url' => 'https://idm.test.local',
+            'idp.providers.eduplaces.client_id' => 'test-client',
+            'idp.providers.eduplaces.client_secret' => 'test-secret',
+        ]);
+
+        Http::fake([
+            '*/oauth2/token' => Http::response([
+                'access_token' => 'idm-token', 'token_type' => 'bearer', 'expires_in' => 3599,
+            ]),
+            "*/people/{$personId}" => Http::response($person),
+            "*/users/{$personId}" => Http::response($person),
+        ]);
     }
 
     private function seedShell(string $personId): int

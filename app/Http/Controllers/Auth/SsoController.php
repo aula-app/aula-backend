@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
+use App\Services\Idp\DirectoryException;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\SchoolImport;
 use App\Services\IdTokenVerification\IdTokenVerificationException;
@@ -1125,13 +1126,17 @@ class SsoController extends Controller
 
         $candidate = $this->ssoUserService->findByIdpUserId($personId);
 
-        // Nothing local yet, or a real account already carrying this identity:
-        // the ordinary paths handle both.
-        if ($candidate === null || $candidate->sso_sub !== null || ! empty($candidate->pw)) {
+        // A real account already carrying this identity: its owner has signed
+        // in before, or a merge asserted it. The ordinary paths handle both.
+        if ($candidate !== null && ($candidate->sso_sub !== null || ! empty($candidate->pw))) {
             return null;
         }
 
-        $token = $this->storeAccountClaimIntent($personId, (int) $candidate->id, $socialiteUser, $tenant);
+        // No row at all is the commonest case, not an exception: before the
+        // merge is applied nothing carries a provider id, and that is exactly
+        // when everyone still has only their old password account. Provisioning
+        // here is what produces the duplicate this question exists to prevent.
+        $token = $this->storeAccountClaimIntent($personId, $candidate?->id, $socialiteUser, $tenant);
 
         Log::info('SSO: asking a migrating school whether this person already has an account', [
             'tenant' => $instanceCode,
@@ -1148,8 +1153,11 @@ class SsoController extends Controller
      * whoever proves an aula password — which is exactly the assertion being
      * made: "that provider identity is me". Possession of the account is still
      * what gets proved, so the trust model is unchanged.
+     *
+     * `$shellUserId` is null when nothing local holds this identity yet, which
+     * is the normal state before a merge is applied.
      */
-    protected function storeAccountClaimIntent(string $personId, int $shellUserId, LaravelSocialiteUser $socialiteUser, Tenant $tenant): string
+    protected function storeAccountClaimIntent(string $personId, ?int $shellUserId, LaravelSocialiteUser $socialiteUser, Tenant $tenant): string
     {
         $token = bin2hex(random_bytes(16));
 
@@ -1184,7 +1192,11 @@ class SsoController extends Controller
             return response()->json(['success' => false, 'error' => 'link_intent_not_found'], 404);
         }
 
-        $user = LegacyUser::find($intent['shell_user_id'] ?? 0);
+        $user = LegacyUser::find($intent['shell_user_id'] ?? 0)
+            // Nothing was waiting for them, so they are new to the school as
+            // well: give them the account the import would have made, rooms
+            // and role included.
+            ?? $this->provisionFromDirectory((string) ($intent['idp_user_id'] ?? ''));
 
         if ($user === null) {
             return response()->json(['success' => false, 'error' => 'user_not_found'], 404);
@@ -1198,6 +1210,41 @@ class SsoController extends Controller
         Cache::forget($this->linkIntentCacheKey($token));
 
         return response()->json(['success' => true, 'JWT' => $this->jwtService->generateToken($user)]);
+    }
+
+    /**
+     * Build the account for a person the directory knows and aula does not.
+     *
+     * Through the import's own path, so a person who arrives before the roster
+     * does gets the same row the roster would have given them.
+     */
+    protected function provisionFromDirectory(string $personId): ?LegacyUser
+    {
+        /** @var Tenant|null $tenant */
+        $tenant = tenant();
+        $provider = $tenant === null ? null : $this->idpProviders->forTenant($tenant);
+
+        if ($personId === '' || $tenant === null || $provider === null) {
+            return null;
+        }
+
+        $directory = $this->idpProviders->directory($provider);
+
+        try {
+            $person = method_exists($directory, 'personOrUser')
+                ? $directory->personOrUser($personId)
+                : $directory->user($personId);
+        } catch (DirectoryException $e) {
+            Log::warning('SSO: cannot provision a newcomer, the directory is unreachable', [
+                'tenant' => $tenant->instance_code,
+                'idp_user_id' => $personId,
+                'reason' => $e->reason,
+            ]);
+
+            return null;
+        }
+
+        return $person === null ? null : $this->schoolImport->importUser($tenant, $provider, $person);
     }
 
     /**
