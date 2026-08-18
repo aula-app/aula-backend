@@ -59,6 +59,7 @@ if (!!$check_jwt && $check_jwt["success"]) {
   } else {
     $arguments = [];
   }
+  $arguments["user_id"] = $user_id;
 
   if (array_key_exists("decrypt", $input)) {
     $decrypt_fields = $input["decrypt"];

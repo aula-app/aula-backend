@@ -277,7 +277,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         "roles" => [
           "all"
         ],
-        "checks" => ["user_id:updater_id"]
+        "checks" => ["user_hash:updater_hash"]
       ],
 
     ],
@@ -879,7 +879,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
             "get_room" => "idea_id",
           ],
           "owner" => ["idea_id"],
-          "checks" => ["user_id:updater_id"]
+          "checks" => ["user_hash:updater_hash"]
         ],
 
         "deleteIdea" => [
@@ -903,7 +903,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
             "moderator_v"
           ],
           "owner" => ["idea_id"],
-          "checks" => ["user_id:updater_id"]
+          "checks" => ["user_hash:updater_hash"]
         ],
 
         "getLikeStatus" => [
@@ -1241,7 +1241,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
             "moderator",
             "moderator_v",
           ],
-          "checks" => ["user_id:user_id", "user_id:updater_id"],
+          "checks" => ["user_id:user_id", "user_hash:updater_hash"],
           "from_room" => ["arg" => "room_id"]
         ]
       ]
