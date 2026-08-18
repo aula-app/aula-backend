@@ -17,6 +17,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TextInput\Actions\CopyAction;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Components\Section;
@@ -200,7 +201,7 @@ class TenantResource extends Resource
                     Toggle::make('sso_force_logout')
                         ->label('End Keycloak session on logout')
                         ->helperText('When on, clicking Logout in aula also ends the Keycloak session (RP-initiated logout).')
-                        ->default(true),
+                        ->default(false),
 
                     Toggle::make('sso_required')
                         ->label('SSO required (no password login)')
@@ -226,15 +227,15 @@ class TenantResource extends Resource
                         ->disabled(fn (?Tenant $record): bool => $record?->idp_migration_status !== null
                             && $record->idp_migration_status !== Tenant::IDP_MIGRATION_FLAGGED),
 
-                    Placeholder::make('idp_migration_state')
+                    TextEntry::make('idp_migration_state')
+                        ->placeholder(fn (?Tenant $record): string => $record?->idp_migration_status ?? 'not migrating')
                         ->label('Migration state')
-                        ->content(fn (?Tenant $record): string => $record?->idp_migration_status ?? 'not migrating')
                         ->visible(fn (?Tenant $record): bool => $record?->idp_migration_status !== null),
 
                     Toggle::make('sso_require_email_verified')
                         ->label('Require verified email from IdP')
                         ->helperText('When on (default), reject SSO logins whose id_token does not assert email_verified=true. Turn off only when the IdP is trusted to control all email addresses (e.g., school-issued addresses with no self-registration).')
-                        ->default(true),
+                        ->default(false),
                 ]),
         ]);
     }
