@@ -55,11 +55,20 @@ if (!!$check_jwt && $check_jwt["success"]) {
     if (array_key_exists("extra_where", $input["arguments"])) {
       unset($input["arguments"]["extra_where"]) ;
     }
+    if (array_key_exists("updater_hash", $input["arguments"])) { // provided updater_hash used to derive updater_id
+      $updater_id = $converters->checkUserId($arguments["updater_hash"]);
+      unset($input["arguments"]["updater_hash"]) ;
+      $input["arguments"]["updater_id"] = $updater_id;
+    }
+    if (array_key_exists("user_id", $input["arguments"])) { // provided user_id overwritten by derived user_id
+      // user_id is derived from user_hash above
+      unset($input["arguments"]["user_id"]) ;
+      $input["arguments"]["user_id"] = $user_id;
+    }
     $arguments = $input["arguments"];
   } else {
     $arguments = [];
   }
-  $arguments["user_id"] = $user_id;
 
   if (array_key_exists("decrypt", $input)) {
     $decrypt_fields = $input["decrypt"];
