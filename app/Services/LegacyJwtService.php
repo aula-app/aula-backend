@@ -22,8 +22,11 @@ class LegacyJwtService
 
         $payload = [
             'exp' => 0,
-            // @NOTE: old FE won't work without user_id in JWT (but then again, old FE won't use this endpoint)
-            /* 'user_id' => $user->id, */
+            // The legacy API reads this claim unconditionally (model.php), and
+            // the frontend copies it into request arguments. A token minted
+            // without it, which is every SSO login, breaks every call made with
+            // it.
+            'user_id' => $user->id,
             'user_hash' => $user->hash_id,
             'user_level' => $user->userlevel?->value,
             'roles' => json_decode($user->roles ?? '[]'),
