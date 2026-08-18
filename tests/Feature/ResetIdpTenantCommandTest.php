@@ -79,6 +79,72 @@ class ResetIdpTenantCommandTest extends TestCase
         });
     }
 
+    public function test_it_keeps_the_admin_the_first_login_took_over(): void
+    {
+        $username = 'reset.admin.'.random_int(1000, 999999);
+        $seeded = self::$testTenant->admin1_username;
+        Tenant::where('id', self::$testTenant->id)->update(['admin1_username' => $username]);
+
+        $adminId = (int) self::$testTenant->run(function () use ($username) {
+            $user = new LegacyUser;
+            $user->username = $username;
+            $user->displayname = $username;
+            $user->email = 'reset.admin@test.example';
+            // Seeded by tenant creation, so no password: the bootstrap takes
+            // over exactly this row and stamps its provider identity on it.
+            $user->idp_user_id = 'person-reset-admin';
+            $user->sso_sub = 'kc-sub-admin';
+            $user->status = UserStatus::Active;
+            $user->userlevel = 50;
+            $user->hash_id = md5($user->username);
+            $user->save();
+
+            return $user->id;
+        });
+
+        $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
+
+        self::$testTenant->run(function () use ($adminId) {
+            $admin = LegacyUser::find($adminId);
+
+            // Deleting it leaves the tenant with no admin for the next first
+            // login to take over, and no way back to a working school.
+            $this->assertNotNull($admin);
+            $this->assertNull($admin->sso_sub);
+            $this->assertNull($admin->idp_user_id);
+        });
+
+        Tenant::where('id', self::$testTenant->id)->update(['admin1_username' => $seeded]);
+    }
+
+    public function test_it_deletes_an_imported_row_whose_owner_has_signed_in(): void
+    {
+        $importedId = (int) self::$testTenant->run(function () {
+            $user = new LegacyUser;
+            $user->username = 'reset.adopted.'.random_int(1000, 999999);
+            $user->displayname = $user->username;
+            // Adoption copies an address onto the row at that first login, so
+            // having one says nothing about where the row came from.
+            $user->email = 'reset.adopted@test.example';
+            $user->idp_user_id = 'person-reset-adopted';
+            $user->sso_sub = 'kc-sub-adopted';
+            $user->status = UserStatus::Active;
+            $user->userlevel = 20;
+            $user->hash_id = md5($user->username);
+            $user->save();
+
+            return $user->id;
+        });
+
+        $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
+
+        self::$testTenant->run(function () use ($importedId) {
+            // Left behind, it collides with the next import: its provider id is
+            // cleared, so the import makes a second row for the same person.
+            $this->assertNull(LegacyUser::find($importedId));
+        });
+    }
+
     public function test_it_clears_the_signal_that_makes_a_login_the_first(): void
     {
         $this->seedImportedSchool();

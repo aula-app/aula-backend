@@ -9,6 +9,7 @@ use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -67,15 +68,35 @@ class ResetIdpTenant extends Command
     }
 
     /**
+     * Accounts the import created, as opposed to ones it claimed.
+     *
+     * They carry the provider's id and no password. The two exceptions are the
+     * admins tenant creation seeded: the first login stamps its identity on one
+     * of them, and deleting it leaves the tenant with no admin for the next
+     * first login to take over. Email is not a signal, since adoption copies
+     * one onto an imported row as soon as its owner signs in.
+     *
+     * @return Builder<LegacyUser>
+     */
+    private function directoryCreatedUsers(Tenant $tenant): Builder
+    {
+        $seededAdmins = array_values(array_filter([$tenant->admin1_username, $tenant->admin2_username]));
+
+        return LegacyUser::whereNotNull('idp_user_id')
+            ->where(fn (Builder $q) => $q->whereNull('pw')->orWhere('pw', ''))
+            ->when($seededAdmins !== [], fn (Builder $q) => $q->whereNotIn('username', $seededAdmins));
+    }
+
+    /**
      * @return array<string, int>
      */
     private function summarise(Tenant $tenant): array
     {
         /** @var array<string, int> $counts */
         $counts = $tenant->run(fn (): array => [
-            'imported_users' => LegacyUser::whereNotNull('idp_user_id')->count(),
+            'imported_users' => $this->directoryCreatedUsers($tenant)->count(),
             'imported_rooms' => DB::table('au_rooms')->whereNotNull('idp_group_id')->count(),
-            'other_users' => LegacyUser::whereNull('idp_user_id')->count(),
+            'other_users' => LegacyUser::query()->count() - $this->directoryCreatedUsers($tenant)->count(),
         ]);
 
         return $counts + [
@@ -86,7 +107,7 @@ class ResetIdpTenant extends Command
 
     private function resetTenantDatabase(Tenant $tenant): void
     {
-        $tenant->run(function (): void {
+        $tenant->run(function () use ($tenant): void {
             $rooms = DB::table('au_rooms')
                 ->whereNotNull('idp_group_id')
                 ->get(['id', 'hash_id']);
@@ -98,9 +119,9 @@ class ResetIdpTenant extends Command
                 DB::table('au_rooms')->whereIn('id', $roomIds)->delete();
             }
 
-            // Only rows the import created. Anyone who has signed in owns their
-            // account now, whatever brought it into being.
-            $importedIds = LegacyUser::whereNotNull('idp_user_id')->pluck('id')->all();
+            // `idp_user_id` alone is not the test: the first login stamps it
+            // onto the seeded admin, and a merge stamps it onto real accounts.
+            $importedIds = $this->directoryCreatedUsers($tenant)->pluck('id')->all();
 
             if ($importedIds !== []) {
                 DB::table('au_rel_rooms_users')->whereIn('user_id', $importedIds)->delete();
