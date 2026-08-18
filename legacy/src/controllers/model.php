@@ -56,7 +56,7 @@ if (!!$check_jwt && $check_jwt["success"]) {
       unset($input["arguments"]["extra_where"]) ;
     }
     if (array_key_exists("updater_hash", $input["arguments"])) { // provided updater_hash used to derive updater_id
-      $updater_id = $converters->checkUserId($arguments["updater_hash"]);
+      $updater_id = $converters->checkUserId($input["arguments"]["updater_hash"]);
       unset($input["arguments"]["updater_hash"]) ;
       $input["arguments"]["updater_id"] = $updater_id;
     }
