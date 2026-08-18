@@ -76,7 +76,7 @@ class ProcessIdpWebhookEvent implements ShouldQueue
             action: (string) $record->action,
             entityId: (string) $record->entity_id,
             updatedProperties: (array) ($record->updated_properties ?? []),
-            payload: (array) ($record->payload ?? []),
+            payload: (array) $record->payload,
         );
 
         $provider = (string) $record->provider;

@@ -93,7 +93,7 @@ final class MergeProposalApplier
     }
 
     /**
-     * @return Collection<int, object>
+     * @return Collection<int, \stdClass>
      */
     private function merges()
     {

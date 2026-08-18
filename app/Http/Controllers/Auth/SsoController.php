@@ -691,7 +691,9 @@ class SsoController extends Controller
             }
         }
 
-        if (! is_string($schoolId) || $schoolId === '') {
+        // The loop only ever assigns a non-empty string, so being a string is
+        // the whole test.
+        if (! is_string($schoolId)) {
             Log::warning('SSO: IdP-initiated login has no school claim', [
                 'keycloak_sub' => $socialiteUser->getId(),
                 'claim_keys' => is_array($payload) ? array_keys($payload) : null,
@@ -953,7 +955,7 @@ class SsoController extends Controller
 
         // Queued, not inline: a large school must not have to fit inside the
         // login request, and the frontend needs to see the import in progress.
-        ImportSchoolForTenant::dispatch($tenant->id);
+        ImportSchoolForTenant::dispatch((string) $tenant->id);
 
         return $admin->fresh();
     }
@@ -1035,7 +1037,7 @@ class SsoController extends Controller
      */
     protected function tenantAdmin(Tenant $tenant): ?LegacyUser
     {
-        $byUsername = $tenant->admin1_username !== null
+        $byUsername = $tenant->admin1_username !== ''
             ? LegacyUser::where('username', $tenant->admin1_username)->first()
             : null;
 
@@ -1166,12 +1168,24 @@ class SsoController extends Controller
             'idp_user_id' => $personId,
             'shell_user_id' => $shellUserId,
             'sso_sub' => $socialiteUser->getId(),
-            'sso_id_token' => $socialiteUser->accessTokenResponseBody['id_token'] ?? null,
+            'sso_id_token' => $this->accessTokenBody($socialiteUser)['id_token'] ?? null,
             'sso_refresh_token' => $socialiteUser->refreshToken,
             'instance_code' => $tenant->instance_code,
         ], now()->addMinutes(self::LINK_INTENT_TTL_MINUTES));
 
         return $token;
+    }
+
+    /**
+     * The provider's token response, which only its own user object carries.
+     *
+     * @return array<array-key, mixed>
+     */
+    protected function accessTokenBody(LaravelSocialiteUser $socialiteUser): array
+    {
+        return $socialiteUser instanceof SocialiteOAuth2User && is_array($socialiteUser->accessTokenResponseBody)
+            ? $socialiteUser->accessTokenResponseBody
+            : [];
     }
 
     /**
@@ -1192,7 +1206,7 @@ class SsoController extends Controller
             return response()->json(['success' => false, 'error' => 'link_intent_not_found'], 404);
         }
 
-        $user = LegacyUser::find($intent['shell_user_id'] ?? 0)
+        $user = LegacyUser::find((int) ($intent['shell_user_id'] ?? 0))
             // Nothing was waiting for them, so they are new to the school as
             // well: give them the account the import would have made, rooms
             // and role included.

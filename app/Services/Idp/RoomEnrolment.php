@@ -50,7 +50,7 @@ final class RoomEnrolment
             return ['id' => (int) $existing->id, 'hash_id' => (string) $existing->hash_id];
         }
 
-        $hashId = md5($idpGroupId.microtime(true).random_int(100, 10000000));
+        $hashId = md5($idpGroupId.(string) microtime(true).random_int(100, 10000000));
 
         $id = (int) DB::table('au_rooms')->insertGetId([
             'room_name' => $name,

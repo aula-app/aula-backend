@@ -28,7 +28,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 /**
- * @extends resource<Tenant,ResourceConfiguration>
+ * Fully qualified: the short name is normalised to lower case `resource`,
+ * which reads as the reserved type rather than the Filament class.
+ *
+ * @extends \Filament\Resources\Resource<Tenant, ResourceConfiguration>
  */
 class TenantResource extends Resource
 {

@@ -164,7 +164,7 @@ final class SchoolImport
             $user = new LegacyUser;
             $user->idp_user_id = $person->id;
             $user->username = $this->uniqueUsername($person);
-            $user->hash_id = md5($person->id.microtime(true).random_int(100, 10000000));
+            $user->hash_id = md5($person->id.(string) microtime(true).random_int(100, 10000000));
             // Identity providers need not expose an email address, and their
             // users need not have one. The column stays null; `idp_user_id` is
             // the identifier.
