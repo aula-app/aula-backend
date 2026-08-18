@@ -119,10 +119,6 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * Discard the cached token. Used after a 401 so the next call re-authenticates
-     * instead of replaying a credential the API has already rejected.
-     */
-    /**
      * Every group, read in full.
      *
      * The school listing gives only id and name; the per-group call adds the
