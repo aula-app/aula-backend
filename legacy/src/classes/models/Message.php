@@ -184,7 +184,8 @@ class Message
     }
 
     if ($creator_id > 0) {
-      // if a target group is set then add to where clause
+      $creator_id = $this->converters->checkUserId($creator_id);
+      // if a creator user id is set then add to where clause
       $extra_where .= " AND creator_id = " . $creator_id;
     }
 
@@ -427,6 +428,7 @@ class Message
     //sanitize the vars
     $updater_id = $this->converters->checkUserId($updater_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $target_id = $this->converters->checkUserId($target_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    $creator_id = $this->converters->checkUserId($creator_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
     $target_group = $this->converters->checkGroupId($target_group); // check id and converts id to db id if necessary (when hash id was passed)
     $status = intval($status);
     $room_id = $this->converters->checkRoomId($room_id); // checks room_id id and converts room id to db room id if necessary (when room hash id was passed)

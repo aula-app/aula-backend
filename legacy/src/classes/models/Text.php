@@ -144,7 +144,6 @@ class Text
     $orderby = intval($orderby);
     $asc = intval($asc);
     $status = intval($status);
-    $creator_id = intval($creator_id);
     $user_needs_to_consent = intval($user_needs_to_consent);
 
     // init vars
@@ -175,6 +174,7 @@ class Text
     }
 
     if ($creator_id > 0) {
+      $creator_id = $this->converters->checkUserId($creator_id);
       $extra_where .= " AND creator_id = :creator_id"; // get specific texts for a creator / moderator / admin
     }
 
