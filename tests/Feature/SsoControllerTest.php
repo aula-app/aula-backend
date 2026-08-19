@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
@@ -634,6 +635,7 @@ class SsoControllerTest extends TestCase
         $this->assertRedirectAuthenticatesUser($response, $subUser);
         $payload = $this->decodeRedirectToken($response);
         $this->assertNotEquals($emailUser->hash_id, $payload->user_hash);
+        $this->assertNotEquals($emailUser->id, $payload->user_id);
     }
 
     // =========================================================
@@ -743,6 +745,7 @@ class SsoControllerTest extends TestCase
      * Must run inside tenant context — CacheTenancyBootstrapper applies a
      * per-tenant prefix, so a central write would not be visible to the
      * tenant-scoped controller read.
+     * @param array<int,mixed> $intent
      */
     private function primeLinkIntent(array $intent): string
     {
@@ -758,6 +761,7 @@ class SsoControllerTest extends TestCase
      * crypto envelope (iss/aud/exp/azp) so the verifier accepts the token; the
      * email_verified claim is deliberately NOT defaulted so tests that omit it
      * exercise the controller's missing-claim rejection.
+     * @param array<int,mixed> $claims
      */
     private function makeIdToken(array $claims): string
     {
@@ -780,6 +784,7 @@ class SsoControllerTest extends TestCase
     /**
      * Extract the JWT token from an /oauth-login/{token} redirect and
      * validate it against LegacyJwtService.
+     * @param TestResponse<Response> $response
      */
     private function decodeRedirectToken(TestResponse $response): object
     {
@@ -814,7 +819,10 @@ class SsoControllerTest extends TestCase
         return json_decode(base64_decode($payload), false);
     }
 
-    private function assertRedirectAuthenticatesUser(\Illuminate\Testing\TestResponse $response, LegacyUser $user): void
+    /**
+     * @param TestResponse<Response> $response
+     */
+    private function assertRedirectAuthenticatesUser(TestResponse $response, LegacyUser $user): void
     {
         $payload = $this->decodeRedirectToken($response);
         $this->assertEquals($user->hash_id, $payload->user_hash);

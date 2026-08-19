@@ -209,13 +209,13 @@ class TokenCreateTest extends TestCase
         $this->assertGreaterThan(time() - 100, $payload['exp']);
         $this->assertLessThanOrEqual(time() + 86400, $payload['exp']);
 
-        // not publishing user_id anymore
-        // $this->assertArrayHasKey('user_id', $payload);
+        $this->assertArrayHasKey('user_id', $payload);
         $this->assertArrayHasKey('user_hash', $payload);
         $this->assertArrayHasKey('temp_pw', $payload);
         $this->assertArrayHasKey('user_level', $payload);
         $this->assertArrayHasKey('roles', $payload);
 
+        $this->assertEquals($userId, $payload['user_id']);
         $this->assertEquals('hash123', $payload['user_hash']);
         $this->assertEquals(1, $payload['temp_pw']);
         $this->assertEquals(20, $payload['user_level']);
