@@ -151,6 +151,28 @@ class IdpBootstrapTest extends TestCase
         ])->assertOk()->assertJsonPath('ready', false)->assertJsonPath('status', null);
     }
 
+    /**
+     * A declined bootstrap leaves no status behind and no login retries it, so
+     * waiting on one would park every user here for good.
+     */
+    public function test_the_import_status_endpoint_stops_blocking_once_a_bootstrap_has_declined(): void
+    {
+        self::$testTenant->run(function () {
+            $admin = LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail();
+            $admin->sso_sub = 'kc-sub-already-signed-in';
+            $admin->save();
+        });
+
+        $jwt = self::$testTenant->run(fn () => app(LegacyJwtService::class)->generateToken(
+            LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail(),
+        ));
+
+        $this->getJson('/api/v2/auth/idp/import-status', [
+            'aula-instance-code' => 'TEST001',
+            'Authorization' => "Bearer {$jwt}",
+        ])->assertOk()->assertJsonPath('ready', true)->assertJsonPath('status', null);
+    }
+
     public function test_it_refuses_to_bootstrap_a_school_that_already_has_users(): void
     {
         // An existing school's admin is a person's real account. Whoever signs
