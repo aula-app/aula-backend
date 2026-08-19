@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Idp;
 
-use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Services\Idp\SchoolImport;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controller;
 
 /**
  * Reports how the initial school import is going.

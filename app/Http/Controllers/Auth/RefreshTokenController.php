@@ -2,18 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
 use App\Models\LegacyUser;
-use App\Services\LegacyJwtService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 class RefreshTokenController extends Controller
 {
-    public function __construct(
-        protected LegacyJwtService $jwtService
-    ) {}
-
     /**
      * Refresh the JWT token.
      * Matches the legacy refresh_token.php behavior.

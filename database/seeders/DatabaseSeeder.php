@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Manager\AulaManagerUser;
 use Illuminate\Database\Seeder;
 use Laravel\Passport\ClientRepository;
 
@@ -13,13 +13,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $clientRepo = new ClientRepository;
+        $clientRepo = new ClientRepository();
         // when confidential:false is set, we don't need client_secret
-        $client = $clientRepo->createPasswordGrantClient('password_central_manager', 'aula_manager_users', false);
+        $client = $clientRepo->createPasswordGrantClient('password_grants_tenant_users', 'aula_users', false);
+
         $this->command->info("Client ID:     {$client->id}");
         $this->command->info('Client Secret: N/A');
 
-        $user = User::firstOrCreate(
+        $user = AulaManagerUser::firstOrCreate(
             ['email' => 'dev@aula.de'],
             [
                 'name' => 'aula devs test',
@@ -27,7 +28,7 @@ class DatabaseSeeder extends Seeder
                 'password' => 'password',
             ]
         );
-        $this->command->info("User Email:    {$user->email}");
-        $this->command->info('User Password: password');
+        $this->command->info("Manager (Central) User Email:    {$user->email}");
+        $this->command->info('Manager (Central) User Password: password');
     }
 }

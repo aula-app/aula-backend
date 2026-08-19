@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Facades\Socialite;
-use SocialiteProviders\Manager\OAuth2\User;
+use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
@@ -408,7 +408,7 @@ class SsoIdpInitiatedTest extends TestCase
     private function seedDirectoryProvisionedUser(string $personId, ?string $password = null, ?string $ssoSub = null): int
     {
         return (int) self::$testTenant->run(function () use ($personId, $password, $ssoSub) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->idp_user_id = $personId;
             $user->username = 'pre.'.substr(md5($personId), 0, 8);
             $user->displayname = 'Pre Provisioned';
@@ -485,7 +485,7 @@ class SsoIdpInitiatedTest extends TestCase
             'email_verified' => true,
         ]);
 
-        $socialiteUser = \Mockery::mock(User::class);
+        $socialiteUser = \Mockery::mock(SocialiteOAuth2User::class);
         $socialiteUser->token = 'kc-access-token';
         $socialiteUser->refreshToken = 'kc-refresh-token';
         $socialiteUser->accessTokenResponseBody = ['id_token' => $idToken];

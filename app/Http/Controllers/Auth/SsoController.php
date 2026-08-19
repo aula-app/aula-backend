@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserLevel;
-use App\Http\Controllers\Controller;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -12,11 +11,12 @@ use App\Services\Idp\IdpProviders;
 use App\Services\Idp\SchoolImport;
 use App\Services\IdTokenVerification\IdTokenVerificationException;
 use App\Services\IdTokenVerifier;
-use App\Services\LegacyJwtService;
 use App\Services\SsoUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -50,12 +50,12 @@ class SsoController extends Controller
     private array $idpIdTokens = [];
 
     public function __construct(
-        protected LegacyJwtService $jwtService,
         protected SsoUserService $ssoUserService,
         protected IdTokenVerifier $idTokenVerifier,
         protected SchoolImport $schoolImport,
         protected IdpProviders $idpProviders,
-    ) {}
+    ) {
+    }
 
     // =========================================================
     // Public endpoints
@@ -345,7 +345,7 @@ class SsoController extends Controller
 
         $user->save();
 
-        $token = $this->jwtService->generateToken($user);
+        $token = $user->createToken("sso_token_{$callbackTenant->sso_provider}")->accessToken;
 
         return $this->frontendRedirect($token, $callbackTenant->instance_code);
     }
@@ -493,12 +493,12 @@ class SsoController extends Controller
         ]);
 
         /** @var LegacyUser $authUser */
-        $authUser = $request->attributes->get('authenticated_user');
-        $token = $request->input('sso_link_token');
+        $authUser = Auth::user();
+        $token    = $request->input('sso_link_token');
 
         $intent = Cache::get($this->linkIntentCacheKey($token));
-
         if (! is_array($intent)) {
+            // TODO: change response - remove "success" field, double-check http status codes and errors
             return response()->json(['success' => false, 'error' => 'link_intent_not_found'], 404);
         }
 
@@ -516,11 +516,9 @@ class SsoController extends Controller
         }
 
         $fresh = LegacyUser::find($authUser->id);
-
         if ($fresh === null) {
             return response()->json(['success' => false, 'error' => 'user_not_found'], 404);
         }
-
         if ($fresh->sso_sub !== null && $fresh->sso_sub !== $intent['sso_sub']) {
             return response()->json(['success' => false, 'error' => 'already_linked'], 409);
         }
@@ -569,8 +567,8 @@ class SsoController extends Controller
             return response()->json(['logout_url' => null]);
         }
 
-        /** @var LegacyUser|null $user */
-        $user = $request->attributes->get('authenticated_user');
+        /** @var LegacyUser $user */
+        $user = Auth::user();
 
         $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
 

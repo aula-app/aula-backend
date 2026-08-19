@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Data\User\Requests\UpdateUserData;
+use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -31,6 +32,11 @@ class AuthzServiceProvider extends ServiceProvider
         Gate::before(function (mixed $user, string $ability): bool|null {
             if (!$user instanceof LegacyUser) {
                 return null;
+            }
+
+            // @TODO: is this the right place for this check
+            if ($user->status !== UserStatus::Active) {
+                return false;
             }
 
             return $user->isAdmin() ? true : null;

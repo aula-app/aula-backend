@@ -4,6 +4,8 @@ namespace Tests\Concerns;
 
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Artisan;
+use Laravel\Passport\Client;
+use Laravel\Passport\ClientRepository;
 
 /**
  * Creates (or finds) the TEST001 tenant once per test class and runs its
@@ -17,6 +19,7 @@ trait CreatesTestTenant
     private const TEST_JWT_KEY = 'phpunit_test_jwt_key_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 
     private static ?Tenant $testTenant = null;
+    private static ?Client $client = null;
 
     protected function ensureTestTenantExists(): void
     {
@@ -38,5 +41,19 @@ trait CreatesTestTenant
         Artisan::call('tenants:migrate', [
             '--tenants' => [self::$testTenant->id],
         ]);
+
+        /** @var ClientRepository::class */
+        $clientRepo = app(ClientRepository::class);
+        self::$client = $clientRepo->createPasswordGrantClient('password_grants_tenant_users_'.self::$testTenant->id, 'aula_users', false);
+        $clientPersonalAccess = $clientRepo->createPersonalAccessGrantClient('password_grants_tenant_users_'.self::$testTenant->id, 'aula_users');
+
+        /* $this->beforeApplicationDestroyed(function () use ($clientPersonalAccess) { */
+        /* $clientPersonalAccess->delete(); */
+        /* self::$client->delete(); */
+        /* self::$client = null; */
+        /*     self::$testTenant->delete(); */
+        /*     self::$testTenant = null; */
+        /* }); */
     }
+
 }

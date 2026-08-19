@@ -19,6 +19,10 @@ info.php
 **/docker-local/
 **/docker-compose.*
 
+# other projects in the repo
+legacy/
+keycloak/
+
 nginx-reverse-proxy.conf
 Dockerfile*
 docker-compose*

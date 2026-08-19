@@ -6,8 +6,6 @@ namespace App\Data\User;
 
 use DateTimeImmutable;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Attributes\MapName;
-use Spatie\LaravelData\Attributes\Validation\Max;
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 

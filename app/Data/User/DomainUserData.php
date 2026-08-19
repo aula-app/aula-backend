@@ -7,9 +7,7 @@ namespace App\Data\User;
 use DateTimeImmutable;
 use App\Data\User\AbstractUserData;
 use App\Enums\UserLevel;
-use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\MapInputName;
-use Spatie\LaravelData\Attributes\MapOutputName;
 
 class DomainUserData extends AbstractUserData
 {

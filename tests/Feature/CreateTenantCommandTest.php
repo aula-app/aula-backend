@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Tests\Feature;
+
 use App\Models\Tenant;
 use App\Services\TenantsService;
 use App\UseCases\CreateTenantUseCase;
@@ -26,7 +28,7 @@ function fakeTenant(array $attrs = []): Tenant
 
 function mockUseCase(Tenant $tenant): CreateTenantUseCase
 {
-    $mock = Mockery::mock(CreateTenantUseCase::class);
+    $mock = \Mockery::mock(CreateTenantUseCase::class);
     $mock->shouldReceive('execute')->once()->andReturn($tenant);
 
     app()->instance(CreateTenantUseCase::class, $mock);
@@ -50,13 +52,18 @@ it('creates tenant non-interactively when all required options are supplied', fu
 });
 
 it('passes adminPassword to the use case', function () {
-    $mock = Mockery::mock(CreateTenantUseCase::class);
+    $mock = \Mockery::mock(CreateTenantUseCase::class);
     $mock->shouldReceive('execute')
         ->once()
         ->withArgs(fn (
-            string $name, string $code,
-            string $a1u, string $a1n, string $a1e,
-            string $a2u, string $a2n, string $a2e,
+            string $name,
+            string $code,
+            string $a1u,
+            string $a1n,
+            string $a1e,
+            string $a2u,
+            string $a2n,
+            string $a2e,
             ?string $pw
         ) => $pw === 'secret123')
         ->andReturn(fakeTenant(['admin1_init_pass_url' => null, 'admin2_init_pass_url' => null]));
@@ -75,7 +82,7 @@ it('passes adminPassword to the use case', function () {
 });
 
 it('auto-generates instance code when --code is omitted in non-interactive mode', function () {
-    $tenantsService = Mockery::mock(TenantsService::class);
+    $tenantsService = \Mockery::mock(TenantsService::class);
     $tenantsService->shouldReceive('generateUniqueInstanceCode')->once()->andReturn('XYZ99');
     app()->instance(TenantsService::class, $tenantsService);
 
@@ -107,7 +114,7 @@ it('skips creation and exits successfully when tenant with same code already exi
     ]);
 
     // Use case must NOT be called
-    $mock = Mockery::mock(CreateTenantUseCase::class);
+    $mock = \Mockery::mock(CreateTenantUseCase::class);
     $mock->shouldNotReceive('execute');
     app()->instance(CreateTenantUseCase::class, $mock);
 
@@ -137,7 +144,7 @@ it('fails when tenant name already exists in non-interactive mode', function () 
         'admin2_name'     => 'Admin Two',
     ]);
 
-    $mock = Mockery::mock(CreateTenantUseCase::class);
+    $mock = \Mockery::mock(CreateTenantUseCase::class);
     $mock->shouldNotReceive('execute');
     app()->instance(CreateTenantUseCase::class, $mock);
 
@@ -152,7 +159,7 @@ it('fails when tenant name already exists in non-interactive mode', function () 
 });
 
 it('fails when both admin usernames are the same', function () {
-    $mock = Mockery::mock(CreateTenantUseCase::class);
+    $mock = \Mockery::mock(CreateTenantUseCase::class);
     $mock->shouldNotReceive('execute');
     app()->instance(CreateTenantUseCase::class, $mock);
 
@@ -167,7 +174,7 @@ it('fails when both admin usernames are the same', function () {
 });
 
 it('fails when instance code format is invalid', function () {
-    $mock = Mockery::mock(CreateTenantUseCase::class);
+    $mock = \Mockery::mock(CreateTenantUseCase::class);
     $mock->shouldNotReceive('execute');
     app()->instance(CreateTenantUseCase::class, $mock);
 
