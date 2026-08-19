@@ -113,6 +113,109 @@ class SsoControllerTest extends TestCase
     }
 
     // =========================================================
+    // native app clients
+    // =========================================================
+
+    /**
+     * The state is the only thing that survives the round trip through
+     * Keycloak, so it is where the app has to say it is the app.
+     */
+    public function test_initiate_records_a_native_client_in_the_state(): void
+    {
+        $state = $this->captureInitiateState('/api/v2/auth/sso/initiate?client=app');
+
+        $this->assertSame('app', $this->decodeState($state)['client'] ?? null);
+    }
+
+    public function test_initiate_leaves_the_state_unmarked_for_the_website(): void
+    {
+        $state = $this->captureInitiateState('/api/v2/auth/sso/initiate');
+
+        $this->assertArrayNotHasKey('client', $this->decodeState($state));
+    }
+
+    public function test_callback_from_the_app_redirects_to_the_deep_link_scheme(): void
+    {
+        Http::fake(['*/broker/*/token' => Http::response(['id_token' => 'idp.token.test'], 200)]);
+
+        $this->mockSocialiteCallback('sub-app-001', 'sso_app@test.example', 'App User', 'appuser');
+
+        $state = $this->buildState(self::INSTANCE_CODE, 'app');
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringStartsWith(
+            config('app.mobile_url_scheme').'://oauth-login/',
+            (string) $response->headers->get('Location'),
+        );
+    }
+
+    /**
+     * A failed login has to come home too. Leaving errors on the website would
+     * strand the user in the browser tab the app opened for the login.
+     */
+    public function test_callback_error_from_the_app_redirects_to_the_deep_link_scheme(): void
+    {
+        $state = $this->buildState(self::INSTANCE_CODE, 'app');
+
+        $response = $this->get("/api/v2/auth/sso/callback?error=access_denied&state={$state}");
+
+        $response->assertRedirect();
+        $location = (string) $response->headers->get('Location');
+
+        $this->assertStringStartsWith(config('app.mobile_url_scheme').'://login?', $location);
+        $this->assertStringContainsString('sso_error=login_cancelled', $location);
+    }
+
+    /**
+     * A state we cannot verify buys no redirect target. Honouring an unsigned
+     * `client` claim would let anyone aim the callback at a scheme of their
+     * choosing, so an unverifiable state falls back to the website.
+     */
+    public function test_callback_ignores_a_native_client_claim_in_an_unsigned_state(): void
+    {
+        $payload = base64_encode(json_encode([
+            'instance_code' => self::INSTANCE_CODE,
+            'client' => 'app',
+            'nonce' => 'testnonce',
+        ]));
+
+        $response = $this->get("/api/v2/auth/sso/callback?state={$payload}.badsignature");
+
+        $response->assertRedirect();
+        $location = (string) $response->headers->get('Location');
+
+        $this->assertStringStartsWith(rtrim((string) config('app.frontend_url'), '/'), $location);
+        $this->assertStringContainsString('sso_error=invalid_state', $location);
+    }
+
+    /**
+     * Run initiate against a mocked Socialite driver and give back the state it
+     * put into the authorize request.
+     */
+    private function captureInitiateState(string $uri): string
+    {
+        $captured = [];
+
+        $provider = \Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('with')->andReturnUsing(function (array $params) use (&$captured, $provider) {
+            $captured = $params;
+
+            return $provider;
+        });
+        $provider->shouldReceive('redirect')->andReturn(new RedirectResponse('https://sso.example'));
+
+        Socialite::shouldReceive('driver')->with('keycloak')->andReturn($provider);
+
+        $this->getJson($uri, ['aula-instance-code' => self::INSTANCE_CODE])->assertOk();
+
+        $this->assertArrayHasKey('state', $captured);
+
+        return (string) $captured['state'];
+    }
+
+    // =========================================================
     // callback — state validation
     // =========================================================
 
@@ -829,15 +932,28 @@ class SsoControllerTest extends TestCase
         return $user;
     }
 
-    private function buildState(string $instanceCode): string
+    private function buildState(string $instanceCode, ?string $client = null): string
     {
-        $payload = base64_encode(json_encode([
+        $payload = base64_encode(json_encode(array_filter([
             'instance_code' => $instanceCode,
+            'client' => $client,
             'nonce' => 'testnonce',
-        ]));
+        ], fn ($value): bool => $value !== null)));
         $signature = hash_hmac('sha256', $payload, config('app.key'));
 
         return $payload.'.'.$signature;
+    }
+
+    /**
+     * The payload half of a state, without checking its signature.
+     *
+     * @return array<string, mixed>
+     */
+    private function decodeState(string $state): array
+    {
+        [$payload] = explode('.', $state, 2);
+
+        return (array) json_decode((string) base64_decode($payload, true), true);
     }
 
     private function mockSocialiteCallback(string $sub, string $email, string $name, string $nickname, ?string $idToken = null): void
