@@ -44,6 +44,9 @@ return [
             'driver' => 'passport', // 'session', // @TODO: nikola - use 'passport' driver
             'provider' => 'aula_users',
         ],
+        'apiv2' => [
+            'driver' => 'legacy_jwt',
+        ],
     ],
 
     /*
