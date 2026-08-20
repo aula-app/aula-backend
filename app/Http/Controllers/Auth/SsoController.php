@@ -87,6 +87,24 @@ class SsoController extends Controller
      * Native clients pass `?client=app` so the callback knows to end on the
      * app's deep-link scheme rather than on the website.
      */
+    /**
+     * Whether this school offers SSO at all.
+     *
+     * Unauthenticated because the login page is what asks: offering a button
+     * that initiate() will only refuse is worse than not offering one. Says
+     * nothing a failed login attempt would not already reveal.
+     */
+    public function status(): JsonResponse
+    {
+        /** @var Tenant $tenant */
+        $tenant = tenant();
+
+        return response()->json([
+            'enabled' => (bool) $tenant->sso_enabled,
+            'provider' => $tenant->sso_provider,
+        ]);
+    }
+
     public function initiate(Request $request): JsonResponse
     {
         /** @var Tenant $tenant */

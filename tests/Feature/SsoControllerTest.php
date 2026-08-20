@@ -116,6 +116,25 @@ class SsoControllerTest extends TestCase
     // sso_enabled
     // =========================================================
 
+    public function test_status_reports_sso_enabled(): void
+    {
+        self::$testTenant->update(['sso_enabled' => true, 'sso_provider' => 'mock-iserv']);
+
+        $this->getJson('/api/v2/auth/sso/status', ['aula-instance-code' => self::INSTANCE_CODE])
+            ->assertOk()
+            ->assertJsonPath('enabled', true)
+            ->assertJsonPath('provider', 'mock-iserv');
+    }
+
+    public function test_status_reports_sso_disabled(): void
+    {
+        self::$testTenant->update(['sso_enabled' => false]);
+
+        $this->getJson('/api/v2/auth/sso/status', ['aula-instance-code' => self::INSTANCE_CODE])
+            ->assertOk()
+            ->assertJsonPath('enabled', false);
+    }
+
     public function test_initiate_refuses_a_tenant_with_sso_disabled(): void
     {
         self::$testTenant->update(['sso_enabled' => false]);
