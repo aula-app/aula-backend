@@ -78,6 +78,24 @@ class SsoController extends Controller
     // =========================================================
 
     /**
+     * Whether this school offers SSO at all.
+     *
+     * Unauthenticated because the login page is what asks: offering a button
+     * that initiate() will only refuse is worse than not offering one. Says
+     * nothing a failed login attempt would not already reveal.
+     */
+    public function status(): JsonResponse
+    {
+        /** @var Tenant $tenant */
+        $tenant = tenant();
+
+        return response()->json([
+            'enabled' => (bool) $tenant->sso_enabled,
+            'provider' => $tenant->sso_provider,
+        ]);
+    }
+
+    /**
      * Initiate SSO login flow.
      *
      * Returns a JSON response with the Keycloak redirect URL.
