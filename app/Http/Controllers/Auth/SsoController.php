@@ -78,6 +78,24 @@ class SsoController extends Controller
     // =========================================================
 
     /**
+     * Whether this school offers SSO at all.
+     *
+     * Unauthenticated because the login page is what asks: offering a button
+     * that initiate() will only refuse is worse than not offering one. Says
+     * nothing a failed login attempt would not already reveal.
+     */
+    public function status(): JsonResponse
+    {
+        /** @var Tenant $tenant */
+        $tenant = tenant();
+
+        return response()->json([
+            'enabled' => (bool) $tenant->sso_enabled,
+            'provider' => $tenant->sso_provider,
+        ]);
+    }
+
+    /**
      * Initiate SSO login flow.
      *
      * Returns a JSON response with the Keycloak redirect URL.
@@ -91,7 +109,17 @@ class SsoController extends Controller
     {
         /** @var Tenant $tenant */
         $tenant = tenant();
+
+        if (! $tenant->sso_enabled) {
+            return response()->json(['error' => 'sso_disabled'], 403);
+        }
+
         $idpHint = $tenant->sso_provider ?? null;
+
+        Log::info('SSO: starting a login', [
+            'tenant' => $tenant->instance_code,
+            'idp_hint' => $idpHint,
+        ]);
 
         $state = $this->buildSignedState(
             $tenant->instance_code,
@@ -344,6 +372,19 @@ class SsoController extends Controller
             if ($tenant === null) {
                 return $this->frontendError('unknown_tenant');
             }
+
+            // Checked here as well as in initiate(), because a state signed
+            // while SSO was still on stays valid, and nothing stops a caller
+            // reaching the callback without going through initiate() at all.
+            // The IdP-initiated branch runs the same check once it has resolved
+            // its tenant from the school claim.
+            if (! $tenant->sso_enabled) {
+                Log::warning('SSO: login attempted on a tenant with SSO disabled', [
+                    'tenant' => $instanceCode,
+                ]);
+
+                return $this->frontendError('sso_disabled');
+            }
         }
 
         /** @var AbstractProvider $driver */
@@ -445,11 +486,28 @@ class SsoController extends Controller
 
         $user = $this->ssoUserService->findBySub($sub);
 
+        // A login that goes on to bootstrap is the one that decides which school
+        // this tenant is, so there is nothing to hold it against. Anyone already
+        // known here is not that login, whatever the bootstrap does next.
+        $provesSchool = $user !== null;
+
         if ($user === null) {
             // Nobody has ever signed in here, so this login owns the school: it
             // takes over the admin seeded at tenant creation and pulls in the
             // directory roster before anyone else arrives.
             $user = $this->bootstrapIdpTenant($laravelSocialiteUser, $callbackTenant, $instanceCode);
+
+            // Declined, so it established nothing and has to prove it belongs
+            // like everybody else.
+            $provesSchool = $user === null;
+        }
+
+        if ($provesSchool) {
+            $foreign = $this->rejectForeignSchool($laravelSocialiteUser, $callbackTenant, $instanceCode);
+
+            if ($foreign !== null) {
+                return $foreign;
+            }
         }
 
         if ($user === null && $callbackTenant->isMigratingToIdp()) {
@@ -1014,6 +1072,87 @@ class SsoController extends Controller
     }
 
     /**
+     * Refuse a login that comes from a different school than this tenant is.
+     *
+     * Only the very first login gets to say which school a tenant belongs to;
+     * after that the binding is a fact, and a login from anywhere else is
+     * someone signing into a school that is not theirs. Nothing checked this,
+     * so any Keycloak-verified identity was provisioned an account on any
+     * instance code it happened to be pointed at.
+     *
+     * A tenant with no school at all is refused too. It would be the first
+     * login that establishes one, and by here that has already declined.
+     *
+     * Deliberately not written in terms of learnSchoolId(): that binds the
+     * school it reads when the tenant has none, which is right for the login
+     * that owns the tenant and is exactly the hole this closes for every other
+     * one. The part they can share is reading the claim.
+     *
+     * @return RedirectResponse|null null when the login may proceed
+     */
+    protected function rejectForeignSchool(LaravelSocialiteUser $socialiteUser, Tenant $tenant, string $instanceCode): ?RedirectResponse
+    {
+        // Tenants that sync from no directory have no school to belong to.
+        if (! $this->usesIdpDirectory($tenant)) {
+            return null;
+        }
+
+        if ($tenant->idp_school_id === null) {
+            Log::warning('SSO: refusing a login to a tenant with no school of its own', [
+                'tenant' => $instanceCode,
+                'keycloak_sub' => $socialiteUser->getId(),
+            ]);
+
+            return $this->frontendError('school_not_provisioned');
+        }
+
+        $claims = $this->idpClaims($socialiteUser, $tenant);
+        $schoolId = $this->claimedSchoolId($tenant, $claims, $instanceCode);
+
+        if ($schoolId === null) {
+            return $this->frontendError('idp_school_missing');
+        }
+
+        if ($schoolId !== $tenant->idp_school_id) {
+            Log::warning('SSO: refusing a login from a different school', [
+                'tenant' => $instanceCode,
+                'tenant_school_id' => $tenant->idp_school_id,
+                'login_school_id' => $schoolId,
+                'keycloak_sub' => $socialiteUser->getId(),
+            ]);
+
+            return $this->frontendError('school_mismatch');
+        }
+
+        return null;
+    }
+
+    /**
+     * The school a login says it comes from, or null when it does not say.
+     *
+     * Shared by the login that establishes a tenant's school and by every one
+     * that is checked against it, so the claim is read and reported in one
+     * place. Says nothing about what the caller then does with it.
+     *
+     * @param  array<string, mixed>|null  $claims
+     */
+    protected function claimedSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
+    {
+        $schoolId = $this->idpClaim($claims, $tenant, 'school');
+
+        if (! is_string($schoolId) || $schoolId === '') {
+            Log::warning('SSO: login carried no school claim', [
+                'tenant' => $instanceCode,
+                'claim_keys' => is_array($claims) ? array_keys($claims) : null,
+            ]);
+
+            return null;
+        }
+
+        return $schoolId;
+    }
+
+    /**
      * Learn which school this tenant is, from the login itself.
      *
      * The upstream id_token carries a `school` claim, so nobody has to look a
@@ -1030,14 +1169,9 @@ class SsoController extends Controller
      */
     protected function learnSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
     {
-        $schoolId = $this->idpClaim($claims, $tenant, 'school');
+        $schoolId = $this->claimedSchoolId($tenant, $claims, $instanceCode);
 
-        if (! is_string($schoolId) || $schoolId === '') {
-            Log::warning('SSO: first SSO login carried no school claim, nothing to import', [
-                'tenant' => $instanceCode,
-                'claim_keys' => is_array($claims) ? array_keys($claims) : null,
-            ]);
-
+        if ($schoolId === null) {
             return 'idp_school_missing';
         }
 

@@ -113,6 +113,63 @@ class SsoControllerTest extends TestCase
     }
 
     // =========================================================
+    // sso_enabled
+    // =========================================================
+
+    public function test_status_reports_sso_enabled(): void
+    {
+        self::$testTenant->update(['sso_enabled' => true, 'sso_provider' => 'mock-iserv']);
+
+        $this->getJson('/api/v2/auth/sso/status', ['aula-instance-code' => self::INSTANCE_CODE])
+            ->assertOk()
+            ->assertJsonPath('enabled', true)
+            ->assertJsonPath('provider', 'mock-iserv');
+    }
+
+    public function test_status_reports_sso_disabled(): void
+    {
+        self::$testTenant->update(['sso_enabled' => false]);
+
+        $this->getJson('/api/v2/auth/sso/status', ['aula-instance-code' => self::INSTANCE_CODE])
+            ->assertOk()
+            ->assertJsonPath('enabled', false);
+    }
+
+    public function test_initiate_refuses_a_tenant_with_sso_disabled(): void
+    {
+        self::$testTenant->update(['sso_enabled' => false]);
+
+        $this->getJson('/api/v2/auth/sso/initiate', ['aula-instance-code' => self::INSTANCE_CODE])
+            ->assertForbidden()
+            ->assertJsonPath('error', 'sso_disabled');
+    }
+
+    /**
+     * A state signed while SSO was still on outlives the flag, and nothing
+     * forces a caller through initiate() first, so the callback has to refuse
+     * on its own rather than provisioning an account.
+     */
+    public function test_callback_refuses_a_tenant_with_sso_disabled(): void
+    {
+        self::$testTenant->update(['sso_enabled' => false]);
+
+        $this->mockSocialiteCallback('sub-ssooff-001', 'sso_ssooff@test.example', 'Disabled Tenant', 'ssooff');
+
+        $state = $this->buildState(self::INSTANCE_CODE);
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('sso_error=sso_disabled', (string) $response->headers->get('Location'));
+
+        self::$testTenant->run(function () {
+            $this->assertNull(
+                LegacyUser::where('sso_sub', 'sub-ssooff-001')->first(),
+                'a tenant with SSO disabled must not gain an account from an SSO login',
+            );
+        });
+    }
+
+    // =========================================================
     // native app clients
     // =========================================================
 
