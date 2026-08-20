@@ -78,16 +78,6 @@ class SsoController extends Controller
     // =========================================================
 
     /**
-     * Initiate SSO login flow.
-     *
-     * Returns a JSON response with the Keycloak redirect URL.
-     * The frontend navigates to it; the instance_code is carried in a signed
-     * state parameter so the callback can identify the tenant without the header.
-     *
-     * Native clients pass `?client=app` so the callback knows to end on the
-     * app's deep-link scheme rather than on the website.
-     */
-    /**
      * Whether this school offers SSO at all.
      *
      * Unauthenticated because the login page is what asks: offering a button
@@ -105,6 +95,16 @@ class SsoController extends Controller
         ]);
     }
 
+    /**
+     * Initiate SSO login flow.
+     *
+     * Returns a JSON response with the Keycloak redirect URL.
+     * The frontend navigates to it; the instance_code is carried in a signed
+     * state parameter so the callback can identify the tenant without the header.
+     *
+     * Native clients pass `?client=app` so the callback knows to end on the
+     * app's deep-link scheme rather than on the website.
+     */
     public function initiate(Request $request): JsonResponse
     {
         /** @var Tenant $tenant */
