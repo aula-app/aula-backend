@@ -91,6 +91,11 @@ class SsoController extends Controller
     {
         /** @var Tenant $tenant */
         $tenant = tenant();
+
+        if (! $tenant->sso_enabled) {
+            return response()->json(['error' => 'sso_disabled'], 403);
+        }
+
         $idpHint = $tenant->sso_provider ?? null;
 
         $state = $this->buildSignedState(
@@ -343,6 +348,19 @@ class SsoController extends Controller
 
             if ($tenant === null) {
                 return $this->frontendError('unknown_tenant');
+            }
+
+            // Checked here as well as in initiate(), because a state signed
+            // while SSO was still on stays valid, and nothing stops a caller
+            // reaching the callback without going through initiate() at all.
+            // The IdP-initiated branch runs the same check once it has resolved
+            // its tenant from the school claim.
+            if (! $tenant->sso_enabled) {
+                Log::warning('SSO: login attempted on a tenant with SSO disabled', [
+                    'tenant' => $instanceCode,
+                ]);
+
+                return $this->frontendError('sso_disabled');
             }
         }
 
