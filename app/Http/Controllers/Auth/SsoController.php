@@ -462,12 +462,25 @@ class SsoController extends Controller
         $email = $laravelSocialiteUser->getEmail();
 
         $user = $this->ssoUserService->findBySub($sub);
+        $bootstrapped = null;
 
         if ($user === null) {
             // Nobody has ever signed in here, so this login owns the school: it
             // takes over the admin seeded at tenant creation and pulls in the
             // directory roster before anyone else arrives.
-            $user = $this->bootstrapIdpTenant($laravelSocialiteUser, $callbackTenant, $instanceCode);
+            $bootstrapped = $this->bootstrapIdpTenant($laravelSocialiteUser, $callbackTenant, $instanceCode);
+            $user = $bootstrapped;
+        }
+
+        // A login that just bootstrapped is the one that decided which school
+        // this tenant is, so there is nothing to hold it against. Every other
+        // login has to prove it belongs to the school already on the tenant.
+        if ($bootstrapped === null) {
+            $foreign = $this->rejectForeignSchool($laravelSocialiteUser, $callbackTenant, $instanceCode);
+
+            if ($foreign !== null) {
+                return $foreign;
+            }
         }
 
         if ($user === null && $callbackTenant->isMigratingToIdp()) {
@@ -1046,6 +1059,61 @@ class SsoController extends Controller
      * @param  array<string, mixed>|null  $claims
      * @return string|null an error code, or null when the school is established
      */
+    /**
+     * Refuse a login that comes from a different school than this tenant is.
+     *
+     * Only the very first login gets to say which school a tenant belongs to;
+     * after that the binding is a fact, and a login from anywhere else is
+     * someone signing into a school that is not theirs. Nothing checked this,
+     * so any Keycloak-verified identity was provisioned an account on any
+     * instance code it happened to be pointed at.
+     *
+     * A tenant with no school at all is refused too. It would be the first
+     * login that establishes one, and by here that has already declined.
+     *
+     * @return RedirectResponse|null null when the login may proceed
+     */
+    protected function rejectForeignSchool(LaravelSocialiteUser $socialiteUser, Tenant $tenant, string $instanceCode): ?RedirectResponse
+    {
+        // Tenants that sync from no directory have no school to belong to.
+        if (! $this->usesIdpDirectory($tenant)) {
+            return null;
+        }
+
+        if ($tenant->idp_school_id === null) {
+            Log::warning('SSO: refusing a login to a tenant with no school of its own', [
+                'tenant' => $instanceCode,
+                'keycloak_sub' => $socialiteUser->getId(),
+            ]);
+
+            return $this->frontendError('school_not_provisioned');
+        }
+
+        $schoolId = $this->idpClaim($this->idpClaims($socialiteUser, $tenant), $tenant, 'school');
+
+        if ($schoolId === null) {
+            Log::warning('SSO: refusing a login that carries no school claim', [
+                'tenant' => $instanceCode,
+                'keycloak_sub' => $socialiteUser->getId(),
+            ]);
+
+            return $this->frontendError('idp_school_missing');
+        }
+
+        if ($schoolId !== $tenant->idp_school_id) {
+            Log::warning('SSO: refusing a login from a different school', [
+                'tenant' => $instanceCode,
+                'tenant_school_id' => $tenant->idp_school_id,
+                'login_school_id' => $schoolId,
+                'keycloak_sub' => $socialiteUser->getId(),
+            ]);
+
+            return $this->frontendError('school_mismatch');
+        }
+
+        return null;
+    }
+
     protected function learnSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
     {
         $schoolId = $this->idpClaim($claims, $tenant, 'school');

@@ -53,6 +53,9 @@ class IdpBootstrapTest extends TestCase
 
     private string $currentKeycloakSub = '';
 
+    /** School the next login's upstream id_token claims to come from. */
+    private string $currentSchool = self::SCHOOL;
+
     private bool $socialiteMocked = false;
 
     protected function setUp(): void
@@ -112,6 +115,78 @@ class IdpBootstrapTest extends TestCase
 
         // Nobody had to look a UUID up: the id_token said which school it was.
         $this->assertSame(self::SCHOOL, self::$testTenant->fresh()->idp_school_id);
+    }
+
+    // =========================================================
+    // school binding
+    // =========================================================
+
+    /**
+     * Only the first login says which school a tenant is. After that, anyone
+     * arriving from a different one is signing into a school that is not
+     * theirs, and used to be handed a brand new account for it.
+     */
+    public function test_refuses_a_login_from_a_different_school(): void
+    {
+        $this->login('kc-sub-principal', 'person-teacher');
+        $this->assertSame(self::SCHOOL, self::$testTenant->fresh()->idp_school_id);
+
+        $this->socialiteMocked = false;
+        $this->login('kc-sub-outsider', 'person-outsider', 'school-somewhere-else');
+
+        self::$testTenant->run(function () {
+            $this->assertNull(
+                LegacyUser::where('sso_sub', 'kc-sub-outsider')->first(),
+                'a login from another school must not be provisioned an account',
+            );
+        });
+    }
+
+    /**
+     * Someone signs into the wrong instance code: their school belongs to
+     * another tenant, so this one never learns it and the bootstrap declines.
+     * With no school of its own there is nothing to check anyone against, and
+     * an account here would be an account at a school they have no claim to.
+     */
+    public function test_refuses_a_login_when_the_tenant_has_no_school_of_its_own(): void
+    {
+        $rival = Tenant::create([
+            'name' => 'Rival Eduplaces School',
+            'instance_code' => 'RIVAL3',
+            'api_base_url' => 'https://rival3.example',
+            'admin1_username' => 'rival3_admin',
+            'admin1_email' => 'rival3@example.test',
+            'idp_school_id' => self::SCHOOL,
+        ]);
+
+        try {
+            $this->login('kc-sub-nobody', 'person-teacher');
+
+            $this->assertNull(self::$testTenant->fresh()->idp_school_id, 'precondition: the school was not learned');
+
+            self::$testTenant->run(function () {
+                $this->assertNull(LegacyUser::where('sso_sub', 'kc-sub-nobody')->first());
+            });
+        } finally {
+            $rival->delete();
+        }
+    }
+
+    /**
+     * No claim is no proof. The school it would have named is exactly what the
+     * tenant is checked against.
+     */
+    public function test_refuses_a_login_that_carries_no_school_claim(): void
+    {
+        $this->login('kc-sub-principal', 'person-teacher');
+        $this->assertSame(self::SCHOOL, self::$testTenant->fresh()->idp_school_id);
+
+        $this->socialiteMocked = false;
+        $this->login('kc-sub-claimless', 'person-student', null);
+
+        self::$testTenant->run(function () {
+            $this->assertNull(LegacyUser::where('sso_sub', 'kc-sub-claimless')->first());
+        });
     }
 
     public function test_refuses_to_take_a_school_another_tenant_already_holds(): void
@@ -336,8 +411,14 @@ class IdpBootstrapTest extends TestCase
         ])->json();
     }
 
-    private function login(string $keycloakSub, string $eduplacesPersonId): void
+    /**
+     * @param  string|null  $school  school the upstream id_token claims, or null
+     *                               to omit the claim entirely
+     */
+    private function login(string $keycloakSub, string $eduplacesPersonId, ?string $school = self::SCHOOL): void
     {
+        $this->currentSchool = (string) $school;
+
         // One closure covering JWKS, the Keycloak broker and the IDM.
         // Http::fake() merges successive calls rather than replacing them, so
         // layering separate stubs would leave the first login's responses
@@ -441,10 +522,10 @@ class IdpBootstrapTest extends TestCase
     private function upstreamIdToken(string $personId): string
     {
         $header = rtrim(strtr(base64_encode((string) json_encode(['alg' => 'RS256'])), '+/', '-_'), '=');
-        $body = rtrim(strtr(base64_encode((string) json_encode([
+        $body = rtrim(strtr(base64_encode((string) json_encode(array_filter([
             'sub' => $personId,
-            'school' => self::SCHOOL,
-        ])), '+/', '-_'), '=');
+            'school' => $this->currentSchool === '' ? null : $this->currentSchool,
+        ], fn ($value): bool => $value !== null))), '+/', '-_'), '=');
 
         return "{$header}.{$body}.sig";
     }
