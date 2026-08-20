@@ -609,9 +609,10 @@ class SsoController extends Controller
      * chains the logout itself with a static post_logout_redirect_uri, its own
      * broker logout_response endpoint, that the IdP can whitelist.
      *
-     * `?client=app` returns a deep link. Keycloak checks
-     * post_logout_redirect_uri against the client allowlist, so the app scheme
-     * must be listed in `post.logout.redirect.uris`.
+     * `?client=app` returns the deep-link scheme as post_logout_redirect_uri.
+     * Keycloak validates it against the client's `post.logout.redirect.uris`,
+     * so the scheme must be listed there. The null case opens no browser, so a
+     * native client needs nothing extra.
      */
     public function logout(Request $request): JsonResponse
     {
@@ -625,14 +626,11 @@ class SsoController extends Controller
         /** @var LegacyUser|null $user */
         $user = $request->attributes->get('authenticated_user');
 
-        // Same problem the login had: this URL is opened outside the WebView, so
-        // ending it on the website leaves the app's user in a browser. There is
-        // no signed state to carry the client on this path, but there does not
-        // need to be — the app asks for its own logout directly.
+        // Read from the request, not from a signed state: the app calls this
+        // endpoint directly, there is no round trip to survive.
         $this->nativeClient = $this->wantsNativeClient($request);
 
-        // The website keeps landing on the bare frontend URL rather than a
-        // route, which is what Keycloak has whitelisted for it.
+        // Web keeps the bare frontend URL, which is what Keycloak whitelists.
         $redirectUri = $this->nativeClient
             ? $this->clientUrl('login')
             : rtrim((string) config('app.frontend_url', '/'), '/');

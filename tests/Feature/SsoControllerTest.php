@@ -848,15 +848,6 @@ class SsoControllerTest extends TestCase
         $this->assertStringContainsString('id_token_hint=aula-id-token', $logoutUrl);
     }
 
-    /**
-     * The logout URL points at the aula realm and carries app.frontend_url as
-     * post_logout_redirect_uri. Propagating the logout to the upstream IdP is
-     * Keycloak's job, configured as the identity provider's "Logout URL".
-     */
-    /**
-     * The logout URL is opened outside the WebView, so ending it on the website
-     * would leave the app's user stranded in a browser.
-     */
     public function test_logout_url_from_the_app_returns_to_the_deep_link_scheme(): void
     {
         self::$testTenant->update(['sso_force_logout' => true]);
@@ -884,6 +875,11 @@ class SsoControllerTest extends TestCase
         );
     }
 
+    /**
+     * The logout URL points at the aula realm and carries app.frontend_url as
+     * post_logout_redirect_uri. Propagating the logout to the upstream IdP is
+     * Keycloak's job, configured as the identity provider's "Logout URL".
+     */
     public function test_logout_url_targets_keycloak_and_redirects_to_the_frontend(): void
     {
         self::$testTenant->update(['sso_force_logout' => true]);
