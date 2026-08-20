@@ -116,6 +116,11 @@ class SsoController extends Controller
 
         $idpHint = $tenant->sso_provider ?? null;
 
+        Log::info('SSO: starting a login', [
+            'tenant' => $tenant->instance_code,
+            'idp_hint' => $idpHint,
+        ]);
+
         $state = $this->buildSignedState(
             $tenant->instance_code,
             nativeApp: $this->wantsNativeClient($request),
@@ -480,20 +485,24 @@ class SsoController extends Controller
         $email = $laravelSocialiteUser->getEmail();
 
         $user = $this->ssoUserService->findBySub($sub);
-        $bootstrapped = null;
+
+        // A login that goes on to bootstrap is the one that decides which school
+        // this tenant is, so there is nothing to hold it against. Anyone already
+        // known here is not that login, whatever the bootstrap does next.
+        $provesSchool = $user !== null;
 
         if ($user === null) {
             // Nobody has ever signed in here, so this login owns the school: it
             // takes over the admin seeded at tenant creation and pulls in the
             // directory roster before anyone else arrives.
-            $bootstrapped = $this->bootstrapIdpTenant($laravelSocialiteUser, $callbackTenant, $instanceCode);
-            $user = $bootstrapped;
+            $user = $this->bootstrapIdpTenant($laravelSocialiteUser, $callbackTenant, $instanceCode);
+
+            // Declined, so it established nothing and has to prove it belongs
+            // like everybody else.
+            $provesSchool = $user === null;
         }
 
-        // A login that just bootstrapped is the one that decided which school
-        // this tenant is, so there is nothing to hold it against. Every other
-        // login has to prove it belongs to the school already on the tenant.
-        if ($bootstrapped === null) {
+        if ($provesSchool) {
             $foreign = $this->rejectForeignSchool($laravelSocialiteUser, $callbackTenant, $instanceCode);
 
             if ($foreign !== null) {
@@ -1063,21 +1072,6 @@ class SsoController extends Controller
     }
 
     /**
-     * Learn which school this tenant is, from the login itself.
-     *
-     * The upstream id_token carries a `school` claim, so nobody has to look a
-     * UUID up and configure it by hand: the first person through the door tells
-     * us which school they came from, and that is what gets imported.
-     *
-     * The two ways this fails look identical from the outside and are not: a
-     * login with no school claim at all is a configuration problem, while a
-     * school another tenant already holds is usually the wrong instance code.
-     * Reporting both as "missing" sends the operator looking in the wrong place.
-     *
-     * @param  array<string, mixed>|null  $claims
-     * @return string|null an error code, or null when the school is established
-     */
-    /**
      * Refuse a login that comes from a different school than this tenant is.
      *
      * Only the very first login gets to say which school a tenant belongs to;
@@ -1088,6 +1082,11 @@ class SsoController extends Controller
      *
      * A tenant with no school at all is refused too. It would be the first
      * login that establishes one, and by here that has already declined.
+     *
+     * Deliberately not written in terms of learnSchoolId(): that binds the
+     * school it reads when the tenant has none, which is right for the login
+     * that owns the tenant and is exactly the hole this closes for every other
+     * one. The part they can share is reading the claim.
      *
      * @return RedirectResponse|null null when the login may proceed
      */
@@ -1107,14 +1106,10 @@ class SsoController extends Controller
             return $this->frontendError('school_not_provisioned');
         }
 
-        $schoolId = $this->idpClaim($this->idpClaims($socialiteUser, $tenant), $tenant, 'school');
+        $claims = $this->idpClaims($socialiteUser, $tenant);
+        $schoolId = $this->claimedSchoolId($tenant, $claims, $instanceCode);
 
         if ($schoolId === null) {
-            Log::warning('SSO: refusing a login that carries no school claim', [
-                'tenant' => $instanceCode,
-                'keycloak_sub' => $socialiteUser->getId(),
-            ]);
-
             return $this->frontendError('idp_school_missing');
         }
 
@@ -1132,16 +1127,51 @@ class SsoController extends Controller
         return null;
     }
 
-    protected function learnSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
+    /**
+     * The school a login says it comes from, or null when it does not say.
+     *
+     * Shared by the login that establishes a tenant's school and by every one
+     * that is checked against it, so the claim is read and reported in one
+     * place. Says nothing about what the caller then does with it.
+     *
+     * @param  array<string, mixed>|null  $claims
+     */
+    protected function claimedSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
     {
         $schoolId = $this->idpClaim($claims, $tenant, 'school');
 
         if (! is_string($schoolId) || $schoolId === '') {
-            Log::warning('SSO: first SSO login carried no school claim, nothing to import', [
+            Log::warning('SSO: login carried no school claim', [
                 'tenant' => $instanceCode,
                 'claim_keys' => is_array($claims) ? array_keys($claims) : null,
             ]);
 
+            return null;
+        }
+
+        return $schoolId;
+    }
+
+    /**
+     * Learn which school this tenant is, from the login itself.
+     *
+     * The upstream id_token carries a `school` claim, so nobody has to look a
+     * UUID up and configure it by hand: the first person through the door tells
+     * us which school they came from, and that is what gets imported.
+     *
+     * The two ways this fails look identical from the outside and are not: a
+     * login with no school claim at all is a configuration problem, while a
+     * school another tenant already holds is usually the wrong instance code.
+     * Reporting both as "missing" sends the operator looking in the wrong place.
+     *
+     * @param  array<string, mixed>|null  $claims
+     * @return string|null an error code, or null when the school is established
+     */
+    protected function learnSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
+    {
+        $schoolId = $this->claimedSchoolId($tenant, $claims, $instanceCode);
+
+        if ($schoolId === null) {
             return 'idp_school_missing';
         }
 
