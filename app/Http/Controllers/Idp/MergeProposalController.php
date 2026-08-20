@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Idp;
 
 use App\Enums\UserLevel;
-use App\Http\Controllers\Controller;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -14,6 +13,7 @@ use App\Services\Idp\Migration\MergeProposalBuilder;
 use App\Services\Idp\SchoolImport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -29,7 +29,8 @@ class MergeProposalController extends Controller
     public function __construct(
         private readonly MergeProposalBuilder $builder,
         private readonly MergeProposalApplier $applier,
-    ) {}
+    ) {
+    }
 
     /**
      * Build a fresh proposal, discarding any earlier one.

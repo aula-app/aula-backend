@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Idp;
 
+use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\SchoolImport;
 use Illuminate\Http\JsonResponse;
@@ -66,8 +67,26 @@ class ImportStatusController extends Controller
             return ! in_array($status, [SchoolImport::STATUS_PENDING, SchoolImport::STATUS_RUNNING], true);
         }
 
-        // Greenfield: blocked until the import has finished, including before
-        // the first login, when the school is still unknown.
+        // No status means either the first login has not happened yet, which is
+        // worth waiting for, or that it happened and declined to bootstrap.
+        if ($status === null) {
+            return $this->bootstrapAlreadyDeclined();
+        }
+
+        // Greenfield: blocked until the import has finished.
         return false;
+    }
+
+    /**
+     * Whether the first SSO login has happened without starting an import.
+     *
+     * It is the only thing that starts one, and it marks the tenant pending
+     * before dispatching, so anything in flight already has a status. An
+     * `sso_sub` is the same signal bootstrapIdpTenant() guards itself with:
+     * once one exists no login will retry, so nothing is coming.
+     */
+    private function bootstrapAlreadyDeclined(): bool
+    {
+        return LegacyUser::whereNotNull('sso_sub')->exists();
     }
 }

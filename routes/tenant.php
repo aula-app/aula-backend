@@ -18,7 +18,6 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 |
 */
 
-
 // Legacy JWT Authentication routes (public + protected)
 Route::name('auth.')
     ->middleware([
@@ -44,6 +43,10 @@ Route::name('sso.')
         // token, since they have no aula account to authenticate with yet.
         Route::post('/sso/link/decline', [SsoController::class, 'declineAccountClaim'])
             ->name('sso.link_decline');
+
+        // Read before anyone has signed in, so a login page can leave the SSO
+        // button out of a school that does not use it.
+        Route::get('/sso/status', [SsoController::class, 'status'])->name('status');
 
         Route::get('/sso/initiate', [SsoController::class, 'initiate'])->name('initiate');
 

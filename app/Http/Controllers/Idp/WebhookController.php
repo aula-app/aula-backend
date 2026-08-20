@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Idp;
 
-use App\Http\Controllers\Controller;
 use App\Jobs\ProcessIdpWebhookEvent;
 use App\Models\IdpWebhookEvent;
 use App\Services\Idp\IdpProviders;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -33,7 +33,8 @@ class WebhookController extends Controller
 {
     public function __construct(
         private readonly IdpProviders $providers,
-    ) {}
+    ) {
+    }
 
     public function handle(Request $request, string $provider): JsonResponse
     {

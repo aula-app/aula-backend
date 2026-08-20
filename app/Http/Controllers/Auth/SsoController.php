@@ -40,6 +40,22 @@ class SsoController extends Controller
     private const string IDP_INITIATED_EDUPLACES = '__IDP_INITIATED_EDUPLACES__';
 
     /**
+     * Value of `?client=` on the initiate endpoints, and of `client` in the
+     * signed state, that marks a flow as having started inside a native app.
+     */
+    private const string CLIENT_APP = 'app';
+
+    /**
+     * Whether the flow being handled started in a native app, decided from the
+     * signed state at the top of the callback.
+     *
+     * Held on the instance because every exit from the callback runs through
+     * frontendRedirect()/frontendError(), which are called from a dozen places
+     * that have no business threading a client flag through their signatures.
+     */
+    private bool $nativeClient = false;
+
+    /**
      * Upstream IdP id_tokens fetched during this request, keyed by provider
      * alias. Tenant resolution, session issuing and the provider user-id
      * stamping all want the same token, and each read costs a round-trip to
@@ -62,19 +78,53 @@ class SsoController extends Controller
     // =========================================================
 
     /**
+     * Whether this school offers SSO at all.
+     *
+     * Unauthenticated because the login page is what asks: offering a button
+     * that initiate() will only refuse is worse than not offering one. Says
+     * nothing a failed login attempt would not already reveal.
+     */
+    public function status(): JsonResponse
+    {
+        /** @var Tenant $tenant */
+        $tenant = tenant();
+
+        return response()->json([
+            'enabled' => (bool) $tenant->sso_enabled,
+            'provider' => $tenant->sso_provider,
+        ]);
+    }
+
+    /**
      * Initiate SSO login flow.
      *
      * Returns a JSON response with the Keycloak redirect URL.
      * The frontend navigates to it; the instance_code is carried in a signed
      * state parameter so the callback can identify the tenant without the header.
+     *
+     * Native clients pass `?client=app` so the callback knows to end on the
+     * app's deep-link scheme rather than on the website.
      */
     public function initiate(Request $request): JsonResponse
     {
         /** @var Tenant $tenant */
         $tenant = tenant();
+
+        if (! $tenant->sso_enabled) {
+            return response()->json(['error' => 'sso_disabled'], 403);
+        }
+
         $idpHint = $tenant->sso_provider ?? null;
 
-        $state = $this->buildSignedState($tenant->instance_code);
+        Log::info('SSO: starting a login', [
+            'tenant' => $tenant->instance_code,
+            'idp_hint' => $idpHint,
+        ]);
+
+        $state = $this->buildSignedState(
+            $tenant->instance_code,
+            nativeApp: $this->wantsNativeClient($request),
+        );
 
         $params = ['state' => $state];
         if ($idpHint) {
@@ -156,7 +206,11 @@ class SsoController extends Controller
         }
 
         $params = [
-            'state' => $this->buildSignedState($tenant->instance_code, (int) $user->id),
+            'state' => $this->buildSignedState(
+                $tenant->instance_code,
+                (int) $user->id,
+                $this->wantsNativeClient($request),
+            ),
             // Force a fresh authentication: the point is to capture *this*
             // person's provider identity, not to reuse a session that might
             // belong to whoever used the browser last.
@@ -235,7 +289,16 @@ class SsoController extends Controller
         // for this one's identity.
         $this->idpIdTokens = [];
 
-        $instanceCode = $this->verifySignedState($request->query('state', ''));
+        $state = (string) $request->query('state', '');
+
+        // Read before the state is checked for validity below, so that even the
+        // failure paths land back in the app that started the login. An
+        // unverifiable state yields false and sends the user to the website,
+        // which is the safe way to be wrong: a forged state cannot aim the
+        // callback anywhere it could not already reach.
+        $this->nativeClient = $this->stateWantsNativeClient($state);
+
+        $instanceCode = $this->verifySignedState($state);
         if ($instanceCode === null) {
             return $this->frontendError('invalid_state');
         }
@@ -276,7 +339,7 @@ class SsoController extends Controller
         $callbackTenant = tenant();
 
         // An admin connecting their own account: link rather than resolve.
-        $linkUserId = $this->stateLinkUserId((string) $request->query('state', ''));
+        $linkUserId = $this->stateLinkUserId($state);
 
         if ($linkUserId !== null) {
             return $this->completeIdentityConnection($linkUserId, $socialiteUser, $callbackTenant, $instanceCode);
@@ -308,6 +371,19 @@ class SsoController extends Controller
 
             if ($tenant === null) {
                 return $this->frontendError('unknown_tenant');
+            }
+
+            // Checked here as well as in initiate(), because a state signed
+            // while SSO was still on stays valid, and nothing stops a caller
+            // reaching the callback without going through initiate() at all.
+            // The IdP-initiated branch runs the same check once it has resolved
+            // its tenant from the school claim.
+            if (! $tenant->sso_enabled) {
+                Log::warning('SSO: login attempted on a tenant with SSO disabled', [
+                    'tenant' => $instanceCode,
+                ]);
+
+                return $this->frontendError('sso_disabled');
             }
         }
 
@@ -410,11 +486,28 @@ class SsoController extends Controller
 
         $user = $this->ssoUserService->findBySub($sub);
 
+        // A login that goes on to bootstrap is the one that decides which school
+        // this tenant is, so there is nothing to hold it against. Anyone already
+        // known here is not that login, whatever the bootstrap does next.
+        $provesSchool = $user !== null;
+
         if ($user === null) {
             // Nobody has ever signed in here, so this login owns the school: it
             // takes over the admin seeded at tenant creation and pulls in the
             // directory roster before anyone else arrives.
             $user = $this->bootstrapIdpTenant($laravelSocialiteUser, $callbackTenant, $instanceCode);
+
+            // Declined, so it established nothing and has to prove it belongs
+            // like everybody else.
+            $provesSchool = $user === null;
+        }
+
+        if ($provesSchool) {
+            $foreign = $this->rejectForeignSchool($laravelSocialiteUser, $callbackTenant, $instanceCode);
+
+            if ($foreign !== null) {
+                return $foreign;
+            }
         }
 
         if ($user === null && $callbackTenant->isMigratingToIdp()) {
@@ -601,12 +694,17 @@ class SsoController extends Controller
      *                                here because the payload is HMAC-signed by
      *                                us, and /sso/link re-checks it against the
      *                                bearer token anyway.
+     * @param  bool  $nativeApp  when true, the callback ends on the app's
+     *                           deep-link scheme instead of on the website. The
+     *                           state is the only thing that survives the round
+     *                           trip through Keycloak, so it has to carry this.
      */
-    protected function buildSignedState(string $instanceCode, ?int $linkUserId = null): string
+    protected function buildSignedState(string $instanceCode, ?int $linkUserId = null, bool $nativeApp = false): string
     {
         $payload = base64_encode(json_encode(array_filter([
             'instance_code' => $instanceCode,
             'link_user_id' => $linkUserId,
+            'client' => $nativeApp ? self::CLIENT_APP : null,
             'nonce' => Str::random(16),
         ], fn ($value): bool => $value !== null)));
 
@@ -620,23 +718,9 @@ class SsoController extends Controller
      */
     protected function verifySignedState(string $state): ?string
     {
-        $parts = explode('.', $state, 2);
+        $code = $this->decodeSignedState($state)['instance_code'] ?? null;
 
-        if (count($parts) !== 2) {
-            return null;
-        }
-
-        [$payload, $signature] = $parts;
-
-        $expected = hash_hmac('sha256', $payload, $this->stateSecret());
-
-        if (! hash_equals($expected, $signature)) {
-            return null;
-        }
-
-        $data = json_decode(base64_decode($payload), true);
-
-        return $data['instance_code'] ?? null;
+        return is_string($code) ? $code : null;
     }
 
     /**
@@ -644,22 +728,51 @@ class SsoController extends Controller
      */
     protected function stateLinkUserId(string $state): ?int
     {
+        $id = $this->decodeSignedState($state)['link_user_id'] ?? null;
+
+        return is_int($id) || (is_string($id) && ctype_digit($id)) ? (int) $id : null;
+    }
+
+    /**
+     * Whether the login this state belongs to was started inside a native app.
+     */
+    protected function stateWantsNativeClient(string $state): bool
+    {
+        return ($this->decodeSignedState($state)['client'] ?? null) === self::CLIENT_APP;
+    }
+
+    /**
+     * Whether a caller of one of the initiate endpoints is a native app.
+     */
+    protected function wantsNativeClient(Request $request): bool
+    {
+        return $request->query('client') === self::CLIENT_APP;
+    }
+
+    /**
+     * Decode a state, or an empty array when it is missing, malformed or not
+     * signed by us. Callers treat an absent key and a rejected signature the
+     * same way, so nothing downstream can act on an unverified payload.
+     *
+     * @return array<string, mixed>
+     */
+    private function decodeSignedState(string $state): array
+    {
         $parts = explode('.', $state, 2);
 
         if (count($parts) !== 2) {
-            return null;
+            return [];
         }
 
         [$payload, $signature] = $parts;
 
         if (! hash_equals(hash_hmac('sha256', $payload, $this->stateSecret()), $signature)) {
-            return null;
+            return [];
         }
 
-        $data = json_decode(base64_decode($payload), true);
-        $id = is_array($data) ? ($data['link_user_id'] ?? null) : null;
+        $data = json_decode((string) base64_decode($payload, true), true);
 
-        return is_int($id) || (is_string($id) && ctype_digit($id)) ? (int) $id : null;
+        return is_array($data) ? $data : [];
     }
 
     /**
@@ -854,9 +967,7 @@ class SsoController extends Controller
      */
     protected function frontendRedirectToSettings(string $linkToken, string $instanceCode): RedirectResponse
     {
-        $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
-
-        return redirect("{$frontendUrl}/settings/idp-sync?".http_build_query([
+        return redirect()->away($this->clientUrl('settings/idp-sync', [
             'sso_link' => $linkToken,
             'code' => $instanceCode,
         ]));
@@ -959,6 +1070,87 @@ class SsoController extends Controller
     }
 
     /**
+     * Refuse a login that comes from a different school than this tenant is.
+     *
+     * Only the very first login gets to say which school a tenant belongs to;
+     * after that the binding is a fact, and a login from anywhere else is
+     * someone signing into a school that is not theirs. Nothing checked this,
+     * so any Keycloak-verified identity was provisioned an account on any
+     * instance code it happened to be pointed at.
+     *
+     * A tenant with no school at all is refused too. It would be the first
+     * login that establishes one, and by here that has already declined.
+     *
+     * Deliberately not written in terms of learnSchoolId(): that binds the
+     * school it reads when the tenant has none, which is right for the login
+     * that owns the tenant and is exactly the hole this closes for every other
+     * one. The part they can share is reading the claim.
+     *
+     * @return RedirectResponse|null null when the login may proceed
+     */
+    protected function rejectForeignSchool(LaravelSocialiteUser $socialiteUser, Tenant $tenant, string $instanceCode): ?RedirectResponse
+    {
+        // Tenants that sync from no directory have no school to belong to.
+        if (! $this->usesIdpDirectory($tenant)) {
+            return null;
+        }
+
+        if ($tenant->idp_school_id === null) {
+            Log::warning('SSO: refusing a login to a tenant with no school of its own', [
+                'tenant' => $instanceCode,
+                'keycloak_sub' => $socialiteUser->getId(),
+            ]);
+
+            return $this->frontendError('school_not_provisioned');
+        }
+
+        $claims = $this->idpClaims($socialiteUser, $tenant);
+        $schoolId = $this->claimedSchoolId($tenant, $claims, $instanceCode);
+
+        if ($schoolId === null) {
+            return $this->frontendError('idp_school_missing');
+        }
+
+        if ($schoolId !== $tenant->idp_school_id) {
+            Log::warning('SSO: refusing a login from a different school', [
+                'tenant' => $instanceCode,
+                'tenant_school_id' => $tenant->idp_school_id,
+                'login_school_id' => $schoolId,
+                'keycloak_sub' => $socialiteUser->getId(),
+            ]);
+
+            return $this->frontendError('school_mismatch');
+        }
+
+        return null;
+    }
+
+    /**
+     * The school a login says it comes from, or null when it does not say.
+     *
+     * Shared by the login that establishes a tenant's school and by every one
+     * that is checked against it, so the claim is read and reported in one
+     * place. Says nothing about what the caller then does with it.
+     *
+     * @param  array<string, mixed>|null  $claims
+     */
+    protected function claimedSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
+    {
+        $schoolId = $this->idpClaim($claims, $tenant, 'school');
+
+        if (! is_string($schoolId) || $schoolId === '') {
+            Log::warning('SSO: login carried no school claim', [
+                'tenant' => $instanceCode,
+                'claim_keys' => is_array($claims) ? array_keys($claims) : null,
+            ]);
+
+            return null;
+        }
+
+        return $schoolId;
+    }
+
+    /**
      * Learn which school this tenant is, from the login itself.
      *
      * The upstream id_token carries a `school` claim, so nobody has to look a
@@ -975,14 +1167,9 @@ class SsoController extends Controller
      */
     protected function learnSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
     {
-        $schoolId = $this->idpClaim($claims, $tenant, 'school');
+        $schoolId = $this->claimedSchoolId($tenant, $claims, $instanceCode);
 
-        if (! is_string($schoolId) || $schoolId === '') {
-            Log::warning('SSO: first SSO login carried no school claim, nothing to import', [
-                'tenant' => $instanceCode,
-                'claim_keys' => is_array($claims) ? array_keys($claims) : null,
-            ]);
-
+        if ($schoolId === null) {
             return 'idp_school_missing';
         }
 
@@ -1419,24 +1606,40 @@ class SsoController extends Controller
 
     protected function frontendRedirect(string $token, ?string $instanceCode = null): RedirectResponse
     {
-        $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
-        $url = "{$frontendUrl}/oauth-login/{$token}";
-        if (! empty($instanceCode)) {
-            // Carry the resolved tenant back to the frontend so the OAuth
-            // landing page can populate localStorage for IdP-initiated
-            // launches that started without any instance context.
-            $url .= '?'.http_build_query(['code' => $instanceCode]);
-        }
+        // Carry the resolved tenant back to the frontend so the OAuth landing
+        // page can populate localStorage for IdP-initiated launches that
+        // started without any instance context.
+        $query = empty($instanceCode) ? [] : ['code' => $instanceCode];
 
-        return redirect($url);
+        return redirect()->away($this->clientUrl("oauth-login/{$token}", $query));
     }
 
     protected function frontendError(string $code, array $extra = []): RedirectResponse
     {
-        $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
-        $query = http_build_query(['sso_error' => $code] + $extra);
+        return redirect()->away($this->clientUrl('login', ['sso_error' => $code] + $extra));
+    }
 
-        return redirect("{$frontendUrl}/login?{$query}");
+    /**
+     * Where a finished callback sends the browser.
+     *
+     * The website and the native apps are the same frontend reached two ways,
+     * so they share every route; only the origin differs. Building both from
+     * one place keeps a new exit from the callback landing in the app as well.
+     *
+     * @param  array<string, mixed>  $query
+     */
+    protected function clientUrl(string $path, array $query = []): string
+    {
+        $base = $this->nativeClient
+            // A custom scheme has no host, so the first path segment becomes
+            // one: `de.aula.neu://oauth-login/<jwt>`. The app matches on the
+            // scheme alone and reads the rest as a route.
+            ? rtrim((string) config('app.mobile_url_scheme'), ':/').'://'
+            : rtrim((string) config('app.frontend_url', '/'), '/').'/';
+
+        $url = $base.ltrim($path, '/');
+
+        return $query === [] ? $url : $url.'?'.http_build_query($query);
     }
 
     /**
