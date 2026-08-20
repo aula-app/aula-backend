@@ -608,6 +608,10 @@ class SsoController extends Controller
      * "Logout URL" is configured as the IdP's end_session_endpoint, so Keycloak
      * chains the logout itself with a static post_logout_redirect_uri, its own
      * broker logout_response endpoint, that the IdP can whitelist.
+     *
+     * `?client=app` returns a deep link. Keycloak checks
+     * post_logout_redirect_uri against the client allowlist, so the app scheme
+     * must be listed in `post.logout.redirect.uris`.
      */
     public function logout(Request $request): JsonResponse
     {
@@ -621,9 +625,19 @@ class SsoController extends Controller
         /** @var LegacyUser|null $user */
         $user = $request->attributes->get('authenticated_user');
 
-        $frontendUrl = rtrim(config('app.frontend_url', '/'), '/');
+        // Same problem the login had: this URL is opened outside the WebView, so
+        // ending it on the website leaves the app's user in a browser. There is
+        // no signed state to carry the client on this path, but there does not
+        // need to be — the app asks for its own logout directly.
+        $this->nativeClient = $this->wantsNativeClient($request);
 
-        $logoutUrl = $this->buildKeycloakLogoutUrl($user?->sso_id_token, $frontendUrl);
+        // The website keeps landing on the bare frontend URL rather than a
+        // route, which is what Keycloak has whitelisted for it.
+        $redirectUri = $this->nativeClient
+            ? $this->clientUrl('login')
+            : rtrim((string) config('app.frontend_url', '/'), '/');
+
+        $logoutUrl = $this->buildKeycloakLogoutUrl($user?->sso_id_token, $redirectUri);
 
         // Keycloak needs a live session to propagate the logout to the IdP, so
         // revokeKeycloakSession() runs only when no front-channel URL could be
