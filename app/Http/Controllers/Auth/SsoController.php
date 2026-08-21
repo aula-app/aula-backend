@@ -32,34 +32,29 @@ class SsoController extends Controller
     private const int LINK_INTENT_TTL_MINUTES = 10;
 
     /**
-     * Sentinel value in the signed state that marks the callback as an
-     * IdP-initiated launch from Eduplaces. The callback resolves the tenant
-     * from the upstream id_token's `school` claim instead of from an
-     * instance_code carried in the state.
+     * Sentinel instance_code in the signed state. callback() then resolves the
+     * tenant from the id_token `school` claim instead of from the state.
      */
     private const string IDP_INITIATED_EDUPLACES = '__IDP_INITIATED_EDUPLACES__';
 
     /**
      * Value of `?client=` on the initiate endpoints, and of `client` in the
-     * signed state, that marks a flow as having started inside a native app.
+     * signed state, marking a flow as started inside a native app.
      */
     private const string CLIENT_APP = 'app';
 
     /**
-     * Whether the flow being handled started in a native app, decided from the
-     * signed state at the top of the callback.
+     * Whether the flow started in a native app, read from the signed state at
+     * the top of callback().
      *
-     * Held on the instance because every exit from the callback runs through
-     * frontendRedirect()/frontendError(), which are called from a dozen places
-     * that have no business threading a client flag through their signatures.
+     * Held on the instance because every exit runs through frontendRedirect()
+     * or frontendError(), called from a dozen places that carry no client flag.
      */
     private bool $nativeClient = false;
 
     /**
      * Upstream IdP id_tokens fetched during this request, keyed by provider
-     * alias. Tenant resolution, session issuing and the provider user-id
-     * stamping all want the same token, and each read costs a round-trip to
-     * Keycloak's broker endpoint.
+     * alias. Each miss costs a round trip to Keycloak's broker token endpoint.
      *
      * @var array<string, string|null>
      */
@@ -78,11 +73,10 @@ class SsoController extends Controller
     // =========================================================
 
     /**
-     * Whether this school offers SSO at all.
+     * Whether this tenant has sso_enabled, for the login page.
      *
-     * Unauthenticated because the login page is what asks: offering a button
-     * that initiate() will only refuse is worse than not offering one. Says
-     * nothing a failed login attempt would not already reveal.
+     * Unauthenticated: the response says no more than a refused initiate()
+     * would.
      */
     public function status(): JsonResponse
     {
@@ -96,14 +90,11 @@ class SsoController extends Controller
     }
 
     /**
-     * Initiate SSO login flow.
+     * Return the Keycloak authorization URL for a tenant-scoped login.
      *
-     * Returns a JSON response with the Keycloak redirect URL.
-     * The frontend navigates to it; the instance_code is carried in a signed
-     * state parameter so the callback can identify the tenant without the header.
-     *
-     * Native clients pass `?client=app` so the callback knows to end on the
-     * app's deep-link scheme rather than on the website.
+     * instance_code travels in the signed state because callback() is a
+     * universal route and sees no tenant header. `?client=app` makes callback()
+     * end on the app's deep-link scheme.
      */
     public function initiate(Request $request): JsonResponse
     {
@@ -134,9 +125,8 @@ class SsoController extends Controller
             $params['prompt'] = 'login';
         }
         if (($loginHint = (string) $request->query('login_hint', '')) !== '') {
-            // Preserves the user pre-selection blob when the frontend re-enters
-            // /sso/initiate after a third-party initiated login (e.g. Eduplaces
-            // marketplace launcher → /sso/idp-initiated → frontend → here).
+            // Carries the user pre-selection from idpInitiated() when the
+            // frontend re-enters initiate().
             $params['login_hint'] = $loginHint;
         }
 
@@ -153,8 +143,8 @@ class SsoController extends Controller
     }
 
     /**
-     * A migrating school becomes `connected` once its admin has linked and the
-     * school id is known — the point from which an import can be prepared.
+     * Move idp_migration_status from IDP_MIGRATION_FLAGGED to
+     * IDP_MIGRATION_CONNECTED once an admin has linked and idp_school_id is set.
      */
     protected function advanceMigrationAfterConnect(LegacyUser $user): void
     {
@@ -177,17 +167,12 @@ class SsoController extends Controller
     }
 
     /**
-     * Start connecting an admin's own aula account to the identity provider.
+     * Start linking an admin's own aula account to the identity provider.
      *
-     * The first step of migrating a school that already uses aula: the admin
-     * proves who they are on the provider, which both links their account and
-     * establishes which school this tenant is. Everything after it — the
-     * import, the review — depends on that school id being known, and knowing
-     * it by proof rather than by someone picking from a list.
-     *
-     * Possession of the aula account is already proved: this route is behind
-     * the bearer token. The callback still goes through the ordinary link
-     * intent, which re-checks it.
+     * Sets tenants.idp_school_id from the admin's id_token, which SchoolImport
+     * and MergeProposalBuilder both need. The bearer token proves the aula
+     * account; the callback still goes through storeLinkIntent(), which
+     * re-checks it.
      */
     public function connectIdentity(Request $request): JsonResponse
     {
@@ -211,9 +196,8 @@ class SsoController extends Controller
                 (int) $user->id,
                 $this->wantsNativeClient($request),
             ),
-            // Force a fresh authentication: the point is to capture *this*
-            // person's provider identity, not to reuse a session that might
-            // belong to whoever used the browser last.
+            // Capture the provider identity of the admin making this request,
+            // not a Keycloak session left in the browser by an earlier login.
             'prompt' => 'login',
         ];
 
@@ -230,14 +214,11 @@ class SsoController extends Controller
     }
 
     /**
-     * Handle an IdP-initiated SSO launch (OIDC third-party initiated login).
+     * OIDC third-party initiated login from the Eduplaces launcher.
      *
-     * Eduplaces' marketplace launcher hits this endpoint with `iss` and
-     * (optionally) `login_hint`. The spec does not carry a tenant identifier,
-     * but Eduplaces emits a `school` claim in the upstream id_token. We use
-     * a sentinel state value to mark the callback as IdP-initiated; the
-     * callback then resolves the aula tenant by mapping `school` →
-     * `tenants.idp_school_id`.
+     * The launch carries `iss` and optionally `login_hint`, but no tenant
+     * identifier, so the state is set to IDP_INITIATED_EDUPLACES and callback()
+     * maps the id_token `school` claim to tenants.idp_school_id.
      */
     public function idpInitiated(Request $request): RedirectResponse|JsonResponse
     {
@@ -276,26 +257,23 @@ class SsoController extends Controller
     }
 
     /**
-     * Handle the SSO callback from Keycloak.
+     * Handle the Keycloak callback.
      *
-     * This is a universal route — no tenant middleware runs here.
-     * We verify the signed state to prevent CSRF and to identify the tenant.
+     * A universal route, so no tenant middleware runs: the signed state carries
+     * the instance_code and is what makes the request non-forgeable.
      */
     public function callback(Request $request): RedirectResponse
     {
-        // Laravel caches the controller instance on the Route, so this object
-        // can outlive a single request under a long-running worker. Anything
-        // memoised from a previous login has to go before it could be mistaken
-        // for this one's identity.
+        // Laravel caches the controller instance on the Route, so it can
+        // outlive one request under a long-running worker.
         $this->idpIdTokens = [];
 
         $state = (string) $request->query('state', '');
 
-        // Read before the state is checked for validity below, so that even the
-        // failure paths land back in the app that started the login. An
-        // unverifiable state yields false and sends the user to the website,
-        // which is the safe way to be wrong: a forged state cannot aim the
-        // callback anywhere it could not already reach.
+        // Read before verifySignedState() so the failure paths below also land
+        // in the app that started the login. An unverifiable state yields false
+        // and sends the browser to the website, which is the safe way to be
+        // wrong: a forged state cannot aim callback() anywhere new.
         $this->nativeClient = $this->stateWantsNativeClient($state);
 
         $instanceCode = $this->verifySignedState($state);
@@ -303,11 +281,9 @@ class SsoController extends Controller
             return $this->frontendError('invalid_state');
         }
 
-        // Keycloak (or the upstream IdP) can redirect back with an OAuth error
-        // instead of an authorization code — most commonly `access_denied` when the
-        // user cancels the login at the identity provider. There is no code to
-        // exchange, so surface it to the frontend rather than letting the token
-        // exchange in Socialite blow up.
+        // Keycloak redirects back with `error` instead of a code when the login
+        // is cancelled or refused upstream. There is nothing for Socialite to
+        // exchange, so report it rather than let the exchange throw.
         $oauthError = $request->query('error');
         if ($oauthError !== null && $oauthError !== '') {
             Log::info('SSO: identity provider returned an OAuth error', [
@@ -338,7 +314,8 @@ class SsoController extends Controller
         /** @var Tenant $callbackTenant */
         $callbackTenant = tenant();
 
-        // An admin connecting their own account: link rather than resolve.
+        // link_user_id is set by connectIdentity(): link to that account instead
+        // of resolving one.
         $linkUserId = $this->stateLinkUserId($state);
 
         if ($linkUserId !== null) {
@@ -354,11 +331,10 @@ class SsoController extends Controller
     }
 
     /**
-     * Complete the Keycloak OAuth round-trip and resolve the aula tenant.
+     * Run the Keycloak token exchange and resolve the Tenant.
      *
-     * For the tenant-scoped flow we fail fast on an unknown tenant before the
-     * OAuth round-trip. The IdP-initiated flow can only resolve its tenant
-     * afterwards, from the upstream id_token's `school` claim.
+     * The tenant-scoped flow resolves before the exchange; the IdP-initiated
+     * flow can only resolve after it, from the id_token `school` claim.
      *
      * @return array{0: Tenant, 1: SocialiteOAuth2User, 2: string}|RedirectResponse
      */
@@ -373,11 +349,10 @@ class SsoController extends Controller
                 return $this->frontendError('unknown_tenant');
             }
 
-            // Checked here as well as in initiate(), because a state signed
-            // while SSO was still on stays valid, and nothing stops a caller
-            // reaching the callback without going through initiate() at all.
-            // The IdP-initiated branch runs the same check once it has resolved
-            // its tenant from the school claim.
+            // Re-checked after initiate(): a state signed while sso_enabled was
+            // true stays valid, and callback() can be reached without calling
+            // initiate() at all. The IdP-initiated branch runs the same check
+            // once resolveTenantFromEduplacesClaim() has returned.
             if (! $tenant->sso_enabled) {
                 Log::warning('SSO: login attempted on a tenant with SSO disabled', [
                     'tenant' => $instanceCode,
@@ -403,16 +378,12 @@ class SsoController extends Controller
             $instanceCode = $tenant->instance_code;
         }
 
-        // Exactly one branch above resolves $tenant, but Psalm cannot correlate
-        // the two $idpInitiated checks to prove it.
+        // Psalm cannot correlate the two $idpInitiated checks to see that
+        // exactly one branch assigns $tenant.
         /** @var Tenant $tenant */
         return [$tenant, $socialiteUser, $instanceCode];
     }
 
-    /**
-     * Persist the SSO tokens on the user, issue an aula JWT and redirect to the
-     * frontend OAuth landing page.
-     */
     protected function issueSsoSession(LegacyUser $user, LaravelSocialiteUser $laravelSocialiteUser, string $idToken, Tenant $callbackTenant): RedirectResponse
     {
         $user->sso_id_token = $idToken;
@@ -427,11 +398,9 @@ class SsoController extends Controller
     }
 
     /**
-     * Extract and verify the upstream id_token for a completed OAuth callback.
-     *
-     * Returns the raw id_token string on success, or a RedirectResponse carrying
-     * the appropriate frontend error when the token is missing, fails signature
-     * verification, or fails the tenant's email-verification policy.
+     * The raw id_token, or a redirect carrying id_token_invalid for a missing
+     * or unverifiable token and email_not_verified for a tenant with
+     * sso_require_email_verified set.
      */
     protected function verifyCallbackIdToken(SocialiteOAuth2User $socialiteUser, Tenant $tenant, string $instanceCode): string|RedirectResponse
     {
@@ -472,12 +441,12 @@ class SsoController extends Controller
     }
 
     /**
-     * Resolve the aula user for a verified SSO identity: match by sso_sub, fall
-     * back to email (provisioning a new user or requiring an explicit account
-     * link), and ensure the resulting account is active.
+     * Resolve the LegacyUser for a verified identity, in order: sso_sub match,
+     * bootstrapIdpTenant(), offerAccountClaim(), adoptDirectoryProvisionedUser(),
+     * then email match.
      *
-     * Returns the active LegacyUser, or a RedirectResponse carrying the frontend
-     * error/flow signal (account_inactive, sub_collision, account_link_required).
+     * Returns a redirect carrying account_inactive, sub_collision or
+     * account_link_required instead of a user.
      */
     protected function resolveCallbackUser(LaravelSocialiteUser $laravelSocialiteUser, Tenant $callbackTenant, string $instanceCode): LegacyUser|RedirectResponse
     {
@@ -486,19 +455,17 @@ class SsoController extends Controller
 
         $user = $this->ssoUserService->findBySub($sub);
 
-        // A login that goes on to bootstrap is the one that decides which school
-        // this tenant is, so there is nothing to hold it against. Anyone already
-        // known here is not that login, whatever the bootstrap does next.
+        // rejectForeignSchool() compares against tenants.idp_school_id, which
+        // the bootstrap login below is what sets.
         $provesSchool = $user !== null;
 
         if ($user === null) {
-            // Nobody has ever signed in here, so this login owns the school: it
-            // takes over the admin seeded at tenant creation and pulls in the
-            // directory roster before anyone else arrives.
+            // No LegacyUser holds an sso_sub yet, so this login takes over the
+            // seeded tenant admin and triggers the roster import.
             $user = $this->bootstrapIdpTenant($laravelSocialiteUser, $callbackTenant, $instanceCode);
 
-            // Declined, so it established nothing and has to prove it belongs
-            // like everybody else.
+            // bootstrapIdpTenant() declined, so this login is checked against
+            // tenants.idp_school_id like any other.
             $provesSchool = $user === null;
         }
 
@@ -511,10 +478,9 @@ class SsoController extends Controller
         }
 
         if ($user === null && $callbackTenant->isMigratingToIdp()) {
-            // A school mid-migration holds accounts that predate the provider.
-            // The row waiting for this identity may be an empty one the import
-            // made, while the person's real account sits unmatched beside it —
-            // so ask before handing them the empty one.
+            // On a migrating tenant the row for this identity may be one
+            // SchoolImport created, with no password, while the pre-existing
+            // local account sits unmatched beside it.
             $claim = $this->offerAccountClaim($laravelSocialiteUser, $callbackTenant, $instanceCode);
 
             if ($claim !== null) {
@@ -523,8 +489,7 @@ class SsoController extends Controller
         }
 
         if ($user === null) {
-            // Imported by the school import, or announced by a webhook, before
-            // this person ever signed in. Claim the row, do not duplicate it.
+            // A row SchoolImport or a webhook created before this first login.
             $user = $this->adoptDirectoryProvisionedUser($laravelSocialiteUser, $callbackTenant, $instanceCode);
         }
 
@@ -573,11 +538,10 @@ class SsoController extends Controller
     }
 
     /**
-     * Link an SSO identity to an authenticated legacy user.
+     * Bind an SSO identity to the account named by a link intent.
      *
-     * Auth: bearer JWT (legacy.jwt middleware). The bearer user proves possession
-     * of the legacy account; the link-intent token proves possession of the IdP
-     * identity. Both must point to the same user_id.
+     * The bearer JWT proves the aula account and sso_link_token proves the
+     * provider identity; both must name the same user_id.
      */
     public function link(Request $request): JsonResponse
     {
@@ -637,21 +601,13 @@ class SsoController extends Controller
     }
 
     /**
-     * SSO logout endpoint.
+     * A Keycloak RP-initiated logout URL for a tenant with sso_force_logout set,
+     * null otherwise so the frontend logs out locally.
      *
-     * When the tenant has sso_force_logout enabled, returns a Keycloak
-     * logout URL that the frontend must navigate to in order to end the
-     * user's Keycloak session (RP-initiated logout).
-     *
-     * Logging the user out of the upstream IdP is Keycloak's job, not ours:
-     * configuring the IdP's end_session_endpoint as the identity provider's
-     * "Logout URL" makes Keycloak chain the logout itself, using a static
-     * post_logout_redirect_uri (its own broker logout_response endpoint) that
-     * the IdP can whitelist. Chaining it here instead produced a redirect URI
-     * carrying a per-logout id_token_hint, which no IdP can ever whitelist.
-     *
-     * When disabled, returns null so the frontend can proceed with a
-     * normal local logout.
+     * Ending the upstream IdP session is Keycloak's job: the identity provider's
+     * "Logout URL" is configured as the IdP's end_session_endpoint, so Keycloak
+     * chains the logout itself with a static post_logout_redirect_uri, its own
+     * broker logout_response endpoint, that the IdP can whitelist.
      */
     public function logout(Request $request): JsonResponse
     {
@@ -669,11 +625,9 @@ class SsoController extends Controller
 
         $logoutUrl = $this->buildKeycloakLogoutUrl($user?->sso_id_token, $frontendUrl);
 
-        // The front-channel redirect is what triggers Keycloak's IdP logout
-        // propagation, so it needs a live session to act on. Revoking the
-        // session server-side first would leave Keycloak nothing to propagate,
-        // which makes back-channel revocation a fallback for the case where we
-        // cannot build that URL at all.
+        // Keycloak needs a live session to propagate the logout to the IdP, so
+        // revokeKeycloakSession() runs only when no front-channel URL could be
+        // built.
         if ($logoutUrl === null) {
             $this->revokeKeycloakSession($user?->sso_refresh_token);
         }
@@ -686,20 +640,15 @@ class SsoController extends Controller
     // =========================================================
 
     /**
-     * Build a signed state payload containing the instance_code.
-     * Format: base64(json) . '.' . hmac_signature
-     */
-    /**
-     * @param  int|null  $linkUserId  when set, the callback links the provider
-     *                                identity to this aula account instead of
-     *                                resolving or creating one. Safe to carry
-     *                                here because the payload is HMAC-signed by
-     *                                us, and /sso/link re-checks it against the
-     *                                bearer token anyway.
-     * @param  bool  $nativeApp  when true, the callback ends on the app's
-     *                           deep-link scheme instead of on the website. The
-     *                           state is the only thing that survives the round
-     *                           trip through Keycloak, so it has to carry this.
+     * base64(json payload).'.'.hmac_sha256(payload).
+     *
+     * @param  int|null  $linkUserId  callback() links the provider identity to
+     *                                this account instead of resolving one.
+     *                                Safe to carry here because link() re-checks
+     *                                it against the bearer token.
+     * @param  bool  $nativeApp  callback() ends on the app's deep-link scheme.
+     *                           The state is the only value that survives the
+     *                           round trip through Keycloak.
      */
     protected function buildSignedState(string $instanceCode, ?int $linkUserId = null, bool $nativeApp = false): string
     {
@@ -715,9 +664,6 @@ class SsoController extends Controller
         return $payload.'.'.$signature;
     }
 
-    /**
-     * Verify the signed state and return the instance_code, or null on failure.
-     */
     protected function verifySignedState(string $state): ?string
     {
         $code = $this->decodeSignedState($state)['instance_code'] ?? null;
@@ -725,9 +671,6 @@ class SsoController extends Controller
         return is_string($code) ? $code : null;
     }
 
-    /**
-     * The aula account a callback was told to link to, if any.
-     */
     protected function stateLinkUserId(string $state): ?int
     {
         $id = $this->decodeSignedState($state)['link_user_id'] ?? null;
@@ -735,26 +678,20 @@ class SsoController extends Controller
         return is_int($id) || (is_string($id) && ctype_digit($id)) ? (int) $id : null;
     }
 
-    /**
-     * Whether the login this state belongs to was started inside a native app.
-     */
     protected function stateWantsNativeClient(string $state): bool
     {
         return ($this->decodeSignedState($state)['client'] ?? null) === self::CLIENT_APP;
     }
 
-    /**
-     * Whether a caller of one of the initiate endpoints is a native app.
-     */
     protected function wantsNativeClient(Request $request): bool
     {
         return $request->query('client') === self::CLIENT_APP;
     }
 
     /**
-     * Decode a state, or an empty array when it is missing, malformed or not
-     * signed by us. Callers treat an absent key and a rejected signature the
-     * same way, so nothing downstream can act on an unverified payload.
+     * The decoded state payload, or [] when it is missing, malformed or not
+     * signed with app.key, so a rejected signature and an absent key read the
+     * same to every caller.
      *
      * @return array<string, mixed>
      */
@@ -778,17 +715,17 @@ class SsoController extends Controller
     }
 
     /**
-     * Resolve the aula tenant for an IdP-initiated Eduplaces login by reading
-     * the `school` claim from the upstream id_token. Tenants are mapped to
-     * Eduplaces schools by the `idp_school_id` column.
+     * Resolve the Tenant for an IdP-initiated login by matching the id_token
+     * `school` claim against tenants.idp_school_id.
      *
-     * @return Tenant|RedirectResponse Tenant on success; a RedirectResponse with a
-     *                                 frontend error code on failure.
+     * @return Tenant|RedirectResponse a redirect carrying idp_school_missing,
+     *                                 school_not_provisioned or sso_disabled on
+     *                                 failure
      */
     protected function resolveTenantFromEduplacesClaim(LaravelSocialiteUser $socialiteUser): Tenant|RedirectResponse
     {
-        // No tenant yet — that is what this resolves — so read the claim under
-        // every configured provider's name until one matches a tenant.
+        // No tenant is resolved yet, so the claim is read under the name each
+        // provider in IdpProviders configures for it.
         $payload = $this->decodeIdTokenPayload(
             $this->fetchIdpIdToken($socialiteUser->token, (string) config('services.eduplaces.idp_alias', 'eduplaces')),
         );
@@ -804,8 +741,7 @@ class SsoController extends Controller
             }
         }
 
-        // The loop only ever assigns a non-empty string, so being a string is
-        // the whole test.
+        // The loop assigns only a non-empty string.
         if (! is_string($schoolId)) {
             Log::warning('SSO: IdP-initiated login has no school claim', [
                 'keycloak_sub' => $socialiteUser->getId(),
@@ -833,8 +769,8 @@ class SsoController extends Controller
     }
 
     /**
-     * Decoded claims of the upstream Eduplaces id_token, read through
-     * Keycloak's broker token endpoint.
+     * Claims of the upstream provider's id_token, read through Keycloak's
+     * broker token endpoint.
      *
      * @return array<string, mixed>|null
      */
@@ -846,7 +782,7 @@ class SsoController extends Controller
     }
 
     /**
-     * Read a claim by the name this tenant's provider uses for it.
+     * Read a claim under the name this tenant's sso_provider configures for it.
      *
      * @param  array<string, mixed>|null  $claims
      */
@@ -865,14 +801,11 @@ class SsoController extends Controller
     }
 
     /**
-     * Stamp the provider's user id onto the user row.
+     * Write the provider's own user id to users.idp_user_id.
      *
-     * `sso_sub` holds the Keycloak subject, which Keycloak mints itself when
-     * it brokers a provider. Directory imports and webhooks reference the
-     * provider's own user id
-     * instead, so without this column no incoming event can be matched to a
-     * user. The upstream `sub` is that id — providers document it as the
-     * permanent identifier for a person.
+     * sso_sub holds the Keycloak subject, which Keycloak mints when it brokers a
+     * provider. SchoolImport rows and webhook events carry the provider's user
+     * id instead, so without this column nothing matches them to a user.
      */
     protected function recordIdpUserId(LegacyUser $user, LaravelSocialiteUser $socialiteUser, Tenant $tenant): void
     {
@@ -896,8 +829,8 @@ class SsoController extends Controller
             return;
         }
 
-        // The column is unique. Another row already holding this id means two
-        // aula accounts claim one directory user, which needs a human.
+        // users.idp_user_id is unique. A second row holding this id means two
+        // aula accounts claim one directory user.
         $conflict = LegacyUser::where('idp_user_id', $personId)
             ->where('id', '!=', $user->id)
             ->first();
@@ -917,11 +850,9 @@ class SsoController extends Controller
     }
 
     /**
-     * Finish an admin's account connection.
-     *
-     * Learns which school this tenant is from the claim, then hands back an
-     * ordinary link intent so the frontend can complete it against the bearer
-     * token. No session is issued here: the admin already has one.
+     * Finish connectIdentity(): set tenants.idp_school_id from the claim and
+     * hand back a link intent for the frontend to complete against the bearer
+     * token. No JWT is issued, the admin already holds one.
      */
     protected function completeIdentityConnection(int $userId, LaravelSocialiteUser $socialiteUser, Tenant $tenant, string $instanceCode): RedirectResponse
     {
@@ -963,10 +894,6 @@ class SsoController extends Controller
         return $this->frontendRedirectToSettings($token, $tenant->instance_code);
     }
 
-    /**
-     * Send the admin back to where they started the connection, carrying the
-     * one-shot token their browser needs to complete it.
-     */
     protected function frontendRedirectToSettings(string $linkToken, string $instanceCode): RedirectResponse
     {
         return redirect()->away($this->clientUrl('settings/idp-sync', [
@@ -976,18 +903,12 @@ class SsoController extends Controller
     }
 
     /**
-     * Bootstrap a directory-synced tenant on its very first SSO login.
+     * Claim the seeded tenant admin for the first SSO login and import the
+     * school.
      *
-     * Whoever holds the instance code signs in before anyone else. Rather than
-     * provision them a second account alongside the admin that tenant creation
-     * seeded, that admin row *becomes* their account — one admin, not two — and
-     * the whole school is imported behind it.
-     *
-     * Fires only while no user in the tenant has an sso_sub, so it happens
-     * exactly once.
-     *
-     * The import runs inline: everyone logging in afterwards has to find their
-     * account already there, which is only true once it has finished.
+     * The admin row tenant creation seeded becomes this login's account rather
+     * than a second admin beside it. Runs only while no LegacyUser has an
+     * sso_sub, so it happens once per tenant.
      */
     protected function bootstrapIdpTenant(LaravelSocialiteUser $socialiteUser, Tenant $tenant, string $instanceCode): ?LegacyUser
     {
@@ -999,9 +920,9 @@ class SsoController extends Controller
             return null;
         }
 
-        // A school that already used aula gets migrated deliberately, by an
-        // admin who proves who they are. Bootstrapping it would hand the
-        // school's real admin account to whoever signed in first.
+        // A tenant already using aula is connected through connectIdentity()
+        // instead, where an admin proves the account. Bootstrapping would hand
+        // that admin account to the first login to arrive.
         if ($tenant->isMigratingToIdp()) {
             return null;
         }
@@ -1031,11 +952,10 @@ class SsoController extends Controller
             return null;
         }
 
-        // Belt and braces for a school nobody remembered to flag as migrating.
-        // A tenant holding anyone beyond its seeded admins is already in use,
-        // and claiming its admin account would be a takeover by whoever signed
-        // in first. Password presence is not the signal — tenant creation can
-        // pre-set one — but having other people is.
+        // Second guard, for a tenant nobody flagged with idp_migration_status.
+        // Any user beyond admin1_username and admin2_username means the school
+        // is in use. A set password is not the signal, since tenant creation can
+        // pre-set one.
         if ($this->hasUsersBeyondSeededAdmins($tenant)) {
             Log::warning('SSO: refusing to bootstrap a tenant that already has users', [
                 'tenant' => $instanceCode,
@@ -1055,8 +975,8 @@ class SsoController extends Controller
         $admin->idp_user_id = $personId;
         $admin->save();
 
-        // Marked before dispatch so there is no window in which the school
-        // looks ready because its import has not been picked up yet.
+        // Set before dispatch, so idp_import_status is never absent while
+        // ImportSchoolForTenant waits in the queue.
         $tenant->update([
             'idp_import_status' => SchoolImport::STATUS_PENDING,
             'idp_import_error' => null,
@@ -1065,34 +985,26 @@ class SsoController extends Controller
         ]);
 
         // Queued, not inline: a large school must not have to fit inside the
-        // login request, and the frontend needs to see the import in progress.
+        // login request, and the frontend polls ImportStatusController.
         ImportSchoolForTenant::dispatch((string) $tenant->id);
 
         return $admin->fresh();
     }
 
     /**
-     * Refuse a login that comes from a different school than this tenant is.
+     * Refuse a login whose `school` claim is not this tenant's idp_school_id.
      *
-     * Only the very first login gets to say which school a tenant belongs to;
-     * after that the binding is a fact, and a login from anywhere else is
-     * someone signing into a school that is not theirs. Nothing checked this,
-     * so any Keycloak-verified identity was provisioned an account on any
-     * instance code it happened to be pointed at.
+     * A tenant with idp_school_id still null is refused too: setting it is
+     * bootstrapIdpTenant()'s job, which by here has already declined.
      *
-     * A tenant with no school at all is refused too. It would be the first
-     * login that establishes one, and by here that has already declined.
-     *
-     * Deliberately not written in terms of learnSchoolId(): that binds the
-     * school it reads when the tenant has none, which is right for the login
-     * that owns the tenant and is exactly the hole this closes for every other
-     * one. The part they can share is reading the claim.
+     * Kept apart from learnSchoolId(), which writes the school it reads when the
+     * tenant holds none. The shared part is claimedSchoolId().
      *
      * @return RedirectResponse|null null when the login may proceed
      */
     protected function rejectForeignSchool(LaravelSocialiteUser $socialiteUser, Tenant $tenant, string $instanceCode): ?RedirectResponse
     {
-        // Tenants that sync from no directory have no school to belong to.
+        // A tenant that syncs from no directory has no idp_school_id to check.
         if (! $this->usesIdpDirectory($tenant)) {
             return null;
         }
@@ -1128,11 +1040,10 @@ class SsoController extends Controller
     }
 
     /**
-     * The school a login says it comes from, or null when it does not say.
+     * The `school` claim, or null when the id_token carries none.
      *
-     * Shared by the login that establishes a tenant's school and by every one
-     * that is checked against it, so the claim is read and reported in one
-     * place. Says nothing about what the caller then does with it.
+     * Shared by learnSchoolId() and rejectForeignSchool() so the claim is read
+     * and logged in one place, and says nothing about what either does with it.
      *
      * @param  array<string, mixed>|null  $claims
      */
@@ -1153,19 +1064,15 @@ class SsoController extends Controller
     }
 
     /**
-     * Learn which school this tenant is, from the login itself.
+     * Set tenants.idp_school_id from the `school` claim, so no operator has to
+     * look the school UUID up and configure it by hand.
      *
-     * The upstream id_token carries a `school` claim, so nobody has to look a
-     * UUID up and configure it by hand: the first person through the door tells
-     * us which school they came from, and that is what gets imported.
-     *
-     * The two ways this fails look identical from the outside and are not: a
-     * login with no school claim at all is a configuration problem, while a
-     * school another tenant already holds is usually the wrong instance code.
-     * Reporting both as "missing" sends the operator looking in the wrong place.
+     * A missing claim and a school another tenant already holds are reported
+     * apart: the first is a provider configuration problem, the second is
+     * usually a login to the wrong instance_code.
      *
      * @param  array<string, mixed>|null  $claims
-     * @return string|null an error code, or null when the school is established
+     * @return string|null an error code, or null when idp_school_id is set
      */
     protected function learnSchoolId(Tenant $tenant, ?array $claims, string $instanceCode): ?string
     {
@@ -1179,9 +1086,9 @@ class SsoController extends Controller
             return null;
         }
 
-        // The column is unique: one school, one tenant. Someone signing into the
-        // wrong instance code would otherwise silently move a school across
-        // tenants, or blow up on the unique index.
+        // tenants.idp_school_id is unique: one school, one tenant. Without this
+        // check a login to the wrong instance_code moves a school across
+        // tenants or hits the unique index.
         $taken = Tenant::where('idp_school_id', $schoolId)
             ->where('id', '!=', $tenant->id)
             ->exists();
@@ -1206,7 +1113,7 @@ class SsoController extends Controller
     }
 
     /**
-     * Whether anyone uses this school beyond the accounts tenant creation made.
+     * Whether any LegacyUser exists beyond admin1_username and admin2_username.
      */
     protected function hasUsersBeyondSeededAdmins(Tenant $tenant): bool
     {
@@ -1219,8 +1126,8 @@ class SsoController extends Controller
     }
 
     /**
-     * The admin seeded by tenant creation: matched on `admin1_username`, falling
-     * back to the longest-standing admin-level account.
+     * The account matched on admin1_username, falling back to the lowest-id
+     * account at UserLevel::Admin or above.
      */
     protected function tenantAdmin(Tenant $tenant): ?LegacyUser
     {
@@ -1234,8 +1141,8 @@ class SsoController extends Controller
     }
 
     /**
-     * Attach a claimed provider identity to the account whose password was
-     * just proved, and discard the empty row the import had waiting.
+     * Move idp_user_id onto the account whose password was just proved and
+     * delete the row SchoolImport had holding it.
      *
      * @param  array<string, mixed>  $intent
      */
@@ -1255,8 +1162,8 @@ class SsoController extends Controller
         $holder = LegacyUser::where('idp_user_id', $personId)->where('id', '!=', $fresh->id)->first();
 
         if ($holder !== null && (! empty($holder->pw) || $holder->sso_sub !== null)) {
-            // Somebody real already owns this identity. Two accounts claiming
-            // one person needs a human, not a silent reassignment.
+            // A row with a password or an sso_sub is a real account, not an
+            // import shell. Two accounts claiming one identity needs a human.
             Log::warning('SSO: refusing to move a provider identity off a real account', [
                 'idp_user_id' => $personId,
                 'existing_user_id' => $holder->id,
@@ -1267,8 +1174,8 @@ class SsoController extends Controller
 
         DB::transaction(function () use ($fresh, $intent, $personId, $holder): void {
             if ($holder !== null) {
-                // An import-made row has no content by construction, so the
-                // identity moves to the real account and the empty one goes.
+                // A SchoolImport row carries no content by construction, so
+                // idp_user_id moves to the proved account and the row goes.
                 DB::table('au_rel_rooms_users')->where('user_id', $holder->id)->delete();
                 $holder->delete();
             }
@@ -1291,17 +1198,14 @@ class SsoController extends Controller
     }
 
     /**
-     * Ask someone mid-migration whether they already have an aula account.
+     * Ask a login on a migrating tenant whether it already has an aula account,
+     * before any JWT is issued.
      *
-     * Name matching cannot reach everybody — a person the review could not
-     * match has an empty row waiting for their provider identity and a real
-     * account, with all their work, sitting unlinked. Adoption would silently
-     * give them the empty one.
-     *
-     * So: no session yet. They either prove an existing password, or say they
-     * are new. Logging them in first and asking afterwards would make
-     * dismissing the question the easiest path, and produce the duplicate
-     * quietly.
+     * Two rows can hold one person here: one SchoolImport created, carrying
+     * idp_user_id and no password, and one pre-existing local account
+     * MergeProposalBuilder left unmatched. A password proves which is which.
+     * Issuing a JWT first would make dismissing the question the cheapest path
+     * and leave the duplicate in place.
      *
      * Returns null when there is nothing to ask about.
      */
@@ -1315,16 +1219,16 @@ class SsoController extends Controller
 
         $candidate = $this->ssoUserService->findByIdpUserId($personId);
 
-        // A real account already carrying this identity: its owner has signed
-        // in before, or a merge asserted it. The ordinary paths handle both.
+        // A row with an sso_sub or a password is a real account, so
+        // adoptDirectoryProvisionedUser() and the email match handle it.
         if ($candidate !== null && ($candidate->sso_sub !== null || ! empty($candidate->pw))) {
             return null;
         }
 
-        // No row at all is the commonest case, not an exception: before the
-        // merge is applied nothing carries a provider id, and that is exactly
-        // when everyone still has only their old password account. Provisioning
-        // here is what produces the duplicate this question exists to prevent.
+        // No row at all is the common case, not an exception: before
+        // MergeProposalApplier runs nothing carries idp_user_id, which is
+        // exactly when every account is still a password one. Provisioning here
+        // is what would create the duplicate.
         $token = $this->storeAccountClaimIntent($personId, $candidate?->id, $socialiteUser, $tenant);
 
         Log::info('SSO: asking a migrating school whether this person already has an account', [
@@ -1336,15 +1240,13 @@ class SsoController extends Controller
     }
 
     /**
-     * An intent nobody owns yet.
+     * A link intent with no user_id, completed by any caller of link() that
+     * proves an aula password, which is the assertion being made: that provider
+     * identity belongs to this account. Possession of the account is still what
+     * gets proved.
      *
-     * Unlike a link started from a known account, this one is claimed by
-     * whoever proves an aula password — which is exactly the assertion being
-     * made: "that provider identity is me". Possession of the account is still
-     * what gets proved, so the trust model is unchanged.
-     *
-     * `$shellUserId` is null when nothing local holds this identity yet, which
-     * is the normal state before a merge is applied.
+     * $shellUserId is null when no row carries $personId yet, the normal state
+     * before MergeProposalApplier runs.
      */
     protected function storeAccountClaimIntent(string $personId, ?int $shellUserId, LaravelSocialiteUser $socialiteUser, Tenant $tenant): string
     {
@@ -1364,7 +1266,7 @@ class SsoController extends Controller
     }
 
     /**
-     * The provider's token response, which only its own user object carries.
+     * The provider's token response, which only SocialiteOAuth2User carries.
      *
      * @return array<array-key, mixed>
      */
@@ -1376,11 +1278,12 @@ class SsoController extends Controller
     }
 
     /**
-     * Complete a claim for somebody who has no aula account yet.
+     * Complete a claim raised by offerAccountClaim() for a login with no aula
+     * account.
      *
-     * Authenticated by the one-shot token alone: they have just proved an
-     * identity at the provider and have no aula credentials to offer. Without
-     * this, a new pupil would loop on the link prompt forever.
+     * Authenticated by sso_link_token alone: a new pupil has just proved an
+     * identity at the provider and has no aula password to offer, and would
+     * otherwise loop on the link prompt.
      */
     public function declineAccountClaim(Request $request): JsonResponse
     {
@@ -1394,9 +1297,8 @@ class SsoController extends Controller
         }
 
         $user = LegacyUser::find((int) ($intent['shell_user_id'] ?? 0))
-            // Nothing was waiting for them, so they are new to the school as
-            // well: give them the account the import would have made, rooms
-            // and role included.
+            // No row held this idp_user_id, so provision the one SchoolImport
+            // would have made, rooms and role included.
             ?? $this->provisionFromDirectory((string) ($intent['idp_user_id'] ?? ''));
 
         if ($user === null) {
@@ -1414,10 +1316,9 @@ class SsoController extends Controller
     }
 
     /**
-     * Build the account for a person the directory knows and aula does not.
-     *
-     * Through the import's own path, so a person who arrives before the roster
-     * does gets the same row the roster would have given them.
+     * Build the account for a directory user that aula holds no row for,
+     * through SchoolImport::importUser() so the row matches what the roster
+     * import would have created.
      */
     protected function provisionFromDirectory(string $personId): ?LegacyUser
     {
@@ -1449,20 +1350,15 @@ class SsoController extends Controller
     }
 
     /**
-     * Hand this person the account that already carries their identity.
+     * Return the account already carrying this idp_user_id, stamping sso_sub on
+     * it.
      *
-     * Usually a shell the import or a webhook made before they ever signed in.
-     * It can also be a real account with a password and everything they have
-     * written, if a migrating school's admin confirmed the two are the same
-     * person — and that confirmation is the whole point of the merge review, so
-     * the login honours it rather than asking them to prove it again.
-     *
-     * `idp_user_id` is never guessed. It is written by the import, by an applied
-     * merge, by a claim the person proved with their password, or by an admin
-     * connecting their own account: each one a deliberate assertion that this
-     * provider identity is this account. An `sso_sub` already set is the one
-     * case left alone, since re-binding it would move the account to a
-     * different person at the provider.
+     * idp_user_id is written by SchoolImport, by MergeProposalApplier, by
+     * completeAccountClaim() or by connectIdentity(), each one an explicit
+     * assertion that the provider identity belongs to the account, so the login
+     * honours it rather than asking for proof again. A row that already has an
+     * sso_sub is left alone: re-binding it would move the account to a different
+     * identity at the provider.
      */
     protected function adoptDirectoryProvisionedUser(LaravelSocialiteUser $socialiteUser, Tenant $tenant, string $instanceCode): ?LegacyUser
     {
@@ -1492,7 +1388,8 @@ class SsoController extends Controller
         $candidate->sso_sub = $socialiteUser->getId();
 
         if ($socialiteUser->getEmail() !== null) {
-            // First sight of an address for this person: the IDM never has one.
+            // The directory carries no address, so the callback is the first
+            // source of one.
             $candidate->email = $socialiteUser->getEmail();
         }
 
@@ -1502,8 +1399,8 @@ class SsoController extends Controller
     }
 
     /**
-     * Whether this tenant's users come from a directory. Gates the broker call
-     * so tenants on other IdPs do not pay for a lookup that cannot succeed.
+     * Gates the Keycloak broker call, so a tenant on another IdP skips a lookup
+     * that cannot succeed.
      */
     protected function usesIdpDirectory(Tenant $tenant): bool
     {
@@ -1515,9 +1412,6 @@ class SsoController extends Controller
         return config('app.key');
     }
 
-    /**
-     * Build the Keycloak RP-initiated logout URL using the configured realm.
-     */
     protected function buildKeycloakLogoutUrl(?string $idToken, string $redirectUri): ?string
     {
         if (! $idToken) {
@@ -1550,7 +1444,7 @@ class SsoController extends Controller
     }
 
     /**
-     * Fetch the upstream IdP's id_token via Keycloak's broker token API.
+     * The upstream IdP's id_token, read through Keycloak's broker token API.
      */
     protected function fetchIdpIdToken(?string $accessToken, ?string $provider): ?string
     {
@@ -1576,8 +1470,8 @@ class SsoController extends Controller
     }
 
     /**
-     * Decode an OIDC id_token (JWT) payload without verifying the signature.
-     * Returns null when the token is missing, malformed, or the payload is not valid JSON.
+     * Decode a JWT payload without verifying the signature. Null when the token
+     * is missing, malformed, or the payload is not valid JSON.
      *
      * @psalm-pure
      */
@@ -1608,9 +1502,8 @@ class SsoController extends Controller
 
     protected function frontendRedirect(string $token, ?string $instanceCode = null): RedirectResponse
     {
-        // Carry the resolved tenant back to the frontend so the OAuth landing
-        // page can populate localStorage for IdP-initiated launches that
-        // started without any instance context.
+        // The oauth-login page reads `code` into localStorage, which an
+        // IdP-initiated launch needs because it starts with no instance context.
         $query = empty($instanceCode) ? [] : ['code' => $instanceCode];
 
         return redirect()->away($this->clientUrl("oauth-login/{$token}", $query));
@@ -1624,9 +1517,8 @@ class SsoController extends Controller
     /**
      * Where a finished callback sends the browser.
      *
-     * The website and the native apps are the same frontend reached two ways,
-     * so they share every route; only the origin differs. Building both from
-     * one place keeps a new exit from the callback landing in the app as well.
+     * The website and the native apps are one frontend reached two ways, sharing
+     * every route and differing only in origin, so both are built here.
      *
      * @param  array<string, mixed>  $query
      */
@@ -1645,9 +1537,8 @@ class SsoController extends Controller
     }
 
     /**
-     * Persist an account-link intent in the cache and return the opaque token.
-     * The intent carries everything the link endpoint needs to stamp the row
-     * once the user has proven legacy-account possession via password.
+     * Cache an account-link intent and return its opaque token, carrying
+     * everything link() needs to stamp the row once the aula password is proved.
      */
     protected function storeLinkIntent(LegacyUser $emailMatch, SocialiteOAuth2User $socialiteUser, Tenant $tenant): string
     {
@@ -1659,9 +1550,8 @@ class SsoController extends Controller
             'sso_sub' => $socialiteUser->getId(),
             'sso_id_token' => $socialiteUser->accessTokenResponseBody['id_token'] ?? null,
             'sso_refresh_token' => $socialiteUser->refreshToken,
-            // Carried through the link flow so an account that enrols via
-            // password proof is matchable by webhooks too, not just one
-            // provisioned straight from the callback.
+            // Carried so an account linked by password proof is matchable by
+            // webhooks too, not only one provisioned in callback().
             'idp_user_id' => $this->usesIdpDirectory($tenant)
                 ? $this->idpClaim($this->idpClaims($socialiteUser, $tenant), $tenant, 'user')
                 : null,
