@@ -22,10 +22,9 @@ class LegacyJwtService
 
         $payload = [
             'exp' => 0,
-            // The legacy API reads this claim unconditionally (model.php), and
-            // the frontend copies it into request arguments. A token minted
-            // without it, which is every SSO login, breaks every call made with
-            // it.
+            // The legacy API reads this claim unconditionally (model.php) and
+            // the frontend copies it into request arguments, so a token minted
+            // without it fails every call made with it.
             'user_id' => $user->id,
             'user_hash' => $user->hash_id,
             'user_level' => $user->userlevel?->value,

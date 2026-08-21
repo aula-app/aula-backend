@@ -10,10 +10,8 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Builds a merge proposal and prints it.
- *
- * The review screen will show the same thing, but the matching is the part
- * most worth checking against a real school before anyone builds a UI on it.
+ * Runs MergeProposalBuilder and prints the idp_merge_candidates rows, the same
+ * data MergeProposalController::index() serves.
  */
 class ProposeIdpMerge extends Command
 {

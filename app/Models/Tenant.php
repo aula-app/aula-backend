@@ -59,20 +59,11 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     /**
-     * Whether this tenant's users and rooms come from an identity provider's
-     * directory.
-     *
-     * Keyed on `sso_provider` — the same alias Keycloak brokers under — so it
-     * is true from tenant creation. The provider's school id is not known until
-     * the first person signs in and tells us, so it cannot be what identifies a
-     * synced tenant.
-     */
-    /**
      * Whether this school used aula before it started syncing from a directory.
      *
-     * Such a tenant has real accounts and content that predate the provider, so
-     * the greenfield shortcuts — bootstrap on first login, create every user —
-     * would collide with them.
+     * Such a tenant holds accounts and content that predate the provider, so
+     * bootstrapIdpTenant() declines and MergeProposalBuilder decides which rows
+     * pair up instead.
      */
     public function isMigratingToIdp(): bool
     {
@@ -80,6 +71,13 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             && $this->idp_migration_status !== self::IDP_MIGRATION_COMPLETED;
     }
 
+    /**
+     * Whether this tenant's users and rooms come from a directory.
+     *
+     * Keyed on `sso_provider`, the alias Keycloak brokers under, so it is true
+     * from tenant creation. `idp_school_id` is unknown until the first login
+     * reports it, so it cannot be what identifies a synced tenant.
+     */
     public function usesIdpDirectory(): bool
     {
         return $this->idp_school_id !== null

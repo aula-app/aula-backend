@@ -13,14 +13,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Puts a tenant back to "never synced", so the next SSO login bootstraps it
- * again from scratch.
+ * Puts a tenant back to never-synced, so the next SSO login runs
+ * SsoController::bootstrapIdpTenant() again.
  *
- * Testing the first-login flow otherwise means a long tinker one-liner that is
- * easy to fire at the wrong instance code.
- *
- * Only touches what the directory import created. Accounts that existed before
- * it are kept — cleared of their provider identity, but not deleted.
+ * Deletes only what SchoolImport created. An account that predates the import
+ * is kept, with `sso_sub` and `idp_user_id` cleared.
  */
 class ResetIdpTenant extends Command
 {
@@ -68,13 +65,13 @@ class ResetIdpTenant extends Command
     }
 
     /**
-     * Accounts the import created, as opposed to ones it claimed.
+     * Accounts SchoolImport created, as opposed to accounts it claimed.
      *
-     * They carry the provider's id and no password. The two exceptions are the
-     * admins tenant creation seeded: the first login stamps its identity on one
-     * of them, and deleting it leaves the tenant with no admin for the next
-     * first login to take over. Email is not a signal, since adoption copies
-     * one onto an imported row as soon as its owner signs in.
+     * They carry an `idp_user_id` and no password. admin1_username and
+     * admin2_username are excluded: bootstrapIdpTenant() stamps its identity on
+     * one of them, and deleting it leaves no admin for the next first login to
+     * take over. Email is not a signal, since adoptDirectoryProvisionedUser()
+     * writes one onto an imported row.
      *
      * @return Builder<LegacyUser>
      */
@@ -119,8 +116,9 @@ class ResetIdpTenant extends Command
                 DB::table('au_rooms')->whereIn('id', $roomIds)->delete();
             }
 
-            // `idp_user_id` alone is not the test: the first login stamps it
-            // onto the seeded admin, and a merge stamps it onto real accounts.
+            // `idp_user_id` alone is not the test: bootstrapIdpTenant() stamps
+            // it onto the seeded admin, and MergeProposalApplier stamps it onto
+            // accounts that predate the import.
             $importedIds = $this->directoryCreatedUsers($tenant)->pluck('id')->all();
 
             if ($importedIds !== []) {
@@ -128,11 +126,11 @@ class ResetIdpTenant extends Command
                 LegacyUser::whereIn('id', $importedIds)->delete();
             }
 
-            // Everyone left goes back to never-having-signed-in, which is what
-            // makes the next login the tenant's first.
+            // Clearing sso_sub on the rows that remain is what makes the next
+            // login the tenant's first.
             DB::table('au_users_basedata')->update(['sso_sub' => null, 'idp_user_id' => null]);
 
-            // A proposal describes rows that no longer exist.
+            // idp_merge_candidates describes rows that no longer exist.
             DB::table('idp_merge_candidates')->truncate();
 
             $this->stripRolesForRooms($rooms->pluck('hash_id')->all());
@@ -140,11 +138,10 @@ class ResetIdpTenant extends Command
     }
 
     /**
-     * Drop `roles` entries that point at rooms we just deleted.
+     * Drop the `roles` entries pointing at the rooms just deleted.
      *
-     * Surgical rather than resetting the column: entries for rooms created
-     * inside aula are somebody's real configuration, and a reset of the
-     * directory sync has no business discarding them.
+     * Entry by entry rather than clearing the column: entries for rooms created
+     * inside aula are real configuration that a sync reset does not own.
      *
      * @param  list<string>  $roomHashIds
      */
@@ -173,9 +170,8 @@ class ResetIdpTenant extends Command
     {
         $tenant->update([
             'idp_school_id' => null,
-            // A tenant left part-way through a migration never bootstraps on a
-            // first login again, so without this the reset hands back a tenant
-            // that cannot do the thing it was reset for.
+            // bootstrapIdpTenant() declines while this is set, so leaving it
+            // would return a tenant that cannot do what the reset is for.
             'idp_migration_status' => null,
             'idp_import_status' => null,
             'idp_import_error' => null,
@@ -187,8 +183,8 @@ class ResetIdpTenant extends Command
 
         IdpDirectoryEntry::where('tenant_id', $tenant->id)->delete();
 
-        // Events that never resolved to a tenant are left alone: they may
-        // belong to a school someone else hosts.
+        // Events with a null tenant_id are left alone: they may belong to a
+        // school another installation hosts.
         IdpWebhookEvent::where('tenant_id', $tenant->id)->delete();
     }
 }
