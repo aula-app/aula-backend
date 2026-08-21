@@ -17,15 +17,13 @@ use Throwable;
 /**
  * Pulls a school's directory into its tenant, off the request.
  *
- * The first SSO login triggers this. It used to run inline in the callback,
- * which meant the browser held the redirect open for the whole import and the
- * frontend could never observe it in progress — by the time anyone could ask,
- * it was already done. Queued, the login returns at once and the frontend polls
- * `idp_import_status` to hold the user on a setup screen.
+ * Dispatched by SsoController::bootstrapIdpTenant() on the first SSO login and
+ * by MergeProposalController::apply(). The login returns at once and the
+ * frontend polls ImportStatusController to hold the user on a setup screen.
  *
- * The tenant is marked `running` synchronously before this is dispatched, so
- * there is no window where a school looks ready because its import has not
- * been picked up yet.
+ * `idp_import_status` is written to STATUS_PENDING before the dispatch, so
+ * there is no window in which a school looks ready because the job has not been
+ * picked up yet.
  */
 class ImportSchoolForTenant implements ShouldQueue
 {
@@ -57,13 +55,12 @@ class ImportSchoolForTenant implements ShouldQueue
     }
 
     /**
-     * Move a migrating school on once its directory has landed.
+     * Move a migrating tenant on once its directory has landed.
      *
-     * Only the migration path has a state to advance: a greenfield school has
-     * no `idp_migration_status` at all and is finished when the import is. Left
-     * undone, a migrating school sits on `importing` for good — the import is
-     * complete, every screen still says it is running, and nothing will ever
-     * say otherwise.
+     * Only a migration has a state to advance: a tenant with no prior aula use
+     * carries no `idp_migration_status` and is finished when the import is.
+     * Without this, a migrating tenant stays on IDP_MIGRATION_IMPORTING after
+     * the import has completed.
      */
     private function advanceMigration(Tenant $tenant): void
     {
@@ -74,8 +71,8 @@ class ImportSchoolForTenant implements ShouldQueue
         }
 
         if ($tenant->idp_import_status === SchoolImport::STATUS_FAILED) {
-            // Back to the review: that is where an admin can look at the
-            // proposal again and retry.
+            // Back to IDP_MIGRATION_REVIEWING, where an admin can revisit the
+            // proposal and retry.
             $tenant->update(['idp_migration_status' => Tenant::IDP_MIGRATION_REVIEWING]);
 
             return;
@@ -85,8 +82,8 @@ class ImportSchoolForTenant implements ShouldQueue
             return;
         }
 
-        // The directory is in. What remains is people linking their own
-        // accounts, which happens as they sign in over the following days.
+        // The directory is in. What remains is accounts linking themselves as
+        // their owners sign in.
         $tenant->update(['idp_migration_status' => Tenant::IDP_MIGRATION_LINKING]);
 
         Log::info('IdP: import finished, school is now linking accounts', [
@@ -97,9 +94,9 @@ class ImportSchoolForTenant implements ShouldQueue
     }
 
     /**
-     * SchoolImport records its own failure, but only for exceptions it sees.
-     * A job that dies outside it — killed worker, timeout — would otherwise
-     * leave the tenant stuck on `running` and the frontend waiting forever.
+     * SchoolImport records its own failure, but only for exceptions it catches.
+     * A job killed outside it, by a dead worker or a timeout, would leave the
+     * tenant on STATUS_RUNNING and ImportStatusController reporting not ready.
      */
     public function failed(Throwable $e): void
     {
@@ -122,8 +119,8 @@ class ImportSchoolForTenant implements ShouldQueue
             ]);
         }
 
-        // A migration that gave up belongs back at the review, not stranded on
-        // a progress screen that will never finish.
+        // A migration that gave up goes back to IDP_MIGRATION_REVIEWING instead
+        // of staying on a progress screen that never completes.
         if ($tenant->idp_migration_status === Tenant::IDP_MIGRATION_IMPORTING) {
             $tenant->update(['idp_migration_status' => Tenant::IDP_MIGRATION_REVIEWING]);
         }

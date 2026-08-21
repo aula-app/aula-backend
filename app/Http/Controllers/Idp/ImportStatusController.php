@@ -13,10 +13,10 @@ use Illuminate\Http\JsonResponse;
 /**
  * Reports how the initial school import is going.
  *
- * The first SSO login pulls the whole school in synchronously. Everyone else
- * has to be held out of aula until that finishes, or they would arrive at a
- * school with half its rooms and none of its classmates. The frontend polls
- * this and keeps the user on a setup screen while `ready` is false.
+ * SsoController::bootstrapIdpTenant() dispatches ImportSchoolForTenant on the
+ * first SSO login, and every later login is held out until that finishes, or it
+ * would reach a school with half its rooms and none of its classmates. The
+ * frontend polls this and keeps a setup screen up while `ready` is false.
  */
 class ImportStatusController extends Controller
 {
@@ -25,10 +25,10 @@ class ImportStatusController extends Controller
         /** @var Tenant $resolved */
         $resolved = tenant();
 
-        // Read through, not from the resolved instance: tenancy caches it for
-        // the request, and this endpoint exists to be polled while another
-        // process is changing exactly these columns. A cached copy would report
-        // the status from before the import started, forever.
+        // Read fresh, not from the resolved instance: tenancy caches it for the
+        // request, and this endpoint is polled while ImportSchoolForTenant
+        // writes exactly these columns, so a cached copy keeps reporting the
+        // status from before the import started.
         $tenant = $resolved->fresh() ?? $resolved;
 
         $status = $tenant->idp_import_status;
@@ -46,11 +46,11 @@ class ImportStatusController extends Controller
     }
 
     /**
-     * Whether the school is usable, or its users have to wait for an import.
+     * Whether the school is usable, or its logins wait for an import.
      */
     private function isReady(Tenant $tenant, ?string $status): bool
     {
-        // Tenants that sync from no directory have no import to wait for.
+        // A tenant that syncs from no directory has no import to wait for.
         if (! $tenant->usesIdpDirectory()) {
             return true;
         }
@@ -59,31 +59,30 @@ class ImportStatusController extends Controller
             return true;
         }
 
-        // A school that already ran on aula stays open throughout its
-        // migration: it is a working school, and holding its users on a setup
-        // screen would lock them out of it. Only the import that applying the
-        // merge starts is worth waiting for.
+        // A tenant already running on aula stays open through its migration:
+        // a setup screen would lock its users out of a working school. Only the
+        // import MergeProposalController::apply() starts is worth waiting for.
         if ($tenant->isMigratingToIdp()) {
             return ! in_array($status, [SchoolImport::STATUS_PENDING, SchoolImport::STATUS_RUNNING], true);
         }
 
-        // No status means either the first login has not happened yet, which is
-        // worth waiting for, or that it happened and declined to bootstrap.
+        // A null status means the first login has not happened yet, which is
+        // worth waiting for, or that bootstrapIdpTenant() declined.
         if ($status === null) {
             return $this->bootstrapAlreadyDeclined();
         }
 
-        // Greenfield: blocked until the import has finished.
+        // A tenant with no prior aula use is blocked until the import finishes.
         return false;
     }
 
     /**
-     * Whether the first SSO login has been and gone without starting an import.
+     * Whether an SSO login has already happened without starting an import.
      *
-     * It is the only thing that starts one, and it marks the tenant pending
-     * before dispatching, so anything in flight already has a status. An
-     * `sso_sub` is the same signal bootstrapIdpTenant() guards itself with:
-     * once one exists no login will retry, so nothing is coming.
+     * bootstrapIdpTenant() is the only caller that starts one, and it writes
+     * STATUS_PENDING before dispatching, so an import in flight already has a
+     * status. It guards itself on `sso_sub` too, so once one exists no later
+     * login retries.
      */
     private function bootstrapAlreadyDeclined(): bool
     {
