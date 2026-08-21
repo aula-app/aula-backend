@@ -19,11 +19,12 @@ use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
 
 /**
- * What happens to somebody the review could not match.
+ * Covers offerAccountClaim(): an SSO login on a migrating tenant whose
+ * sso_sub matches no row and whom MergeProposalBuilder left unmatched.
  *
- * Their provider identity has an empty row waiting for it while their real
- * account, with everything they have written, sits unlinked. Adoption would
- * hand them the empty one, so mid-migration they are asked first.
+ * Two rows could be theirs: one the directory import created, carrying
+ * idp_user_id and no password, and one pre-existing local account. The user
+ * chooses instead of being bound to the imported row.
  */
 class IdpAccountClaimTest extends TestCase
 {
@@ -75,9 +76,8 @@ class IdpAccountClaimTest extends TestCase
 
     public function test_a_merged_account_is_the_one_that_signs_in(): void
     {
-        // What an applied merge leaves behind: the person's real account, with
-        // their password and everything they have written, now carrying the
-        // provider identity an admin confirmed is theirs.
+        // The state MergeProposalApplier leaves: the local account keeps its
+        // password and content and now carries the confirmed idp_user_id.
         $realId = $this->seedRealUser('claim_merged');
         self::$testTenant->run(
             fn () => LegacyUser::where('id', $realId)->update(['idp_user_id' => 'p1']),
@@ -88,11 +88,11 @@ class IdpAccountClaimTest extends TestCase
         self::$testTenant->run(function () use ($realId) {
             $merged = LegacyUser::find($realId);
 
-            // The merge is the assertion of ownership. If the login will not
-            // honour it, the review an admin worked through bought nothing.
+            // idp_user_id is the admin's assertion of ownership, so
+            // adoptDirectoryProvisionedUser() signs this account in.
             $this->assertSame('kc-sub-1', $merged->sso_sub, 'the merged account should be the one signed in');
 
-            // And nothing new should have been invented for this person.
+            // And no second row was created for the same idp_user_id.
             $this->assertSame(
                 1,
                 LegacyUser::where('idp_user_id', 'p1')->count(),
@@ -109,7 +109,7 @@ class IdpAccountClaimTest extends TestCase
 
         $response = $this->signIn('kc-sub-1', 'p1');
 
-        // No session yet: the person has to say who they are first.
+        // No JWT yet: the account has to be claimed or declined first.
         $location = (string) $response->headers->get('Location');
         $this->assertStringContainsString('sso_error=account_link_required', $location);
         $this->assertStringNotContainsString('/oauth-login/', $location);
@@ -117,9 +117,8 @@ class IdpAccountClaimTest extends TestCase
 
     public function test_it_asks_even_before_the_import_has_made_a_row(): void
     {
-        // A school between being flagged and applying its merge: nothing
-        // carries a provider id yet, and everybody still has only the password
-        // account they have always had.
+        // A tenant between IDP_MIGRATION_FLAGGED and an applied merge: no row
+        // carries an idp_user_id and every account is still a password one.
         $realId = $this->seedRealUser('claim_pupil');
 
         $response = $this->signIn('kc-sub-1', 'p1');
@@ -129,8 +128,8 @@ class IdpAccountClaimTest extends TestCase
         $this->assertStringNotContainsString('/oauth-login/', $location);
 
         self::$testTenant->run(function () use ($realId) {
-            // Provisioning here is the duplicate the question exists to
-            // prevent: the person's real account is sitting right there.
+            // Provisioning here would be the duplicate, with the pre-existing
+            // account still present.
             $this->assertSame(0, LegacyUser::where('idp_user_id', 'p1')->count());
             $this->assertNotNull(LegacyUser::find($realId));
         });
@@ -151,7 +150,7 @@ class IdpAccountClaimTest extends TestCase
 
             $this->assertSame('p1', $real->idp_user_id);
             $this->assertSame('kc-sub-1', $real->sso_sub);
-            // The empty row the import made has served its purpose.
+            // The row SchoolImport created is gone.
             $this->assertNull(LegacyUser::find($shellId));
         });
     }
@@ -162,8 +161,8 @@ class IdpAccountClaimTest extends TestCase
 
         $token = $this->claimToken($this->signIn('kc-sub-1', 'p1'));
 
-        // No aula credentials to offer, so the one-shot token is the only
-        // authentication available — without this a new pupil loops forever.
+        // No aula password to offer, so sso_link_token is the only credential
+        // declineAccountClaim() can authenticate on.
         $response = $this->postJson('/api/v2/auth/sso/link/decline', ['sso_link_token' => $token], [
             'aula-instance-code' => 'TEST001',
         ]);
@@ -177,8 +176,8 @@ class IdpAccountClaimTest extends TestCase
 
     public function test_declaring_yourself_new_provisions_an_account_when_nothing_was_waiting(): void
     {
-        // Same window as above: nothing local holds this identity, and this
-        // person really is new, so there is no password for them to prove.
+        // The same window as above, with no local row holding this
+        // idp_user_id and no password account to claim.
         $token = $this->claimToken($this->signIn('kc-sub-1', 'p1'));
 
         $this->fakeDirectoryPerson('p1', 'Neue', 'Person');
@@ -190,8 +189,8 @@ class IdpAccountClaimTest extends TestCase
         self::$testTenant->run(function () {
             $user = LegacyUser::where('idp_user_id', 'p1')->first();
 
-            // Provisioned through the import's own path, so arriving before
-            // the roster does not produce a lesser account.
+            // Provisioned through SchoolImport::importUser(), so arriving
+            // before the roster gives the same row the roster would have.
             $this->assertNotNull($user);
             $this->assertSame('kc-sub-1', $user->sso_sub);
             $this->assertSame('Neue Person', $user->displayname);
@@ -220,7 +219,7 @@ class IdpAccountClaimTest extends TestCase
 
         $token = $this->claimToken($this->signIn('kc-sub-2', 'p2'));
 
-        // Rewrite the intent to point at an identity a real account holds.
+        // Point the intent at an idp_user_id a password account already holds.
         $intent = Cache::get("sso_link:{$token}");
         self::$testTenant->run(function () use ($token, $intent) {
             Cache::put("sso_link:{$token}", ['claimable' => true] + $intent + [], now()->addMinutes(10));
@@ -243,7 +242,8 @@ class IdpAccountClaimTest extends TestCase
 
         $response = $this->signIn('kc-sub-1', 'p1');
 
-        // Greenfield: the imported row is theirs, no question needed.
+        // With idp_migration_status null, adoptDirectoryProvisionedUser() takes
+        // the imported row and offerAccountClaim() never runs.
         $this->assertStringContainsString('/oauth-login/', (string) $response->headers->get('Location'));
         self::$testTenant->run(
             fn () => $this->assertSame('kc-sub-1', LegacyUser::find($shellId)->sso_sub),
@@ -304,8 +304,8 @@ class IdpAccountClaimTest extends TestCase
     }
 
     /**
-     * Answer the IDM lookups the newcomer path makes. Registered after the
-     * login's own fake, which does not match these paths.
+     * Answer the IDM lookups provisionFromDirectory() makes. Registered after
+     * the login's own fake, which does not match these paths.
      */
     private function fakeDirectoryPerson(string $personId, string $first, string $last): void
     {
@@ -382,10 +382,10 @@ class IdpAccountClaimTest extends TestCase
     private function clean(): void
     {
         self::$testTenant->run(function () {
-            // Also by provider identity, not only by name: a login that ends in
-            // a freshly provisioned row names that row after the person rather
-            // than this class's prefix, so it would outlive the test that
-            // produced it and answer the next test's lookup.
+            // Matched on idp_user_id and sso_sub as well as the username
+            // prefix: a row provisioned by a login is named after the directory
+            // user, so the prefix alone would leave it behind to answer the
+            // next test's lookup.
             $ids = LegacyUser::where('username', 'like', 'claim_%')
                 ->orWhereIn('idp_user_id', ['p1', 'p2'])
                 ->orWhereIn('sso_sub', ['kc-sub-1', 'kc-sub-2'])

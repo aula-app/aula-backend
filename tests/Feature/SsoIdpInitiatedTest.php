@@ -16,10 +16,9 @@ use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
 
 /**
- * Covers the IdP-initiated (OIDC third-party initiated login) entry point
- * that Eduplaces' marketplace launcher hits. The callback resolves the
- * aula tenant from the upstream id_token's `school` claim and maps it to
- * `tenants.idp_school_id`.
+ * Covers idpInitiated(), the OIDC third-party initiated login the Eduplaces
+ * marketplace launcher calls, where callback() resolves the tenant by matching
+ * the upstream id_token's `school` claim to `tenants.idp_school_id`.
  */
 class SsoIdpInitiatedTest extends TestCase
 {
@@ -69,8 +68,8 @@ class SsoIdpInitiatedTest extends TestCase
     {
         self::$testTenant->run(function () {
             LegacyUser::where('email', 'like', 'idp_%@test.example')->delete();
-            // Webhook-provisioned rows carry no email, so they need clearing by
-            // the identifier that does exist.
+            // A webhook-provisioned row carries no email, so it is cleared by
+            // idp_user_id instead.
             LegacyUser::where('idp_user_id', 'like', 'eduplaces-person-%')->delete();
         });
         parent::tearDown();
@@ -214,8 +213,8 @@ class SsoIdpInitiatedTest extends TestCase
             $user = LegacyUser::where('sso_sub', 'keycloak-sub-person77')->first();
 
             $this->assertNotNull($user);
-            // sso_sub stays the Keycloak subject; the Eduplaces person id is
-            // what webhooks reference and lives in its own column.
+            // sso_sub stays the Keycloak subject; the provider's own user id,
+            // which webhooks reference, lives in idp_user_id.
             $this->assertSame('keycloak-sub-person77', $user->sso_sub);
             $this->assertSame('eduplaces-person-77', $user->idp_user_id);
         });
@@ -254,8 +253,8 @@ class SsoIdpInitiatedTest extends TestCase
 
         $state = $this->buildIdpInitiatedState();
 
-        // The login itself must still succeed: a contested person id is an
-        // operational problem to triage, not a reason to lock the user out.
+        // The login still succeeds: a contested idp_user_id is logged for an
+        // operator, not turned into a refused login.
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         $response->assertRedirect();
@@ -295,8 +294,8 @@ class SsoIdpInitiatedTest extends TestCase
 
     public function test_callback_adopts_a_webhook_provisioned_account(): void
     {
-        // What an IDM person webhook leaves behind: an Eduplaces person id and
-        // nothing else to identify the row by.
+        // The row a `person` webhook leaves: an idp_user_id and nothing else
+        // to identify it by.
         $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-pre');
 
         $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-pre', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
@@ -316,9 +315,9 @@ class SsoIdpInitiatedTest extends TestCase
 
     public function test_adoption_matches_on_person_id_rather_than_email(): void
     {
-        // The seeded row has no email at all, and the id_token carries one that
-        // matches nothing. Adoption still has to happen: the Eduplaces person
-        // id is the identifier, not the address.
+        // The seeded row has no email and the id_token carries one that matches
+        // nothing, so adoptDirectoryProvisionedUser() has only idp_user_id to
+        // match on.
         $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-noemail');
 
         $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-noemail', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
@@ -337,12 +336,9 @@ class SsoIdpInitiatedTest extends TestCase
 
     public function test_adopts_an_account_that_has_a_password(): void
     {
-        // A password used to disqualify a row from adoption, on the reasoning
-        // that a credentialed account is one somebody could have been using.
-        // A merged account is exactly that and carries the identity anyway,
-        // because a migrating school's admin confirmed the two are the same
-        // person. Refusing it stranded them: the login would neither use the
-        // account nor let it go, and made a duplicate instead.
+        // A set password does not disqualify a row: MergeProposalApplier stamps
+        // idp_user_id onto password accounts, and refusing them would produce
+        // the duplicate the merge review exists to prevent.
         $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-haspw', password: 'a-real-password-hash');
 
         $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-haspw', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
@@ -355,8 +351,8 @@ class SsoIdpInitiatedTest extends TestCase
             $user = LegacyUser::find($seededId);
 
             $this->assertSame('keycloak-sub-haspw', $user->sso_sub);
-            // Their password is left alone: linking an identity is not a reason
-            // to take away the way they have always signed in.
+            // `pw` is left alone: binding an identity does not remove password
+            // login.
             $this->assertNotEmpty($user->pw);
             $this->assertSame(1, LegacyUser::where('idp_user_id', 'eduplaces-person-haspw')->count());
         });
@@ -379,7 +375,7 @@ class SsoIdpInitiatedTest extends TestCase
 
     public function test_does_not_adopt_across_a_person_id_mismatch(): void
     {
-        // Someone else's pre-provisioned row must not be handed to this login.
+        // A row carrying a different idp_user_id must not be adopted.
         $seededId = $this->seedDirectoryProvisionedUser('eduplaces-person-someone-else');
 
         $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-me', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
@@ -390,7 +386,7 @@ class SsoIdpInitiatedTest extends TestCase
 
         self::$testTenant->run(function () use ($seededId) {
             $this->assertNull(LegacyUser::find($seededId)->sso_sub);
-            // A fresh row for the person who actually logged in.
+            // A new row carrying the idp_user_id the login presented.
             $this->assertSame('eduplaces-person-me', LegacyUser::where('sso_sub', 'keycloak-sub-mine')->firstOrFail()->idp_user_id);
         });
     }
@@ -400,8 +396,8 @@ class SsoIdpInitiatedTest extends TestCase
     // =========================================================
 
     /**
-     * Seed the kind of row a `person` webhook leaves behind: an Eduplaces person
-     * id, a derived username, and no email, password or sso_sub.
+     * Seed the row a `person` webhook leaves: an idp_user_id, a derived
+     * username, and no email, password or sso_sub.
      *
      * @return int the au_users_basedata row id
      */
@@ -459,10 +455,9 @@ class SsoIdpInitiatedTest extends TestCase
     }
 
     /**
-     * Produce a JWT-shaped string whose payload section is the supplied claims.
-     * The controller's decodeIdTokenPayload() only base64-decodes; it does not
-     * verify a signature on the upstream broker token (Keycloak is the trust
-     * boundary), so a stub header/signature is fine.
+     * A JWT-shaped string whose payload section is the supplied claims.
+     * decodeIdTokenPayload() only base64-decodes the broker token, since
+     * Keycloak is the trust boundary, so a stub header and signature suffice.
      */
     private function makeUnverifiedJwt(array $claims): string
     {

@@ -23,12 +23,12 @@ use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
 
 /**
- * The onboarding flow end to end:
+ * Covers SsoController::bootstrapIdpTenant() end to end:
  *
- *   1. a tenant is created, with one admin
- *   2. whoever holds the instance code logs in via SSO first
- *   3. that login takes over the admin account and imports the school
- *   4. everyone else logs in and finds their account already there
+ *   1. a tenant is created with one seeded admin
+ *   2. the first SSO login arrives
+ *   3. that login claims the admin row and dispatches ImportSchoolForTenant
+ *   4. a later login finds an account the import already created
  */
 class IdpBootstrapTest extends TestCase
 {
@@ -70,8 +70,8 @@ class IdpBootstrapTest extends TestCase
             'sso_provider' => 'eduplaces',
             'sso_require_email_verified' => false,
             'sso_force_logout' => false,
-            // Deliberately not set: the first login learns it from the
-            // upstream `school` claim.
+            // Left null: learnSchoolId() sets it from the upstream `school`
+            // claim on the first login.
             'idp_school_id' => null,
             'idp_import_status' => null,
             'admin1_username' => self::ADMIN_USERNAME,
@@ -113,7 +113,8 @@ class IdpBootstrapTest extends TestCase
 
         $this->login('kc-sub-principal', 'person-teacher');
 
-        // Nobody had to look a UUID up: the id_token said which school it was.
+        // learnSchoolId() took idp_school_id from the id_token, with no
+        // operator configuration.
         $this->assertSame(self::SCHOOL, self::$testTenant->fresh()->idp_school_id);
     }
 
@@ -122,9 +123,8 @@ class IdpBootstrapTest extends TestCase
     // =========================================================
 
     /**
-     * Only the first login says which school a tenant is. After that, anyone
-     * arriving from a different one is signing into a school that is not
-     * theirs, and used to be handed a brand new account for it.
+     * Only the first login sets tenants.idp_school_id. rejectForeignSchool()
+     * refuses every later login whose `school` claim differs from it.
      */
     public function test_refuses_a_login_from_a_different_school(): void
     {
@@ -143,10 +143,10 @@ class IdpBootstrapTest extends TestCase
     }
 
     /**
-     * Someone signs into the wrong instance code: their school belongs to
-     * another tenant, so this one never learns it and the bootstrap declines.
-     * With no school of its own there is nothing to check anyone against, and
-     * an account here would be an account at a school they have no claim to.
+     * A login to the wrong instance_code: another tenant already holds the
+     * school, so learnSchoolId() returns idp_school_taken and the bootstrap
+     * declines. With idp_school_id still null, rejectForeignSchool() has
+     * nothing to check the login against and refuses it.
      */
     public function test_refuses_a_login_when_the_tenant_has_no_school_of_its_own(): void
     {
@@ -173,8 +173,8 @@ class IdpBootstrapTest extends TestCase
     }
 
     /**
-     * No claim is no proof. The school it would have named is exactly what the
-     * tenant is checked against.
+     * An id_token with no `school` claim is refused: that claim is what
+     * rejectForeignSchool() checks tenants.idp_school_id against.
      */
     public function test_refuses_a_login_that_carries_no_school_claim(): void
     {
@@ -213,9 +213,9 @@ class IdpBootstrapTest extends TestCase
 
     public function test_the_import_status_endpoint_blocks_before_the_first_login(): void
     {
-        // An Eduplaces tenant with no import yet is not ready, even though its
-        // school is still unknown. setUp already seeded the admin, and hash_id
-        // is unique, so seeding it again here would collide.
+        // A directory-synced tenant with no import is not ready, even with
+        // idp_school_id still unknown. setUp() seeded the admin already, and
+        // hash_id is unique, so seeding it again here would collide.
         $jwt = self::$testTenant->run(fn () => app(LegacyJwtService::class)->generateToken(
             LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail(),
         ));
@@ -227,8 +227,8 @@ class IdpBootstrapTest extends TestCase
     }
 
     /**
-     * A declined bootstrap leaves no status behind and no login retries it, so
-     * waiting on one would park every user here for good.
+     * A declined bootstrap writes no idp_import_status and no later login
+     * retries it, so waiting on one would hold every user on the setup screen.
      */
     public function test_the_import_status_endpoint_stops_blocking_once_a_bootstrap_has_declined(): void
     {
@@ -250,9 +250,9 @@ class IdpBootstrapTest extends TestCase
 
     public function test_it_refuses_to_bootstrap_a_school_that_already_has_users(): void
     {
-        // An existing school's admin is a person's real account. Whoever signs
-        // in through the provider first must not inherit it, even if nobody
-        // remembered to flag the tenant as migrating.
+        // The seeded admin of a school in use is somebody's account, so the
+        // first SSO login must not claim it even with idp_migration_status
+        // left null.
         self::$testTenant->run(function () {
             $pupil = new LegacyUser;
             $pupil->username = 'existing.pupil';
@@ -272,14 +272,14 @@ class IdpBootstrapTest extends TestCase
             $this->assertNull($admin->idp_user_id);
         });
 
-        // And nothing was imported off the back of it.
+        // And no import was dispatched.
         $this->assertNull(self::$testTenant->fresh()->idp_import_status);
     }
 
     public function test_it_does_not_bootstrap_a_school_that_is_being_migrated(): void
     {
-        // Migration is an admin-driven flow; the first login must not pre-empt
-        // it by adopting an account and importing the roster.
+        // A flagged tenant is connected through connectIdentity(), so an early
+        // login must not claim the admin row or import the roster.
         Tenant::where('id', self::$testTenant->id)
             ->update(['idp_migration_status' => Tenant::IDP_MIGRATION_FLAGGED]);
 
@@ -296,8 +296,8 @@ class IdpBootstrapTest extends TestCase
 
     public function test_the_login_queues_the_import_rather_than_running_it_inline(): void
     {
-        // Inline, the browser would hold the redirect open for the whole import
-        // and the frontend could never observe it running.
+        // Run inline, the import would hold the callback redirect open for its
+        // whole duration.
         Queue::fake();
 
         $this->login('kc-sub-principal', 'person-teacher');
@@ -307,8 +307,8 @@ class IdpBootstrapTest extends TestCase
             fn (ImportSchoolForTenant $job): bool => $job->tenantId === self::$testTenant->id,
         );
 
-        // Marked before dispatch, so the frontend never sees a school that
-        // looks ready only because no worker has picked the job up yet.
+        // Written before the dispatch, so ImportStatusController never reports
+        // ready while the job is still waiting in the queue.
         $this->assertSame(SchoolImport::STATUS_PENDING, self::$testTenant->fresh()->idp_import_status);
         $this->assertFalse($this->importStatus()['ready']);
     }
@@ -320,7 +320,8 @@ class IdpBootstrapTest extends TestCase
         self::$testTenant->run(function () {
             $admins = LegacyUser::where('userlevel', '>=', 50)->get();
 
-            // One admin, not two: the seeded row became the principal's account.
+            // One admin, not two: the seeded row became the first login's
+            // account.
             $this->assertCount(1, $admins, 'SSO must not create a second admin');
             $this->assertSame(self::ADMIN_USERNAME, $admins[0]->username);
             $this->assertSame('kc-sub-principal', $admins[0]->sso_sub);
@@ -339,7 +340,8 @@ class IdpBootstrapTest extends TestCase
 
         self::$testTenant->run(function () {
             $this->assertSame(2, DB::table('au_rooms')->whereNotNull('idp_group_id')->count());
-            // Principal plus the two people who have not logged in yet.
+            // The first login plus the two directory users that have not
+            // signed in.
             $this->assertSame(3, LegacyUser::whereNotNull('idp_user_id')->count());
             $this->assertSame(1, LegacyUser::whereNotNull('sso_sub')->count());
         });
@@ -421,8 +423,8 @@ class IdpBootstrapTest extends TestCase
 
         // One closure covering JWKS, the Keycloak broker and the IDM.
         // Http::fake() merges successive calls rather than replacing them, so
-        // layering separate stubs would leave the first login's responses
-        // winning for the second.
+        // separate stubs would leave the first login's responses matching the
+        // second.
         $this->currentPersonId = $eduplacesPersonId;
         $this->currentKeycloakSub = $keycloakSub;
         $this->fakeEverything();
@@ -438,8 +440,8 @@ class IdpBootstrapTest extends TestCase
      * Registered once per test and driven by $currentKeycloakSub.
      *
      * Mockery expectations accumulate, so re-mocking Socialite for a second
-     * login would leave the first expectation matching and hand back the first
-     * user — every login after the first would silently be the same person.
+     * login would leave the first expectation matching and return the first
+     * user for every login after it.
      */
     private function mockSocialite(): void
     {
@@ -473,7 +475,7 @@ class IdpBootstrapTest extends TestCase
         $user->refreshToken = 'kc-refresh-token';
         $user->accessTokenResponseBody = ['id_token' => $idToken];
         $user->shouldReceive('getId')->andReturn($this->currentKeycloakSub);
-        // Eduplaces users have no email, and the id_token carries none.
+        // The directory exposes no email, and the id_token carries none.
         $user->shouldReceive('getEmail')->andReturn(null);
         $user->shouldReceive('getName')->andReturn(null);
         $user->shouldReceive('getNickname')->andReturn(null);
@@ -516,8 +518,8 @@ class IdpBootstrapTest extends TestCase
 
     /**
      * The upstream Eduplaces id_token Keycloak hands back through its broker
-     * endpoint. Only the payload matters — Keycloak is the trust boundary, so
-     * the controller decodes it without verifying a signature.
+     * endpoint. Only the payload matters: Keycloak is the trust boundary, so
+     * decodeIdTokenPayload() does not verify the signature.
      */
     private function upstreamIdToken(string $personId): string
     {
@@ -560,13 +562,12 @@ class IdpBootstrapTest extends TestCase
     }
 
     /**
-     * Reduce the shared tenant to what tenant creation would have left: the
-     * seeded admin and nobody else.
+     * Reduce the shared tenant to what tenant creation leaves: the seeded admin
+     * and nobody else.
      *
-     * This class is about a school nobody has used yet, and the bootstrap
-     * deliberately refuses to run on one that already has users — so anything
-     * another test class left behind has to go, or the fixture is not the
-     * scenario under test.
+     * bootstrapIdpTenant() refuses to run on a tenant that already has users,
+     * so a row left behind by another test class would change the scenario
+     * under test.
      */
     private function cleanTenant(): void
     {
@@ -583,9 +584,8 @@ class IdpBootstrapTest extends TestCase
         self::$testTenant->run(function () {
             $userIds = LegacyUser::whereNotNull('idp_user_id')
                 ->orWhere('username', self::ADMIN_USERNAME)
-                // Rows provisioned by a login carry neither, so clear those too
-                // or a stray sso_sub makes the next test think the tenant has
-                // already been bootstrapped.
+                // A row provisioned by a login carries neither, and a stray
+                // sso_sub makes bootstrapIdpTenant() decline in the next test.
                 ->orWhere('sso_sub', 'like', 'kc-sub-%')
                 ->pluck('id')->all();
             $roomIds = DB::table('au_rooms')->whereNotNull('idp_group_id')->pluck('id')->all();

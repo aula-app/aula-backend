@@ -39,8 +39,8 @@ class SsoControllerTest extends TestCase
             'sso_provider' => 'mock-iserv',
             'sso_force_logout' => false,
             'sso_require_email_verified' => true,
-            // Explicit: TEST001 is shared with Eduplaces test classes, and this
-            // class asserts the behaviour of a tenant that is not on Eduplaces.
+            // Set explicitly: TEST001 is shared with the Eduplaces test
+            // classes, and this class covers a tenant on another provider.
             'idp_school_id' => null,
         ]);
 
@@ -145,9 +145,9 @@ class SsoControllerTest extends TestCase
     }
 
     /**
-     * A state signed while SSO was still on outlives the flag, and nothing
-     * forces a caller through initiate() first, so the callback has to refuse
-     * on its own rather than provisioning an account.
+     * A state signed while sso_enabled was true outlives the flag, and nothing
+     * forces a caller through initiate(), so callback() refuses on its own
+     * rather than provisioning an account.
      */
     public function test_callback_refuses_a_tenant_with_sso_disabled(): void
     {
@@ -174,8 +174,8 @@ class SsoControllerTest extends TestCase
     // =========================================================
 
     /**
-     * The state is the only thing that survives the round trip through
-     * Keycloak, so it is where the app has to say it is the app.
+     * The signed state is the only value that survives the round trip through
+     * Keycloak, so `?client=app` has to travel in it.
      */
     public function test_initiate_records_a_native_client_in_the_state(): void
     {
@@ -208,8 +208,8 @@ class SsoControllerTest extends TestCase
     }
 
     /**
-     * A failed login has to come home too. Leaving errors on the website would
-     * strand the user in the browser tab the app opened for the login.
+     * An error exit ends on the deep-link scheme too, or the user is left in
+     * the browser tab the app opened for the login.
      */
     public function test_callback_error_from_the_app_redirects_to_the_deep_link_scheme(): void
     {
@@ -225,9 +225,9 @@ class SsoControllerTest extends TestCase
     }
 
     /**
-     * A state we cannot verify buys no redirect target. Honouring an unsigned
-     * `client` claim would let anyone aim the callback at a scheme of their
-     * choosing, so an unverifiable state falls back to the website.
+     * An unverifiable state falls back to the website: honouring an unsigned
+     * `client` value would let any caller aim callback() at a scheme of its
+     * choosing.
      */
     public function test_callback_ignores_a_native_client_claim_in_an_unsigned_state(): void
     {
@@ -247,7 +247,7 @@ class SsoControllerTest extends TestCase
     }
 
     /**
-     * Run initiate against a mocked Socialite driver and give back the state it
+     * Run initiate() against a mocked Socialite driver and return the state it
      * put into the authorize request.
      */
     private function captureInitiateState(string $uri): string
@@ -849,11 +849,9 @@ class SsoControllerTest extends TestCase
     }
 
     /**
-     * The logout URL must point at the aula realm and carry the frontend as
-     * post_logout_redirect_uri. Wrapping it in an upstream IdP logout, as an
-     * earlier version did, produced a redirect URI containing a per-logout
-     * id_token_hint that no IdP can whitelist. Propagating the logout to the
-     * upstream IdP is Keycloak's job, configured on the identity provider.
+     * The logout URL points at the aula realm and carries app.frontend_url as
+     * post_logout_redirect_uri. Propagating the logout to the upstream IdP is
+     * Keycloak's job, configured as the identity provider's "Logout URL".
      */
     public function test_logout_url_targets_keycloak_and_redirects_to_the_frontend(): void
     {
@@ -885,9 +883,9 @@ class SsoControllerTest extends TestCase
     }
 
     /**
-     * Revoking the Keycloak session server-side kills the very session the
-     * front-channel redirect needs in order to trigger Keycloak's IdP logout
-     * propagation, so it must not run when we hand a logout URL to the browser.
+     * revokeKeycloakSession() would end the session the front-channel redirect
+     * needs to trigger Keycloak's IdP logout propagation, so it must not run
+     * when logout() returns a URL.
      */
     public function test_logout_does_not_revoke_the_session_when_a_logout_url_is_returned(): void
     {
@@ -914,8 +912,8 @@ class SsoControllerTest extends TestCase
     }
 
     /**
-     * Without an id_token there is no front-channel logout to redirect to, so
-     * back-channel revocation is the only way to end the Keycloak session.
+     * With no sso_id_token there is no front-channel logout to redirect to, so
+     * revokeKeycloakSession() is the only way left to end the session.
      */
     public function test_logout_falls_back_to_session_revocation_without_an_id_token(): void
     {
@@ -949,8 +947,8 @@ class SsoControllerTest extends TestCase
 
     public function test_callback_does_not_record_a_person_id_for_a_non_eduplaces_tenant(): void
     {
-        // This tenant is on mock-iserv with no idp_school_id, so the
-        // Eduplaces person lookup must not run at all.
+        // This tenant is on mock-iserv with no idp_school_id, so
+        // usesIdpDirectory() is false and no broker lookup runs.
         $this->mockSocialiteCallback('sso-sub-iserv-only', 'sso_iservonly@test.example', 'IServ Only', 'iservonly');
 
         $state = $this->buildState(self::INSTANCE_CODE);
@@ -1084,7 +1082,7 @@ class SsoControllerTest extends TestCase
         $this->assertStringContainsString('/oauth-login/', $location);
 
         // The redirect carries the resolved tenant as `?code=`, which is not
-        // part of the token: signing it in would fail every validation here.
+        // part of the token and has to come off before validation.
         $parts = explode('/oauth-login/', (string) parse_url($location, PHP_URL_PATH), 2);
         $token = $parts[1] ?? '';
         $this->assertNotEmpty($token, 'redirect did not contain a JWT token');
