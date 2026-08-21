@@ -11,10 +11,10 @@ return new class extends Migration
     /**
      * Maps provider user and group ids to the tenant that owns them.
      *
-     * IdpUser and group webhook payloads carry no school identifier, so there is
-     * nothing in the event itself that tells us which tenant database to open.
-     * This table is the index that answers that question; entries are written
-     * whenever a school's people or groups are read from the IDM API.
+     * User and group webhook payloads carry no school identifier, so nothing in
+     * the event says which tenant database to open. TenantResolver reads this
+     * index for the answer and writes an entry whenever a school's users or
+     * groups are read from the directory.
      */
     public function up(): void
     {

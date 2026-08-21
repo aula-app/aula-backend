@@ -9,9 +9,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * The first SSO login on a directory-synced tenant pulls the whole school in
-     * before anyone can use aula. The frontend polls this state to know whether
-     * to hold the user on a "setting up your school" screen.
+     * The first SSO login on a directory-synced tenant dispatches
+     * ImportSchoolForTenant, which pulls the whole school in before anyone can
+     * use aula. ImportStatusController reports this column so the frontend can
+     * hold the user on a setup screen until the import has finished.
      */
     public function up(): void
     {

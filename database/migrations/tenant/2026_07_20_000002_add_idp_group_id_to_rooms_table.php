@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * A provider group ("Klasse 5a") becomes an aula room, not an au_groups row:
-     * rooms are where aula's participation actually happens, and room
-     * membership carries the per-room role.
+     * A provider group ("Klasse 5a") becomes an `au_rooms` row, not an
+     * `au_groups` row: participation happens in rooms, and room membership
+     * carries the per-room role.
      */
     public function up(): void
     {
