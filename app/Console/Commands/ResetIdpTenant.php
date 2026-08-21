@@ -67,7 +67,7 @@ class ResetIdpTenant extends Command
     /**
      * Accounts SchoolImport created, as opposed to accounts it claimed.
      *
-     * They carry an `idp_user_id` and no password. admin1_username and
+     * Such a row carries an `idp_user_id` and no password. admin1_username and
      * admin2_username are excluded: bootstrapIdpTenant() stamps its identity on
      * one of them, and deleting it leaves no admin for the next first login to
      * take over. Email is not a signal, since adoptDirectoryProvisionedUser()

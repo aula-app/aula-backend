@@ -250,9 +250,8 @@ class IdpBootstrapTest extends TestCase
 
     public function test_it_refuses_to_bootstrap_a_school_that_already_has_users(): void
     {
-        // The seeded admin of a school in use is somebody's account, so the
-        // first SSO login must not claim it even with idp_migration_status
-        // left null.
+        // The seeded admin of a school in use is a real account, so the first
+        // SSO login must not claim it even with idp_migration_status left null.
         self::$testTenant->run(function () {
             $pupil = new LegacyUser;
             $pupil->username = 'existing.pupil';

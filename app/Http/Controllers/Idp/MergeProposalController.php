@@ -69,8 +69,8 @@ class MergeProposalController extends Controller
             $query->where('kind', $kind);
         }
 
-        // A thousand-row proposal is unusable unfiltered, so the review
-        // searches rather than scrolls.
+        // A thousand-row proposal is unusable unfiltered, so this endpoint
+        // searches and pages rather than returning everything.
         if (($search = trim((string) $request->query('search', ''))) !== '') {
             $query->where(function ($q) use ($search): void {
                 $q->where('local_name', 'like', "%{$search}%")

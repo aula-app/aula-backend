@@ -14,8 +14,8 @@ return new class extends Migration
      * MergeProposalApplier applying it.
      *
      * Stored rather than recomputed on submit: a review can take an hour and
-     * the directory can change underneath it, so applying a pairing the admin
-     * never saw is exactly what the review prevents.
+     * the directory can change underneath it, so storing the rows is what stops
+     * a pairing the admin never saw being applied.
      *
      * One table covers all three buckets, by which side is null:
      *

@@ -131,7 +131,7 @@ class IdpMergeProposalTest extends TestCase
         $row = $this->candidateForIdp('p1');
 
         $this->assertSame(MergeProposalBuilder::OUTCOME_NONE, $row->outcome);
-        // idp_name_kind is what the review shows to explain the empty keys.
+        // idp_name_kind is what the admin sees to explain the empty keys.
         $this->assertSame(MergeProposalBuilder::NAME_PSEUDONYM, $row->idp_name_kind);
     }
 
