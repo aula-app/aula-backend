@@ -10,16 +10,15 @@ use Illuminate\Support\Facades\DB;
 /**
  * Rooms and room membership for directory-sourced data.
  *
- * A directory group ("Klasse 5a") is an aula **room**: `au_rooms` keyed by
- * `idp_group_id`, membership in `au_rel_rooms_users`, and a per-room role
- * in the `roles` JSON column on `au_users_basedata`. `au_groups` plays no part
- * in the integration.
+ * A directory group ("Klasse 5a") is an aula room: an `au_rooms` row keyed by
+ * `idp_group_id`, membership in `au_rel_rooms_users`, and a per-room role in
+ * the `roles` JSON column on `au_users_basedata`. `au_groups` plays no part in
+ * the integration.
  *
- * Shared by the initial school import and by the webhook syncs, so both produce
- * exactly the same shape and a webhook arriving mid-import cannot diverge from
- * it.
+ * Shared by SchoolImport and by UserSync and GroupSync, so all three write the
+ * same shape and a webhook arriving mid-import cannot diverge from it.
  *
- * Every method is idempotent — applying the same state twice is a no-op.
+ * Every method is idempotent: applying the same state twice changes nothing.
  */
 final class RoomEnrolment
 {
@@ -106,12 +105,12 @@ final class RoomEnrolment
     }
 
     /**
-     * Make a user's synced room memberships match the given groups exactly.
+     * Make a user's directory-sourced room memberships match $groups exactly.
      *
-     * Rooms with no `idp_group_id` — the school room and anything created
-     * inside aula — are never touched.
+     * Rooms with no `idp_group_id`, the school room and anything created inside
+     * aula, are left alone.
      *
-     * @param  list<IdpGroupRef>|list<string>  $groups  IdpGroupRefs, or bare the provider group ids
+     * @param  list<IdpGroupRef>|list<string>  $groups  IdpGroupRefs, or bare provider group ids
      */
     public function syncUserRooms(int $userId, array $groups, int $role): void
     {
@@ -138,9 +137,9 @@ final class RoomEnrolment
     }
 
     /**
-     * Make a room's membership match the given users exactly.
+     * Make a room's membership match $userRoles exactly.
      *
-     * Only users that came from the directory are candidates for removal; someone
+     * Only rows carrying an `idp_user_id` are candidates for removal, so a user
      * added to the room inside aula stays.
      *
      * @param  array<int, int>  $userRoles  user id => role
@@ -192,8 +191,8 @@ final class RoomEnrolment
     /**
      * Set or clear this user's role for one room in the `roles` JSON column.
      *
-     * The column is a list of {role, room-hash_id} pairs; entries for other
-     * rooms are preserved untouched.
+     * The column holds a list of {role, room hash_id} pairs; entries for other
+     * rooms are left untouched.
      */
     private function writeRole(int $userId, string $roomHashId, ?int $role): void
     {

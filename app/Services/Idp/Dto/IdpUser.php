@@ -7,11 +7,11 @@ namespace App\Services\Idp\Dto;
 /**
  * A person in an identity provider directory.
  *
- * A provider may distinguish "people" (configured to exist, may never
- * sign in) from "users" (can sign in via SSO). The two endpoints return
- * overlapping shapes: `/people/:id` adds `sourceSystemIdentifier`, `/users/:id`
- * adds `status`. Webhooks fire a single `person` event for both, so one DTO
- * covers both payloads and leaves the absent field null.
+ * A provider can distinguish people, configured to exist and possibly never
+ * signing in, from users, which can sign in. The endpoints overlap:
+ * `/people/:id` adds `sourceSystemIdentifier`, `/users/:id` adds `status`.
+ * Webhooks fire one `person` event for both, so this DTO covers both payloads
+ * and leaves the absent field null.
  */
 final readonly class IdpUser
 {
@@ -58,14 +58,13 @@ final readonly class IdpUser
     }
 
     /**
-     * Combine two views of the same person, keeping whichever actually carries
-     * each field.
+     * Combine two views of one directory user, keeping whichever carries each
+     * field.
      *
-     * No single endpoint returns everything: names may come from a group's
-     * member list, status and pseudonym from a user record, and an external
-     * system id from somewhere else again. Group memberships are unioned rather
-     * than replaced — seeing someone through one group does not put them out of
-     * the others.
+     * No single endpoint returns everything: `name` can come from a group
+     * member list, `status` and `pseudonym` from a user record, and
+     * `sourceSystemIdentifier` from a person record. Group refs are unioned
+     * rather than replaced, so a view through one group does not drop the rest.
      */
     public function mergedWith(self $other): self
     {
@@ -91,13 +90,12 @@ final readonly class IdpUser
     }
 
     /**
-     * What to show in aula.
+     * The name to write to `displayname`.
      *
-     * Which name data an endpoint returns depends on the app's entitlements:
-     * `/users` carries a `pseudonym` ("Denk Kapitän") and no `name`, while a
-     * group's member list carries the real `name` and no pseudonym. Prefer the
-     * real name and fall back to the pseudonym, so a person is never left
-     * showing a generated username.
+     * Which name fields an endpoint returns depends on the app's entitlements:
+     * `/users` carries a `pseudonym` ("Denk Kapitän") and no `name`, a group
+     * member list carries `name` and no pseudonym. The real name wins, with the
+     * pseudonym as fallback so no account is left showing a generated username.
      */
     public function displayName(): string
     {
@@ -107,8 +105,8 @@ final readonly class IdpUser
     }
 
     /**
-     * The legal name, or null when the provider only gave us a pseudonym — a
-     * pseudonym is not a real name and does not belong in `realname`.
+     * The legal name, or null when the provider returned a pseudonym only. A
+     * pseudonym does not belong in `realname`.
      */
     public function realName(): ?string
     {
@@ -118,8 +116,8 @@ final readonly class IdpUser
     }
 
     /**
-     * the provider only documents ACTIVE. Treat a missing status as active so a
-     * person the directory never gave a status to is not archived by accident.
+     * STATUS_ACTIVE is the only documented value, so a missing status counts as
+     * active and a directory user carrying none is not archived by accident.
      */
     public function isActive(): bool
     {

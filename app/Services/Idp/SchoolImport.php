@@ -20,20 +20,19 @@ use Throwable;
 /**
  * Pulls a whole school from an identity provider into a tenant in one pass.
  *
- * This is how a school's people and classes actually arrive. Webhooks only
- * report *changes* — no provider replays an existing roster — so without this a
- * freshly connected school would stay empty until people trickled in one login
- * at a time.
+ * Webhooks report changes only, and no provider replays an existing roster, so
+ * without this a freshly connected school stays empty until people arrive one
+ * login at a time.
  *
- * Runs synchronously on the first SSO login (see
- * SsoController::bootstrapIdpTenant) so nobody reaches a half-populated aula.
- * Progress is written to the tenant record for the frontend to poll.
+ * Runs inside ImportSchoolForTenant, which SsoController::bootstrapIdpTenant()
+ * dispatches. Progress is written to the tenants row for ImportStatusController
+ * to report.
  *
- * Provider-agnostic: everything it reads comes through IdentityDirectory, so
- * which upstream a school syncs from changes nothing here.
+ * Reads through IdentityDirectory alone, so the upstream a school syncs from
+ * makes no difference here.
  *
- * Idempotent throughout — re-running converges rather than duplicating, so a
- * failed import can simply be run again.
+ * Idempotent throughout: a re-run converges instead of duplicating, so a failed
+ * import can be run again.
  */
 final class SchoolImport
 {
@@ -54,8 +53,7 @@ final class SchoolImport
     ) {}
 
     /**
-     * Import the school bound to this tenant. Must be called with tenancy
-     * initialised.
+     * Import the school in tenants.idp_school_id. Requires initialised tenancy.
      */
     public function run(Tenant $tenant): void
     {
@@ -93,7 +91,7 @@ final class SchoolImport
     }
 
     /**
-     * Provider groups become aula rooms.
+     * Each IdpGroup becomes an au_rooms row keyed by idp_group_id.
      *
      * @param  list<IdpGroup>  $groups
      */
@@ -108,12 +106,11 @@ final class SchoolImport
     }
 
     /**
-     * Import everyone, merging the school's user list with what the group
-     * member lists reveal.
+     * Import everyone, merging the school user list with the group member
+     * lists.
      *
-     * Both are needed: a provider may expose names only on group members, and
-     * may list someone in a group who is absent from the user listing entirely.
-     * Reading either alone loses data.
+     * A provider can expose names on group members only, and can list a group
+     * member the user listing omits, so either list alone loses data.
      *
      * @param  list<IdpUser>  $users
      * @param  list<IdpGroup>  $groups
@@ -154,7 +151,7 @@ final class SchoolImport
     }
 
     /**
-     * Create or converge one user, then put them in their rooms.
+     * Create or converge one LegacyUser, then sync its rooms.
      */
     public function importUser(Tenant $tenant, string $provider, IdpUser $person): LegacyUser
     {
@@ -165,9 +162,9 @@ final class SchoolImport
             $user->idp_user_id = $person->id;
             $user->username = $this->uniqueUsername($person);
             $user->hash_id = md5($person->id.(string) microtime(true).random_int(100, 10000000));
-            // Identity providers need not expose an email address, and their
-            // users need not have one. The column stays null; `idp_user_id` is
-            // the identifier.
+            // A provider need not expose an email address, and a directory user
+            // need not have one. idp_user_id is the identifier, so the column
+            // stays null.
             $user->email = null;
         }
 
@@ -177,10 +174,9 @@ final class SchoolImport
         $user->realname = $person->realName() ?? $user->realname;
         $user->status = $person->isActive() ? UserStatus::Active : UserStatus::Archived;
 
-        // Never demote an admin. The first person to sign in takes over the
-        // tenant admin, and to the provider they are an ordinary teacher —
-        // letting the role map write their userlevel would strip their own
-        // school's administration from them mid-import.
+        // Never demote an admin. bootstrapIdpTenant() stamps idp_user_id on the
+        // tenant admin, an account the provider reports as an ordinary teacher,
+        // so RoleMap would strip its userlevel mid-import.
         if (($user->userlevel?->value ?? 0) < UserLevel::Admin->value) {
             $user->userlevel = $this->roles->userlevel($provider, $person->role);
         }
@@ -198,8 +194,8 @@ final class SchoolImport
     }
 
     /**
-     * Everyone belongs to the school-wide room (`au_rooms.type = 1`) as well as
-     * to their classes, the same as any locally provisioned user.
+     * Every imported user joins the school-wide room (`au_rooms.type = 1`)
+     * besides its classes, like any locally provisioned account.
      */
     private function enrolInSchoolRoom(LegacyUser $user, int $role): void
     {
@@ -213,8 +209,8 @@ final class SchoolImport
     }
 
     /**
-     * Usernames are unique and there is no email to derive one from, so the
-     * person's name is used with a slice of their provider id.
+     * username is unique and no email is available to derive one from, so
+     * displayName() is combined with a slice of the provider id.
      */
     private function uniqueUsername(IdpUser $person): string
     {
