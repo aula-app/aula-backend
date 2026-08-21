@@ -16,8 +16,9 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * `school` events are the only ones that resolve their tenant directly, from
- * `tenants.idp_school_id`. Only the name has a home in aula.
+ * Covers SchoolSync. A `school` event is the only kind that resolves its tenant
+ * directly, through `tenants.idp_school_id`, and `tenants.name` is the only
+ * attribute aula has a column for.
  */
 class SchoolSyncTest extends TestCase
 {
@@ -83,7 +84,7 @@ class SchoolSyncTest extends TestCase
 
         $this->process($this->event('update', ['name']));
 
-        // idp_school_id is a direct mapping, so no school listing is read.
+        // idp_school_id maps straight to a tenant, so no listing is read.
         $this->assertFalse(
             collect(Http::recorded())->contains(
                 fn (array $pair): bool => str_contains((string) $pair[0]->url(), '/people'),
@@ -118,8 +119,8 @@ class SchoolSyncTest extends TestCase
 
         $this->process($event);
 
-        // tenants.name is unique: report the clash rather than retrying a write
-        // that can never succeed.
+        // tenants.name is unique, so the clash is logged instead of retrying a
+        // write that cannot succeed.
         $this->assertSame($this->originalName, self::$testTenant->fresh()->name);
         $this->assertSame(IdpWebhookEvent::STATUS_PROCESSED, $event->fresh()->status);
     }
@@ -131,8 +132,8 @@ class SchoolSyncTest extends TestCase
 
         $this->process($event);
 
-        // Dropping a tenant destroys a school's whole aula database. That is an
-        // operator decision, not something an inbound webhook gets to make.
+        // Dropping a tenant destroys a school's whole aula database, which is
+        // not a decision for an inbound webhook.
         $this->assertNotNull(self::$testTenant->fresh());
         $this->assertSame(IdpWebhookEvent::STATUS_SKIPPED, $event->fresh()->status);
         $this->assertSame('school_delete_needs_operator', $event->fresh()->error);
@@ -179,8 +180,8 @@ class SchoolSyncTest extends TestCase
         $event = $this->event('update', ['address', 'official_id']);
         $this->process($event);
 
-        // There is nowhere to put an address, but the event is still handled
-        // rather than left pending or retried.
+        // No column holds an address, and the event is still marked processed
+        // rather than left pending for a retry.
         $this->assertSame(IdpWebhookEvent::STATUS_PROCESSED, $event->fresh()->status);
     }
 

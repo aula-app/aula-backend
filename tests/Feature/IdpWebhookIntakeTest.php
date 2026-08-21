@@ -11,8 +11,8 @@ use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
- * Covers the webhook entry point: signature verification, envelope validation
- * and durable capture. Processing is a separate concern that runs on the queue.
+ * Covers WebhookController: signature verification, envelope validation and
+ * durable capture. ProcessIdpWebhookEvent does the processing.
  */
 class IdpWebhookIntakeTest extends TestCase
 {
@@ -26,8 +26,8 @@ class IdpWebhookIntakeTest extends TestCase
 
         config(['idp.providers.eduplaces.webhook_secret' => self::SECRET]);
 
-        // Intake is about capture and acknowledgement; what the job then does
-        // with the event is covered by the sync tests.
+        // This class covers capture and acknowledgement; the sync tests cover
+        // what ProcessIdpWebhookEvent then does.
         Queue::fake();
 
         IdpWebhookEvent::query()->delete();
@@ -93,8 +93,8 @@ class IdpWebhookIntakeTest extends TestCase
 
     public function test_rejects_a_signature_that_does_not_cover_the_delivered_body(): void
     {
-        // Signature is valid, but for a different body: catches a replayed
-        // header pasted onto tampered content.
+        // A signature valid for a different body, which is a replayed header
+        // on tampered content.
         $signature = hash_hmac('sha256', (string) json_encode($this->personPayload()), self::SECRET);
         $tampered = (string) json_encode($this->personPayload('someone-elses-person-id'));
 
@@ -175,7 +175,7 @@ class IdpWebhookIntakeTest extends TestCase
 
         $event = IdpWebhookEvent::firstOrFail();
 
-        // Normalised: Eduplaces says 'person', aula records 'user'.
+        // Normalised: Eduplaces sends 'person', the row records ENTITY_USER.
         $this->assertSame('user', $event->entity_type);
         $this->assertSame('update', $event->action);
         $this->assertSame('10adffa1-5ccd-481c-afc0-b5b8728d140d', $event->entity_id);
@@ -199,7 +199,8 @@ class IdpWebhookIntakeTest extends TestCase
 
     public function test_accepts_a_payload_without_updated_properties(): void
     {
-        // The field is documented as optional and is absent on create/delete.
+        // updatedProperties is documented as optional and absent on create and
+        // delete.
         $this->postSigned(['event' => 'person', 'action' => 'create', 'personId' => 'person-new'], 'person')
             ->assertStatus(202);
 
@@ -228,7 +229,8 @@ class IdpWebhookIntakeTest extends TestCase
     public function test_stores_repeated_deliveries_separately(): void
     {
         // Eduplaces documents no idempotency key, so a redelivery is a second
-        // row. Convergent processing, not intake, is what makes replays safe.
+        // row. The syncs converge on a read-back, which is what makes a replay
+        // harmless.
         $payload = $this->personPayload();
 
         $this->postSigned($payload, 'person')->assertStatus(202);

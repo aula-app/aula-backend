@@ -15,11 +15,11 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * Reviewing and applying a merge proposal.
+ * Covers MergeProposalController::decide() and MergeProposalApplier.
  *
- * Applying decides who owns which account, so the cases that matter are the
- * ones it must refuse, and the guarantee that a merge writes one column and
- * touches nothing else.
+ * Applying settles which account each directory identity lands on, so the cases
+ * here are the ones it must refuse, plus the guarantee that a merge writes one
+ * column and changes nothing else.
  */
 class IdpMergeApplyTest extends TestCase
 {
@@ -64,8 +64,7 @@ class IdpMergeApplyTest extends TestCase
         self::$testTenant->run(function () use ($userId) {
             $user = LegacyUser::find($userId);
 
-            // One column. The account, its content and its password are as
-            // they were.
+            // One column: the account's content and password are unchanged.
             $this->assertSame('p1', $user->idp_user_id);
             $this->assertNull($user->sso_sub);
             $this->assertNotEmpty($user->pw);
@@ -80,8 +79,7 @@ class IdpMergeApplyTest extends TestCase
 
         $response = $this->postJson('/api/v2/auth/idp/merge-proposal/apply', [], $this->adminHeaders());
 
-        // Folding two people into one account is the worst outcome available,
-        // so nothing is applied at all.
+        // validate() rejects the whole proposal, so no row is stamped.
         $response->assertStatus(422)->assertJsonPath('error', 'proposal_invalid');
 
         self::$testTenant->run(function () use ($userId) {
@@ -120,8 +118,8 @@ class IdpMergeApplyTest extends TestCase
         $this->postJson('/api/v2/auth/idp/merge-proposal/apply', [], $this->adminHeaders())->assertOk();
 
         self::$testTenant->run(function () use ($realId, $shellId) {
-            // The provider-created row has no content by construction, so the
-            // identity moves to the real account and the empty one goes.
+            // A row SchoolImport created carries no content, so idp_user_id
+            // moves to the local account and that row is deleted.
             $this->assertSame('p1', LegacyUser::find($realId)->idp_user_id);
             $this->assertNull(LegacyUser::find($shellId));
         });
@@ -159,8 +157,8 @@ class IdpMergeApplyTest extends TestCase
         $this->postJson('/api/v2/auth/idp/merge-proposal/apply', [], $this->adminHeaders())->assertOk();
 
         self::$testTenant->run(function () use ($wrongId, $rightId) {
-            // Picking a target by hand is the only way to match somebody the
-            // name comparison could not, or to correct a wrong guess.
+            // A hand-picked local_id is the only way to pair a row NameKey
+            // could not match, or to correct a wrong pairing.
             $this->assertSame('p1', LegacyUser::find($rightId)->idp_user_id);
             $this->assertNull(LegacyUser::find($wrongId)->idp_user_id);
         });

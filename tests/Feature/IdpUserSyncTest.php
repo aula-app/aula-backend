@@ -19,8 +19,9 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * End-to-end for `person` events: the queued job resolves the tenant, reads the
- * person back from the IDM and converges the local row onto it.
+ * End to end for `person` events: ProcessIdpWebhookEvent resolves the tenant,
+ * UserSync reads the user back from the directory, and SchoolImport::importUser()
+ * converges the local row onto it.
  */
 class UserSyncTest extends TestCase
 {
@@ -34,7 +35,7 @@ class UserSyncTest extends TestCase
 
     private const string PERSON = 'person-sync-1';
 
-    /** @var array<string, array<string, mixed>> the people the IDM stand-in knows about */
+    /** @var array<string, array<string, mixed>> the users the IDM stand-in holds */
     private array $idmPeople = [];
 
     /** @var list<string> listed at the school, but 404 on individual lookup */
@@ -94,7 +95,8 @@ class UserSyncTest extends TestCase
         $this->assertSame('Maximilian Mustermann', $user->realname);
         $this->assertSame(20, $user->userlevel->value);
         $this->assertSame(UserStatus::Active, $user->status);
-        // The IDM exposes no address, so the row waits for the first login.
+        // The directory exposes no address, so `email` stays null until a login
+        // supplies one.
         $this->assertNull($user->email);
     }
 
@@ -190,7 +192,8 @@ class UserSyncTest extends TestCase
         $this->process($this->event('update'));
         $second = $this->syncedUser();
 
-        // Eduplaces documents no idempotency key, so redelivery has to be inert.
+        // Eduplaces documents no idempotency key, so a redelivered event has to
+        // be inert.
         $this->assertSame($first->id, $second->id);
         $this->assertSame($first->displayname, $second->displayname);
         $this->assertSame($first->userlevel->value, $second->userlevel->value);
@@ -213,7 +216,8 @@ class UserSyncTest extends TestCase
 
         $user = $this->syncedUser();
 
-        // Legacy tables reference user rows; the history has to survive.
+        // The legacy ideas, votes and comments tables reference the row, so a
+        // delete archives instead.
         $this->assertNotNull($user, 'the row must still exist');
         $this->assertSame($userId, $user->id);
         $this->assertSame(UserStatus::Archived, $user->status);
@@ -227,7 +231,8 @@ class UserSyncTest extends TestCase
         Http::fake();
         $this->process($this->event('delete'));
 
-        // Nothing to read back: the payload already says what happened.
+        // No read-back on ACTION_DELETE: the payload carries all UserSync
+        // needs.
         Http::assertNothingSent();
     }
 
@@ -245,8 +250,8 @@ class UserSyncTest extends TestCase
 
     public function test_deleting_a_person_we_never_had_is_a_skip_not_a_failure(): void
     {
-        // The school is ours, so the event resolves to a tenant, but this
-        // person never reached aula — nothing to archive.
+        // The event resolves to a tenant, but no row carries this
+        // idp_user_id, so there is nothing to archive.
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Neverwas']]);
 
         $event = $this->event('delete');
@@ -300,8 +305,8 @@ class UserSyncTest extends TestCase
 
     public function test_leaves_aula_native_group_memberships_alone(): void
     {
-        // A group created inside aula, with no Eduplaces id, is not the IDM's
-        // to manage and must survive a membership sync.
+        // A room created inside aula carries no idp_group_id, so
+        // syncUserRooms() leaves it alone.
         $nativeRoomId = $this->seedLocalRoom(null, 'Schülerzeitung');
 
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Native'], 'groups' => []]);
@@ -347,8 +352,8 @@ class UserSyncTest extends TestCase
 
     public function test_skips_an_event_for_a_school_we_do_not_host(): void
     {
-        // The IDM knows nobody by this id at any school we serve, so the scan
-        // comes up empty and there is no tenant to open.
+        // No school in the directory holds this id, so TenantResolver's scan
+        // finds no tenant to open.
         $event = $this->event('update', 'person-from-another-school');
         $this->process($event);
 
@@ -358,9 +363,9 @@ class UserSyncTest extends TestCase
 
     public function test_skips_when_the_person_vanished_upstream(): void
     {
-        // Listed at the school, so the tenant resolves, but the read-back 404s:
-        // a create followed closely by a delete. Not a failure, and no row is
-        // invented for a person who is already gone.
+        // Listed at the school, so the tenant resolves, but the read-back 404s,
+        // as after a create followed by a delete. Not a failure, and no row is
+        // created for a directory user that no longer exists.
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Ghost']]);
         $this->idmVanished[] = self::PERSON;
 
@@ -409,10 +414,9 @@ class UserSyncTest extends TestCase
     /**
      * Stand in for the IDM, reading from mutable state.
      *
-     * A closure rather than a URL map because Http::fake() merges successive
-     * calls instead of replacing them — restubbing the same URL leaves the
-     * first response winning, which silently hides every second step of a
-     * multi-step test.
+     * A closure rather than a URL map: Http::fake() merges successive calls
+     * instead of replacing them, so restubbing a URL leaves the first response
+     * matching and hides the second step of a multi-step test.
      */
     private function fakeIdm(): void
     {
@@ -434,7 +438,7 @@ class UserSyncTest extends TestCase
     }
 
     /**
-     * Put a person into the IDM stand-in, replacing any earlier version.
+     * Put a user into the IDM stand-in, replacing any earlier version.
      *
      * @param  array<string, mixed>  $person
      */

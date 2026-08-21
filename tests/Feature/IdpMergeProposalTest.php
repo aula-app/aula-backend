@@ -17,10 +17,11 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * Matching a school's existing aula rows against its directory.
+ * Covers MergeProposalBuilder, which pairs a school's existing aula rows with
+ * its directory.
  *
- * The proposal decides who gets merged into whom, so the interesting cases are
- * the ones where it must refuse to decide.
+ * A pairing settles which account a directory identity lands on, so the cases
+ * here are the ones the builder must leave OUTCOME_AMBIGUOUS for an admin.
  */
 class IdpMergeProposalTest extends TestCase
 {
@@ -83,7 +84,7 @@ class IdpMergeProposalTest extends TestCase
 
         $row = $this->candidateForIdp('p1');
 
-        // Umlaut folding and casing are spelling, not identity.
+        // NameKey folds umlauts and casing, which are spelling, not identity.
         $this->assertSame(MergeProposalBuilder::OUTCOME_CONFIDENT, $row->outcome);
         $this->assertSame($id, (int) $row->local_id);
         $this->assertSame('merge', $row->decision);
@@ -100,7 +101,7 @@ class IdpMergeProposalTest extends TestCase
         $row = $this->candidateForIdp('p1');
 
         $this->assertSame(MergeProposalBuilder::OUTCOME_AMBIGUOUS, $row->outcome);
-        // Never pre-selected: merging the wrong one hands over an account.
+        // Never pre-selected: the wrong pairing hands over an account.
         $this->assertNull($row->decision);
     }
 
@@ -114,7 +115,7 @@ class IdpMergeProposalTest extends TestCase
 
         $this->build();
 
-        // Applying both would fold two people into a single account.
+        // Applying both would put two directory ids on one account.
         $this->assertSame(MergeProposalBuilder::OUTCOME_AMBIGUOUS, $this->candidateForIdp('p1')->outcome);
         $this->assertSame(MergeProposalBuilder::OUTCOME_AMBIGUOUS, $this->candidateForIdp('p2')->outcome);
     }
@@ -122,7 +123,7 @@ class IdpMergeProposalTest extends TestCase
     public function test_a_pseudonym_is_never_matched_and_says_so(): void
     {
         $this->seedAulaUser('Denk Raumfahrer');
-        // What the directory returns when it will not disclose a real name.
+        // What the directory returns in place of a real name.
         $this->idmUsers = [['id' => 'p1', 'role' => 'STUDENT', 'pseudonym' => 'Denk Raumfahrer', 'groups' => []]];
 
         $this->build();
@@ -130,7 +131,7 @@ class IdpMergeProposalTest extends TestCase
         $row = $this->candidateForIdp('p1');
 
         $this->assertSame(MergeProposalBuilder::OUTCOME_NONE, $row->outcome);
-        // The review has to be able to explain why this one cannot be matched.
+        // idp_name_kind is what the review shows to explain the empty keys.
         $this->assertSame(MergeProposalBuilder::NAME_PSEUDONYM, $row->idp_name_kind);
     }
 
@@ -179,8 +180,8 @@ class IdpMergeProposalTest extends TestCase
 
     public function test_it_ignores_accounts_that_are_already_linked(): void
     {
-        // The admin who connected the school is settled; re-proposing them
-        // would offer to merge them with themselves.
+        // A row that already carries an idp_user_id is skipped, or the proposal
+        // would offer to merge it with itself.
         self::$testTenant->run(function () {
             $user = new LegacyUser;
             $user->username = 'proposal.linked';
@@ -209,7 +210,8 @@ class IdpMergeProposalTest extends TestCase
         $this->idmUsers = [$this->person('p2', 'Zweite', 'Runde')];
         $this->build();
 
-        // A stale proposal is worse than none: it would be applied unseen.
+        // A rebuild truncates first, so no row from the previous proposal can
+        // be applied unseen.
         $this->assertNull($this->findCandidate('p1'));
         $this->assertNotNull($this->findCandidate('p2'));
     }

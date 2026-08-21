@@ -51,8 +51,8 @@ class TenantResolverTest extends TestCase
     protected function tearDown(): void
     {
         IdpDirectoryEntry::query()->delete();
-        // The TEST001 tenant is shared across test classes and deliberately not
-        // torn down, so anything set on it here has to be put back.
+        // TEST001 is shared across test classes and is not torn down, so
+        // anything set on it here has to be put back.
         self::$testTenant->update(['idp_school_id' => null]);
         parent::tearDown();
     }
@@ -98,13 +98,13 @@ class TenantResolverTest extends TestCase
 
         $this->resolver->resolve('eduplaces', IdpEvent::ENTITY_USER, 'person-b');
 
-        // The scan cost one round of API calls; the rest of the school should
-        // now be answerable from the index alone.
+        // The scan cost one round of API calls, and every other id at the
+        // school is now answerable from idp_directory alone.
         $this->assertDirectoryHas(IdpDirectoryEntry::TYPE_USER, 'person-a');
         $this->assertDirectoryHas(IdpDirectoryEntry::TYPE_USER, 'person-b');
-        // Only reachable via the /users listing, not /people.
+        // Present in the `/users` listing and absent from `/people`.
         $this->assertDirectoryHas(IdpDirectoryEntry::TYPE_USER, 'user-only-c');
-        // Picked up from the groups nested in the people payload.
+        // Indexed from the group refs nested in the user payload.
         $this->assertDirectoryHas(IdpDirectoryEntry::TYPE_GROUP, 'group-a');
     }
 
@@ -146,8 +146,8 @@ class TenantResolverTest extends TestCase
 
         $this->resolver->resolve('eduplaces', IdpEvent::ENTITY_USER, 'person-stranger');
 
-        // A school we do not host must not be able to make every one of its
-        // events trigger a fresh scan.
+        // A school this installation does not host must not make each of its
+        // events start a fresh scan.
         $this->assertCount($callsAfterFirstScan, Http::recorded());
     }
 
@@ -182,8 +182,8 @@ class TenantResolverTest extends TestCase
             self::API_URL.'/idm/ep/v1/schools/*/users' => Http::response(status: 503),
         ]);
 
-        // No exception escapes: an unreachable school is logged and skipped so
-        // the queue can retry rather than the job dying mid-scan.
+        // No DirectoryException escapes: an unreachable school is logged and
+        // stepped over so one failure does not abort the scan.
         $this->assertNull($this->resolver->resolve('eduplaces', IdpEvent::ENTITY_USER, 'person-b'));
     }
 
@@ -208,8 +208,8 @@ class TenantResolverTest extends TestCase
             ['id' => 'person-b', 'name' => ['last' => 'B'], 'groups' => []],
         ];
 
-        // A closure, because groups() reads each group in full and the response
-        // has to depend on which one was asked for.
+        // A closure, because groups() reads each group in full, so the response
+        // depends on which group was requested.
         Http::fake(function (Request $request) use ($groups, $people) {
             $path = (string) parse_url($request->url(), PHP_URL_PATH);
 
