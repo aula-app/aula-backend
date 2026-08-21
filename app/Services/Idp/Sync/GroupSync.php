@@ -18,13 +18,13 @@ use Illuminate\Support\Facades\Log;
 /**
  * Applies a group event to the tenant database.
  *
- * A directory group is an aula **room**, so this keeps `au_rooms` and
- * `au_rel_rooms_users` in step after the initial import. It shares the same
- * enrolment code as SchoolImport, so the two cannot produce different shapes.
+ * A directory group is an aula room, so this keeps `au_rooms` and
+ * `au_rel_rooms_users` in step after SchoolImport has run, through the same
+ * RoomEnrolment methods the import uses.
  *
- * Must be called with tenancy already initialised.
+ * Requires initialised tenancy.
  *
- * Converges on the state read back from the directory rather than applying the
+ * Converges on the state read back from the directory instead of applying the
  * reported delta, so redelivered and out-of-order events are harmless.
  */
 final class GroupSync
@@ -63,12 +63,11 @@ final class GroupSync
     }
 
     /**
-     * Reconcile who is in the room, carrying each member's role across.
+     * Reconcile room membership, carrying each member's role across.
      *
-     * Members aula has never seen are left out rather than invented: a group
-     * payload is usually thinner than a user record, so the row their own user
-     * event builds is better, and that event reconciles this room from the
-     * other side.
+     * A member with no `idp_user_id` row is counted and skipped, not created: a
+     * group payload is thinner than a user record, and that member's own user
+     * event builds the row and reconciles this room from the other side.
      *
      * @param  array{id: int, hash_id: string}  $room
      * @param  list<IdpUser>  $members
@@ -103,9 +102,9 @@ final class GroupSync
     }
 
     /**
-     * Fill in a real name once a group event reveals one.
+     * Write `realname` once a group event carries one.
      *
-     * Some providers expose real names only on group members, so a user
+     * A provider can expose real names on group members only, so a user
      * imported from the user listing alone can still be showing a pseudonym.
      */
     private function backfillName(int $userId, IdpUser $member): void

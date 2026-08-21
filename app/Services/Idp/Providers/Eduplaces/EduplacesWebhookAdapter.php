@@ -10,14 +10,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Eduplaces IDM webhooks — https://developer.eduplaces.de/idm/webhooks
+ * Eduplaces IDM webhooks: https://developer.eduplaces.de/idm/webhooks
  *
  * Signature: `X-EP-Signature-Sha256`, an HMAC-SHA256 of the raw body. The
  * documented check produces lowercase hex; base64 is accepted too, since the
- * docs do not pin the encoding and the two are trivially distinguishable.
+ * docs do not pin the encoding and the two differ in length and alphabet.
  *
  * Envelope: `{event, action, personId|groupId|schoolId, updatedProperties}`.
- * Eduplaces calls its people "person"; aula calls them users.
+ * Eduplaces calls a "person" what aula calls a user.
  */
 final class EduplacesWebhookAdapter implements WebhookAdapter
 {
@@ -45,8 +45,8 @@ final class EduplacesWebhookAdapter implements WebhookAdapter
             return false;
         }
 
-        // The raw body: a decode/re-encode round trip would not reproduce the
-        // bytes that were signed.
+        // The raw body: a decode and re-encode round trip does not reproduce
+        // the signed bytes.
         $body = $request->getContent();
 
         if (preg_match('/^[0-9a-f]{64}$/i', $provided) === 1) {
@@ -98,8 +98,8 @@ final class EduplacesWebhookAdapter implements WebhookAdapter
     }
 
     /**
-     * The event type appears in both the header and the body. Requiring them to
-     * agree stops a mislabelled delivery being applied to the wrong kind of
+     * The event type appears in the header and in the body. Requiring the two
+     * to agree stops a mislabelled delivery being applied to the wrong kind of
      * entity.
      *
      * @param  array<string, mixed>  $payload

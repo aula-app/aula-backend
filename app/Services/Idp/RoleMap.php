@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Services\Idp;
 
 /**
- * Maps a provider's role vocabulary onto aula's two notions of rank: the
- * account-wide `userlevel` and the per-room entry in the `roles` column.
+ * Maps a provider's role vocabulary onto both of aula's ranks: the account-wide
+ * `userlevel` and the per-room entry in the `roles` column.
  *
- * Both come from one configured map, so a teacher cannot end up privileged
- * account-wide but not in their own class, or the other way round.
+ * Both read one `config/idp.php` map, so an account cannot come out privileged
+ * account-wide but not in its own rooms, or the reverse.
  */
 final class RoleMap
 {
@@ -32,7 +32,7 @@ final class RoleMap
     }
 
     /**
-     * The role recorded against each room the person belongs to.
+     * The role written to the `roles` entry for each of the user's rooms.
      */
     public function roomRole(string $provider, ?string $role): int
     {

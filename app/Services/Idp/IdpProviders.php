@@ -10,10 +10,11 @@ use App\Services\Idp\Contracts\WebhookAdapter;
 use InvalidArgumentException;
 
 /**
- * Resolves a provider alias to its implementation and settings.
+ * Resolves a provider alias to its implementation and its `config/idp.php`
+ * settings.
  *
- * The alias is `tenants.sso_provider` — the same value Keycloak uses as its IdP
- * alias — so a tenant's login and its directory can never point at different
+ * The alias is `tenants.sso_provider`, the same value Keycloak uses as its IdP
+ * alias, so a tenant's login and its directory cannot point at different
  * providers.
  */
 final class IdpProviders
@@ -34,7 +35,8 @@ final class IdpProviders
     }
 
     /**
-     * The alias this tenant syncs from, or null when it syncs from nowhere.
+     * The alias this tenant syncs from, or null when `sso_provider` names none
+     * that is configured.
      */
     public function forTenant(Tenant $tenant): ?string
     {
@@ -49,8 +51,8 @@ final class IdpProviders
     }
 
     /**
-     * Every configured alias, for the scan that finds which tenant an entity
-     * belongs to.
+     * Every configured alias, for TenantResolver and for reading a claim under
+     * each provider's name for it.
      *
      * @return list<string>
      */
