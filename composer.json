@@ -58,7 +58,10 @@
     ],
     "post-update-cmd": [
       "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-      "@php artisan vendor:publish --tag=livewire-assets --ansi --force",
+      "@php artisan vendor:publish --tag=livewire-assets --ansi --force"
+    ],
+    "ide-helper-update": [
+      "mkdir -p .ide_helpers && touch .ide_helpers/_ide_helper.php",
       "@php artisan ide-helper:generate --no-interaction .ide_helpers/_ide_helper.php",
       "@php artisan ide-helper:models --nowrite -F .ide_helpers/_ide_helper_models.php --no-interaction"
     ],
