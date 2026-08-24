@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\SsoController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 
@@ -23,7 +24,11 @@ Route::name('auth.')
         InitializeTenancyByRequestData::class,
     ])
     ->prefix('/api/v2/legacy-auth')
-    ->group(base_path('routes/tenant/api/v2/auth.php'));
+    ->group(base_path('routes/tenant/api/v2/legacy-auth.php'));
+
+// See also \App\Providers\PassportServiceProvider.php for
+// some more routes that are added there in function boot()
+// OAuth routes are defined there
 
 // SSO routes
 Route::name('sso.')
@@ -33,11 +38,11 @@ Route::name('sso.')
     ])
     ->prefix('/api/v2/auth')
     ->group(function () {
-        Route::get('/sso/initiate', [\App\Http\Controllers\Auth\SsoController::class, 'initiate'])->name('initiate');
+        Route::get('/sso/initiate', [SsoController::class, 'initiate'])->name('initiate');
 
-        Route::middleware('legacy.jwt')->group(function () {
-            Route::post('/sso/logout', [\App\Http\Controllers\Auth\SsoController::class, 'logout'])->name('sso.logout');
-            Route::post('/sso/link', [\App\Http\Controllers\Auth\SsoController::class, 'link'])->name('sso.link');
+        Route::middleware('auth:api')->group(function () {
+            Route::post('/sso/logout', [SsoController::class, 'logout'])->name('sso.logout');
+            Route::post('/sso/link', [SsoController::class, 'link'])->name('sso.link');
         });
     });
 
@@ -48,10 +53,7 @@ Route::name('aula.')
         /* \Illuminate\Session\Middleware\StartSession::class, */
         /* \Illuminate\View\Middleware\ShareErrorsFromSession::class, */
         InitializeTenancyByRequestData::class,
-        /* 'auth:api', // our 'api' guard should be configured to use 'passport' */
-        // TODO: replace with passport?
-        'legacy.jwt',
-        'auth:apiv2',
+        'auth:api', // our 'api' guard should be configured to use 'passport'
     ])
     ->prefix('/api/v2')
     ->group(base_path('routes/tenant/api/v2/aula.php'));

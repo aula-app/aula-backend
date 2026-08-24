@@ -16,8 +16,7 @@ use Illuminate\Support\Facades\Schema;
  * varchar(1024) cannot be indexed under utf8mb4 (1024 * 4 > the 3072-byte key
  * limit), so the column is narrowed first. Values are md5 hex digests, 32 chars.
  */
-return new class extends Migration
-{
+return new class () extends Migration {
     private const TABLE = 'au_users_basedata';
 
     private const INDEX = 'au_users_basedata_hash_id_unique';

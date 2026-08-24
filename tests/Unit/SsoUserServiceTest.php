@@ -6,6 +6,8 @@ use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Services\SsoUserService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Mockery;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -115,17 +117,23 @@ class SsoUserServiceTest extends TestCase
     // addToStandardRoom
     // =========================================================
 
-    // @FIXME: we shouldn't have conditional tests - ensure std. room exists for this test case
     public function test_add_to_standard_room_inserts_membership_when_standard_room_exists(): void
     {
         self::$testTenant->run(function () {
             $user = $this->makeUser('unit_room@sso.test', 'sub-room');
 
             // Ensure there is at least one standard room (type=1)
-            $standardRoom = \Illuminate\Support\Facades\DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
+            $standardRoom = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
 
             if ($standardRoom === null) {
-                $this->markTestSkipped('No standard room (type=1) in test tenant.');
+                DB::table('au_rooms')->insert([
+                    'room_name' => 'Schule',
+                    'description_internal' => null,
+                    'hash_id' => Str::random(30),
+                    'status' => 1,
+                    'type' => 1,
+                ]);
+                $standardRoom = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
             }
 
             $this->service->addToStandardRoom($user);
