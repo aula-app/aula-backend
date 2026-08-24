@@ -15,19 +15,17 @@ use Illuminate\Support\Facades\Log;
 /**
  * Receives identity-provider webhooks.
  *
- * The signature is checked by middleware and the payload is normalised by the
- * provider's adapter, so what is left here is durable capture: the delivery is
- * written to the central event log, acknowledged with 202, and the work happens
- * on the queue.
+ * VerifyIdpWebhookSignature checks the signature and the provider's
+ * WebhookAdapter normalises the payload, so what is left here is durable
+ * capture: the delivery is written to `idp_webhook_events`, acknowledged with
+ * 202, and ProcessIdpWebhookEvent does the work.
  *
- * Status codes matter more than usual because they drive the provider's own
- * retries:
+ * The status codes drive the provider's own retries:
  *
- *   401  bad or missing signature     — worth retrying only if transient
+ *   401  bad or missing signature
  *   404  provider not configured here
- *   422  envelope we cannot interpret — a contract violation, retries will not help
- *   202  accepted                     — anything after this is our problem, and
- *                                       our own queue owns those retries
+ *   422  uninterpretable envelope, which no retry can fix
+ *   202  accepted, and every retry after this belongs to the aula queue
  */
 class WebhookController extends Controller
 {

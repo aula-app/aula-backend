@@ -21,8 +21,8 @@ use Throwable;
  * The review an admin works through before a school's directory is imported
  * over its existing accounts.
  *
- * Everything here is admin-only: these decisions determine who ends up owning
- * which account.
+ * Every endpoint is admin-only: these decisions settle which account each
+ * directory identity ends up on.
  */
 class MergeProposalController extends Controller
 {
@@ -32,7 +32,7 @@ class MergeProposalController extends Controller
     ) {}
 
     /**
-     * Build a fresh proposal, discarding any earlier one.
+     * Replace the proposal and move the tenant to IDP_MIGRATION_REVIEWING.
      */
     public function build(Request $request): JsonResponse
     {
@@ -55,7 +55,7 @@ class MergeProposalController extends Controller
     }
 
     /**
-     * The proposal, in the three buckets the review shows.
+     * A page of idp_merge_candidates, filtered by kind, search and bucket.
      */
     public function index(Request $request): JsonResponse
     {
@@ -69,8 +69,8 @@ class MergeProposalController extends Controller
             $query->where('kind', $kind);
         }
 
-        // A thousand-pupil school makes an unfiltered list useless, so the
-        // review is expected to search rather than scroll.
+        // A thousand-row proposal is unusable unfiltered, so this endpoint
+        // searches and pages rather than returning everything.
         if (($search = trim((string) $request->query('search', ''))) !== '') {
             $query->where(function ($q) use ($search): void {
                 $q->where('local_name', 'like', "%{$search}%")
@@ -99,10 +99,10 @@ class MergeProposalController extends Controller
     }
 
     /**
-     * Record what the admin decided, including any target they picked by hand.
+     * Record the admin's decisions, including a local_id picked by hand.
      *
-     * The manual target is what makes a pseudonym-only person matchable at all,
-     * and what lets a wrong guess be corrected rather than merely rejected.
+     * A hand-picked local_id is what makes a NAME_PSEUDONYM row matchable at
+     * all, and what corrects a wrong pairing instead of only rejecting it.
      */
     public function decide(Request $request): JsonResponse
     {
@@ -146,8 +146,8 @@ class MergeProposalController extends Controller
         $problems = $this->applier->validate();
 
         if ($problems !== []) {
-            // Better to send the admin back to the rows than to apply a
-            // proposal that is partly wrong.
+            // Nothing is stamped while any row is invalid: the admin fixes the
+            // rows first.
             return response()->json(['error' => 'proposal_invalid', 'problems' => $problems], 422);
         }
 
@@ -167,8 +167,8 @@ class MergeProposalController extends Controller
     }
 
     /**
-     * How far the school has got: the middle number is the one that says
-     * whether the migration is finished.
+     * idp_migration_status with the linked, unlinked and signed-in account
+     * counts behind it.
      */
     public function progress(Request $request): JsonResponse
     {
@@ -179,10 +179,10 @@ class MergeProposalController extends Controller
         /** @var Tenant $resolved */
         $resolved = tenant();
 
-        // Read through, not from the resolved instance: tenancy caches it for
-        // the request, and this endpoint is polled while a queued import is
-        // changing exactly this column. A cached copy reports `importing`
-        // forever, however long the import has been finished.
+        // Read fresh, not from the resolved instance: tenancy caches it for the
+        // request, and this endpoint is polled while ImportSchoolForTenant
+        // writes exactly this column, so a cached copy reports IMPORTING for as
+        // long as the polling lasts.
         $tenant = $resolved->fresh() ?? $resolved;
 
         return response()->json([

@@ -16,12 +16,12 @@ use RuntimeException;
 /**
  * Works out how a school's existing aula rows line up with its directory.
  *
- * Proposes only. Nothing here changes a user or a room — it writes candidates
- * for a human to confirm, because the only thing the two sides have in common
- * is names, and a wrong name match hands somebody another person's account and
- * everything they wrote.
+ * Writes idp_merge_candidates and nothing else: no LegacyUser or au_rooms row
+ * is changed here. Names are all the two sides share, and a wrong name match
+ * would hand one account, and everything written in it, to another person, so
+ * an admin confirms the rows and MergeProposalApplier acts on them.
  *
- * Must be called with tenancy initialised.
+ * Requires initialised tenancy.
  */
 final class MergeProposalBuilder
 {
@@ -32,7 +32,7 @@ final class MergeProposalBuilder
     /** Exactly one candidate on each side. */
     public const string OUTCOME_CONFIDENT = 'confident';
 
-    /** More than one candidate either way — a human has to choose. */
+    /** More than one candidate on either side, so an admin chooses. */
     public const string OUTCOME_AMBIGUOUS = 'ambiguous';
 
     /** Nothing to match against. */
@@ -41,8 +41,8 @@ final class MergeProposalBuilder
     public const string NAME_REAL = 'real';
 
     /**
-     * A generated stand-in the directory returns when it will not disclose a
-     * real name. Can never be matched: it is not what anyone is called in aula.
+     * A stand-in the directory returns in place of a real name. Never matched,
+     * since no aula row carries it.
      */
     public const string NAME_PSEUDONYM = 'pseudonym';
 
@@ -51,9 +51,9 @@ final class MergeProposalBuilder
     ) {}
 
     /**
-     * Replace any existing proposal for this tenant with a fresh one.
+     * Replace this tenant's idp_merge_candidates rows with a fresh proposal.
      *
-     * @return array<string, int> counts by outcome, for the caller to report
+     * @return array<string, int> counts by outcome
      */
     public function build(Tenant $tenant): array
     {
@@ -86,12 +86,11 @@ final class MergeProposalBuilder
     }
 
     /**
-     * Fold the group member lists into the user list.
+     * Fold IdpGroup member lists into the user list.
      *
-     * A directory may expose real names only on group members while the user
-     * listing carries a pseudonym, and may list somebody in a group who is
-     * absent from the user listing altogether. Both are needed or the proposal
-     * silently loses people.
+     * A directory can expose real names on group members while the user listing
+     * carries a pseudonym, and can list a group member the user listing omits,
+     * so a proposal built from either list alone is short of names and rows.
      *
      * @param  list<IdpUser>  $users
      * @param  list<IdpGroup>  $groups
@@ -127,7 +126,6 @@ final class MergeProposalBuilder
         $local = [];
 
         foreach (DB::table('au_rooms')->whereNull('idp_group_id')->get(['id', 'room_name']) as $room) {
-            // The school-wide room is aula's own and is never a class.
             $local[] = ['id' => (int) $room->id, 'name' => (string) $room->room_name];
         }
 
@@ -170,8 +168,8 @@ final class MergeProposalBuilder
             $provider[] = [
                 'id' => $user->id,
                 'name' => $user->displayName(),
-                // Only a real name is worth comparing. A pseudonym would match
-                // nothing, and pretending otherwise hides why.
+                // A pseudonym matches no aula row, so it gets no keys and
+                // idp_name_kind records why.
                 'keys' => $real === null ? [] : NameKey::keys([$real, $user->name->display()]),
                 'name_kind' => $real === null ? self::NAME_PSEUDONYM : self::NAME_REAL,
             ];
@@ -181,12 +179,12 @@ final class MergeProposalBuilder
     }
 
     /**
-     * Pair two sides by name key and write the result.
+     * Pair both sides by NameKey and write the idp_merge_candidates rows.
      *
-     * A pairing is confident only when each side sees exactly one of the other.
-     * One provider person matching two aula rows is ambiguous; so is one aula
-     * row being the only match for two provider people, because applying both
-     * would merge two people into one account.
+     * A pairing is OUTCOME_CONFIDENT only when each side sees exactly one of
+     * the other. One directory entry matching two aula rows is ambiguous, and
+     * so is one aula row being the only match for two directory entries, since
+     * applying both would merge two people into one account.
      *
      * @param  list<array{id: string, name: string, keys: list<string>, name_kind: string}>  $provider
      * @param  list<array{id: int, name: string, keys: list<string>}>  $local
@@ -252,16 +250,16 @@ final class MergeProposalBuilder
                 'local_id' => $outcome === self::OUTCOME_NONE ? null : ($local[$localIndex]['id'] ?? null),
                 'local_name' => $outcome === self::OUTCOME_NONE ? null : ($local[$localIndex]['name'] ?? null),
                 'outcome' => $outcome,
-                // Only an unambiguous pairing is pre-selected. Everything else
-                // is a question for the admin, not a default.
+                // Only OUTCOME_CONFIDENT is pre-selected; the rest carry no
+                // decision until an admin makes one.
                 'decision' => $outcome === self::OUTCOME_CONFIDENT ? 'merge' : null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
 
-        // Whatever nothing pointed at exists in aula alone: it keeps working as
-        // it does today and can still be linked later by its owner.
+        // A local row no directory entry matched is recorded as OUTCOME_NONE
+        // with no idp_id: it stays as it is, and an SSO login can still link it.
         foreach ($local as $index => $row) {
             if (isset($matchedLocal[$index])) {
                 continue;

@@ -13,9 +13,9 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * `idp:reset-tenant` puts a tenant back to never-synced so the first-login
- * bootstrap can be exercised again. It has to undo the import without taking
- * anything else with it.
+ * Covers `idp:reset-tenant`, which puts a tenant back to never-synced so
+ * bootstrapIdpTenant() runs again. It has to undo SchoolImport's writes and
+ * nothing else.
  */
 class ResetIdpTenantCommandTest extends TestCase
 {
@@ -71,8 +71,8 @@ class ResetIdpTenantCommandTest extends TestCase
         self::$testTenant->run(function () use ($nativeId) {
             $native = LegacyUser::find($nativeId);
 
-            // A reset of the directory sync must not delete a school's own
-            // accounts, only clear the identity the sync attached to them.
+            // A sync reset clears sso_sub and idp_user_id on a school's own
+            // accounts and deletes none of them.
             $this->assertNotNull($native);
             $this->assertNull($native->sso_sub);
             $this->assertNull($native->idp_user_id);
@@ -90,8 +90,8 @@ class ResetIdpTenantCommandTest extends TestCase
             $user->username = $username;
             $user->displayname = $username;
             $user->email = 'reset.admin@test.example';
-            // Seeded by tenant creation, so no password: the bootstrap takes
-            // over exactly this row and stamps its provider identity on it.
+            // Seeded by tenant creation with no password, and the row
+            // bootstrapIdpTenant() claims and stamps idp_user_id onto.
             $user->idp_user_id = 'person-reset-admin';
             $user->sso_sub = 'kc-sub-admin';
             $user->status = UserStatus::Active;
@@ -107,8 +107,8 @@ class ResetIdpTenantCommandTest extends TestCase
         self::$testTenant->run(function () use ($adminId) {
             $admin = LegacyUser::find($adminId);
 
-            // Deleting it leaves the tenant with no admin for the next first
-            // login to take over, and no way back to a working school.
+            // Deleting it would leave tenantAdmin() nothing for the next first
+            // login to claim.
             $this->assertNotNull($admin);
             $this->assertNull($admin->sso_sub);
             $this->assertNull($admin->idp_user_id);
@@ -123,8 +123,8 @@ class ResetIdpTenantCommandTest extends TestCase
             $user = new LegacyUser;
             $user->username = 'reset.adopted.'.random_int(1000, 999999);
             $user->displayname = $user->username;
-            // Adoption copies an address onto the row at that first login, so
-            // having one says nothing about where the row came from.
+            // adoptDirectoryProvisionedUser() writes an address onto an
+            // imported row, so `email` says nothing about the row's origin.
             $user->email = 'reset.adopted@test.example';
             $user->idp_user_id = 'person-reset-adopted';
             $user->sso_sub = 'kc-sub-adopted';
@@ -139,8 +139,8 @@ class ResetIdpTenantCommandTest extends TestCase
         $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
 
         self::$testTenant->run(function () use ($importedId) {
-            // Left behind, it collides with the next import: its provider id is
-            // cleared, so the import makes a second row for the same person.
+            // Left behind with idp_user_id cleared, the next import would
+            // create a second row for the same directory user.
             $this->assertNull(LegacyUser::find($importedId));
         });
     }
@@ -168,8 +168,8 @@ class ResetIdpTenantCommandTest extends TestCase
 
         $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
 
-        // A tenant still part-way through a migration refuses to bootstrap on a
-        // first login, which is exactly what this command exists to set up.
+        // bootstrapIdpTenant() declines while idp_migration_status is set,
+        // which is the state this command exists to restore.
         $tenant = self::$testTenant->fresh();
         $this->assertNull($tenant->idp_migration_status);
         $this->assertFalse($tenant->isMigratingToIdp());
@@ -193,7 +193,7 @@ class ResetIdpTenantCommandTest extends TestCase
 
         $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
 
-        // The proposal describes rows the reset has just deleted.
+        // idp_merge_candidates describes rows the reset just deleted.
         $this->assertSame(0, self::$testTenant->run(
             fn () => DB::table('idp_merge_candidates')->count(),
         ));
@@ -230,7 +230,7 @@ class ResetIdpTenantCommandTest extends TestCase
         self::$testTenant->run(function () use ($userId, $nativeRoomHash) {
             $roles = json_decode((string) LegacyUser::find($userId)->roles, true);
 
-            // The aula-native room role is somebody's real configuration.
+            // The `roles` entry for a room created inside aula is kept.
             $this->assertSame([['role' => 30, 'room' => $nativeRoomHash]], $roles);
         });
     }
@@ -247,7 +247,7 @@ class ResetIdpTenantCommandTest extends TestCase
         $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
 
         $this->assertSame(0, IdpDirectoryEntry::where('tenant_id', self::$testTenant->id)->count());
-        // Another tenant's index is none of this reset's business.
+        // idp_directory rows belonging to another tenant are left alone.
         $this->assertSame(1, IdpDirectoryEntry::where('tenant_id', 'some-other-tenant')->count());
     }
 
@@ -317,7 +317,8 @@ class ResetIdpTenantCommandTest extends TestCase
             $user->displayname = $user->username;
             $user->email = 'reset.native@test.example';
             $user->pw = password_hash('secret', PASSWORD_BCRYPT);
-            // Signed in via SSO at some point, but not created by the import.
+            // Carries an sso_sub from an SSO login but was not created by
+            // SchoolImport.
             $user->sso_sub = 'kc-sub-native';
             $user->status = UserStatus::Active;
             $user->userlevel = 20;

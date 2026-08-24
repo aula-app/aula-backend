@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Idp\Dto;
 
 /**
- * A provider may split a name into the full first name, the name the person is
- * actually called by, and the last name. "Wilma Johanna Sophie" may go by
- * "Johanna", so the call name is what belongs in a display name.
+ * A provider can split a name into the full first name, the first name in use,
+ * and the last name. "Wilma Johanna Sophie" may go by "Johanna", so firstCall
+ * is what belongs in `displayname`.
  */
 final readonly class IdpUserName
 {
@@ -30,7 +30,7 @@ final readonly class IdpUserName
     }
 
     /**
-     * Name shown in the aula frontend.
+     * The name for `displayname`.
      */
     public function display(): string
     {
@@ -38,7 +38,7 @@ final readonly class IdpUserName
     }
 
     /**
-     * Legal name, kept in `realname`.
+     * The legal name, for `realname`.
      */
     public function real(): string
     {

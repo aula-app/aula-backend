@@ -10,9 +10,9 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
 /**
  * Maps a provider user or group id to the tenant that owns it.
  *
- * IdpUser and group webhooks carry no school identifier, so this index is what
- * makes an incoming event routable to a tenant database. Entries are written
- * whenever a school's people or groups are read from the directory.
+ * User and group webhooks carry no school identifier, so this index is what
+ * makes an event routable to a tenant database. TenantResolver::remember()
+ * writes an entry whenever a school's users or groups are read.
  */
 class IdpDirectoryEntry extends Model
 {

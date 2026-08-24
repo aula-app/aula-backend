@@ -6,13 +6,12 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * getUsers has to say where an account came from.
+ * getUsers has to report where an account came from, so the settings table can
+ * label each row "aula" or "sso: <provider>".
  *
- * The settings table labels each person "aula" or "sso: <provider>". It can
- * only do that if the payload carries the provider identity, and the identity
- * has to be idp_user_id: the import sets it when it creates the account, while
- * sso_sub appears only once that person has signed in. Selecting sso_sub alone
- * labelled every imported account "aula" until its owner first logged in.
+ * The payload carries idp_user_id for that: SchoolImport writes it when it
+ * creates the row, while sso_sub appears only after a first login, so selecting
+ * sso_sub alone labels every imported account "aula" until then.
  */
 class UserGetUsersIdpTest extends TestCase
 {
@@ -53,8 +52,8 @@ class UserGetUsersIdpTest extends TestCase
 
         $this->assertNotNull($row, 'the seeded user should come back from getUsers');
         $this->assertArrayHasKey('idp_user_id', $row);
-        // Never signed in, so sso_sub is null; the account is still the
-        // provider's and must not read as locally made.
+        // No login yet, so sso_sub is null, and idp_user_id is what keeps the
+        // row from reading as locally created.
         $this->assertSame('person-from-directory', $row['idp_user_id']);
         $this->assertNull($row['sso_sub']);
     }

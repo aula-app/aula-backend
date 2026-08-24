@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Services\Idp\Migration;
 
 /**
- * Reduces a person's or room's name to a key two systems can be compared on.
+ * Reduces a user or room name to a key two systems can be compared on.
  *
- * Names are the only thing a school's aula rows and its directory have in
- * common, and they never agree exactly: casing differs, umlauts are written
- * both ways, and spacing is inconsistent. Everything here is a fold that makes
- * two spellings of the same name equal, and nothing more — no fuzzy distance,
- * because a near-match that is wrong hands somebody another person's account.
+ * Names are all a school's aula rows and its directory share, and they never
+ * agree exactly: casing differs, umlauts are written both ways, spacing is
+ * inconsistent. Every step here is a fold that makes two spellings of one name
+ * equal, and nothing more. No fuzzy distance: a near-match that is wrong hands
+ * one account to another person.
  */
 final class NameKey
 {
@@ -34,7 +34,7 @@ final class NameKey
         $key = mb_strtolower(trim($name));
         $key = strtr($key, self::FOLD);
         // Punctuation carries no meaning here: "Müller-Schmidt" and
-        // "Mueller Schmidt" are the same person written two ways.
+        // "Mueller Schmidt" are one name written two ways.
         $key = (string) preg_replace('/[^a-z0-9]+/u', ' ', $key);
         $key = trim((string) preg_replace('/\s+/', ' ', $key));
 
@@ -44,10 +44,9 @@ final class NameKey
     /**
      * Every spelling of a name worth comparing.
      *
-     * A directory may give both a full first name and the one the person is
-     * actually called by ("Wilma Johanna Sophie" goes by "Johanna"), and aula
-     * holds both a real name and a display name. Any of them matching is a
-     * match.
+     * A directory can carry both a full first name and the one in use ("Wilma
+     * Johanna Sophie" going by "Johanna"), and aula holds `realname` next to
+     * `displayname`. Any one key matching counts as a match.
      *
      * @param  list<string|null>  $names
      * @return list<string>

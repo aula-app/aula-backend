@@ -14,9 +14,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Verifies an inbound webhook against the provider named in the route.
  *
- * The scheme itself belongs to the provider's WebhookAdapter — signatures are
- * where identity providers differ most — so this only resolves the provider,
- * supplies the secret, and fails closed.
+ * The scheme belongs to the provider's WebhookAdapter, since signatures are
+ * where providers differ most, so this resolves the provider, supplies the
+ * secret and fails closed.
  */
 class VerifyIdpWebhookSignature
 {

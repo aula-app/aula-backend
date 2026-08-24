@@ -10,13 +10,12 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
 /**
  * One received identity-provider webhook.
  *
- * Rows are written before any processing so a delivery is never lost to a
- * transient failure downstream, and so a replay can be reconstructed from
- * what the provider actually sent rather than from what we inferred.
+ * WebhookController writes the row before any processing, so a delivery
+ * survives a failure in ProcessIdpWebhookEvent and a replay can be rebuilt from
+ * the payload as the provider sent it.
  *
- * Lives on the central connection: the job that processes an event switches
- * to a tenant database part-way through, and the audit trail must not follow
- * it there.
+ * Central connection: ProcessIdpWebhookEvent initialises a tenant part-way
+ * through, and this table must not follow it there.
  */
 class IdpWebhookEvent extends Model
 {
@@ -26,7 +25,7 @@ class IdpWebhookEvent extends Model
 
     public const string STATUS_PROCESSED = 'processed';
 
-    /** Nothing to do: the entity is not one we track. */
+    /** Nothing to do: no tenant holds the entity, or the sync had no work. */
     public const string STATUS_SKIPPED = 'skipped';
 
     public const string STATUS_FAILED = 'failed';

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Services\Idp\Sync;
 
 /**
- * What a sync did with an event, so the job can record it without the sync
- * services needing to know about the event log or about queue semantics.
+ * What a sync did with an event, so ProcessIdpWebhookEvent can record it
+ * without the sync services knowing about the event log or queue semantics.
  *
- * "Skipped" is a success: there was legitimately nothing to do. Failures are
- * exceptions, because those are the ones the queue should retry.
+ * skipped() is a success: there was nothing to do. A failure is an exception,
+ * which is what the queue retries.
  */
 final readonly class SyncOutcome
 {

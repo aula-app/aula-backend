@@ -19,8 +19,8 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * The initial school import: Eduplaces groups become aula rooms, Eduplaces
- * people become users enrolled in those rooms with a per-room role.
+ * Covers SchoolImport: an IdpGroup becomes an `au_rooms` row and an IdpUser
+ * becomes a LegacyUser enrolled in those rooms with a per-room role.
  */
 class SchoolImportTest extends TestCase
 {
@@ -120,7 +120,8 @@ class SchoolImportTest extends TestCase
             $this->assertSame(1, DB::table('au_rel_rooms_users')
                 ->where('room_id', $room->id)->where('user_id', $student->id)->count());
 
-            // The per-room role in the roles column, not just the membership row.
+            // The per-room role in the `roles` column, not the membership row
+            // alone.
             $this->assertSame(40, $this->roleFor($teacher, (string) $room->hash_id));
             $this->assertSame(20, $this->roleFor($student, (string) $room->hash_id));
         });
@@ -143,8 +144,8 @@ class SchoolImportTest extends TestCase
 
     public function test_falls_back_to_the_pseudonym_when_no_real_name_is_exposed(): void
     {
-        // What an app with pseudonymous entitlements actually sees on /users:
-        // a pseudonym and no name at all.
+        // What `/users` returns to an app with pseudonymous entitlements: a
+        // pseudonym and no name.
         $this->idmGroups = [];
         $this->idmPeople = [[
             'id' => 'person-pseudo',
@@ -159,7 +160,7 @@ class SchoolImportTest extends TestCase
             $user = LegacyUser::where('idp_user_id', 'person-pseudo')->firstOrFail();
 
             $this->assertSame('Denk Raumfahrer', $user->displayname);
-            // A pseudonym is not a legal name and must not land in realname.
+            // A pseudonym is not a legal name and must not reach `realname`.
             $this->assertNull($user->realname);
             $this->assertStringStartsWith('denk.raumfahrer', (string) $user->username);
         });
@@ -167,8 +168,8 @@ class SchoolImportTest extends TestCase
 
     public function test_imports_members_that_only_the_group_listing_reveals(): void
     {
-        // A person can appear in a group's members and be absent from /users.
-        // Reading only /users would silently lose them.
+        // A directory user can appear in a group's members and be absent from
+        // `/users`, so reading `/users` alone would lose the row.
         $this->idmGroups = [['id' => 'group-5a', 'name' => 'Klasse 5a']];
         $this->idmPeople = [[
             'id' => 'person-group-only',
@@ -211,8 +212,8 @@ class SchoolImportTest extends TestCase
         $this->import();
 
         self::$testTenant->run(function () {
-            // Eduplaces exposes no address and its users do not share one;
-            // idp_user_id is the identifier.
+            // The directory exposes no address, so idp_user_id is the only
+            // identifier the import has.
             $this->assertSame(0, LegacyUser::whereNotNull('idp_user_id')->whereNotNull('email')->count());
             $this->assertSame(3, LegacyUser::whereNotNull('idp_user_id')->count());
         });
@@ -241,8 +242,8 @@ class SchoolImportTest extends TestCase
 
         $this->runImportJob();
 
-        // Without this the school sits on `importing` for good: the import is
-        // done and every screen still says it is running.
+        // Without this the tenant stays on IDP_MIGRATION_IMPORTING after the
+        // import has completed.
         $this->assertSame(Tenant::IDP_MIGRATION_LINKING, self::$testTenant->fresh()->idp_migration_status);
     }
 
@@ -264,8 +265,8 @@ class SchoolImportTest extends TestCase
 
         (new ImportSchoolForTenant(self::$testTenant->id))->failed(new \RuntimeException('worker died'));
 
-        // The review is where an admin can look at the proposal and try again;
-        // a progress screen that never finishes is not.
+        // Back to IDP_MIGRATION_REVIEWING, where an admin can revisit the
+        // proposal and retry.
         $tenant = self::$testTenant->fresh();
         $this->assertSame(Tenant::IDP_MIGRATION_REVIEWING, $tenant->idp_migration_status);
         $this->assertSame(SchoolImport::STATUS_FAILED, $tenant->idp_import_status);
@@ -321,8 +322,8 @@ class SchoolImportTest extends TestCase
     {
         $this->seedSchool();
 
-        // The person who bootstrapped the tenant is an ordinary teacher to
-        // Eduplaces but administers the school in aula.
+        // The account bootstrapIdpTenant() claimed is a TEACHER to the
+        // directory and UserLevel::Admin in aula.
         $adminId = (int) self::$testTenant->run(function () {
             $u = new LegacyUser;
             $u->username = 'import.admin';
@@ -345,9 +346,9 @@ class SchoolImportTest extends TestCase
 
     public function test_imports_from_users_alone_when_people_is_not_granted(): void
     {
-        // `people:read` is a separate Eduplaces scope an app may not hold. Over
-        // `/users` it adds only sourceSystemIdentifier, which nothing reads, so
-        // a school must still import completely without it.
+        // `people:read` is a separate scope an app may not hold. Over `/users`
+        // it adds sourceSystemIdentifier alone, which nothing reads, so the
+        // import has to complete without it.
         $this->seedSchool();
         $this->peopleForbidden = true;
 
@@ -363,8 +364,8 @@ class SchoolImportTest extends TestCase
 
     public function test_marks_the_tenant_failed_when_the_idm_breaks(): void
     {
-        // Flag rather than a second Http::fake(): fakes merge, so a new stub
-        // for an already-stubbed URL never gets a look in.
+        // A flag rather than a second Http::fake(): fakes merge, so a new stub
+        // for an already-stubbed URL never matches.
         $this->idmBroken = true;
 
         try {
@@ -386,8 +387,8 @@ class SchoolImportTest extends TestCase
 
         $this->import();
 
-        // The directory is warm, so the first webhook for any of these skips
-        // the discovery scan entirely.
+        // idp_directory is populated, so the first webhook for any of these
+        // ids skips TenantResolver's scan.
         $this->assertSame(3, IdpDirectoryEntry::where('entity_type', IdpDirectoryEntry::TYPE_USER)->count());
         $this->assertSame(2, IdpDirectoryEntry::where('entity_type', IdpDirectoryEntry::TYPE_GROUP)->count());
     }
@@ -404,8 +405,8 @@ class SchoolImportTest extends TestCase
     }
 
     /**
-     * Through the job rather than the service: advancing the migration is the
-     * job's responsibility, so calling the service alone would not see it.
+     * Through ImportSchoolForTenant rather than SchoolImport: advancing
+     * idp_migration_status is the job's work, not the service's.
      */
     private function runImportJob(): void
     {
@@ -472,8 +473,8 @@ class SchoolImportTest extends TestCase
     }
 
     /**
-     * IdpGroup detail carries the member list with real names — the only place
-     * Eduplaces exposes them when the app holds pseudonymous entitlements.
+     * A group detail response carries the member list with real names, the one
+     * place Eduplaces exposes them to an app with pseudonymous entitlements.
      */
     private function groupResponse(string $id): PromiseInterface
     {
@@ -512,7 +513,7 @@ class SchoolImportTest extends TestCase
     }
 
     /**
-     * The role this user holds in one room, or null if they hold none.
+     * The `roles` entry for one room, or null when the user has none.
      */
     private function roleFor(LegacyUser $user, string $roomHashId): ?int
     {

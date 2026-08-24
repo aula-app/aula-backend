@@ -17,19 +17,17 @@ use Illuminate\Support\Facades\Log;
 /**
  * Applies a user event to the tenant database.
  *
- * The ongoing-drift counterpart to SchoolImport: the import brings a school in,
- * this keeps one person in step afterwards. Creating and converging the row is
- * delegated to the import, so both paths produce identical results — room
- * membership and per-room roles included.
+ * SchoolImport brings a school in and UserSync keeps one account in step
+ * afterwards, delegating the row itself to SchoolImport::importUser() so both
+ * paths write the same result, room membership and per-room roles included.
  *
- * Must be called with tenancy already initialised.
+ * Requires initialised tenancy.
  *
- * Converges on the state read back from the directory rather than applying the
+ * Converges on the state read back from the directory instead of applying the
  * reported delta, so redelivered and out-of-order events are harmless.
  *
- * Deletes archive rather than remove: legacy tables (ideas, votes, comments)
- * reference user rows, and someone leaving a school should not take that
- * history with them.
+ * ACTION_DELETE archives instead of deleting: the legacy ideas, votes and
+ * comments tables reference `au_users_basedata` rows.
  */
 final class UserSync
 {
@@ -48,16 +46,17 @@ final class UserSync
         $person = $this->fetch($provider, $event->entityId);
 
         if ($person === null) {
-            // Gone between the event firing and us handling it. Not an error,
-            // and not a reason to destroy a row we hold — a later delete event
-            // will say so explicitly.
+            // Deleted between the event firing and this read-back. Not an
+            // error, and not a reason to drop a local row: an ACTION_DELETE
+            // event says so explicitly.
             return SyncOutcome::skipped('user_not_found_upstream');
         }
 
         $user = $this->import->importUser($tenant, $provider, $person);
 
         if ($event->action === IdpEvent::ACTION_RESTORE && ! $user->isActive()) {
-            // A restore says active even if the directory has not caught up.
+            // ACTION_RESTORE means active even when the directory read-back
+            // still reports otherwise.
             $user->status = UserStatus::Active;
             $user->save();
         }
@@ -68,9 +67,9 @@ final class UserSync
     /**
      * Read the user back from the directory.
      *
-     * A provider may offer a richer single-entity lookup than the contract
-     * requires — some merge several upstream views — so use that when
-     * it exists and the plain contract method otherwise.
+     * A provider can offer a richer single-entity lookup than IdentityDirectory
+     * requires, such as EduplacesDirectory::personOrUser(), which merges two
+     * upstream views. IdentityDirectory::user() is the fallback.
      */
     private function fetch(string $provider, string $userId): ?IdpUser
     {
@@ -92,8 +91,8 @@ final class UserSync
         $user->status = UserStatus::Archived;
         $user->save();
 
-        // Drop them out of the synced rooms and clear the matching entries in
-        // `roles`; rooms created inside aula are left alone.
+        // Leave every directory-sourced room and clear the matching `roles`
+        // entries. Rooms created inside aula are left alone.
         $this->rooms->syncUserRooms($user->id, [], 0);
 
         Log::info('IdP: archived a user on directory delete', [

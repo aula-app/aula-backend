@@ -11,20 +11,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Turns a reviewed proposal into the identity stamps the import reads.
+ * Turns a confirmed proposal into the identity stamps SchoolImport reads.
  *
- * Applying a merge writes one column — `idp_user_id` on a person,
- * `idp_group_id` on a room — and nothing else. That is enough for the import
+ * Applying a merge writes one column, `idp_user_id` on `au_users_basedata` or
+ * `idp_group_id` on `au_rooms`, and nothing else. That is enough for the import
  * to converge onto the existing row instead of creating a second one, and it
- * means nothing is moved, rewritten or deleted, so a mistaken merge is undone
- * by clearing a column.
+ * moves, rewrites and deletes nothing, so clearing the column undoes a mistaken
+ * merge.
  *
- * Must be called with tenancy initialised.
+ * Requires initialised tenancy.
  */
 final class MergeProposalApplier
 {
     /**
-     * Reasons a proposal cannot be applied, keyed by candidate id.
+     * Reasons a proposal cannot be applied, keyed by idp_merge_candidates.id.
      *
      * @return array<int, string>
      */
@@ -40,9 +40,9 @@ final class MergeProposalApplier
                 continue;
             }
 
-            // Two provider identities stamped onto one aula row would fold two
-            // people into a single account, and the second write would fail the
-            // unique index anyway.
+            // Two directory ids on one aula row would fold two people into a
+            // single account, and the second write would hit the unique index
+            // anyway.
             $key = $row->kind.':'.$row->local_id;
 
             if (isset($claimed[$key])) {
@@ -112,16 +112,15 @@ final class MergeProposalApplier
             $current = DB::table('au_users_basedata')->where('id', $row->local_id)->value('idp_user_id');
         }
 
-        // Re-applying the same pairing is fine; pointing at a row that already
-        // belongs to a different identity is not.
+        // Re-applying the same pairing is allowed; pointing at a row that
+        // already carries a different id is not.
         return $current === null || $current === $row->idp_id;
     }
 
     private function stampUser(int $localId, string $idpId): bool
     {
-        // A row the import already created for this identity has no content by
-        // construction, so the id can move to the real account and the empty
-        // one can go.
+        // A row SchoolImport already created for this id carries no content, so
+        // idp_user_id moves to the local row and that row goes.
         $shell = LegacyUser::where('idp_user_id', $idpId)->where('id', '!=', $localId)->first();
 
         if ($shell !== null) {

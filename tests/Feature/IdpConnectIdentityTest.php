@@ -21,11 +21,12 @@ use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
 
 /**
- * The first step of migrating a school that already uses aula: its admin
- * connects their own account to the identity provider.
+ * Covers connectIdentity(), the first step of migrating a tenant that already
+ * uses aula.
  *
- * This both links their account and establishes which school the tenant is —
- * by proof, from the id_token, rather than by anyone choosing from a list.
+ * One admin account is bound to a provider identity, and learnSchoolId() takes
+ * tenants.idp_school_id from that admin's id_token rather than from a value
+ * anyone typed in.
  */
 class IdpConnectIdentityTest extends TestCase
 {
@@ -93,7 +94,8 @@ class IdpConnectIdentityTest extends TestCase
 
         $response = $this->getJson('/api/v2/auth/idp/connect', $this->headersFor($id));
 
-        // Connecting decides which school every future import belongs to.
+        // This request sets tenants.idp_school_id, which every later import
+        // reads.
         $response->assertStatus(403)->assertJsonPath('error', 'admin_required');
     }
 
@@ -103,7 +105,7 @@ class IdpConnectIdentityTest extends TestCase
 
         $this->completeConnect($adminId, 'kc-sub-admin', 'person-admin');
 
-        // The school is now known, by proof rather than by being typed in.
+        // idp_school_id came from the id_token, not from configuration.
         $this->assertSame(self::SCHOOL, self::$testTenant->fresh()->idp_school_id);
     }
 
@@ -132,7 +134,7 @@ class IdpConnectIdentityTest extends TestCase
         $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $token], $this->headersFor($adminId))
             ->assertOk();
 
-        // `connected` is what unlocks preparing the import.
+        // IDP_MIGRATION_CONNECTED is what lets a proposal be built.
         $this->assertSame(Tenant::IDP_MIGRATION_CONNECTED, self::$testTenant->fresh()->idp_migration_status);
     }
 
@@ -153,7 +155,7 @@ class IdpConnectIdentityTest extends TestCase
 
         $response = $this->connectCallback($adminId, 'kc-sub-admin', 'person-admin');
 
-        // Two aula accounts claiming one provider identity needs a human.
+        // Two accounts claiming one idp_user_id needs an operator.
         $this->assertStringContainsString('sso_error=idp_identity_taken', $response->headers->get('Location'));
     }
 
@@ -165,14 +167,14 @@ class IdpConnectIdentityTest extends TestCase
         try {
             $response = $this->connectCallback($adminId, 'kc-sub-admin', 'person-admin');
 
-            // Reporting this as a missing school sends the operator looking for
-            // a broken claim, when the real answer is the wrong instance code.
+            // idp_school_taken, not idp_school_missing: the claim was present,
+            // and the likely cause is the wrong instance_code.
             $this->assertStringContainsString('sso_error=idp_school_taken', $response->headers->get('Location'));
             $this->assertNull(self::$testTenant->fresh()->idp_school_id);
         } finally {
             // The callback leaves tenancy initialised, so an unqualified query
-            // here would look for `tenants` inside the tenant's own database
-            // and leak the row into every test that follows.
+            // would look for `tenants` in the tenant's own database and leave
+            // the row behind for every later test.
             $this->central()->table('tenants')->where('id', $otherId)->delete();
         }
     }
@@ -202,7 +204,8 @@ class IdpConnectIdentityTest extends TestCase
 
         $response = $this->connectCallback($adminId, 'kc-sub-admin', 'person-admin');
 
-        // The admin already has one; this hop only produces a link token.
+        // The admin holds a JWT already; this leg returns an sso_link token
+        // only.
         $location = (string) $response->headers->get('Location');
         $this->assertStringNotContainsString('/oauth-login/', $location);
         $this->assertStringContainsString('sso_link=', $location);
@@ -241,8 +244,8 @@ class IdpConnectIdentityTest extends TestCase
     }
 
     /**
-     * A central row only, inserted past the model so no database is built for
-     * a tenant that exists purely to own a school id.
+     * A central row only, inserted past the model so no database is created
+     * for a tenant that exists to hold an idp_school_id.
      */
     private function seedRivalTenant(string $schoolId): string
     {

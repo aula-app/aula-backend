@@ -9,14 +9,12 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * `eduplaces_school_id` predates the directory sync and names one vendor.
+     * `eduplaces_school_id` names one vendor, while a school's directory id is
+     * the same concept for every provider aula brokers, so the column loses the
+     * vendor name. `tenants.sso_provider` says which provider it came from.
      *
-     * aula brokers several identity providers, and a school's directory id is
-     * the same concept whichever one it came from, so the column loses the
-     * vendor name. Which provider a tenant syncs from is `sso_provider`.
-     *
-     * A rename rather than a new column: tenants already carry values here and
-     * the IdP-initiated login resolves against them.
+     * A rename rather than a new column: tenants already hold values here, and
+     * SsoController::resolveTenantFromEduplacesClaim() resolves against them.
      */
     public function up(): void
     {
@@ -24,8 +22,8 @@ return new class extends Migration
             return;
         }
 
-        // Drop and recreate the unique index around the rename so the change is
-        // driver-agnostic rather than relying on the index following the column.
+        // The unique index is dropped and recreated around the rename, rather
+        // than relying on every driver to carry it across with the column.
         Schema::table('tenants', function (Blueprint $table) {
             $table->dropUnique(['eduplaces_school_id']);
         });

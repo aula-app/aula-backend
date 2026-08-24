@@ -10,16 +10,14 @@ use App\Services\Idp\IdpProviders;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Applies a `school` webhook to the tenant record.
+ * Applies a `school` event to the tenants row.
  *
- * The only school attribute aula has a home for is the name. Address, location,
- * official id and schooling level are read and logged but not stored — there
- * are no columns for them and nothing currently reads them, so adding some
- * would be schema written on speculation. If a consumer appears, the fetch is
- * already here and only persistence needs adding.
+ * `tenants.name` is the only school attribute aula has a column for. Address,
+ * location, official id and schooling level are read and logged instead, since
+ * nothing reads them yet; persisting them later needs no new fetch.
  *
- * Deletes are deliberately not honoured. Dropping a tenant destroys a school's
- * entire aula database, which is not a decision to hand to an inbound webhook.
+ * ACTION_DELETE is not honoured: dropping a tenant destroys a school's whole
+ * aula database, which is not a decision for an inbound webhook.
  */
 final class SchoolSync
 {
@@ -63,9 +61,9 @@ final class SchoolSync
             return;
         }
 
-        // tenants.name is unique. Two schools that rename into each other would
-        // otherwise fail the write and put the event into the retry loop for
-        // nothing, so the collision is reported and the rename dropped.
+        // tenants.name is unique. Two schools renaming into each other would
+        // fail the write and put the event back in the retry loop, so the
+        // collision is logged and the rename dropped.
         $taken = Tenant::where('name', $name)->where('id', '!=', $tenant->id)->exists();
 
         if ($taken) {

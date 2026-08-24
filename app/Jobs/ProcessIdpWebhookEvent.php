@@ -23,11 +23,11 @@ use Throwable;
 /**
  * Processes one captured identity-provider webhook.
  *
- * The endpoint acknowledges deliveries with 202 and the work happens here, so
- * retries are ours rather than the provider's.
+ * WebhookController acknowledges a delivery with 202 and the work happens here,
+ * so the retries belong to the aula queue rather than to the provider.
  *
- * Runs in central context and switches into the resolved tenant for the sync.
- * The event log stays on the central connection, so progress is recorded even
+ * Runs in central context and initialises the resolved tenant for the sync.
+ * `idp_webhook_events` stays on the central connection, so progress is recorded
  * while a tenant database is active.
  */
 class ProcessIdpWebhookEvent implements ShouldQueue
@@ -41,7 +41,7 @@ class ProcessIdpWebhookEvent implements ShouldQueue
 
     /**
      * Spread over roughly twenty minutes: long enough to ride out a provider
-     * outage, short enough that a school's data is not stale for an afternoon.
+     * outage, short enough to keep a school's data from going stale.
      *
      * @var list<int>
      */
@@ -65,7 +65,7 @@ class ProcessIdpWebhookEvent implements ShouldQueue
         }
 
         if ($record->status === IdpWebhookEvent::STATUS_PROCESSED) {
-            // Already applied — a duplicate dispatch, not a duplicate delivery.
+            // Already applied: a duplicate dispatch, not a duplicate delivery.
             return;
         }
 
@@ -83,8 +83,8 @@ class ProcessIdpWebhookEvent implements ShouldQueue
         $tenant = $resolver->resolve($provider, $event->entityType, $event->entityId);
 
         if ($tenant === null) {
-            // Providers notify about every school they know, including ones
-            // that do not use aula. Nothing to do, and nothing wrong.
+            // A provider notifies about every school it knows, including the
+            // schools that do not use aula.
             $record->markSkipped('tenant_unresolved');
 
             return;

@@ -208,22 +208,22 @@ class TenantResource extends Resource
                         ->helperText('When on, refuse legacy username+password login for everyone in this tenant. Only flip on AFTER all users have completed account linking — while on, the link flow itself is unreachable.')
                         ->default(false),
 
-                    // Named for the column it writes. A name of its own would be
-                    // saved as one, and on a tenant model an unknown attribute
-                    // lands in the `data` blob rather than failing, so the
-                    // toggle would appear to work while the app read NULL.
+                    // Named for the column it writes: an unknown attribute on a
+                    // tenant model lands in the `data` blob instead of failing,
+                    // so a name of its own would leave idp_migration_status
+                    // NULL while the toggle appeared to work.
                     Toggle::make('idp_migration_status')
                         ->label('Migrate existing accounts to the IdP')
                         ->helperText('Turn on for a school that ALREADY uses aula before it starts syncing from the IdP. Its admin then runs the import from Settings, matching existing accounts instead of duplicating them. Leave off for a brand new school, which sets itself up on the first SSO login.')
                         ->default(false)
-                        // The column is a state machine the app advances; the
-                        // operator only ever starts or cancels a migration.
+                        // idp_migration_status is advanced by the app; the
+                        // operator only starts or cancels a migration.
                         ->formatStateUsing(fn (?Tenant $record): bool => $record?->idp_migration_status !== null)
                         ->dehydrateStateUsing(fn (bool $state, ?Tenant $record): ?string => $state
                             ? ($record?->idp_migration_status ?? Tenant::IDP_MIGRATION_FLAGGED)
                             : null)
-                        // Once the school's admin has connected, turning this
-                        // off would strand a half-finished migration.
+                        // Past IDP_MIGRATION_FLAGGED, turning this off would
+                        // strand a half-finished migration.
                         ->disabled(fn (?Tenant $record): bool => $record?->idp_migration_status !== null
                             && $record->idp_migration_status !== Tenant::IDP_MIGRATION_FLAGGED),
 

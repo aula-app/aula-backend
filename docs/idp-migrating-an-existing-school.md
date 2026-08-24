@@ -1,7 +1,7 @@
 # Migrating an Existing School onto an Identity Provider
 
-How a school that already uses aula — with real accounts, rooms and content —
-starts syncing its users and classes from an identity provider.
+How a school that already uses aula, with accounts, rooms and content of its
+own, starts syncing its users and classes from an identity provider.
 
 This is the counterpart to [idp-directory-sync.md](idp-directory-sync.md), which
 covers a school that starts on the provider from day one. The two differ in one
@@ -15,12 +15,12 @@ import everything and be done. An existing school has:
 
 - aula accounts with passwords, ideas, votes and comments
 - rooms with history
-- no shared identifier with the provider — Eduplaces exposes **no email**, and
+- no shared identifier with the provider: Eduplaces exposes **no email**, and
   aula stores nothing the provider knows about
 
-So the two sides can only be matched by **guessing** (names) or by **proof**
-(the person's own password). Guessing wrong hands somebody another person's
-account and content, so a guess may never be applied without review.
+So the two sides can be matched by **name** or by **proof** of an aula password,
+and nothing else. A wrong name match hands one account and its content to
+another person, so no name match is applied without review.
 
 ## Principles
 
@@ -60,7 +60,7 @@ migration completable even when matching cannot work.
 
 | value        | meaning                                                        |
 |--------------|----------------------------------------------------------------|
-| `null`       | not migrating — greenfield rules apply                          |
+| `null`       | not migrating; a tenant with no prior aula use                  |
 | `flagged`    | operator has enabled it; admin has not connected yet            |
 | `connected`  | admin's account is linked; `idp_school_id` known                |
 | `reviewing`  | a proposal exists and is waiting on the admin                   |
@@ -68,41 +68,41 @@ migration completable even when matching cannot work.
 | `linking`    | import done; users are linking themselves as they log in        |
 | `completed`  | operator has finalised; behaves like any synced school          |
 
-The state is what suppresses greenfield behaviour: while it is non-null, the
-first-login bootstrap does not fire.
+`isMigratingToIdp()` is true while the value is non-null and not `completed`,
+and that is what stops `bootstrapIdpTenant()` firing.
 
 ## Safety rules
 
 These are the things that go wrong silently, so they are stated as rules.
 
-**The first-login bootstrap must not fire on a migrating tenant.** Today its
-only guard is "no user has an `sso_sub`", which is true of every password-only
-school. Left alone, the first provider user to sign in takes over the school's
-real admin account. Two guards, both applied:
+**`bootstrapIdpTenant()` must not fire on a migrating tenant.** Its own guard,
+that no user has an `sso_sub`, is true of every password-only school, so the
+first login through the provider would claim the school's admin account. Two
+further guards apply:
 
-- skip the bootstrap entirely when `idp_migration_status` is non-null
-- never take over an admin row that has a password — the greenfield admin is
-  seeded with none, a real one always has one
+- decline while `idp_migration_status` is non-null
+- decline when the tenant holds any user beyond `admin1_username` and
+  `admin2_username`, which means the school is already in use
 
 **`sso_required` must stay off until the migration completes.** Linking needs a
 password login, and `LegacyLoginController` refuses password login for the whole
-tenant when `sso_required` is set. Turning it on early makes the remaining users
-unlinkable — they match nothing on the provider side and cannot log in locally.
-Finalising is therefore an explicit operator step, gated on the progress screen.
+tenant when `sso_required` is set. Turning it on early leaves the remaining
+accounts unlinkable: they match nothing at the provider and cannot log in
+locally. Finalising is therefore an explicit operator step, gated on the
+progress screen.
 
-**Unmatched people must have a way through.** A pupil with no aula account must
-be able to say so and be provisioned normally, or they loop forever. The cost is
-that someone who *does* have an account can take that exit and orphan it, which
-is why the admin gets a list of accounts that never linked.
+**An unmatched login must have a way through.** A pupil with no aula account has
+to be able to say so and be provisioned, or the link prompt repeats forever. The
+cost is that a login that does have an account can take that exit and orphan it,
+which is why the admin gets a list of accounts that never linked.
 
 ## Matching
 
 ### Rooms
 
-Provider group → existing room by **normalised name** (trim, collapse spaces,
-case-insensitive, umlauts folded). Reviewed like users: a wrong room merge is
-worse than a wrong user merge, because it hands a whole class access to an
-existing room's content and history.
+Provider group to existing room by **normalised name**, through `NameKey`: trim,
+collapse spaces, lower case, fold umlauts. Reviewed like users, since a wrong
+room merge hands a whole class access to an existing room's content and history.
 
 Unmatched groups become new rooms. Existing rooms that match nothing are left
 alone and stay unmanaged.
@@ -116,20 +116,20 @@ rather than hide.
 provider returns `pseudonym` ("Denk Raumfahrer") for a user and a real `name`
 only inside a group's member list. So:
 
-| person is…            | name available | matchable |
+| directory user is…    | name available | matchable |
 |-----------------------|----------------|-----------|
 | in at least one group | real name      | yes       |
 | in no group           | pseudonym only | **no**    |
 
-Pseudonym-only people appear in the review as unmatchable and can only be mapped
-by hand.
+A pseudonym-only row is recorded with `idp_name_kind = pseudonym`, carries no
+name keys, and can be paired by hand only.
 
-**Names are not unique.** Two people called "Max Müller" on either side is an
-ambiguous match, never a confident one.
+**Names are not unique.** Two rows called "Max Müller" on either side make an
+`ambiguous` outcome, never a `confident` one.
 
-Candidates are compared against both aula `realname` and `displayname`, and
-against both provider first-name forms (`firstFull` and `firstCall` — "Wilma
-Johanna Sophie" is called "Johanna"). Normalisation as for rooms.
+Candidates are compared against aula `realname` and `displayname`, and against
+both provider first-name forms, `firstFull` and `firstCall` ("Wilma Johanna
+Sophie" going by "Johanna"). Normalisation as for rooms.
 
 Outcome per candidate:
 
@@ -145,19 +145,19 @@ Outcome per candidate:
 
 Three sections, rooms above users:
 
-1. **Proposed merges** — `aula name` · `provider name` · `merge?`
-   Checkbox for confident rows; a **dropdown** for the rest, so an admin can map
-   a pseudonym-only person or correct a wrong guess. A checkbox alone makes
-   those two cases impossible.
-2. **In aula only** — will keep password login and can link later
-3. **In the provider only** — will be created as new accounts
+1. **Proposed merges**: `aula name` · `provider name` · `merge?`
+   A checkbox for `confident` rows and a **dropdown** for the rest, so an admin
+   can pair a pseudonym-only row or correct a wrong pairing. A checkbox alone
+   makes both impossible.
+2. **In aula only**: keeps password login and can link later
+3. **In the provider only**: created as new accounts
 
-Needs search, paging and "check all confident" from the start: a thousand-pupil
-school makes an unpaged table unusable.
+Search, paging and "check all confident" are needed from the start: a
+thousand-row proposal is unusable unpaged.
 
-The proposal is **stored**, not recomputed on submit. The admin may take an hour
-and the directory may change underneath; applying something they did not see is
-the exact mistake this screen exists to prevent.
+The proposal is **stored**, not recomputed on submit. A review can take an hour
+and the directory can change underneath it, so applying a pairing the admin
+never saw is exactly what this screen prevents.
 
 ## What a merge does
 
@@ -166,13 +166,13 @@ aula row:   idp_user_id  ← provider id
             sso_sub      ← unchanged (set at their first SSO login)
 ```
 
-Nothing else. The person keeps everything they had and gains SSO. Password login
-keeps working until they actually sign in through the provider, which is what
-allows a migration to run for weeks without disrupting anyone.
+Nothing else. The account keeps everything it held and gains SSO, and password
+login goes on working until its owner signs in through the provider, which is
+what lets a migration run for weeks without disrupting anyone.
 
-If the import already created a row for that person, the merge **absorbs** it:
-provider-created rows have no content by construction, so the id moves to the
-real account and the empty row is deleted.
+If `SchoolImport` already created a row for that directory user, the merge
+**absorbs** it: an imported row carries no content, so `idp_user_id` moves to
+the existing account and the imported row is deleted.
 
 ## Linking at login
 
@@ -181,45 +181,42 @@ For a tenant in `linking` (or earlier), an SSO login that finds no
 provisioning:
 
 ```
-callback → storeLinkIntent → /login?sso_error=account_link_required&sso_link=…
-        → user proves their aula password
-        → POST /sso/link stamps sso_sub + idp_user_id on their row
+callback → offerAccountClaim → /login?sso_error=account_link_required&sso_link=…
+        → the aula password is proved
+        → POST /sso/link stamps sso_sub + idp_user_id on that row
 ```
 
-All of that already exists; only the trigger changes. Today it fires on an email
-match, which can never happen with a provider that exposes no email.
+This shares the link flow an email match uses, which a provider exposing no
+email can never reach.
 
-**No session is issued before linking.** Logging someone in first and then
-asking makes dismissing the prompt the path of least resistance, and produces
-the duplicate silently.
+**No JWT is issued before linking.** Signing the user in first and asking
+afterwards would make dismissing the prompt the cheapest path and leave the
+duplicate in place.
 
 ## Progress
 
 The settings screen reports:
 
-- **linked** — `idp_user_id IS NOT NULL`
-- **not yet linked** — listed by name; this is the migration to-do list
-- **provider people with no aula account** — will be created on first login
+- **linked**: `idp_user_id IS NOT NULL`
+- **not yet linked**: listed by name, and the migration to-do list
+- **directory users with no aula account**: created on their first login
 
-The middle list is the deliverable. It is what makes "are we done?" answerable,
-and it gates finalisation.
+The middle list is what makes "are we done?" answerable, and it gates
+finalisation.
 
 ## Out of scope
 
 - Merging two aula accounts with each other
-- Moving content between accounts (never needed: provider rows have none)
-- Automatic deactivation of accounts that never link — surfaced, decided by a human
+- Moving content between accounts, which an imported row never has
+- Automatic deactivation of accounts that never link: listed, decided by an admin
 
-## Decisions taken without an explicit answer
+## Choices worth knowing
 
-Recorded because they were recommendations, not instructions, and are cheap to
-reverse:
-
-- **Rooms are reviewed, not auto-matched.** A wrong room merge exposes existing
-  content to a whole class.
-- **The review offers a dropdown, not only a checkbox.** Otherwise pseudonym-only
-  people cannot be matched at all and wrong guesses cannot be corrected.
+- **Rooms are reviewed, not matched automatically.** A wrong room merge exposes
+  existing content to a whole class.
+- **The review offers a dropdown, not a checkbox alone.** Without it a
+  pseudonym-only row cannot be paired and a wrong pairing cannot be corrected.
 - **Admin means `userlevel >= 50`.** Principal (44/45) is excluded; widening it
-  later is a one-line change.
-- **Accounts that never link are left alone**, listed but never touched
+  is a one-line change.
+- **An account that never links is left alone**, listed and never touched
   automatically.

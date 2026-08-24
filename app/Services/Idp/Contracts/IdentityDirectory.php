@@ -11,25 +11,24 @@ use App\Services\Idp\Dto\IdpUser;
 /**
  * Read access to an identity provider's directory.
  *
- * Everything aula does with a synced school — import, tenant resolution,
- * webhook convergence — goes through this. Nothing above it knows which
- * provider is behind it, so adding one means implementing this interface and
- * a WebhookAdapter, with no schema, route or sync changes.
+ * SchoolImport, TenantResolver and the Sync services all read through this and
+ * none of them names a provider, so a new provider is an implementation of this
+ * interface plus a WebhookAdapter, with no schema, route or sync change.
  *
- * Implementations own their vendor's quirks: how many calls a listing really
- * takes, which endpoint carries names, how roles are spelled. Callers see one
- * shape.
+ * An implementation owns its vendor's quirks: how many calls a listing takes,
+ * which endpoint carries names, how roles are spelled.
  *
- * A missing entity is null or an empty list, not an exception — entities
- * disappear between an event firing and it being handled. Genuine failures
- * throw DirectoryException.
+ * A missing entity is null or an empty list rather than an exception, since an
+ * entity can be deleted between an event firing and it being handled. A genuine
+ * failure throws DirectoryException.
  */
 interface IdentityDirectory
 {
     public function school(string $schoolId): ?IdpSchool;
 
     /**
-     * Every group in the school, with members populated where the provider can.
+     * Every group in the school, with members populated where the provider
+     * exposes them.
      *
      * @return list<IdpGroup>
      */
@@ -38,7 +37,7 @@ interface IdentityDirectory
     public function group(string $groupId): ?IdpGroup;
 
     /**
-     * Everyone in the school, however the provider chooses to expose them.
+     * Everyone in the school, across whichever listings the provider exposes.
      *
      * @return list<IdpUser>
      */

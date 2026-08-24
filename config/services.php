@@ -51,9 +51,9 @@ return [
             'https://auth.eduplaces.io,https://auth.sandbox.eduplaces.dev',
         )))),
 
-        // IDM API. Webhook payloads only carry an id and the names of the
-        // properties that changed, so every event is followed by a read-back
-        // against these endpoints.
+        // IDM API. A webhook payload carries an id and the names of the changed
+        // properties only, so every event is followed by a read-back against
+        // these endpoints.
         'auth_base_url' => env('EDUPLACES_AUTH_URL', 'https://auth.eduplaces.io'),
         'api_base_url' => env('EDUPLACES_API_URL', 'https://api.eduplaces.io'),
         'client_id' => env('EDUPLACES_CLIENT_ID'),
@@ -67,7 +67,7 @@ return [
         // Shared secret Eduplaces signs webhook bodies with (X-EP-Signature-Sha256).
         'webhook_secret' => env('EDUPLACES_WEBHOOK_SECRET'),
 
-        // Eduplaces role -> aula userlevel. See App\Enums\UserLevel.
+        // Eduplaces role to aula userlevel. See App\Enums\UserLevel.
         'role_userlevels' => [
             'TEACHER' => (int) env('EDUPLACES_USERLEVEL_TEACHER', 40),
             'STUDENT' => (int) env('EDUPLACES_USERLEVEL_STUDENT', 20),

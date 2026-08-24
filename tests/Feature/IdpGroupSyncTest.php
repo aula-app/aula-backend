@@ -19,8 +19,9 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * `group` webhooks after the initial import: an Eduplaces group is an aula
- * room, so these keep au_rooms and au_rel_rooms_users in step.
+ * Covers GroupSync, which handles `group` events after SchoolImport has run. A
+ * directory group is an aula room, so these keep `au_rooms` and
+ * `au_rel_rooms_users` in step.
  */
 class GroupSyncTest extends TestCase
 {
@@ -84,7 +85,7 @@ class GroupSyncTest extends TestCase
         $this->assertNotNull($room);
         $this->assertSame('Klasse 5a', $room->room_name);
         $this->assertSame(1, (int) $room->status);
-        // au_groups is not part of the integration.
+        // `au_groups` plays no part in the integration.
         $this->assertSame(0, self::$testTenant->run(fn () => DB::table('au_groups')->count()));
     }
 
@@ -141,7 +142,7 @@ class GroupSyncTest extends TestCase
 
         $this->assertMembership((int) $room->id, $stays, 1);
         $this->assertMembership((int) $room->id, $goes, 0);
-        // The role entry goes with the membership.
+        // The `roles` entry is removed with the membership row.
         $this->assertNull($this->roleFor($goes, (string) $room->hash_id));
     }
 
@@ -159,7 +160,7 @@ class GroupSyncTest extends TestCase
 
         $this->process($this->event('update', ['name']));
 
-        // Someone added inside aula is not the IDM's to remove.
+        // A member with no idp_user_id was added inside aula and stays.
         $this->assertMembership((int) $room->id, $native, 1);
     }
 

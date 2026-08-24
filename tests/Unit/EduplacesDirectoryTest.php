@@ -9,11 +9,9 @@ use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
- * The Eduplaces implementation of IdentityDirectory.
- *
- * Its job is to hide Eduplaces' choreography behind the contract: two
- * overlapping endpoints for people, a per-group call to reach member names, and
- * a client-credentials token in front of all of it.
+ * Covers EduplacesDirectory, which puts the IdentityDirectory contract in front
+ * of Eduplaces' own shape: two overlapping user endpoints, a per-group call to
+ * reach member names, and a client-credentials token in front of both.
  */
 class EduplacesDirectoryTest extends TestCase
 {
@@ -57,7 +55,7 @@ class EduplacesDirectoryTest extends TestCase
 
         $this->assertNotNull($user);
         $this->assertSame('ACTIVE', $user->status);
-        // No `name` on this endpoint — the pseudonym is what there is.
+        // This endpoint returns no `name`, only a pseudonym.
         $this->assertSame('Denk Raumfahrer', $user->displayName());
         $this->assertNull($user->realName());
         $this->assertSame(['group-2'], $user->groupIds());
@@ -65,9 +63,9 @@ class EduplacesDirectoryTest extends TestCase
 
     public function test_merges_the_people_and_users_views_of_one_person(): void
     {
-        // Eduplaces splits a person across two endpoints and neither is
-        // complete: names and sourceSystemIdentifier on one, status and
-        // pseudonym on the other.
+        // Eduplaces splits one user across two endpoints and neither is
+        // complete: `name` and sourceSystemIdentifier on one, `status` and
+        // `pseudonym` on the other.
         Http::fake([
             self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
             self::API_URL.'/idm/ep/v1/people/*' => Http::response([
@@ -104,8 +102,8 @@ class EduplacesDirectoryTest extends TestCase
 
         $users = $this->directory->users('school-1');
 
-        // `people:read` is a separate scope an app may not hold; losing it must
-        // not lose the school.
+        // `people:read` is a separate scope an app may not hold, and users()
+        // still returns the school without it.
         $this->assertCount(1, $users);
         $this->assertSame('Bio Akrobat', $users[0]->displayName());
     }
@@ -128,7 +126,7 @@ class EduplacesDirectoryTest extends TestCase
 
         $groups = $this->directory->groups('school-1');
 
-        // The school listing has no members; only the per-group call does.
+        // The school listing carries no members; the per-group call does.
         $this->assertCount(1, $groups);
         $this->assertSame('Klasse 5a', $groups[0]->name);
         $this->assertSame(['person-1'], $groups[0]->memberIds());

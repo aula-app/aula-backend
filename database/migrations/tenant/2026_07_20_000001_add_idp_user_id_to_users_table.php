@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * `sso_sub` holds the Keycloak subject, which Keycloak mints itself when it
-     * brokers an upstream provider. Directory imports and webhooks reference
-     * the provider's own user id instead, so it needs its own column to match
-     * against. Which provider it belongs to is a tenant property.
+     * `sso_sub` holds the Keycloak subject, which Keycloak mints when it brokers
+     * an upstream provider. SchoolImport and the webhook syncs reference the
+     * provider's own user id instead, so it needs a column of its own to match
+     * against. `tenants.sso_provider` says which provider it belongs to.
      */
     public function up(): void
     {

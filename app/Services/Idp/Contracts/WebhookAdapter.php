@@ -8,17 +8,17 @@ use App\Services\Idp\Dto\IdpEvent;
 use Illuminate\Http\Request;
 
 /**
- * Turns one provider's webhook into aula's own event shape.
+ * Turns one provider's webhook delivery into an IdpEvent.
  *
- * Signature schemes and payload envelopes are where identity providers differ
- * most, so both live behind this rather than in the endpoint.
+ * Signature schemes and payload envelopes are where providers differ most, so
+ * both live behind this instead of in WebhookController.
  */
 interface WebhookAdapter
 {
     /**
-     * Verify the delivery is authentic. Implementations must compare in
-     * constant time and read the raw body, since a decode/re-encode round trip
-     * would not reproduce the signed bytes.
+     * Verify the delivery is authentic. An implementation must compare in
+     * constant time and read the raw body, since a decode and re-encode round
+     * trip does not reproduce the signed bytes.
      */
     public function verify(Request $request, string $secret): bool;
 

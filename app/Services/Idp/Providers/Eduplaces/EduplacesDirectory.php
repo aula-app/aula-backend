@@ -20,21 +20,21 @@ use Illuminate\Support\Facades\Log;
 /**
  * Read-only client for the Eduplaces IDM API.
  *
- * Webhook payloads carry an entity id and the names of the properties that
- * changed, never the values, so every event is followed by a read-back through
- * this client. Access is granted by an OAuth2 client-credentials token
- * (see https://developer.eduplaces.de/authentication/client-credentials).
+ * Webhook payloads carry an entity id and the names of the changed properties,
+ * never the values, so ProcessIdpWebhookEvent reads every entity back through
+ * this client. Authenticated with an OAuth2 client-credentials token:
+ * https://developer.eduplaces.de/authentication/client-credentials
  *
- * A 404 is not an error here: entities disappear between the webhook firing and
- * us handling it, so lookups return null and let the caller decide.
+ * A 404 returns null instead of throwing: an entity can be deleted between the
+ * webhook firing and the read-back.
  */
 final class EduplacesDirectory implements IdentityDirectory
 {
     private const string API_PREFIX = '/idm/ep/v1';
 
     /**
-     * Margin subtracted from the token lifetime so a token cannot expire in
-     * flight between our expiry check and the API receiving the request.
+     * Subtracted from expires_in so a cached token cannot expire between the
+     * cache read and the API receiving the request.
      */
     private const int TOKEN_EXPIRY_MARGIN_SECONDS = 60;
 
@@ -42,14 +42,13 @@ final class EduplacesDirectory implements IdentityDirectory
 
     /**
      * Process-local copy of the cached token, so a worker running many jobs
-     * does not hit the cache once per job.
+     * reads the cache once.
      *
-     * The persistent cache below is deliberately *not* read through
-     * `tenancy()->central()`. Doing so ends tenancy mid-call, which purges the
-     * dynamically-created `tenant` database connection while a database-backed
-     * cache store is still holding it — "Database connection [tenant] not
-     * configured". One token per tenant prefix is a cheap price for not
-     * unwinding tenancy underneath an active store.
+     * accessToken() deliberately does not read the cache through
+     * `tenancy()->central()`: that ends tenancy mid-call and purges the
+     * dynamically created `tenant` database connection while a database-backed
+     * cache store still holds it, raising "Database connection [tenant] not
+     * configured". The cost is one token per tenant cache prefix.
      */
     private ?string $accessToken = null;
 
@@ -96,8 +95,8 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * People who can actually sign in. Overlaps with schoolPeople() but is not
-     * a subset of it: a user may exist without being configured as a person.
+     * Accounts that can sign in. Overlaps schoolPeople() without being a subset
+     * of it: a user can exist with no person record.
      *
      * @return list<IdpUser>
      */
@@ -119,11 +118,11 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * Every group, read in full.
+     * Every group of the school, read in full.
      *
-     * The school listing gives only id and name; the per-group call adds the
-     * member list, which is the only place Eduplaces exposes real names when an
-     * app holds pseudonymous entitlements. Worth one call per group.
+     * schoolGroupRefs() returns id and name only. group() adds members, the one
+     * place Eduplaces exposes real names to an app holding pseudonymous
+     * entitlements, at one call per group.
      *
      * @return list<IdpGroup>
      */
@@ -139,12 +138,10 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * Everyone at the school.
-     *
-     * Eduplaces splits this across two overlapping endpoints: `/people` (adds
-     * sourceSystemIdentifier, needs a scope an app may not hold) and `/users`
-     * (adds status and a pseudonym). Both are read and merged by id so callers
-     * see one list; a refusal on `/people` is logged and stepped over.
+     * Everyone at the school, merged by id across the two endpoints Eduplaces
+     * splits this over: `/people` adds sourceSystemIdentifier and needs a scope
+     * the app may not hold, `/users` adds status and a pseudonym. A refusal on
+     * `/people` is logged and stepped over.
      *
      * @return list<IdpUser>
      */
@@ -183,7 +180,7 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * A single person, merging the same two views as users().
+     * One user, merging the same two views as users().
      */
     public function personOrUser(string $userId): ?IdpUser
     {
@@ -226,8 +223,7 @@ final class EduplacesDirectory implements IdentityDirectory
         $response = $this->send($path);
 
         if ($response->status() === 401) {
-            // Token rejected: drop it and give the request one more chance with
-            // a freshly minted one.
+            // Token rejected: forget it and retry once with a newly minted one.
             $this->forgetToken();
             $response = $this->send($path);
         }
@@ -356,7 +352,7 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * Keyed by client id so rotating credentials cannot serve a token minted
+     * Keyed by client_id, so rotated credentials cannot serve a token minted
      * for the previous client.
      */
     private function tokenCacheKey(): string

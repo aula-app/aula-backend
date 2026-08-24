@@ -9,18 +9,19 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * A proposal for reconciling a school's existing aula rows with its
-     * directory, held between building it and an admin applying it.
+     * The proposal for reconciling a school's existing aula rows with its
+     * directory, held between MergeProposalBuilder writing it and
+     * MergeProposalApplier applying it.
      *
-     * Stored rather than recomputed on submit: an admin may take an hour over
-     * the review, and the directory can change underneath. Applying something
-     * they did not see is the exact mistake the review exists to prevent.
+     * Stored rather than recomputed on submit: a review can take an hour and
+     * the directory can change underneath it, so storing the rows is what stops
+     * a pairing the admin never saw being applied.
      *
      * One table covers all three buckets, by which side is null:
      *
      *   idp_id + local_id   a proposed merge
-     *   idp_id only         exists on the provider, will become a new row
-     *   local_id only       exists in aula only, keeps password login
+     *   idp_id only         exists at the provider, becomes a new row
+     *   local_id only       exists in aula alone, keeps password login
      */
     public function up(): void
     {

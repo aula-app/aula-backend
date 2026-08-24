@@ -11,26 +11,24 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Answers "which tenant does this directory entity belong to?".
+ * Answers which tenant a directory entity belongs to.
  *
- * IdpSchool events are easy: `tenants.idp_school_id` is a direct mapping.
- * IdpUser and group events are not — those payloads carry no school identifier
- * at all, so there may be nothing in
- * the event itself to route on.
+ * An IdpEvent::ENTITY_SCHOOL maps straight onto `tenants.idp_school_id`. User
+ * and group events carry no school identifier, so nothing in the payload routes
+ * them, and those take two steps:
  *
- * Two-step answer:
+ *   1. Look the id up in `idp_directory`, which SchoolImport and every scan
+ *      below populate.
+ *   2. On a miss, scan that provider's tenants through IdentityDirectory. Every
+ *      id seen on the way is indexed, so one scan warms a whole school and the
+ *      next event for any of its members is a single lookup.
  *
- *   1. Consult the directory index, which is populated every time a school's
- *      people or groups are read.
- *   2. On a miss, scan that provider's tenants through its directory. Every
- *      id seen along the way is indexed, so one scan warms a whole school and
- *      the next event for any of its members is a single lookup.
+ * An id that resolves to nothing is cached for UNRESOLVABLE_TTL_SECONDS, so a
+ * school this installation does not host cannot make each of its events start a
+ * fresh scan.
  *
- * Ids that resolve to nothing are remembered for a while so a school we do not
- * host cannot make every one of its events trigger a fresh scan.
- *
- * If a provider carries a school identifier on its user and group events, all
- * of this collapses to the school lookup and can be deleted.
+ * A provider that carries a school identifier on user and group events reduces
+ * all of this to forSchool().
  */
 final class TenantResolver
 {
@@ -56,8 +54,8 @@ final class TenantResolver
     }
 
     /**
-     * Index an id against a tenant. Idempotent: a repeated sighting just
-     * refreshes the row, and a moved entity re-points to its new tenant.
+     * Index an id against a tenant. Idempotent: a repeated sighting refreshes
+     * the row, and a moved entity re-points to its new tenant.
      */
     public function remember(string $entityType, string $idpId, string $tenantId, ?string $provider = null): void
     {
@@ -126,8 +124,8 @@ final class TenantResolver
         $tenant = Tenant::find($entry->tenant_id);
 
         if ($tenant === null) {
-            // Tenant was deleted out from under the index. Drop the entry so a
-            // rescan can find the entity elsewhere, or conclude it is gone.
+            // The tenant was deleted under the index, so drop the entry and let
+            // a rescan find the entity elsewhere or conclude it is gone.
             $entry->delete();
 
             return null;
@@ -137,8 +135,8 @@ final class TenantResolver
     }
 
     /**
-     * Walk the the provider-enabled tenants until the entity turns up, indexing
-     * everything seen on the way.
+     * Walk the tenants on this provider until the entity turns up, indexing
+     * every id seen on the way.
      */
     private function discover(string $provider, string $entityType, string $entityId): ?Tenant
     {
@@ -162,8 +160,8 @@ final class TenantResolver
                     ? $this->indexGroups($tenant)
                     : $this->indexPeople($tenant);
             } catch (DirectoryException $e) {
-                // One unreachable school must not abort the whole scan, but it
-                // does mean a null result here is "not found yet", not "absent".
+                // One unreachable school must not abort the scan, though it does
+                // make a null result "not found yet" rather than "absent".
                 Log::warning('the provider: school scan failed, continuing', [
                     'tenant' => $tenant->instance_code,
                     'reason' => $e->reason,
@@ -194,8 +192,8 @@ final class TenantResolver
 
         $directory = $this->providers->directory($provider);
 
-        // People and users are overlapping sets, not nested ones: a person may
-        // never sign in, and a user may exist without being a configured person.
+        // users() merges both provider listings, which overlap without nesting:
+        // a person may never sign in, a user may have no person record.
         $people = $directory->users($schoolId);
 
         $personIds = [];
@@ -207,7 +205,7 @@ final class TenantResolver
         }
 
         $this->rememberMany(IdpDirectoryEntry::TYPE_USER, $personIds, $tenant->id);
-        // The nested group references come for free with this response.
+        // The nested group refs arrive in the same response, at no extra call.
         $this->rememberMany(IdpDirectoryEntry::TYPE_GROUP, $groupIds, $tenant->id);
 
         return array_values(array_unique($personIds));

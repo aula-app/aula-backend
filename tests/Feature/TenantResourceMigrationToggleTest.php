@@ -9,22 +9,20 @@ use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
- * Every field on the tenant form must name a real column.
+ * Every field on TenantResource's form must name a real tenants column.
  *
- * A tenant keeps unknown attributes in a `data` blob instead of rejecting
- * them, so a field named anything else still saves without error, and the
- * switch appears to work while the app goes on reading NULL from the column
- * it actually cares about. That is how the migration toggle shipped broken.
+ * A tenant model keeps an unknown attribute in its `data` blob instead of
+ * rejecting it, so a misnamed field saves without error while the app reads
+ * NULL from the column it meant to write.
  *
- * This reads the resource's source rather than its schema because building
- * the schema boots a Filament panel, which needs more memory than the test
- * container has.
+ * Reads the resource's source rather than its schema: building the schema boots
+ * a Filament panel, which needs more memory than the test container has.
  */
 class TenantResourceMigrationToggleTest extends TestCase
 {
     /**
-     * Fields that deliberately do not correspond to a column: display-only
-     * placeholders, and inputs the resource itself unpacks before saving.
+     * Fields that name no column: display-only placeholders, and inputs the
+     * resource unpacks before saving.
      *
      * @var list<string>
      */
@@ -73,8 +71,8 @@ class TenantResourceMigrationToggleTest extends TestCase
 
     public function test_the_migration_states_the_toggle_switches_between_exist(): void
     {
-        // The toggle turns the column on to "flagged" and off to null; the
-        // rest of the state machine belongs to the app.
+        // The toggle writes IDP_MIGRATION_FLAGGED or null; the app advances
+        // idp_migration_status from there.
         $this->assertSame('flagged', Tenant::IDP_MIGRATION_FLAGGED);
     }
 

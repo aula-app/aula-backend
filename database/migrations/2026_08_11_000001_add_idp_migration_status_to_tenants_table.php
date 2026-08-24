@@ -12,9 +12,9 @@ return new class extends Migration
      * Marks a school that already used aula before it started syncing from a
      * directory.
      *
-     * Such a tenant behaves differently from a greenfield one: the first SSO
-     * login must not bootstrap it, and users are matched or linked rather than
-     * simply created. Null means the greenfield rules apply.
+     * On such a tenant SsoController::bootstrapIdpTenant() declines and
+     * accounts are matched or linked rather than created. Null means a tenant
+     * with no prior aula use, which bootstraps on its first SSO login.
      */
     public function up(): void
     {

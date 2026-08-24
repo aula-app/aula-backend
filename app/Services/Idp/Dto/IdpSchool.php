@@ -30,9 +30,9 @@ final readonly class IdpSchool
             address: is_array($data['address'] ?? null) ? $data['address'] : [],
             location: is_array($data['location'] ?? null) ? $data['location'] : [],
             officialId: is_string($data['officialId'] ?? null) ? $data['officialId'] : null,
-            // Webhooks list `schooling_level` among the properties a school event
-            // can report, but the documented school schema has no matching field.
-            // Read both spellings so we log whichever one actually turns up.
+            // Webhooks list `schooling_level` among the properties a school
+            // event can report, while the documented school schema has no
+            // matching field, so both spellings are read.
             schoolingLevel: is_string($data['schoolingLevel'] ?? null)
                 ? $data['schoolingLevel']
                 : (is_string($data['schooling_level'] ?? null) ? $data['schooling_level'] : null),
