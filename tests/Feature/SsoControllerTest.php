@@ -848,6 +848,33 @@ class SsoControllerTest extends TestCase
         $this->assertStringContainsString('id_token_hint=aula-id-token', $logoutUrl);
     }
 
+    public function test_logout_url_from_the_app_returns_to_the_deep_link_scheme(): void
+    {
+        self::$testTenant->update(['sso_force_logout' => true]);
+
+        $user = self::$testTenant->run(fn () => $this->createUser('sso_applogout@test.example', 'sub-applogout-001', UserStatus::Active, [
+            'sso_id_token' => 'aula-id-token',
+            'sso_refresh_token' => 'refresh-token',
+        ]));
+
+        Http::fake();
+
+        $jwt = $this->jwtForUser($user);
+
+        $logoutUrl = $this->postJson('/api/v2/auth/sso/logout?client=app', [], [
+            'aula-instance-code' => self::INSTANCE_CODE,
+            'Authorization' => "Bearer {$jwt}",
+        ])->assertOk()->json('logout_url');
+
+        $this->assertStringStartsWith(rtrim((string) config('services.keycloak.base_url'), '/'), $logoutUrl);
+
+        parse_str((string) parse_url($logoutUrl, PHP_URL_QUERY), $query);
+        $this->assertSame(
+            config('app.mobile_url_scheme').'://login',
+            $query['post_logout_redirect_uri'] ?? null,
+        );
+    }
+
     /**
      * The logout URL points at the aula realm and carries app.frontend_url as
      * post_logout_redirect_uri. Propagating the logout to the upstream IdP is
