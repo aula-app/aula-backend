@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
+use App\Services\Idp\Contracts\IdentityDirectory;
 use App\Services\Idp\DirectoryException;
+use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\SchoolImport;
 use App\Services\IdTokenVerification\IdTokenVerificationException;
@@ -1390,7 +1392,45 @@ class SsoController extends Controller
             return null;
         }
 
-        return $person === null ? null : $this->schoolImport->importUser($tenant, $provider, $person);
+        if ($person === null) {
+            return null;
+        }
+
+        return $this->schoolImport->importUser($tenant, $provider, $this->withRealName($directory, $person));
+    }
+
+    /**
+     * Merge the group member record, the only payload carrying `name`.
+     *
+     * personOrUser() reads `/people` and `/users`, which return `pseudonym`
+     * only, so uniqueUsername() and realname would both take the pseudonym.
+     */
+    protected function withRealName(IdentityDirectory $directory, IdpUser $person): IdpUser
+    {
+        if ($person->realName() !== null) {
+            return $person;
+        }
+
+        foreach ($person->groupIds() as $groupId) {
+            try {
+                $group = $directory->group($groupId);
+            } catch (DirectoryException $e) {
+                Log::warning('SSO: cannot read a group for its member names', [
+                    'idp_group_id' => $groupId,
+                    'reason' => $e->reason,
+                ]);
+
+                continue;
+            }
+
+            foreach ($group?->members ?? [] as $member) {
+                if ($member->id === $person->id && $member->realName() !== null) {
+                    return $person->mergedWith($member);
+                }
+            }
+        }
+
+        return $person;
     }
 
     /**

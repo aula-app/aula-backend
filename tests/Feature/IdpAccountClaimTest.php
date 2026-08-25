@@ -272,6 +272,24 @@ class IdpAccountClaimTest extends TestCase
         });
     }
 
+    public function test_a_rebuilt_account_takes_its_real_name_from_the_group(): void
+    {
+        Tenant::where('id', self::$testTenant->id)->update(['idp_migration_status' => null]);
+
+        $this->fakePseudonymousDirectoryPerson('p1', 'group-5a', 'Wilma', 'Schuster');
+
+        $this->signIn('kc-sub-1', 'p1');
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('idp_user_id', 'p1')->firstOrFail();
+
+            // /users and /people carry only the pseudonym, so without the group
+            // read realname is null and uniqueUsername() slugs "Denk Raumfahrer".
+            $this->assertSame('Wilma Schuster', $user->realname);
+            $this->assertStringStartsWith('wilma.schuster', (string) $user->username);
+        });
+    }
+
     // =========================================================
     // Helpers
     // =========================================================
@@ -352,6 +370,46 @@ class IdpAccountClaimTest extends TestCase
             ]),
             "*/people/{$personId}" => Http::response($person),
             "*/users/{$personId}" => Http::response($person),
+        ]);
+    }
+
+    /**
+     * The shape an app with pseudonymous entitlements sees: `pseudonym` on
+     * /people and /users, the real `name` only on the group's member list.
+     */
+    private function fakePseudonymousDirectoryPerson(string $personId, string $groupId, string $first, string $last): void
+    {
+        $pseudonymous = [
+            'id' => $personId,
+            'pseudonym' => 'Denk Raumfahrer',
+            'role' => 'STUDENT',
+            'status' => 'ACTIVE',
+            'groups' => [['id' => $groupId, 'name' => 'Klasse 5a']],
+        ];
+
+        config([
+            'idp.providers.eduplaces.auth_url' => 'https://idm.test.local',
+            'idp.providers.eduplaces.api_url' => 'https://idm.test.local',
+            'idp.providers.eduplaces.client_id' => 'test-client',
+            'idp.providers.eduplaces.client_secret' => 'test-secret',
+        ]);
+
+        Http::fake([
+            '*/oauth2/token' => Http::response([
+                'access_token' => 'idm-token', 'token_type' => 'bearer', 'expires_in' => 3599,
+            ]),
+            "*/people/{$personId}" => Http::response($pseudonymous),
+            "*/users/{$personId}" => Http::response($pseudonymous),
+            "*/groups/{$groupId}" => Http::response([
+                'id' => $groupId,
+                'name' => 'Klasse 5a',
+                'status' => 'ACTIVE',
+                'members' => [[
+                    'id' => $personId,
+                    'name' => ['firstFull' => $first, 'firstCall' => $first, 'last' => $last],
+                    'role' => 'STUDENT',
+                ]],
+            ]),
         ]);
     }
 
