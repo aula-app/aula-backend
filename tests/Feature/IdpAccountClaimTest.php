@@ -250,6 +250,28 @@ class IdpAccountClaimTest extends TestCase
         );
     }
 
+    public function test_a_login_with_no_local_row_is_rebuilt_from_the_directory(): void
+    {
+        // A deleted account: no row carries this sso_sub or idp_user_id.
+        Tenant::where('id', self::$testTenant->id)->update(['idp_migration_status' => null]);
+
+        $this->fakeDirectoryPerson('p1', 'Wilma', 'Schuster');
+
+        $response = $this->signIn('kc-sub-1', 'p1');
+
+        $this->assertStringContainsString('/oauth-login/', (string) $response->headers->get('Location'));
+
+        self::$testTenant->run(function () {
+            $user = LegacyUser::where('idp_user_id', 'p1')->firstOrFail();
+
+            $this->assertSame('kc-sub-1', $user->sso_sub);
+            // provisionUser() leaves realname null and takes the username from
+            // preferred_username, which getNickname() returns as null here.
+            $this->assertSame('Wilma Schuster', $user->realname);
+            $this->assertStringStartsWith('wilma.schuster', (string) $user->username);
+        });
+    }
+
     // =========================================================
     // Helpers
     // =========================================================

@@ -493,6 +493,12 @@ class SsoController extends Controller
             $user = $this->adoptDirectoryProvisionedUser($laravelSocialiteUser, $callbackTenant, $instanceCode);
         }
 
+        if ($user === null && $this->usesIdpDirectory($callbackTenant)) {
+            // provisionUser() below writes preferred_username and no realname.
+            // Falls through to it when the directory cannot answer.
+            $user = $this->reprovisionFromDirectory($laravelSocialiteUser, $callbackTenant, $instanceCode);
+        }
+
         if ($user === null) {
             $emailMatch = $this->ssoUserService->findByEmail($email);
 
@@ -1313,6 +1319,44 @@ class SsoController extends Controller
         Cache::forget($this->linkIntentCacheKey($token));
 
         return response()->json(['success' => true, 'JWT' => $this->jwtService->generateToken($user)]);
+    }
+
+    /**
+     * provisionFromDirectory() for a login, stamping sso_sub on the row
+     * SchoolImport::importUser() creates.
+     *
+     * Null when the `user` claim is absent or the directory holds no such id.
+     */
+    protected function reprovisionFromDirectory(LaravelSocialiteUser $socialiteUser, Tenant $tenant, string $instanceCode): ?LegacyUser
+    {
+        $personId = $this->idpClaim($this->idpClaims($socialiteUser, $tenant), $tenant, 'user');
+
+        if ($personId === null) {
+            return null;
+        }
+
+        $user = $this->provisionFromDirectory($personId);
+
+        if ($user === null) {
+            Log::warning('SSO: directory holds no user for this login', [
+                'tenant' => $instanceCode,
+                'idp_user_id' => $personId,
+            ]);
+
+            return null;
+        }
+
+        // email stays null, as it is on every row importUser() creates.
+        $user->sso_sub = $socialiteUser->getId();
+        $user->save();
+
+        Log::info('SSO: rebuilt a deleted account from the directory', [
+            'tenant' => $instanceCode,
+            'user_id' => $user->id,
+            'idp_user_id' => $personId,
+        ]);
+
+        return $user;
     }
 
     /**
