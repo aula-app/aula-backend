@@ -22,6 +22,15 @@ class SsoUserService
         return LegacyUser::where('email', $email)->first();
     }
 
+    public function findByIdpUserId(?string $personId): ?LegacyUser
+    {
+        if ($personId === null || $personId === '') {
+            return null;
+        }
+
+        return LegacyUser::where('idp_user_id', $personId)->first();
+    }
+
     /**
      * Create a new user from the SSO claims and enrol them in the standard room.
      */

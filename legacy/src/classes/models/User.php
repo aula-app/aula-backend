@@ -1638,7 +1638,7 @@ class User
     }
 
     $stmt = $this->db->query(<<<EOD
-      SELECT roles, realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw, sso_sub
+      SELECT roles, realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw, sso_sub, idp_user_id
       FROM au_users_basedata u
       WHERE id > 0 {$extra_where}
       ORDER BY {$orderby_field} {$asc_field}
