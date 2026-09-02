@@ -16,6 +16,8 @@ class AulaClaims
     {
         $user = LegacyUser::find($token->getUserIdentifier());
 
+        // legacy/src/controllers/model.php reads user_id unconditionally
+        $token->addClaim('user_id', $user->id);
         $token->addClaim('user_hash', $user->hash_id);
         $token->addClaim('temp_pw', !empty($user->temp_pw));
         $token->addClaim('user_level', $user->userlevel?->value);
