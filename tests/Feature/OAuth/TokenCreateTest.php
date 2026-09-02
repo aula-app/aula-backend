@@ -18,7 +18,6 @@ class TokenCreateTest extends TestCase
         $this->ensureTestTenantExists();
     }
 
-
     // -------------------------------------------------------------------------
     // Integration tests (require TEST001 tenant)
     // -------------------------------------------------------------------------
@@ -32,11 +31,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () use ($password) {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
 
-            $user = new LegacyUser();
+            $user = new LegacyUser;
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash($password, PASSWORD_DEFAULT);
             $user->status = UserStatus::Active;
-            $user->hash_id = 'phpunit_hash_' . uniqid();
+            $user->hash_id = 'phpunit_hash_'.uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -77,11 +76,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
 
-            $user = new LegacyUser();
+            $user = new LegacyUser;
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash('correctpass', PASSWORD_DEFAULT);
             $user->status = UserStatus::Active;
-            $user->hash_id = 'phpunit_hash_' . uniqid();
+            $user->hash_id = 'phpunit_hash_'.uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -136,11 +135,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_inactive')->delete();
 
-            $user = new LegacyUser();
+            $user = new LegacyUser;
             $user->username = 'phpunit_inactive';
             $user->pw = password_hash('testpass', PASSWORD_DEFAULT);
             $user->status = UserStatus::Suspended;
-            $user->hash_id = 'phpunit_hash_' . uniqid();
+            $user->hash_id = 'phpunit_hash_'.uniqid();
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -163,6 +162,76 @@ class TokenCreateTest extends TestCase
             ->assertJsonMissingPath('JWT');
     }
 
+    /**
+     * The refresh grant sends no username or password, so validating them on
+     * every request to this endpoint locks it out.
+     */
+    public function test_refresh_token_grant_issues_a_new_token_pair(): void
+    {
+        $tenant = self::$testTenant;
+        $this->assertNotNull($tenant);
+
+        $password = 'testpass123';
+        $tenant->run(function () use ($password) {
+            LegacyUser::where('username', 'phpunit_refresh')->delete();
+
+            $user = new LegacyUser;
+            $user->username = 'phpunit_refresh';
+            $user->pw = password_hash($password, PASSWORD_DEFAULT);
+            $user->status = UserStatus::Active;
+            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->userlevel = UserLevel::User;
+            $user->roles = json_encode([]);
+            $user->refresh_token = false;
+            $user->save();
+        });
+
+        $refreshToken = $this->post('/api/v2/oauth/token', [
+            'grant_type' => 'password',
+            'client_id' => self::$client->id,
+            'username' => 'phpunit_refresh',
+            'password' => $password,
+        ], [
+            'aula-instance-code' => 'TEST001',
+        ])->assertOk()->json('refresh_token');
+
+        $this->assertNotEmpty($refreshToken);
+
+        $response = $this->post('/api/v2/oauth/token', [
+            'grant_type' => 'refresh_token',
+            'client_id' => self::$client->id,
+            'refresh_token' => $refreshToken,
+        ], [
+            'aula-instance-code' => 'TEST001',
+        ]);
+
+        $response->assertOk()
+            ->assertJson(['token_type' => 'Bearer'])
+            ->assertJsonStructure(['access_token', 'refresh_token']);
+
+        // A refreshed token must carry the aula claims the legacy API reads.
+        $payload = json_decode(base64_decode(explode('.', $response->json('access_token'))[1]), true);
+        $this->assertArrayHasKey('user_id', $payload);
+        $this->assertArrayHasKey('user_hash', $payload);
+        $this->assertEquals(UserLevel::User->value, $payload['user_level']);
+
+        $tenant->run(function () {
+            LegacyUser::where('username', 'phpunit_refresh')->delete();
+        });
+    }
+
+    public function test_password_grant_still_requires_credentials(): void
+    {
+        $this->assertNotNull(self::$testTenant);
+
+        $this->postJson('/api/v2/oauth/token', [
+            'grant_type' => 'password',
+            'client_id' => self::$client->id,
+        ], [
+            'aula-instance-code' => 'TEST001',
+        ])->assertStatus(422)->assertJsonValidationErrors(['username', 'password']);
+    }
+
     public function test_token_has_legacy_fields(): void
     {
         $tenant = self::$testTenant;
@@ -172,7 +241,7 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () use (&$userId) {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
 
-            $user = new LegacyUser();
+            $user = new LegacyUser;
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash('testpass', PASSWORD_DEFAULT);
             $user->status = UserStatus::Active;
@@ -192,7 +261,7 @@ class TokenCreateTest extends TestCase
             'password' => 'testpass',
         ], [
             'aula-instance-code' => 'TEST001',
-            ])
+        ])
             ->assertOk()
             ->assertJson(['token_type' => 'Bearer'])
             ->assertJsonStructure(['access_token', 'refresh_token']);

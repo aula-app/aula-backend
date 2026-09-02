@@ -20,22 +20,25 @@ class SsoAwareAccessTokenController extends AccessTokenController
         // used in parent class, needs to be injected here
         protected AuthorizationServer $server
     ) {
-        $this->psrHttpFactory = new PsrHttpFactory(new Psr17Factory());
+        $this->psrHttpFactory = new PsrHttpFactory(new Psr17Factory);
     }
 
     /**
-     * Handle a login request.
-     * Matches the legacy login.php behavior.
+     * Handle a token request.
+     *
+     * This route replaces Passport's own POST /token, so it serves every grant
+     * type, not only the password grant.
      */
     public function login(Request $request): Response
     {
-        $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-        ]);
-
-        $username = $request->input('username');
-        $password = $request->input('password');
+        // Only the password grant carries credentials; validating them
+        // unconditionally would reject refresh_token and client_credentials.
+        if ($request->input('grant_type') === 'password') {
+            $request->validate([
+                'username' => 'required|string',
+                'password' => 'required|string',
+            ]);
+        }
 
         // Tenants flagged sso_required reject issuing OAuth tokens directly for
         // everyone, regardless of whether the specific user has finished SSO linking yet.
@@ -44,12 +47,13 @@ class SsoAwareAccessTokenController extends AccessTokenController
         if ($isSsoRequired) {
             return response()->json([
                 'error' => 'access_denied',
-                'error_description'   => 'Tenant requires using Single Sign-On functionality',
+                'error_description' => 'Tenant requires using Single Sign-On functionality',
             ], 400);
         }
 
         $psrRequest = $this->psrHttpFactory->createRequest($request);
         $psrResponse = $this->psrHttpFactory->createResponse(response()->make());
+
         return $this->issueToken($psrRequest, $psrResponse);
     }
 }
