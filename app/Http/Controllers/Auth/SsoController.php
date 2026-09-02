@@ -85,6 +85,7 @@ class SsoController extends Controller
 
         return response()->json([
             'enabled' => (bool) $tenant->sso_enabled,
+            'required' => (bool) $tenant->sso_required,
             'provider' => $tenant->sso_provider,
         ]);
     }
