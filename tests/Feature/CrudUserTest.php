@@ -464,4 +464,39 @@ class CrudUserTest extends TestCase
         $this->deleteJson('/api/v2/users/foo', [])
             ->assertNotFound();
     }
+
+    public function test_export_gdpr_info()
+    {
+        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+        $this->getJson("/api/v2/users/{$user->hash_id}/export")
+            ->assertOk()
+            ->assertJsonMissingPath('id')
+            ->assertJson([
+                'user' => [
+                    'displayName' => 'Distinct',
+                    'realName' => 'Distinct User',
+                ],
+                // TODO: how to test ideas & comments? create here?
+                'userIdeas' => '',
+                'userComments' => '',
+            ]);
+    }
+
+    public function test_authz_export_gdpr_info_self()
+    {
+        $user = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
+        $otherUser = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+        $this->assertNotEquals($user->hash_id, $otherUser->hash_id);
+        $jwt = $this->jwtForUser($user);
+        $this->getJson(
+            "/api/v2/users/{$user->hash_id}/export",
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertOk();
+        $this->getJson(
+            "/api/v2/users/{$otherUser->hash_id}/export",
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertForbidden();
+    }
 }

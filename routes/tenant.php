@@ -18,6 +18,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 |
 */
 
+
 // Legacy JWT Authentication routes (public + protected)
 Route::name('auth.')
     ->middleware([
