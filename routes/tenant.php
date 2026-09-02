@@ -18,15 +18,6 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 |
 */
 
-// Legacy JWT Authentication routes (public + protected)
-Route::name('auth.')
-    ->middleware([
-        'api',
-        InitializeTenancyByRequestData::class,
-    ])
-    ->prefix('/api/v2/legacy-auth')
-    ->group(base_path('routes/tenant/api/v2/legacy-auth.php'));
-
 // See also \App\Providers\PassportServiceProvider.php for
 // some more routes that are added there in function boot()
 // OAuth routes are defined there
