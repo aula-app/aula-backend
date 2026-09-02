@@ -4,11 +4,18 @@ namespace App\Models;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
+use App\Relations\RoomMember;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
+/**
+ * Appease psalm https://github.com/psalm/psalm-plugin-laravel/issues/641
+ * @property-read Pivot $pivot
+ */
 class LegacyUser extends Model implements Authenticatable
 {
     /**
@@ -48,6 +55,11 @@ class LegacyUser extends Model implements Authenticatable
         'last_update' => 'datetime',
         'last_login' => 'datetime',
     ];
+
+    public function rooms(): BelongsToMany
+    {
+        return $this->belongsToMany(LegacyRoom::class, 'au_rel_rooms_users', 'user_id', 'room_id')->using(RoomMember::class)->withPivot('room_user_level');
+    }
 
     /**
      * Build an unsaved user from SSO claims. Caller is responsible for ->save().
@@ -202,5 +214,17 @@ class LegacyUser extends Model implements Authenticatable
     public function getAuthPasswordName(): string
     {
         return 'pw';
+    }
+
+    /**
+     * @psalm-suppress UndefinedMagicPropertyFetch
+     */
+    public function updateRolesJson(): void
+    {
+        $legacyRoles = $this->rooms->map(fn($r) => [
+            "room" => $r->hash_id,
+            "role" => $r->pivot->room_user_level,
+        ]);
+        $this->roles = json_encode($legacyRoles);
     }
 }

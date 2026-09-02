@@ -273,6 +273,7 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJsonMissingPath('id')
+            ->assertJsonMissingPath('roomLevel')
             ->assertJson(self::NEW_USER_DATA);
         $newUserDecoded = $result->decodeResponseJson();
         $this->assertIsString($newUserDecoded['createdAt']);
