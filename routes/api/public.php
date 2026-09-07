@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\InstanceAutocompleteController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,8 @@ Route::name('public.')
         Route::get('/health', function () {
             return response()->json(['TODO' => 'gather health information'], 200);
         });
+
+        Route::get('/schools', [InstanceAutocompleteController::class, 'index']);
 
         Route::get('/versions', function () {
             return response()->json([
