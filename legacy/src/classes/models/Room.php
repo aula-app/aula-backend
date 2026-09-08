@@ -352,8 +352,7 @@ class Room
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
-        // TODO $query undefined?
-        $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":user_id", $user_id, $query . $extra_where));
+        $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":user_id", $user_id, $query_rooms . $extra_where));
       }
       $returnvalue['success'] = true; // set return value to false
       $returnvalue['error_code'] = 0; // error code
