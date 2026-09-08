@@ -352,6 +352,7 @@ class Room
       // get count
       if ($limit_active) {
         // only newly calculate datasets if limits are active
+        // TODO $query undefined?
         $total_datasets = $this->converters->getTotalDatasetsFree(str_replace(":user_id", $user_id, $query . $extra_where));
       }
       $returnvalue['success'] = true; // set return value to false
@@ -541,20 +542,6 @@ class Room
 
       return $returnvalue;
 
-    }
-  }
-
-  public function canEditMainRoom($user_id, $userlevel, $arguments) {
-    if ($userlevel != 60) {
-      return false;
-    }
-
-    try {
-      $room = $this->getRoomBaseData($arguments["room_id"])["data"];
-      if ($room["type"] == 1)
-        return true;
-    } catch(Exception $e) {
-      return false;
     }
   }
 

@@ -1,4 +1,4 @@
-/*M!999999\- enable the sandbox mode */ 
+/*M!999999\- enable the sandbox mode */
 -- MariaDB dump 10.19-11.4.3-MariaDB, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: aula
@@ -858,7 +858,7 @@ CREATE TABLE `au_roles` (
   `description_public` text DEFAULT NULL COMMENT 'description useable in frontend',
   `description_internal` text DEFAULT NULL COMMENT 'description only seen by admins',
   `order` int(11) DEFAULT NULL COMMENT 'used for sorting in display in frontend',
-  `rights_level` int(11) DEFAULT NULL COMMENT '0=view_only, 10=std_user, 20=privileged user1, 30=privileged user 2, 40=priviledged user 5, 50=admin, 60=tech admin',
+  `rights_level` int(11) DEFAULT NULL COMMENT '0=view_only, 10=std_user, 20=privileged user1, 30=privileged user 2, 40=priviledged user 5, 50=admin',
   `status` tinyint(1) DEFAULT NULL COMMENT '0=inactive, 1=active 2=suspended 3=archived',
   `created` datetime DEFAULT NULL COMMENT 'time of creation',
   `last_update` datetime DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'last update of dataset',

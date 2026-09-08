@@ -85,10 +85,7 @@ class LegacyUser extends Model implements Authenticatable
 
     public function isAdmin(): bool
     {
-        return \in_array($this->userlevel, [
-            UserLevel::Admin,
-            UserLevel::TechAdmin,
-        ]);
+        return $this->userlevel === UserLevel::Admin;
     }
 
     /**
