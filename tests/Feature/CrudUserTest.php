@@ -11,6 +11,7 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Depends;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\DB;
 
 class CrudUserTest extends TestCase
 {
@@ -468,6 +469,19 @@ class CrudUserTest extends TestCase
     public function test_export_gdpr_info()
     {
         $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+
+        $content = "Testcontent";
+        $created = "2026-01-01 01:23:45";
+        $tenant = self::$testTenant;
+        $tenant->run(function () use ($user, $content, $created) {
+            DB::table('au_ideas')->insert(
+                ['user_id' => $user->id, 'content' => $content, 'created' => $created]
+            );
+            DB::table('au_comments')->insert(
+                ['user_id' => $user->id, 'content' => $content, 'created' => $created]
+            );
+        });
+
         $this->getJson("/api/v2/users/{$user->hash_id}/export")
             ->assertOk()
             ->assertJsonMissingPath('id')
@@ -476,9 +490,9 @@ class CrudUserTest extends TestCase
                     'displayName' => 'Distinct',
                     'realName' => 'Distinct User',
                 ],
-                // TODO: how to test ideas & comments? create here?
-                'userIdeas' => '',
-                'userComments' => '',
+                // last_update==null becomes empty string
+                'userIdeas' => "$content, IDEA CREATED: $created, IDEA LAST UPDATE: *§$",
+                'userComments' => "$content, COMMENT CREATED: $created, COMMENT LAST UPDATE: *§$",
             ]);
     }
 
