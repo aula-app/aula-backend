@@ -15,13 +15,13 @@ class ListUsersUseCase
     /**
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement
-     * @return DataCollection
+     * @return DataCollection<array-key, DomainUserData>
      */
     public function execute(): DataCollection
     {
         Gate::authorize(Gates::ListUsers);
 
-        $all = LegacyUser::all();
+        $all = LegacyUser::with('rooms:hash_id')->get();
         return DomainUserData::collect($all, DataCollection::class);
     }
 }

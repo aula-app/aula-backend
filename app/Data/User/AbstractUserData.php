@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Data\User;
 
 use DateTimeImmutable;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Pivot;
+use Spatie\LaravelData\Attributes\Hidden;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
+use App\Relations\RoomUser;
 
 abstract class AbstractUserData extends Data
 {
@@ -36,6 +40,8 @@ abstract class AbstractUserData extends Data
 
     abstract public null|DateTimeImmutable $updatedAt { get; }
 
+    abstract public null|Pivot $pivot { get; }
+
     public function __construct(
         null|string $publicId,
         null|string $displayName,
@@ -49,6 +55,8 @@ abstract class AbstractUserData extends Data
         null|string $aboutMe,
         null|DateTimeImmutable $createdAt,
         null|DateTimeImmutable $updatedAt,
+
+        null|Pivot $pivot,
     ) {
         // abstract are unpromotable, need to be set up sans sugar
         $this->publicId = $publicId;
@@ -60,5 +68,6 @@ abstract class AbstractUserData extends Data
         $this->aboutMe = $aboutMe;
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
+        $this->pivot = $pivot;
     }
 }
