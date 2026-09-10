@@ -62,21 +62,21 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
     {
         if ($socialiteUser->getNickname() === null) {
             Log::warning('SSO: nickname missing from upstream IdP — falling back to email for username.', [
-                'sub'   => $socialiteUser->getId(),
+                'sub' => $socialiteUser->getId(),
                 'email' => $socialiteUser->getEmail(),
             ]);
         }
 
         $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
 
-        $user               = new self();
-        $user->email        = $socialiteUser->getEmail();
-        $user->sso_sub      = $socialiteUser->getId();
-        $user->username     = $username;
-        $user->displayname  = $socialiteUser->getName() ?? $username;
-        $user->hash_id      = md5($username . (string) microtime(true) . rand(100, 10000000));
-        $user->userlevel    = UserLevel::User;
-        $user->status       = UserStatus::Active;
+        $user = new self;
+        $user->email = $socialiteUser->getEmail();
+        $user->sso_sub = $socialiteUser->getId();
+        $user->username = $username;
+        $user->displayname = $socialiteUser->getName() ?? $username;
+        $user->hash_id = md5($username.(string) microtime(true).rand(100, 10000000));
+        $user->userlevel = UserLevel::User;
+        $user->status = UserStatus::Active;
 
         return $user;
     }
@@ -104,12 +104,26 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
     public function checkPassword(string $password): bool
     {
         // Check temporary password first (timing attack safe plain text match)
-        if (!empty($this->temp_pw) && hash_equals($this->temp_pw, $password)) {
+        if (! empty($this->temp_pw) && hash_equals($this->temp_pw, $password)) {
             return true;
+        }
+
+        // au_users_basedata.pw is nullable: directory-imported rows have none.
+        if (empty($this->pw)) {
+            return false;
         }
 
         // Check hashed password using PHP's password_verify (bcrypt)
         return password_verify($password, $this->pw);
+    }
+
+    /**
+     * Passport calls this in preference to the configured hasher, so the
+     * temp_pw path stays reachable through the password grant.
+     */
+    public function validateForPassportPasswordGrant(string $password): bool
+    {
+        return $this->checkPassword($password);
     }
 
     // Authenticatable interface methods
@@ -135,7 +149,9 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
      */
     public function getAuthPassword(): string
     {
-        return $this->pw;
+        // Nullable column; returning null here is a TypeError, which surfaces
+        // as a 500 and tells a caller the username exists.
+        return (string) $this->pw;
     }
 
     /**
@@ -177,8 +193,6 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
      * Additionally, we can put all other unauthenticated exceptions here: status not active, sso in use. We accept
      * that failing those checks doesn't produce a more specific error message because that would be leaking
      * unnecessary information to the API client, enabling potential user enumeration et al.
-     *
-     * @param string $username
      */
     public function findForPassport(string $username): ?LegacyUser
     {

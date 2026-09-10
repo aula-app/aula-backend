@@ -163,6 +163,105 @@ class TokenCreateTest extends TestCase
     }
 
     /**
+     * au_users_basedata.pw is nullable, and a TypeError on the way to the
+     * hasher answered 500 where an unknown username answers 400, which tells a
+     * caller the username exists.
+     */
+    public function test_a_passwordless_user_is_refused_like_an_unknown_one(): void
+    {
+        $tenant = self::$testTenant;
+        $this->assertNotNull($tenant);
+
+        $tenant->run(function () {
+            LegacyUser::where('username', 'phpunit_shell')->delete();
+
+            $user = new LegacyUser;
+            $user->username = 'phpunit_shell';
+            $user->pw = null;
+            $user->status = UserStatus::Active;
+            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->userlevel = UserLevel::User;
+            $user->roles = json_encode([]);
+            $user->refresh_token = false;
+            $user->save();
+        });
+
+        $unknown = $this->post('/api/v2/oauth/token', [
+            'grant_type' => 'password',
+            'client_id' => self::$client->id,
+            'username' => 'phpunit_no_such_user',
+            'password' => 'anything',
+        ], ['aula-instance-code' => 'TEST001']);
+
+        $passwordless = $this->post('/api/v2/oauth/token', [
+            'grant_type' => 'password',
+            'client_id' => self::$client->id,
+            'username' => 'phpunit_shell',
+            'password' => 'anything',
+        ], ['aula-instance-code' => 'TEST001']);
+
+        $passwordless->assertStatus(400)->assertJsonMissingPath('access_token');
+        $this->assertSame(
+            $unknown->getStatusCode(),
+            $passwordless->getStatusCode(),
+            'a real passwordless user must be indistinguishable from an unknown one',
+        );
+
+        $tenant->run(function () {
+            LegacyUser::where('username', 'phpunit_shell')->delete();
+        });
+    }
+
+    /**
+     * Passport uses the configured hasher unless the model validates for
+     * itself, which skipped temp_pw and locked out anyone mid password reset.
+     */
+    public function test_login_with_a_temporary_password(): void
+    {
+        $tenant = self::$testTenant;
+        $this->assertNotNull($tenant);
+
+        $tenant->run(function () {
+            LegacyUser::where('username', 'phpunit_temp')->delete();
+
+            $user = new LegacyUser;
+            $user->username = 'phpunit_temp';
+            $user->pw = null;
+            $user->temp_pw = 'temp123';
+            $user->status = UserStatus::Active;
+            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->userlevel = UserLevel::User;
+            $user->roles = json_encode([]);
+            $user->refresh_token = false;
+            $user->save();
+        });
+
+        $response = $this->post('/api/v2/oauth/token', [
+            'grant_type' => 'password',
+            'client_id' => self::$client->id,
+            'username' => 'phpunit_temp',
+            'password' => 'temp123',
+        ], ['aula-instance-code' => 'TEST001']);
+
+        $response->assertOk()->assertJsonStructure(['access_token']);
+
+        // The frontend routes on this claim to force a password change.
+        $payload = json_decode(base64_decode(explode('.', $response->json('access_token'))[1]), true);
+        $this->assertTrue((bool) $payload['temp_pw']);
+
+        $this->post('/api/v2/oauth/token', [
+            'grant_type' => 'password',
+            'client_id' => self::$client->id,
+            'username' => 'phpunit_temp',
+            'password' => 'not-the-temp-password',
+        ], ['aula-instance-code' => 'TEST001'])->assertStatus(400);
+
+        $tenant->run(function () {
+            LegacyUser::where('username', 'phpunit_temp')->delete();
+        });
+    }
+
+    /**
      * The refresh grant sends no username or password, so validating them on
      * every request to this endpoint locks it out.
      */
