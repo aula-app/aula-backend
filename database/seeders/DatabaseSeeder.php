@@ -13,12 +13,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $clientRepo = new ClientRepository();
+        $clientRepo = new ClientRepository;
         // when confidential:false is set, we don't need client_secret
         $client = $clientRepo->createPasswordGrantClient('password_grants_tenant_users', 'aula_users', false);
 
         $this->command->info("Client ID:     {$client->id}");
         $this->command->info('Client Secret: N/A');
+
+        // SsoController mints tokens with createToken(), which resolves a
+        // personal_access client or throws.
+        $personalAccessClient = $clientRepo->createPersonalAccessGrantClient(
+            'personal_access_tenant_users',
+            'aula_users',
+        );
+
+        $this->command->info("Personal Access Client ID: {$personalAccessClient->id}");
 
         $user = AulaManagerUser::firstOrCreate(
             ['email' => 'dev@aula.de'],
