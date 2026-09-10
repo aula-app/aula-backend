@@ -41,11 +41,8 @@ return [
             'provider' => 'aula_manager_users',
         ],
         'api' => [
-            'driver' => 'passport', // 'session', // @TODO: nikola - use 'passport' driver
+            'driver' => 'passport',
             'provider' => 'aula_users',
-        ],
-        'apiv2' => [
-            'driver' => 'legacy_jwt',
         ],
     ],
 
