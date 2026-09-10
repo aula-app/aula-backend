@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\LegacyUser;
+use App\Models\Manager\AulaManagerUser;
+
 return [
 
     /*
@@ -44,6 +47,13 @@ return [
             'driver' => 'passport',
             'provider' => 'aula_users',
         ],
+
+        // Transitional, for routes the deployed frontend already calls with a
+        // BE.v1 token. See AuthServiceProvider::boot().
+        'api_compat' => [
+            'driver' => 'passport_or_legacy_jwt',
+            'provider' => 'aula_users',
+        ],
     ],
 
     /*
@@ -66,11 +76,11 @@ return [
     'providers' => [
         'aula_manager_users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Manager\AulaManagerUser::class,
+            'model' => AulaManagerUser::class,
         ],
         'aula_users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\LegacyUser::class),
+            'model' => env('AUTH_MODEL', LegacyUser::class),
         ],
 
         // 'users' => [

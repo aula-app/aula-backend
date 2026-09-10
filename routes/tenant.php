@@ -41,7 +41,9 @@ Route::name('sso.')
 
         Route::get('/sso/initiate', [SsoController::class, 'initiate'])->name('initiate');
 
-        Route::middleware('auth:api')->group(function () {
+        // api_compat, not api: the deployed frontend calls these with the
+        // BE.v1 token it got from /api/controllers/login.php.
+        Route::middleware('auth:api_compat')->group(function () {
             Route::post('/sso/logout', [SsoController::class, 'logout'])->name('sso.logout');
             Route::post('/sso/link', [SsoController::class, 'link'])->name('sso.link');
 
