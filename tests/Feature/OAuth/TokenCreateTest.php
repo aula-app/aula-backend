@@ -319,6 +319,50 @@ class TokenCreateTest extends TestCase
         });
     }
 
+    /**
+     * AulaClaims looks the user up again to build the claims, and a refresh
+     * token outlives the row it was issued for.
+     */
+    public function test_refreshing_for_a_deleted_user_is_an_oauth_error(): void
+    {
+        $tenant = self::$testTenant;
+        $this->assertNotNull($tenant);
+
+        $password = 'testpass123';
+        $tenant->run(function () use ($password) {
+            LegacyUser::where('username', 'phpunit_doomed')->delete();
+
+            $user = new LegacyUser;
+            $user->username = 'phpunit_doomed';
+            $user->pw = password_hash($password, PASSWORD_DEFAULT);
+            $user->status = UserStatus::Active;
+            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->userlevel = UserLevel::User;
+            $user->roles = json_encode([]);
+            $user->refresh_token = false;
+            $user->save();
+        });
+
+        $refreshToken = $this->post('/api/v2/oauth/token', [
+            'grant_type' => 'password',
+            'client_id' => self::$client->id,
+            'username' => 'phpunit_doomed',
+            'password' => $password,
+        ], ['aula-instance-code' => 'TEST001'])->assertOk()->json('refresh_token');
+
+        $tenant->run(function () {
+            LegacyUser::where('username', 'phpunit_doomed')->delete();
+        });
+
+        $this->post('/api/v2/oauth/token', [
+            'grant_type' => 'refresh_token',
+            'client_id' => self::$client->id,
+            'refresh_token' => $refreshToken,
+        ], ['aula-instance-code' => 'TEST001'])
+            ->assertStatus(400)
+            ->assertJsonPath('error', 'invalid_grant');
+    }
+
     public function test_password_grant_still_requires_credentials(): void
     {
         $this->assertNotNull(self::$testTenant);
