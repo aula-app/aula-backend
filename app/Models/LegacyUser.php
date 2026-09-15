@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\UserLevel;
@@ -74,7 +76,7 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
         $user->sso_sub = $socialiteUser->getId();
         $user->username = $username;
         $user->displayname = $socialiteUser->getName() ?? $username;
-        $user->hash_id = md5($username.(string) microtime(true).rand(100, 10000000));
+        $user->hash_id = md5($username . \Str::random(16));
         $user->userlevel = UserLevel::User;
         $user->status = UserStatus::Active;
 

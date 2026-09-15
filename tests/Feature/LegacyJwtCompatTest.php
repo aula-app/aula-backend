@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
+use Illuminate\Support\Str;
 use Laravel\Passport\Passport;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -136,14 +137,14 @@ class LegacyJwtCompatTest extends TestCase
         return self::$testTenant->run(function () use ($username, $level, $status) {
             LegacyUser::where('username', $username)->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = $username;
             $user->displayname = $username;
             $user->realname = $username;
             $user->pw = password_hash('irrelevant', PASSWORD_DEFAULT);
             $user->status = $status;
             $user->userlevel = $level;
-            $user->hash_id = $username.'_'.substr(md5(uniqid()), 0, 12);
+            $user->hash_id = $username.'_'.substr(md5(Str::random(16)), 0, 12);
             $user->roles = json_encode([]);
             $user->refresh_token = false;
             $user->save();

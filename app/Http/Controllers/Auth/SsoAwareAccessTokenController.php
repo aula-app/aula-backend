@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use Http\Discovery\Psr17Factory;
@@ -20,7 +22,7 @@ class SsoAwareAccessTokenController extends AccessTokenController
         // used in parent class, needs to be injected here
         protected AuthorizationServer $server
     ) {
-        $this->psrHttpFactory = new PsrHttpFactory(new Psr17Factory);
+        $this->psrHttpFactory = new PsrHttpFactory(new Psr17Factory());
     }
 
     /**

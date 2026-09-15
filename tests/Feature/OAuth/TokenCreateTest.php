@@ -5,6 +5,7 @@ namespace Tests\Feature\OAuth;
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
+use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -31,11 +32,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () use ($password) {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash($password, PASSWORD_DEFAULT);
             $user->status = UserStatus::Active;
-            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->hash_id = 'phpunit_hash_'.Str::random(16);
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -76,11 +77,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash('correctpass', PASSWORD_DEFAULT);
             $user->status = UserStatus::Active;
-            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->hash_id = 'phpunit_hash_'.Str::random(16);
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -135,11 +136,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_inactive')->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'phpunit_inactive';
             $user->pw = password_hash('testpass', PASSWORD_DEFAULT);
             $user->status = UserStatus::Suspended;
-            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->hash_id = 'phpunit_hash_'.Str::random(16);
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -175,11 +176,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_shell')->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'phpunit_shell';
             $user->pw = null;
             $user->status = UserStatus::Active;
-            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->hash_id = 'phpunit_hash_'.Str::random(16);
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -224,12 +225,12 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () {
             LegacyUser::where('username', 'phpunit_temp')->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'phpunit_temp';
             $user->pw = null;
             $user->temp_pw = 'temp123';
             $user->status = UserStatus::Active;
-            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->hash_id = 'phpunit_hash_'.Str::random(16);
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -274,11 +275,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () use ($password) {
             LegacyUser::where('username', 'phpunit_refresh')->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'phpunit_refresh';
             $user->pw = password_hash($password, PASSWORD_DEFAULT);
             $user->status = UserStatus::Active;
-            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->hash_id = 'phpunit_hash_'.Str::random(16);
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -332,11 +333,11 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () use ($password) {
             LegacyUser::where('username', 'phpunit_doomed')->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'phpunit_doomed';
             $user->pw = password_hash($password, PASSWORD_DEFAULT);
             $user->status = UserStatus::Active;
-            $user->hash_id = 'phpunit_hash_'.uniqid();
+            $user->hash_id = 'phpunit_hash_'.Str::random(16);
             $user->userlevel = UserLevel::User;
             $user->roles = json_encode([]);
             $user->refresh_token = false;
@@ -384,7 +385,7 @@ class TokenCreateTest extends TestCase
         $tenant->run(function () use (&$userId) {
             LegacyUser::where('username', 'phpunit_testuser')->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'phpunit_testuser';
             $user->pw = password_hash('testpass', PASSWORD_DEFAULT);
             $user->status = UserStatus::Active;

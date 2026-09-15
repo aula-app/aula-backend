@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserLevel;
@@ -65,7 +67,8 @@ class SsoController extends Controller
         protected IdTokenVerifier $idTokenVerifier,
         protected SchoolImport $schoolImport,
         protected IdpProviders $idpProviders,
-    ) {}
+    ) {
+    }
 
     // =========================================================
     // Public endpoints

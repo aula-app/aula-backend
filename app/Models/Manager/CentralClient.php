@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Manager;
 
 use Laravel\Passport\Client as PassportClient;
