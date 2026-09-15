@@ -15,12 +15,6 @@ class AuthzServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        // TODO(v1 divergence): isAdmin() covers Admin *and* TechAdmin, but
-        // legacy's Permissions.php grants "admin" in ~100 rule entries and
-        // "tech_admin" in only ~20 -- userlevel is not a hierarchy there. As
-        // long as Gate::before below bypasses everything for both, TechAdmin
-        // gains abilities in v2 that it does not have in v1. Needs a product
-        // decision before this covers more than the User resource.
         Gate::define('admin', function (LegacyUser $user) {
             return $user->isAdmin();
         });
