@@ -16,7 +16,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
     44 => "principal",
     45 => "principal_v",
     50 => "admin",
-    60 => "tech_admin"
   ];
 
   $all_models = [
@@ -192,26 +191,26 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
 
     "Command" => [
       "getCommands" => [
-        "open_roles" => ["admin", "tech_admin"]
+        "open_roles" => ["admin"]
       ],
 
       "deleteCommand" => [
-        "open_roles" => ["admin", "tech_admin"]
+        "open_roles" => ["admin"]
       ],
 
       "addCommand" => [
-        "open_roles" => ["admin", "tech_admin"]
+        "open_roles" => ["admin"]
       ],
     ],
 
     "Settings" =>
       [
         "setWorkdays" => [
-          "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+          "roles" => ["principal", "principal_v", "admin"]
         ],
 
         "setQuorum" => [
-          "roles" => ["principal", "principal_v", "admin", "tech_admin"]
+          "roles" => ["principal", "principal_v", "admin"]
         ],
 
         "getInstanceSettings" => [
@@ -223,7 +222,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         ],
 
         "setInstanceOnlineMode" => [
-          "open_roles" => ["admin", "tech_admin"]
+          "open_roles" => ["admin"]
         ],
       ],
     "Converters" => [
@@ -293,7 +292,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
 
       "editRoom" => [
         "open_roles" => ["admin"],
-        "checks" => ["method:canEditMainRoom"]
       ],
 
       "getRooms" => [
@@ -303,7 +301,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "principal",
           "principal_v",
           "admin",
-          "tech_admin"
         ]
       ],
 
@@ -385,13 +382,11 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       "addCSV" => [
         "open_roles" => [
           "admin",
-          "tech_admin"
         ]
       ],
       "addAllCSV" => [
         "open_roles" => [
           "admin",
-          "tech_admin"
         ]
       ],
 
@@ -454,7 +449,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       "setUserAbout" => [
         "open_roles" => [
           "admin",
-          "tech_admin"
         ],
         "roles" => [
           "guest",
@@ -466,7 +460,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "principal",
           "principal_v",
           "admin",
-          "tech_admin"
         ],
         "checks" => ["user_id:user_id"]
       ],
@@ -474,7 +467,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       "setUserDisplayname" => [
         "open_roles" => [
           "admin",
-          "tech_admin"
         ],
         "roles" => [
           "guest",
@@ -486,7 +478,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "principal",
           "principal_v",
           "admin",
-          "tech_admin"
         ],
         "checks" => ["user_id:user_id"]
       ],
@@ -494,28 +485,24 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
       "setUserRealname" => [
         "roles" => [
           "admin",
-          "tech_admin"
         ]
       ],
 
       "setUserEmail" => [
         "roles" => [
           "admin",
-          "tech_admin"
         ]
       ],
 
       "setUserUsername" => [
         "roles" => [
           "admin",
-          "tech_admin"
         ]
       ],
 
       "setUserDisplayname" => [
         "roles" => [
           "admin",
-          "tech_admin"
         ]
       ],
 
@@ -673,7 +660,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "principal",
           "principal_v",
           "admin",
-          "tech_admin"
         ]
       ],
       "getGroupBaseData" => [
@@ -683,7 +669,6 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
           "principal",
           "principal_v",
           "admin",
-          "tech_admin"
         ]
       ],
       "addGroup" => [
