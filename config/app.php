@@ -57,6 +57,16 @@ return [
     'version' => env('APP_VERSION', 'unknown'),
 
     /*
+     * Custom URL scheme the native apps register as a deep link.
+     *
+     * A login started inside the app ends here rather than at `frontend_url`,
+     * which would leave the user in the browser the app opened for the login.
+     * Read from config and never from the request, so a caller cannot turn the
+     * SSO callback into an open redirect.
+     */
+    'mobile_url_scheme' => env('APP_MOBILE_URL_SCHEME', 'de.aula.neu'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
