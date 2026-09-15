@@ -11,11 +11,13 @@ return new class () extends Migration {
             ->where('userlevel', 60)
             ->get(['id', 'username']);
         $numOfUsers = $users->count();
-        $message = "Migrating [{$numOfUsers}] from techadmin to admin userlevel: " . $users->toJson();
+        $message = "Converting [{$numOfUsers}] users from 'techadmin' userlevel to 'admin' userlevel: " . $users->toJson();
         Log::info($message, [ 'tenant' => tenant('instance_code'), 'count' => $numOfUsers ]);
 
         DB::table('au_systemlog')->insert([ 'message' => $message ]);
-        DB::statement('UPDATE au_users_basedata SET userlevel=50, refresh_token=1 WHERE userlevel=60');
+        $users = DB::table('au_users_basedata')
+            ->where('userlevel', 60)
+            ->update(['refresh_token' => 1, 'userlevel' => 50]);
     }
 
     public function down(): void
