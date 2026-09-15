@@ -796,8 +796,7 @@ class SsoControllerTest extends TestCase
         $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
 
         // Should authenticate as the sso_sub user, not the email user
-        $this->assertRedirectAuthenticatesUser($response, $subUser);
-        $payload = $this->decodeRedirectToken($response);
+        $payload = $this->assertRedirectAuthenticatesUser($response, $subUser);
         $this->assertNotEquals($emailUser->hash_id, $payload->user_hash);
     }
 
@@ -995,7 +994,7 @@ class SsoControllerTest extends TestCase
 
     private function createUser(string $email, ?string $sub, UserStatus $status = UserStatus::Active, array $extra = []): LegacyUser
     {
-        $user = new LegacyUser;
+        $user = new LegacyUser();
         $user->email = $email;
         $user->sso_sub = $sub;
         $user->status = $status;
@@ -1094,8 +1093,6 @@ class SsoControllerTest extends TestCase
     private function jwtForUser(LegacyUser $user): string
     {
         return self::$testTenant->run(fn () => $user->createToken('test token')->accessToken);
-        /*     fn () => app(\App\Auth\)->generateToken($user) */
-        /* ); */
     }
 
     /**
@@ -1115,13 +1112,6 @@ class SsoControllerTest extends TestCase
         $this->assertNotEmpty($token, 'redirect did not contain a JWT token');
 
         return $this->jwtPayload($token);
-        // @TODO: validate token (and don't rely on app code in tests for doing that)
-        //
-        /* $result = self::$testTenant->run( */
-        /*     fn () => app(\App\Services\LegacyJwtService::class)->validateToken($token) */
-        /* ); */
-        /* $this->assertTrue($result['success'], 'JWT in redirect failed validation: ' . ($result['error'] ?? '')); */
-        /* return $result['payload']; */
     }
 
     public function jwtPayload(string $token): object
@@ -1137,9 +1127,10 @@ class SsoControllerTest extends TestCase
         return json_decode(base64_decode($payload), false);
     }
 
-    private function assertRedirectAuthenticatesUser(TestResponse $response, LegacyUser $user): void
+    private function assertRedirectAuthenticatesUser(TestResponse $response, LegacyUser $user): object
     {
         $payload = $this->decodeRedirectToken($response);
         $this->assertEquals($user->hash_id, $payload->user_hash);
+        return $payload;
     }
 }
