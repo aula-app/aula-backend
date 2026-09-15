@@ -7,6 +7,8 @@ namespace Tests\Feature;
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Laravel\Passport\Passport;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Depends;
@@ -15,6 +17,7 @@ use DateTimeImmutable;
 class CrudUserTest extends TestCase
 {
     use CreatesTestTenant;
+    use DatabaseTransactions;
 
     private const array NEW_USER_DATA = [
         'displayName' => 'Firstnamé',
@@ -41,21 +44,12 @@ class CrudUserTest extends TestCase
         $this->ensureTestTenantExists();
 
         $this->adminUser = $this->createDistinctUser(UserLevel::Admin, UserStatus::Active);
-        $this->adminJwt = $this->jwtForUser($this->adminUser);
-        $this->adminHeaders = ['Authorization' => "Bearer {$this->adminJwt}"];
+        Passport::actingAs($this->adminUser);
 
-        $this->withHeaders([
-            ...self::TENANT_HEADERS,
-            ...$this->adminHeaders,
-        ]);
+        $this->withHeaders([ ...self::TENANT_HEADERS ]);
     }
 
     public static function tearDownAfterClass(): void
-    {
-        self::cleanUp();
-    }
-
-    public static function cleanUp(): void
     {
         self::$testTenant->run(function () {
             LegacyUser::whereLike('email', 'e2e_distinct_%@aula.de')->delete();
@@ -102,9 +96,11 @@ class CrudUserTest extends TestCase
 
     private function jwtForUser(LegacyUser $user): string
     {
-        return self::$testTenant->run(
-            fn () => app(\App\Services\LegacyJwtService::class)->generateToken($user)
-        ) ?? '';
+        Passport::actingAs($user);
+        return '';
+        /* return self::$testTenant->run( */
+        /*     fn () => app(\App\Services\LegacyJwtService::class)->generateToken($user) */
+        /* ) ?? ''; */
     }
 
     public function test_authz_nonadmin()
@@ -117,17 +113,14 @@ class CrudUserTest extends TestCase
         //     $this->adminHeaders
         //   )->assertOk();
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
+        $this->jwtForUser($nonAdminUser);
         $this->getJson(
             '/api/v2/users',
-            // override default admin headers
-            ['Authorization' => "Bearer {$nonAdminJwt}"]
         )
             ->assertForbidden();
         $this->postJson(
             '/api/v2/users',
             self::NEW_USER_DATA,
-            ['Authorization' => "Bearer {$nonAdminJwt}"]
         )
             ->assertForbidden();
     }
@@ -135,11 +128,9 @@ class CrudUserTest extends TestCase
     public function test_authz_early_validation()
     {
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
+        $this->jwtForUser($nonAdminUser);
         $this->postJson(
-            '/api/v2/users',
-            [/* empty body! */],
-            ['Authorization' => "Bearer {$nonAdminJwt}"]
+            '/api/v2/users'
         )
             // *not* assertForbidden, because validation (laravel-data) happens *before* Gate
             ->assertUnprocessable();
@@ -159,12 +150,10 @@ class CrudUserTest extends TestCase
         $jwt = $this->jwtForUser($user);
         $this->getJson(
             "/api/v2/users/{$user->hash_id}",
-            ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertOk();
         $this->getJson(
             "/api/v2/users/{$otherUser->hash_id}",
-            ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertForbidden();
     }
@@ -172,12 +161,11 @@ class CrudUserTest extends TestCase
     public function test_authz_self_update_cannot_escalate_userlevel()
     {
         $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        $jwt = $this->jwtForUser($user);
+        $this->jwtForUser($user);
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
             [...$this->putBodyFor($user), 'userLevel' => UserLevel::Admin->value],
-            ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertForbidden();
 
@@ -190,12 +178,11 @@ class CrudUserTest extends TestCase
     public function test_authz_self_update_cannot_change_status()
     {
         $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        $jwt = $this->jwtForUser($user);
+        $this->jwtForUser($user);
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
             [...$this->putBodyFor($user), 'status' => UserStatus::Suspended->value],
-            ['Authorization' => "Bearer {$jwt}"]
         )
             ->assertForbidden();
 
@@ -208,12 +195,11 @@ class CrudUserTest extends TestCase
     public function test_authz_self_update_allows_own_profile_fields()
     {
         $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        $jwt = $this->jwtForUser($user);
+        $this->jwtForUser($user);
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
-            [...$this->putBodyFor($user), 'realName' => 'Renamed Self'],
-            ['Authorization' => "Bearer {$jwt}"]
+            [...$this->putBodyFor($user), 'realName' => 'Renamed Self']
         )
             ->assertOk()
             ->assertJson(['realName' => 'Renamed Self', 'userLevel' => UserLevel::User->value]);
@@ -241,28 +227,39 @@ class CrudUserTest extends TestCase
             ]);
     }
 
+    // Passport will not create access tokens for wrong credentials, inactive users, etc.
+    // the scope of this FeatureTest file is CRUD Users, rather than details of Passport authN
+    // Therefore, we only have one test to check that missing access token will disallow GET /users
+    public function test_authz_unauthorized()
+    {
+        // Necessary to clean up the cached $user from \Illuminate\Auth\RequestGuard
+        $this->refreshApplication();
+        parent::setUp();
+        $this->withHeaders([ ...self::TENANT_HEADERS ]);
+
+        $this->getJson(
+            '/api/v2/users',
+            [ 'Authorization' => null ]
+        )
+            ->assertUnauthorized();
+    }
+
+    // This test doesn't make too much sense, because it's testing whether inactive users
+    // can access GET /users. The real question is whether inactive users would have any
+    // active (unrevoked) Access Tokens. This test uses Passport::actingAs($user) to
+    // check the authZ for GET /users, but that's only a fallback check - our first line
+    // of defense is not issuing (and revoking) tokens to non-Active users.
     public function test_authz_not_active_statuses()
     {
         foreach ([UserStatus::Inactive, UserStatus::Suspended, UserStatus::Archived] as $userStatus) {
+            /* // Necessary to clean up the cached $user from \Illuminate\Auth\RequestGuard */
+            /* $this->refreshApplication(); */
+            /* parent::setUp(); */
             $inActiveUser = $this->createDistinctUser(UserLevel::Admin, $userStatus);
-            $inActiveJwt = $this->jwtForUser($inActiveUser);
-            $this->getJson(
-                '/api/v2/users',
-                ['Authorization' => "Bearer {$inActiveJwt}"]
-            )
-                ->assertJson(['error' => 'user_not_active'])
-                ->assertUnauthorized();
+            $this->jwtForUser($inActiveUser);
+            $this->getJson('/api/v2/users')
+                ->assertForbidden();
         }
-    }
-
-    public function test_authz_unauthorized()
-    {
-        $this->getJson(
-            '/api/v2/users',
-            ['Authorization' => null]
-        )
-            ->assertJson(['error' => 'Authorization header missing or invalid'])
-            ->assertUnauthorized();
     }
 
     public function test_create()
@@ -321,7 +318,7 @@ class CrudUserTest extends TestCase
     #[Depends('test_create_optional')]
     public function test_index($newUserPublicId1, $newUserPublicId2)
     {
-        $allUsers = $this->getJson('/api/v2/users/')
+        $allUsers = $this->getJson('/api/v2/users')
             ->assertOk()->json();
 
         $allUserPublicIds = array_column($allUsers, 'publicId');
@@ -389,15 +386,13 @@ class CrudUserTest extends TestCase
         // non admin tries do delete other
         $this->deleteJson(
             '/api/v2/users/'.$newUserPublicId1,
-            [],
-            ['Authorization' => "Bearer {$nonAdminJwt}"]
+            []
         )
             ->assertForbidden();
         // non admin tries to delete self
         $this->deleteJson(
             '/api/v2/users/'.$nonAdminUser->hash_id,
-            [],
-            ['Authorization' => "Bearer {$nonAdminJwt}"]
+            []
         )
             ->assertForbidden();
     }

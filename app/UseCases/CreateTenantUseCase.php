@@ -68,8 +68,7 @@ class CreateTenantUseCase
     private function insertInitialSystemData(string $name): void
     {
         $now = now();
-        $appendix = microtime(true).rand(100, 10000000);
-        $hashId = md5('Schule'.$appendix);
+        $hashId = md5('Schule' . Str::random(16));
 
         DB::table('au_rooms')->insert([
             'room_name' => 'Schule',
