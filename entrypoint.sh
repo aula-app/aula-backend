@@ -26,7 +26,7 @@ done
 echo "✅ Database is ready."
 
 php artisan migrate --force
-php artisan tenants:migrate --force
+php artisan tenants:migrate --force --skip-failing
 php artisan optimize:clear
 php artisan storage:link
 # Make sure write and setgid bits is enabled for storage, so
