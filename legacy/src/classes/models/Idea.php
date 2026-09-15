@@ -120,6 +120,7 @@ class Idea
       SELECT id
       FROM {$this->db->au_users_basedata}
       WHERE
+        status = 1 AND
         userlevel NOT IN (41,45) AND
         id in (SELECT user_id FROM {$this->db->au_rel_rooms_users} WHERE room_id = :room_id)
         AND EXISTS (
@@ -143,7 +144,7 @@ class Idea
     $users_id = $this->db->resultSet();
 
     // Count super_moderator and principals with voting rights
-    $query = "select count(id) as count from au_users_basedata where userlevel in (41,45)";
+    $query = "select count(id) as count from au_users_basedata where status = 1 and userlevel in (41,45)";
     $stmt = $this->db->query($query);
     $super_voters_count = $this->db->resultSet()[0]['count'];
 
@@ -256,13 +257,13 @@ class Idea
     $room_hash_id = $this->getRoom($idea_id);
     $room_id = $this->converters->checkRoomId($room_hash_id);
 
-    $query = "SELECT count(user_id) as count FROM  {$this->db->au_rel_rooms_users} WHERE room_id = :room_id";
+    $query = "SELECT count(r.user_id) as count FROM {$this->db->au_rel_rooms_users} r INNER JOIN {$this->db->au_users_basedata} u ON u.id = r.user_id WHERE r.room_id = :room_id AND u.status = 1";
     $stmt = $this->db->query($query);
     $this->db->bind(':room_id', $room_id); // bind idea id
     $voters_in_room_count = $this->db->resultSet()[0]['count'];
 
     // Count super_moderator and principals with voting rights
-    $query = "select count(id) as count from au_users_basedata where userlevel in (41,45)";
+    $query = "select count(id) as count from au_users_basedata where status = 1 and userlevel in (41,45)";
     $stmt = $this->db->query($query);
     $super_voters_count = $this->db->resultSet()[0]['count'];
 
