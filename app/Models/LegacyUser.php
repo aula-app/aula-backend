@@ -1,16 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
-class LegacyUser extends Model implements Authenticatable
+class LegacyUser extends Model implements Authenticatable, OAuthenticatable
 {
+    use HasApiTokens;
+    use Notifiable;
+
     /**
      * The table associated with the model.
      */
@@ -56,21 +64,21 @@ class LegacyUser extends Model implements Authenticatable
     {
         if ($socialiteUser->getNickname() === null) {
             Log::warning('SSO: nickname missing from upstream IdP — falling back to email for username.', [
-                'sub'   => $socialiteUser->getId(),
+                'sub' => $socialiteUser->getId(),
                 'email' => $socialiteUser->getEmail(),
             ]);
         }
 
         $username = $socialiteUser->getNickname() ?? $socialiteUser->getEmail();
 
-        $user               = new self();
-        $user->email        = $socialiteUser->getEmail();
-        $user->sso_sub      = $socialiteUser->getId();
-        $user->username     = $username;
-        $user->displayname  = $socialiteUser->getName() ?? $username;
-        $user->hash_id      = md5($username . (string) microtime(true) . rand(100, 10000000));
-        $user->userlevel    = UserLevel::User;
-        $user->status       = UserStatus::Active;
+        $user = new self;
+        $user->email = $socialiteUser->getEmail();
+        $user->sso_sub = $socialiteUser->getId();
+        $user->username = $username;
+        $user->displayname = $socialiteUser->getName() ?? $username;
+        $user->hash_id = md5($username . \Str::random(16));
+        $user->userlevel = UserLevel::User;
+        $user->status = UserStatus::Active;
 
         return $user;
     }
@@ -89,22 +97,19 @@ class LegacyUser extends Model implements Authenticatable
     }
 
     /**
-     * Check if the user needs to refresh their token.
-     */
-    public function needsRefresh(): bool
-    {
-        return (bool) $this->refresh_token;
-    }
-
-    /**
      * Verify the user's password.
      * Supports both bcrypt hashed passwords and temporary passwords.
      */
     public function checkPassword(string $password): bool
     {
         // Check temporary password first (timing attack safe plain text match)
-        if (!empty($this->temp_pw) && hash_equals($this->temp_pw, $password)) {
+        if (! empty($this->temp_pw) && hash_equals($this->temp_pw, $password)) {
             return true;
+        }
+
+        // au_users_basedata.pw is nullable: directory-imported rows have none.
+        if (empty($this->pw)) {
+            return false;
         }
 
         // Check hashed password using PHP's password_verify (bcrypt)
@@ -112,35 +117,12 @@ class LegacyUser extends Model implements Authenticatable
     }
 
     /**
-     * Get the payload data for JWT token generation.
+     * Passport calls this in preference to the configured hasher, so the
+     * temp_pw path stays reachable through the password grant.
      */
-    public function getJwtPayload(): array
+    public function validateForPassportPasswordGrant(string $password): bool
     {
-        return [
-            'id' => $this->id,
-            'hash_id' => $this->hash_id,
-            'userlevel' => $this->userlevel?->value,
-            'roles' => $this->roles,
-            'temp_pw' => !empty($this->temp_pw),
-        ];
-    }
-
-    /**
-     * Clear the refresh token flag.
-     */
-    public function clearRefreshToken(): bool
-    {
-        $this->refresh_token = false;
-        return $this->save();
-    }
-
-    /**
-     * Set the refresh token flag.
-     */
-    public function setRefreshToken(bool $value = true): bool
-    {
-        $this->refresh_token = $value;
-        return $this->save();
+        return $this->checkPassword($password);
     }
 
     // Authenticatable interface methods
@@ -166,7 +148,9 @@ class LegacyUser extends Model implements Authenticatable
      */
     public function getAuthPassword(): string
     {
-        return $this->pw;
+        // Nullable column; returning null here is a TypeError, which surfaces
+        // as a 500 and tells a caller the username exists.
+        return (string) $this->pw;
     }
 
     /**
@@ -199,5 +183,22 @@ class LegacyUser extends Model implements Authenticatable
     public function getAuthPasswordName(): string
     {
         return 'pw';
+    }
+
+    /**
+     * Needs a custom override because AccessTokenController::issueToken is looking for matching 'email' with
+     * provided $username from the HTTP request body.
+     *
+     * Additionally, we can put all other unauthenticated exceptions here: status not active, sso in use. We accept
+     * that failing those checks doesn't produce a more specific error message because that would be leaking
+     * unnecessary information to the API client, enabling potential user enumeration et al.
+     */
+    public function findForPassport(string $username): ?LegacyUser
+    {
+        return $this
+            ->where('username', $username)
+            ->where('status', UserStatus::Active)
+            ->where('sso_sub', null)
+            ->first();
     }
 }
