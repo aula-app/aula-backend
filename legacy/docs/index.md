@@ -1,9 +1,5 @@
 # aula's backend Architecture
 
-## aula's Database
-
-You can find the database structure and documentation [here](https://github.com/aula-app/playground/blob/main/init/Database_Description.md).
-
 ## Model main aula's controller
 
 The main architecture behind aula's controllers is that most of the system requests pass through the controllers/models.php.
@@ -33,10 +29,6 @@ method arguments and then for each method of the model, it checks for the `metho
 receives `$user_level`, `$user_id` and the arguments and return a boolean value, true if the user has permissions
 to do that specific request or false otherwise. If a method from a model doesn't have a `methodPermission` written,
 the default behaviour is not allowing the request to be processed.
-
-## OAuth (auth0)
-
-The auth0 authentication workflow is managed by `controllers/login_auth0.php` and `controllers/auth0.php`. The first one initiates the OAuth login workflow, sending the user to Auth0 and exchange the security codes. The `controllers/auth0.php` is the callback configured on Auth0, and it is where the user trying to login is verified. If the user doesn't exist in the aula database, a new user is created, otherwise based on the successful response from Auth0, a JWT token is generated, returned to the user and then the user is signed in.
 
 ## Password management
 

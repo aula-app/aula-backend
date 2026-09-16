@@ -15,6 +15,7 @@ clean-legacy-local:
 	rm ./legacy/docker-compose.override.yml
 
 run-legacy-local: prepare-legacy-local
+	docker network create --attachable aula_local
 	docker compose -f ./legacy/docker-compose.yml build --build-arg DOCKER_TAG=$(DOCKER_TAG)
 	docker compose -f ./legacy/docker-compose.yml up -d
 
@@ -25,11 +26,13 @@ publish-legacy-release: build-legacy-release
 	docker image push "aulaapp/aula-backend:legacy-$(git rev-parse --short HEAD)"
 
 run-legacy-release:
+	docker network create --attachable aula_local
 	docker compose -f ./legacy/docker-compose.yml pull
 	docker compose -f ./legacy/docker-compose.yml up -d
 
 test:
 	docker compose -f docker-compose.test.yml down
+	docker network create --attachable aula_local
 	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from app-test
 
 .PHONY: xdebug-v2-docker-setup
