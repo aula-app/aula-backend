@@ -92,7 +92,7 @@ class MergeProposalController extends Controller
             ->paginate(perPage: min((int) $request->query('per_page', 50), 200));
 
         return response()->json([
-            'data' => $page->items(),
+            'data' => $this->withLocalAvatars($page->items()),
             'total' => $page->total(),
             'per_page' => $page->perPage(),
             'current_page' => $page->currentPage(),
@@ -192,6 +192,35 @@ class MergeProposalController extends Controller
             'not_yet_linked' => LegacyUser::whereNull('idp_user_id')->count(),
             'signed_in_at_least_once' => LegacyUser::whereNotNull('sso_sub')->count(),
         ]);
+    }
+
+    /**
+     * Stamp each user candidate with the aula account's avatar filename, which
+     * the frontend resolves against /api/files. One row per user: addMedia()
+     * deletes the previous avatar before inserting.
+     *
+     * @param  list<object>  $items
+     * @return list<object>
+     */
+    private function withLocalAvatars(array $items): array
+    {
+        $userIds = array_filter(array_map(
+            fn (object $row): ?int => $row->kind === MergeProposalBuilder::KIND_USER ? $row->local_id : null,
+            $items,
+        ));
+
+        $avatars = $userIds === []
+            ? collect()
+            : DB::table('au_media')
+                ->where('system_type', 0)
+                ->whereIn('updater_id', $userIds)
+                ->pluck('filename', 'updater_id');
+
+        foreach ($items as $row) {
+            $row->local_avatar = $avatars[$row->local_id] ?? null;
+        }
+
+        return $items;
     }
 
     private function localName(int $candidateId, ?int $localId): ?string
