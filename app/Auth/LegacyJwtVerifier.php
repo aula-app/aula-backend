@@ -63,6 +63,21 @@ class LegacyJwtVerifier
     }
 
     /**
+     * Whether this is a v1 token, so the caller can keep it away from Passport,
+     * which reports an exception for every token it fails to parse.
+     *
+     * Routing only. verify() still pins the algorithm itself.
+     */
+    public function handles(?string $token): bool
+    {
+        if ($token === null || $token === '') {
+            return false;
+        }
+
+        return ($this->segment($token, 0)['alg'] ?? null) === self::ALGORITHM;
+    }
+
+    /**
      * The decoded payload of a token signed with this tenant's key, or null.
      *
      * @return array<string, mixed>|null
@@ -83,11 +98,9 @@ class LegacyJwtVerifier
             return null;
         }
 
-        $header = json_decode((string) base64_decode($headerEncoded, true), true);
-
         // Pinned rather than read from the token, so the algorithm is never
         // chosen by the caller.
-        if (! is_array($header) || ($header['alg'] ?? null) !== self::ALGORITHM) {
+        if (($this->segment($token, 0)['alg'] ?? null) !== self::ALGORITHM) {
             return null;
         }
 
@@ -99,9 +112,9 @@ class LegacyJwtVerifier
             return null;
         }
 
-        $payload = json_decode((string) base64_decode($payloadEncoded, true), true);
+        $payload = $this->segment($token, 1);
 
-        if (! is_array($payload)) {
+        if ($payload === []) {
             return null;
         }
 
@@ -125,6 +138,26 @@ class LegacyJwtVerifier
         }
 
         return (string) $tenant->jwt_key;
+    }
+
+    /**
+     * A decoded JWT segment, or [] if it is missing or not JSON.
+     *
+     * @return array<string, mixed>
+     */
+    private function segment(string $token, int $index): array
+    {
+        $parts = explode('.', $token);
+
+        if (count($parts) !== 3) {
+            return [];
+        }
+
+        // base64url, and v1 strips the padding.
+        $raw = strtr($parts[$index], '-_', '+/');
+        $decoded = json_decode((string) base64_decode(str_pad($raw, intdiv(strlen($raw) + 3, 4) * 4, '='), true), true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     private function base64UrlEncode(string $value): string

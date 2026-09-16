@@ -28,9 +28,13 @@ class AuthServiceProvider extends ServiceProvider
             // Captured first: Passport's TokenGuard blanks the Authorization
             // header once it has run, so the fallback would see nothing.
             $bearer = $request->bearerToken();
+            $legacy = app(LegacyJwtVerifier::class);
 
-            return Auth::guard('api')->user()
-                ?? app(LegacyJwtVerifier::class)->resolve($bearer);
+            // Passport reports an exception for every token it cannot parse, so
+            // a v1 token would log a stack trace on each request.
+            return $legacy->handles($bearer)
+                ? $legacy->resolve($bearer)
+                : Auth::guard('api')->user();
         });
     }
 }
