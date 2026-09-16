@@ -164,6 +164,28 @@ class IdpMergeApplyTest extends TestCase
         });
     }
 
+    public function test_the_proposal_carries_the_aula_avatar(): void
+    {
+        $withAvatar = $this->seedUser('apply_with_avatar', 20);
+        $without = $this->seedUser('apply_no_avatar', 20);
+        $this->seedCandidate('user', 'p-avatar', $withAvatar, null);
+        $this->seedCandidate('user', 'p-plain', $without, null);
+
+        self::$testTenant->run(fn () => DB::table('au_media')->insert([
+            'system_type' => 0,
+            'updater_id' => $withAvatar,
+            'filename' => 'face.png',
+            'created' => now(),
+            'last_update' => now(),
+        ]));
+
+        $rows = collect($this->getJson('/api/v2/auth/idp/merge-proposal', $this->adminHeaders())
+            ->assertOk()->json('data'))->keyBy('local_id');
+
+        $this->assertSame('face.png', $rows[$withAvatar]['local_avatar']);
+        $this->assertNull($rows[$without]['local_avatar']);
+    }
+
     public function test_a_non_admin_can_neither_see_nor_apply_the_proposal(): void
     {
         $pupilId = $this->seedUser('apply_pupil', 20);
