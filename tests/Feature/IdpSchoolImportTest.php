@@ -22,7 +22,7 @@ use Tests\TestCase;
  * Covers SchoolImport: an IdpGroup becomes an `au_rooms` row and an IdpUser
  * becomes a LegacyUser enrolled in those rooms with a per-room role.
  */
-class SchoolImportTest extends TestCase
+class IdpSchoolImportTest extends TestCase
 {
     use CreatesTestTenant;
 
@@ -325,7 +325,7 @@ class SchoolImportTest extends TestCase
         // The account bootstrapIdpTenant() claimed is a TEACHER to the
         // directory and UserLevel::Admin in aula.
         $adminId = (int) self::$testTenant->run(function () {
-            $u = new LegacyUser;
+            $u = new LegacyUser();
             $u->username = 'import.admin';
             $u->displayname = 'Import Admin';
             $u->idp_user_id = 'person-teacher';
