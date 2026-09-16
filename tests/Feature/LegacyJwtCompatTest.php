@@ -128,7 +128,7 @@ class LegacyJwtCompatTest extends TestCase
         $user = $this->makeUser('compat_lowly', UserLevel::User);
 
         $this->getJson('/api/v2/auth/idp/connect', $this->headers(
-            $this->legacyJwt($user->hash_id, userLevel: UserLevel::TechAdmin->value)
+            $this->legacyJwt($user->hash_id, userLevel: UserLevel::Admin->value)
         ))->assertForbidden()->assertJsonPath('error', 'admin_required');
     }
 
@@ -137,7 +137,7 @@ class LegacyJwtCompatTest extends TestCase
         return self::$testTenant->run(function () use ($username, $level, $status) {
             LegacyUser::where('username', $username)->delete();
 
-            $user = new LegacyUser();
+            $user = new LegacyUser;
             $user->username = $username;
             $user->displayname = $username;
             $user->realname = $username;
