@@ -23,7 +23,7 @@ use Tests\TestCase;
  * directory group is an aula room, so these keep `au_rooms` and
  * `au_rel_rooms_users` in step.
  */
-class GroupSyncTest extends TestCase
+class IdpGroupSyncTest extends TestCase
 {
     use CreatesTestTenant;
 
@@ -280,7 +280,7 @@ class GroupSyncTest extends TestCase
     private function seedUser(?string $personId): int
     {
         return (int) self::$testTenant->run(function () use ($personId) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'roomtest.'.($personId ?? 'native').'.'.random_int(1000, 999999);
             $user->displayname = $user->username;
             $user->idp_user_id = $personId;
