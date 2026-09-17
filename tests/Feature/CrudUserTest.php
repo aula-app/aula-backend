@@ -13,6 +13,7 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Depends;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\DB;
 
 class CrudUserTest extends TestCase
 {
@@ -458,5 +459,53 @@ class CrudUserTest extends TestCase
             ->assertNotFound();
         $this->deleteJson('/api/v2/users/foo', [])
             ->assertNotFound();
+    }
+
+    public function test_export_gdpr_info()
+    {
+        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+
+        $content = "Testcontent";
+        $created = "2026-01-01 01:23:45";
+        $tenant = self::$testTenant;
+        $tenant->run(function () use ($user, $content, $created) {
+            DB::table('au_ideas')->insert(
+                ['user_id' => $user->id, 'content' => $content, 'created' => $created]
+            );
+            DB::table('au_comments')->insert(
+                ['user_id' => $user->id, 'content' => $content, 'created' => $created]
+            );
+        });
+
+        $this->getJson("/api/v2/users/{$user->hash_id}/export")
+            ->assertOk()
+            ->assertJsonMissingPath('id')
+            ->assertJson([
+                'user' => [
+                    'displayName' => 'Distinct',
+                    'realName' => 'Distinct User',
+                ],
+                // last_update==null becomes empty string
+                'userIdeas' => "$content, IDEA CREATED: $created, IDEA LAST UPDATE: *§$",
+                'userComments' => "$content, COMMENT CREATED: $created, COMMENT LAST UPDATE: *§$",
+            ]);
+    }
+
+    public function test_authz_export_gdpr_info_self()
+    {
+        $user = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
+        $otherUser = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+        $this->assertNotEquals($user->hash_id, $otherUser->hash_id);
+        $jwt = $this->jwtForUser($user);
+        $this->getJson(
+            "/api/v2/users/{$user->hash_id}/export",
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertOk();
+        $this->getJson(
+            "/api/v2/users/{$otherUser->hash_id}/export",
+            ['Authorization' => "Bearer {$jwt}"]
+        )
+            ->assertForbidden();
     }
 }

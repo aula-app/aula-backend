@@ -12,6 +12,7 @@ use App\UseCases\User\DeleteUserUseCase;
 use App\UseCases\User\ListUsersUseCase;
 use App\UseCases\User\ShowUserUseCase;
 use App\UseCases\User\UpdateUserUseCase;
+use App\UseCases\User\ExportUserGdprInfoUseCase;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Spatie\LaravelData\DataCollection;
@@ -24,6 +25,7 @@ class UserController extends Controller
         protected ListUsersUseCase $listUsersUseCase,
         protected UpdateUserUseCase $updateUserUseCase,
         protected DeleteUserUseCase $deleteUserUseCase,
+        protected ExportUserGdprInfoUseCase $exportUserGdprInfoUseCase,
     ) {
     }
 
@@ -56,5 +58,10 @@ class UserController extends Controller
     public function destroy(string $publicId): void
     {
         $this->deleteUserUseCase->execute($publicId);
+    }
+
+    public function export(string $publicId): array
+    {
+        return $this->exportUserGdprInfoUseCase->execute($publicId);
     }
 }
