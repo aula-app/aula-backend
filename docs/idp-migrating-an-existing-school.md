@@ -38,6 +38,8 @@ another person, so no name match is applied without review.
 
 ```
 1. aula-manager (Filament)   operator flags the tenant: will sync with <provider>
+2. is admin logged in before the operator change?
+2. should we put the school in the maintenance mode?
 2. aula settings             admin sees "Sync with Eduplaces"
 3.   ├─ Connect my account   admin signs in via the provider, links it to their
    │                         own aula admin account (password already proved by

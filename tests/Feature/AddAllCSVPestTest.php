@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Test class for User::addAllCSV functionality
@@ -254,7 +254,7 @@ class AddAllCSVTest extends TestCase
         $timestamp = time();
 
         for ($i = 0; $i < $count; $i++) {
-            $uniqueId = $timestamp . '_' . $i . '_' . uniqid();
+            $uniqueId = $timestamp . '_' . $i . '_' . Str::random(16);
             $users[] = [
                 'realname' => "Test User {$uniqueId}",
                 'displayname' => "Display {$uniqueId}",
@@ -376,7 +376,7 @@ class AddAllCSVTest extends TestCase
             $this->assertIsArray($roles, 'Roles should be a JSON array');
 
             foreach ($rooms as $room) {
-                $roleEntry = collect($roles)->first(fn($r) => ($r['room'] ?? null) === $room['hash_id']);
+                $roleEntry = collect($roles)->first(fn ($r) => ($r['room'] ?? null) === $room['hash_id']);
                 $this->assertNotNull(
                     $roleEntry,
                     "User {$user['username']} should have role entry for room {$room['hash_id']}"
@@ -485,7 +485,7 @@ class AddAllCSVTest extends TestCase
                 $roles = json_decode($dbUser['roles'], true);
 
                 foreach ($rooms as $room) {
-                    $roleEntry = collect($roles)->first(fn($r) => ($r['room'] ?? null) === $room['hash_id']);
+                    $roleEntry = collect($roles)->first(fn ($r) => ($r['room'] ?? null) === $room['hash_id']);
                     $this->assertNotNull($roleEntry, "User should have role for room {$room['hash_id']}");
                     $this->assertEquals(
                         $userLevel,
@@ -612,7 +612,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $duplicateUsername = "duplicate_user_{$uniqueId}";
 
         // CSV with two users having the same username
@@ -652,7 +652,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $duplicateEmail = "duplicate_{$uniqueId}@test.local";
 
         // CSV with two users having the same email
@@ -691,7 +691,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
 
         $invalidEmails = [
             'not-an-email',
@@ -739,7 +739,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
 
         $validEmails = [
             "simple_{$uniqueId}@example.com",
@@ -786,7 +786,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
 
         // Test with emojis in different fields
         $testCases = [
@@ -842,7 +842,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $users = [
             [
                 'realname' => "Future Email User {$uniqueId}",
@@ -919,7 +919,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $users = [
             [
                 'realname' => "Past Email User {$uniqueId}",
@@ -1064,7 +1064,7 @@ class AddAllCSVTest extends TestCase
             $dbUser = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             $roles = json_decode($dbUser['roles'], true);
-            $roleEntry = collect($roles)->first(fn($r) => ($r['room'] ?? null) === $rooms[0]['hash_id']);
+            $roleEntry = collect($roles)->first(fn ($r) => ($r['room'] ?? null) === $rooms[0]['hash_id']);
 
             $this->assertNotNull($roleEntry, 'User should have role for room');
             $this->assertEquals(20, $roleEntry['role'], 'Default role should be 20');
@@ -1080,7 +1080,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $users = [
             [
                 'realname' => "Existing User {$uniqueId}",
@@ -1142,7 +1142,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $originalUser = [
             'realname' => "Original User {$uniqueId}",
             'displayname' => "Original Display {$uniqueId}",
@@ -1226,7 +1226,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $sharedEmail = "shared_email_{$uniqueId}@test.local";
 
         // First user with the email
@@ -1278,7 +1278,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $sharedUsername = "shared_username_{$uniqueId}";
 
         // First user with the username
@@ -1327,7 +1327,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(2);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
 
         // Create multiple users - we'll test that if one fails, none are imported
         $users = [
@@ -1384,7 +1384,7 @@ class AddAllCSVTest extends TestCase
             $this->assertIsArray($roles, 'Roles should be a JSON array');
 
             foreach ($rooms as $room) {
-                $roleEntry = collect($roles)->first(fn($r) => ($r['room'] ?? null) === $room['hash_id']);
+                $roleEntry = collect($roles)->first(fn ($r) => ($r['room'] ?? null) === $room['hash_id']);
                 $this->assertNotNull(
                     $roleEntry,
                     "User {$username} should have role entry for room {$room['hash_id']}"
@@ -1403,7 +1403,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
 
         // First, create an existing user
         $existingUser = [
@@ -1491,7 +1491,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(2);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
 
         // First, create an existing user in ONE room only
         $existingUser = [
@@ -1575,7 +1575,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(2);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
 
         // First, create an existing user in first room with role 20
         $existingUser = [
@@ -1635,7 +1635,7 @@ class AddAllCSVTest extends TestCase
 
         // Verify no role for second room was added
         $roles = json_decode($finalRoles, true);
-        $room2Role = collect($roles)->first(fn($r) => ($r['room'] ?? null) === $roomHashIds[1]);
+        $room2Role = collect($roles)->first(fn ($r) => ($r['room'] ?? null) === $roomHashIds[1]);
         $this->assertNull($room2Role, 'No role should exist for second room after rollback');
     }
 
@@ -1648,7 +1648,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms(1);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $user = [
             'realname' => "Real Name {$uniqueId}",
             'displayname' => "Display Name {$uniqueId}",
@@ -1716,7 +1716,7 @@ class AddAllCSVTest extends TestCase
         $this->assertNotEmpty($roles, 'roles should not be empty');
 
         // Verify role entry structure
-        $roomRole = collect($roles)->first(fn($r) => ($r['room'] ?? null) === $rooms[0]['hash_id']);
+        $roomRole = collect($roles)->first(fn ($r) => ($r['room'] ?? null) === $rooms[0]['hash_id']);
         $this->assertNotNull($roomRole, 'Should have role entry for the target room');
         $this->assertArrayHasKey('room', $roomRole, 'Role entry should have room key');
         $this->assertArrayHasKey('role', $roomRole, 'Role entry should have role key');
@@ -1734,7 +1734,7 @@ class AddAllCSVTest extends TestCase
         $rooms = $this->createTestRooms($roomCount);
         $roomHashIds = array_column($rooms, 'hash_id');
 
-        $uniqueId = time() . '_' . uniqid();
+        $uniqueId = time() . '_' . Str::random(16);
         $users = $this->generateRandomUsers(3);
         $csv = $this->usersToCSV($users);
         $userLevel = 30; // Moderator role
@@ -1779,7 +1779,7 @@ class AddAllCSVTest extends TestCase
             $this->assertIsArray($roles, 'Roles should be a valid JSON array');
 
             foreach ($rooms as $room) {
-                $roleEntry = collect($roles)->first(fn($r) => ($r['room'] ?? null) === $room['hash_id']);
+                $roleEntry = collect($roles)->first(fn ($r) => ($r['room'] ?? null) === $room['hash_id']);
                 $this->assertNotNull(
                     $roleEntry,
                     "User {$username} should have role for room {$room['hash_id']}"

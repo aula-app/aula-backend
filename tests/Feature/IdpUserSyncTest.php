@@ -23,7 +23,7 @@ use Tests\TestCase;
  * UserSync reads the user back from the directory, and SchoolImport::importUser()
  * converges the local row onto it.
  */
-class UserSyncTest extends TestCase
+class IdpUserSyncTest extends TestCase
 {
     use CreatesTestTenant;
 

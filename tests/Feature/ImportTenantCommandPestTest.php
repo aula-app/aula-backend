@@ -23,7 +23,7 @@ function makeTenantArchive(array $overrides = []): string
         'admin2_email'    => 'admin2@test.com',
     ], $overrides);
 
-    $dir = sys_get_temp_dir().'/test_import_src_'.uniqid();
+    $dir = sys_get_temp_dir().'/test_import_src_'.Str::random(16);
     mkdir($dir, 0700, true);
     file_put_contents("{$dir}/tenant.json", json_encode($data, JSON_UNESCAPED_UNICODE));
     file_put_contents("{$dir}/tenant.sql", '-- empty');
@@ -33,7 +33,7 @@ function makeTenantArchive(array $overrides = []): string
         "GRANT SELECT ON `{{DB_NAME}}`.* TO `{{DB_USER}}`@`%`;",
     ]));
 
-    $archive = sys_get_temp_dir().'/test_import_'.uniqid().'.tar.gz';
+    $archive = sys_get_temp_dir().'/test_import_'.Str::random(16).'.tar.gz';
     exec("tar -czf {$archive} -C {$dir} tenant.json tenant.sql setup.sql");
     exec("rm -rf {$dir}");
 

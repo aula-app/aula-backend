@@ -9,13 +9,13 @@ use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\SchoolImport;
-use App\Services\LegacyJwtService;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Laravel\Passport\Passport;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Manager\OAuth2\User;
 use Tests\Concerns\CreatesTestTenant;
@@ -216,13 +216,10 @@ class IdpBootstrapTest extends TestCase
         // A directory-synced tenant with no import is not ready, even with
         // idp_school_id still unknown. setUp() seeded the admin already, and
         // hash_id is unique, so seeding it again here would collide.
-        $jwt = self::$testTenant->run(fn () => app(LegacyJwtService::class)->generateToken(
-            LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail(),
-        ));
+        $this->actAsSeededAdmin();
 
         $this->getJson('/api/v2/auth/idp/import-status', [
             'aula-instance-code' => 'TEST001',
-            'Authorization' => "Bearer {$jwt}",
         ])->assertOk()->assertJsonPath('ready', false)->assertJsonPath('status', null);
     }
 
@@ -238,13 +235,10 @@ class IdpBootstrapTest extends TestCase
             $admin->save();
         });
 
-        $jwt = self::$testTenant->run(fn () => app(LegacyJwtService::class)->generateToken(
-            LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail(),
-        ));
+        $this->actAsSeededAdmin();
 
         $this->getJson('/api/v2/auth/idp/import-status', [
             'aula-instance-code' => 'TEST001',
-            'Authorization' => "Bearer {$jwt}",
         ])->assertOk()->assertJsonPath('ready', true)->assertJsonPath('status', null);
     }
 
@@ -377,13 +371,10 @@ class IdpBootstrapTest extends TestCase
     {
         $this->login('kc-sub-principal', 'person-teacher');
 
-        $jwt = self::$testTenant->run(fn () => app(LegacyJwtService::class)->generateToken(
-            LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail(),
-        ));
+        $this->actAsSeededAdmin();
 
         $response = $this->getJson('/api/v2/auth/idp/import-status', [
             'aula-instance-code' => 'TEST001',
-            'Authorization' => "Bearer {$jwt}",
         ]);
 
         $response->assertOk()
@@ -400,15 +391,21 @@ class IdpBootstrapTest extends TestCase
     /**
      * @return array<string, mixed>
      */
+    private function actAsSeededAdmin(): void
+    {
+        Passport::actingAs(
+            self::$testTenant->run(
+                fn () => LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail(),
+            ),
+        );
+    }
+
     private function importStatus(): array
     {
-        $jwt = self::$testTenant->run(fn () => app(LegacyJwtService::class)->generateToken(
-            LegacyUser::where('username', self::ADMIN_USERNAME)->firstOrFail(),
-        ));
+        $this->actAsSeededAdmin();
 
         return $this->getJson('/api/v2/auth/idp/import-status', [
             'aula-instance-code' => 'TEST001',
-            'Authorization' => "Bearer {$jwt}",
         ])->json();
     }
 

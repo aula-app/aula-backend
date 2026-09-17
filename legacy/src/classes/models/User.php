@@ -1736,7 +1736,7 @@ class User
   {
     /* adds a user and returns insert id (userid) if successful, accepts the above parameters
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
-     userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin 60 = tech admin
+     userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin
     */
 
     // sanitize vars

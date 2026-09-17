@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Data\User\DomainUserData;
 use App\Data\User\Requests\StoreUserData;
 use App\Data\User\Requests\UpdateUserData;
@@ -15,6 +13,8 @@ use App\UseCases\User\ListUsersUseCase;
 use App\UseCases\User\ShowUserUseCase;
 use App\UseCases\User\UpdateUserUseCase;
 use App\UseCases\User\ExportUserGdprInfoUseCase;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Spatie\LaravelData\DataCollection;
 
 class UserController extends Controller

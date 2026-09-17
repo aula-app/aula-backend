@@ -18,15 +18,9 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 |
 */
 
-
-// Legacy JWT Authentication routes (public + protected)
-Route::name('auth.')
-    ->middleware([
-        'api',
-        InitializeTenancyByRequestData::class,
-    ])
-    ->prefix('/api/v2/legacy-auth')
-    ->group(base_path('routes/tenant/api/v2/auth.php'));
+// See also \App\Providers\PassportServiceProvider.php for
+// some more routes that are added there in function boot()
+// OAuth routes are defined there
 
 // SSO routes
 Route::name('sso.')
@@ -47,7 +41,9 @@ Route::name('sso.')
 
         Route::get('/sso/initiate', [SsoController::class, 'initiate'])->name('initiate');
 
-        Route::middleware('legacy.jwt')->group(function () {
+        // api_compat, not api: the deployed frontend calls these with the
+        // BE.v1 token it got from /api/controllers/login.php.
+        Route::middleware('auth:api_compat')->group(function () {
             Route::post('/sso/logout', [SsoController::class, 'logout'])->name('sso.logout');
             Route::post('/sso/link', [SsoController::class, 'link'])->name('sso.link');
 
@@ -83,10 +79,7 @@ Route::name('aula.')
         /* \Illuminate\Session\Middleware\StartSession::class, */
         /* \Illuminate\View\Middleware\ShareErrorsFromSession::class, */
         InitializeTenancyByRequestData::class,
-        /* 'auth:api', // our 'api' guard should be configured to use 'passport' */
-        // TODO: replace with passport?
-        'legacy.jwt',
-        'auth:apiv2',
+        'auth:api', // our 'api' guard should be configured to use 'passport'
     ])
     ->prefix('/api/v2')
     ->group(base_path('routes/tenant/api/v2/aula.php'));

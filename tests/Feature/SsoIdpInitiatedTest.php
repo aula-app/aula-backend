@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Facades\Socialite;
-use SocialiteProviders\Manager\OAuth2\User;
+use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\Support\SignsIdTokens;
 use Tests\TestCase;
@@ -423,9 +423,9 @@ class SsoIdpInitiatedTest extends TestCase
     /**
      * Minimal Socialite user for seeding rows via LegacyUser::fromSocialiteUser().
      */
-    private function stubSocialiteUser(string $sub, string $email): User
+    private function stubSocialiteUser(string $sub, string $email): SocialiteOAuth2User
     {
-        $user = \Mockery::mock(User::class);
+        $user = \Mockery::mock(SocialiteOAuth2User::class);
         $user->shouldReceive('getId')->andReturn($sub);
         $user->shouldReceive('getEmail')->andReturn($email);
         $user->shouldReceive('getName')->andReturn($email);
@@ -480,7 +480,7 @@ class SsoIdpInitiatedTest extends TestCase
             'email_verified' => true,
         ]);
 
-        $socialiteUser = \Mockery::mock(User::class);
+        $socialiteUser = \Mockery::mock(SocialiteOAuth2User::class);
         $socialiteUser->token = 'kc-access-token';
         $socialiteUser->refreshToken = 'kc-refresh-token';
         $socialiteUser->accessTokenResponseBody = ['id_token' => $idToken];

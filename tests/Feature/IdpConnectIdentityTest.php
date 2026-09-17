@@ -7,13 +7,13 @@ namespace Tests\Feature;
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
-use App\Services\LegacyJwtService;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
+use Laravel\Passport\Passport;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Manager\OAuth2\User;
 use Tests\Concerns\CreatesTestTenant;
@@ -361,11 +361,11 @@ class IdpConnectIdentityTest extends TestCase
      */
     private function headersFor(int $userId): array
     {
-        $jwt = self::$testTenant->run(
-            fn () => app(LegacyJwtService::class)->generateToken(LegacyUser::findOrFail($userId)),
+        Passport::actingAs(
+            self::$testTenant->run(fn () => LegacyUser::findOrFail($userId)),
         );
 
-        return ['aula-instance-code' => 'TEST001', 'Authorization' => "Bearer {$jwt}"];
+        return ['aula-instance-code' => 'TEST001'];
     }
 
     private function clean(): void
