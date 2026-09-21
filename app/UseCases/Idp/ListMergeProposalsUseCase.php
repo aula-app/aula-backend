@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\UseCases\Idp;
 
 use App\Enums\Gates;
+use App\Models\IdpMergeCandidate;
 use App\Services\Idp\Migration\MergeProposalBuilder;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -27,7 +28,7 @@ final class ListMergeProposalsUseCase
     {
         Gate::authorize(Gates::ListMergeProposals);
 
-        $query = DB::table('idp_merge_candidates');
+        $query = IdpMergeCandidate::query();
 
         if ($filter->kind !== null) {
             $query->where('kind', $filter->kind);
@@ -47,17 +48,20 @@ final class ListMergeProposalsUseCase
             default => null,
         };
 
-        /** @var LengthAwarePaginator<int, object> $page */
+        /** @var LengthAwarePaginator<int, IdpMergeCandidate> $page */
         $page = $query->orderBy('kind')->orderBy('outcome')->orderBy('id')
             ->paginate(perPage: $filter->perPage, page: $filter->page);
 
         $avatars = $this->avatarsFor($page->items());
 
-        return $page->through(fn (object $row): array => (array) $row + [
+        /** @var LengthAwarePaginator<int, array<string, mixed>> $rows */
+        $rows = $page->through(fn (IdpMergeCandidate $row): array => $row->toArray() + [
             'local_avatar' => $row->kind === MergeProposalBuilder::KIND_USER && $row->local_id !== null
-                ? ($avatars[(int) $row->local_id] ?? null)
+                ? ($avatars[$row->local_id] ?? null)
                 : null,
         ]);
+
+        return $rows;
     }
 
     /**
@@ -66,7 +70,7 @@ final class ListMergeProposalsUseCase
      * system_type 0 is the avatar, and legacy Media::addMedia() deletes the
      * previous one before inserting, so there is at most one row per user.
      *
-     * @param  list<object>  $rows
+     * @param  list<IdpMergeCandidate>  $rows
      * @return array<int, string>
      */
     private function avatarsFor(array $rows): array
@@ -75,7 +79,7 @@ final class ListMergeProposalsUseCase
 
         foreach ($rows as $row) {
             if ($row->kind === MergeProposalBuilder::KIND_USER && $row->local_id !== null) {
-                $userIds[] = (int) $row->local_id;
+                $userIds[] = $row->local_id;
             }
         }
 
