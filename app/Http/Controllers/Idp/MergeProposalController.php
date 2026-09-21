@@ -11,6 +11,9 @@ use App\Models\Tenant;
 use App\Services\Idp\Migration\MergeProposalApplier;
 use App\Services\Idp\Migration\MergeProposalBuilder;
 use App\Services\Idp\SchoolImport;
+use App\UseCases\Idp\ListMergeProposalsUseCase;
+use App\UseCases\Idp\MergeProposalFilter;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -30,6 +33,7 @@ class MergeProposalController extends Controller
     public function __construct(
         private readonly MergeProposalBuilder $builder,
         private readonly MergeProposalApplier $applier,
+        private readonly ListMergeProposalsUseCase $lister,
     ) {}
 
     /**
@@ -60,39 +64,22 @@ class MergeProposalController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        if ($denied = $this->denyNonAdmin($request)) {
-            return $denied;
+        $filter = new MergeProposalFilter(
+            kind: (string) $request->query('kind', ''),
+            search: (string) $request->query('search', ''),
+            bucket: (string) $request->query('bucket', ''),
+            page: (int) $request->query('page', 1),
+            perPage: (int) $request->query('per_page', MergeProposalFilter::DEFAULT_PER_PAGE),
+        );
+
+        try {
+            $page = $this->lister->execute($filter);
+        } catch (AuthorizationException) {
+            return response()->json(['error' => 'admin_required'], 403);
         }
-
-        $query = DB::table('idp_merge_candidates');
-
-        if (($kind = (string) $request->query('kind', '')) !== '') {
-            $query->where('kind', $kind);
-        }
-
-        // A thousand-row proposal is unusable unfiltered, so this endpoint
-        // searches and pages rather than returning everything.
-        if (($search = trim((string) $request->query('search', ''))) !== '') {
-            $query->where(function ($q) use ($search): void {
-                $q->where('local_name', 'like', "%{$search}%")
-                    ->orWhere('idp_name', 'like', "%{$search}%");
-            });
-        }
-
-        if (($bucket = (string) $request->query('bucket', '')) !== '') {
-            match ($bucket) {
-                'merges' => $query->whereNotNull('idp_id')->whereNotNull('local_id'),
-                'idp_only' => $query->whereNotNull('idp_id')->whereNull('local_id'),
-                'aula_only' => $query->whereNull('idp_id')->whereNotNull('local_id'),
-                default => null,
-            };
-        }
-
-        $page = $query->orderBy('kind')->orderBy('outcome')->orderBy('id')
-            ->paginate(perPage: min((int) $request->query('per_page', 50), 200));
 
         return response()->json([
-            'data' => $this->withLocalAvatars($page->items()),
+            'data' => $page->items(),
             'total' => $page->total(),
             'per_page' => $page->perPage(),
             'current_page' => $page->currentPage(),
@@ -192,35 +179,6 @@ class MergeProposalController extends Controller
             'not_yet_linked' => LegacyUser::whereNull('idp_user_id')->count(),
             'signed_in_at_least_once' => LegacyUser::whereNotNull('sso_sub')->count(),
         ]);
-    }
-
-    /**
-     * Stamp each user candidate with the aula account's avatar filename, which
-     * the frontend resolves against /api/files. One row per user: addMedia()
-     * deletes the previous avatar before inserting.
-     *
-     * @param  list<object>  $items
-     * @return list<object>
-     */
-    private function withLocalAvatars(array $items): array
-    {
-        $userIds = array_filter(array_map(
-            fn (object $row): ?int => $row->kind === MergeProposalBuilder::KIND_USER ? $row->local_id : null,
-            $items,
-        ));
-
-        $avatars = $userIds === []
-            ? collect()
-            : DB::table('au_media')
-                ->where('system_type', 0)
-                ->whereIn('updater_id', $userIds)
-                ->pluck('filename', 'updater_id');
-
-        foreach ($items as $row) {
-            $row->local_avatar = $avatars[$row->local_id] ?? null;
-        }
-
-        return $items;
     }
 
     private function localName(int $candidateId, ?int $localId): ?string
