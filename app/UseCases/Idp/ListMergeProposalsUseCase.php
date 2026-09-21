@@ -6,6 +6,7 @@ namespace App\UseCases\Idp;
 
 use App\Enums\Gates;
 use App\Models\IdpMergeCandidate;
+use App\Models\LegacyUser;
 use App\Services\Idp\Migration\MergeProposalBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -13,14 +14,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * A page of idp_merge_candidates for the admin review, with the aula avatar
- * of each user row so the reviewer can tell two accounts of one name apart.
+ * A page of idp_merge_candidates for the admin review.
+ *
+ * Each user row also carries the aula account's display name, real name and
+ * avatar, read fresh from the account: local_name holds whichever name the
+ * builder matched on, and a reviewer telling two accounts of one name apart
+ * needs all three.
  *
  * Admin-only: the rows settle which account each directory identity ends up
  * on. Requires initialised tenancy.
  */
 final class ListMergeProposalsUseCase
 {
+    private const array NO_ACCOUNT = [
+        'local_displayname' => null,
+        'local_realname' => null,
+        'local_avatar' => null,
+    ];
+
     /**
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
@@ -52,28 +63,23 @@ final class ListMergeProposalsUseCase
         $page = $query->orderBy('kind')->orderBy('outcome')->orderBy('id')
             ->paginate(perPage: $filter->perPage, page: $filter->page);
 
-        $avatars = $this->avatarsFor($page->items());
+        $accounts = $this->accountsFor($page->items());
 
         /** @var LengthAwarePaginator<int, array<string, mixed>> $rows */
-        $rows = $page->through(fn (IdpMergeCandidate $row): array => $row->toArray() + [
-            'local_avatar' => $row->kind === MergeProposalBuilder::KIND_USER && $row->local_id !== null
-                ? ($avatars[$row->local_id] ?? null)
-                : null,
-        ]);
+        $rows = $page->through(fn (IdpMergeCandidate $row): array => $row->toArray() + (
+            $row->kind === MergeProposalBuilder::KIND_USER && $row->local_id !== null
+                ? ($accounts[$row->local_id] ?? self::NO_ACCOUNT)
+                : self::NO_ACCOUNT
+        ));
 
         return $rows;
     }
 
     /**
-     * Avatar filename by user id. The frontend resolves it against /api/files.
-     *
-     * system_type 0 is the avatar, and legacy Media::addMedia() deletes the
-     * previous one before inserting, so there is at most one row per user.
-     *
      * @param  list<IdpMergeCandidate>  $rows
-     * @return array<int, string>
+     * @return array<int, array{local_displayname: ?string, local_realname: ?string, local_avatar: ?string}>
      */
-    private function avatarsFor(array $rows): array
+    private function accountsFor(array $rows): array
     {
         $userIds = [];
 
@@ -87,6 +93,31 @@ final class ListMergeProposalsUseCase
             return [];
         }
 
+        $avatars = $this->avatarsFor($userIds);
+        $accounts = [];
+
+        foreach (LegacyUser::whereIn('id', $userIds)->get(['id', 'displayname', 'realname']) as $user) {
+            $accounts[(int) $user->id] = [
+                'local_displayname' => $user->displayname,
+                'local_realname' => $user->realname,
+                'local_avatar' => $avatars[(int) $user->id] ?? null,
+            ];
+        }
+
+        return $accounts;
+    }
+
+    /**
+     * Avatar filename by user id. The frontend resolves it against /api/files.
+     *
+     * system_type 0 is the avatar, and legacy Media::addMedia() deletes the
+     * previous one before inserting, so there is at most one row per user.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, string>
+     */
+    private function avatarsFor(array $userIds): array
+    {
         return DB::table('au_media')
             ->where('system_type', 0)
             ->whereIn('updater_id', $userIds)

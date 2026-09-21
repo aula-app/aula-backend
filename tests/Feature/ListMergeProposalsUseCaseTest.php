@@ -22,7 +22,7 @@ use Tests\TestCase;
  *
  * The rows settle which account each directory identity lands on, so the
  * cases here are who may see them, how they are narrowed, and that each user
- * row carries the aula avatar the reviewer tells two accounts apart by.
+ * row carries the aula names and avatar a reviewer tells two accounts apart by.
  */
 class ListMergeProposalsUseCaseTest extends TestCase
 {
@@ -63,6 +63,24 @@ class ListMergeProposalsUseCaseTest extends TestCase
         $this->list(new MergeProposalFilter);
     }
 
+    public function test_each_user_row_carries_the_aula_names(): void
+    {
+        $userId = $this->seedUser('named', 20, realname: 'Anna Named');
+        $this->seedCandidate('user', 'p-named', $userId, localName: 'Anna Named');
+        $this->seedCandidate('user', 'p-nobody', null);
+
+        $this->actAsAdmin();
+
+        $rows = collect($this->list(new MergeProposalFilter)->items())->keyBy('idp_id');
+
+        // Read from the account, not from local_name: the builder wrote
+        // whichever name it matched on, and a reviewer needs both.
+        $this->assertSame('list_named', $rows['p-named']['local_displayname']);
+        $this->assertSame('Anna Named', $rows['p-named']['local_realname']);
+        $this->assertNull($rows['p-nobody']['local_displayname']);
+        $this->assertNull($rows['p-nobody']['local_realname']);
+    }
+
     public function test_each_user_row_carries_the_aula_avatar(): void
     {
         $withAvatar = $this->seedUser('with_avatar', 20);
@@ -84,9 +102,9 @@ class ListMergeProposalsUseCaseTest extends TestCase
         $this->assertNull($rows[$withDocument]['local_avatar']);
     }
 
-    public function test_a_room_row_never_carries_an_avatar(): void
+    public function test_a_room_row_never_carries_account_details(): void
     {
-        $userId = $this->seedUser('with_avatar', 20);
+        $userId = $this->seedUser('with_avatar', 20, realname: 'Room Sharer');
         $this->seedMedia($userId, 'face.png', systemType: 0);
         $this->seedCandidate('user', 'p-user', $userId);
         // au_rooms.id and au_users_basedata.id share a number space, so a
@@ -98,7 +116,10 @@ class ListMergeProposalsUseCaseTest extends TestCase
         $rows = collect($this->list(new MergeProposalFilter)->items())->keyBy('kind');
 
         $this->assertSame('face.png', $rows['user']['local_avatar']);
+        $this->assertSame('Room Sharer', $rows['user']['local_realname']);
         $this->assertNull($rows['room']['local_avatar']);
+        $this->assertNull($rows['room']['local_displayname']);
+        $this->assertNull($rows['room']['local_realname']);
     }
 
     public function test_it_narrows_by_kind_bucket_and_search(): void
@@ -154,7 +175,7 @@ class ListMergeProposalsUseCaseTest extends TestCase
 
     public function test_the_endpoint_pages_the_proposal_for_an_admin(): void
     {
-        $userId = $this->seedUser('with_avatar', 20);
+        $userId = $this->seedUser('with_avatar', 20, realname: 'Full Name');
         $this->seedMedia($userId, 'face.png', systemType: 0);
         $this->seedCandidate('user', 'p-user', $userId);
         $this->seedCandidate('room', 'g-room', 7);
@@ -167,6 +188,8 @@ class ListMergeProposalsUseCaseTest extends TestCase
             ->assertJsonPath('per_page', 10)
             ->assertJsonPath('current_page', 1)
             ->assertJsonPath('data.0.idp_id', 'p-user')
+            ->assertJsonPath('data.0.local_displayname', 'list_with_avatar')
+            ->assertJsonPath('data.0.local_realname', 'Full Name')
             ->assertJsonPath('data.0.local_avatar', 'face.png');
     }
 
@@ -231,16 +254,17 @@ class ListMergeProposalsUseCaseTest extends TestCase
         ]));
     }
 
-    private function seedUser(string $name, int $level): int
+    private function seedUser(string $name, int $level, ?string $realname = null): int
     {
         $username = self::PREFIX.$name;
 
-        return (int) self::$testTenant->run(function () use ($username, $level) {
+        return (int) self::$testTenant->run(function () use ($username, $level, $realname) {
             LegacyUser::where('username', $username)->delete();
 
             $user = new LegacyUser;
             $user->username = $username;
             $user->displayname = $username;
+            $user->realname = $realname;
             $user->pw = password_hash('secret', PASSWORD_BCRYPT);
             $user->status = UserStatus::Active;
             $user->userlevel = $level;
