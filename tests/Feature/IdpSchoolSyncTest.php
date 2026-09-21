@@ -20,7 +20,7 @@ use Tests\TestCase;
  * directly, through `tenants.idp_school_id`, and `tenants.name` is the only
  * attribute aula has a column for.
  */
-class SchoolSyncTest extends TestCase
+class IdpSchoolSyncTest extends TestCase
 {
     use CreatesTestTenant;
 

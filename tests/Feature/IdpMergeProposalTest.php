@@ -183,7 +183,7 @@ class IdpMergeProposalTest extends TestCase
         // A row that already carries an idp_user_id is skipped, or the proposal
         // would offer to merge it with itself.
         self::$testTenant->run(function () {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'proposal.linked';
             $user->displayname = 'Schon Verknuepft';
             $user->realname = 'Schon Verknuepft';
@@ -263,7 +263,7 @@ class IdpMergeProposalTest extends TestCase
     private function seedAulaUser(string $realname): int
     {
         return (int) self::$testTenant->run(function () use ($realname) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'proposal.'.md5($realname.microtime(true));
             $user->displayname = $realname;
             $user->realname = $realname;
