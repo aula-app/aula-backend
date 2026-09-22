@@ -68,7 +68,7 @@ final class MergeProposalBuilder
         $directory = $this->providers->directory($provider);
 
         $groups = $directory->groups($schoolId);
-        $users = $this->mergeGroupMembers($directory->users($schoolId), $groups);
+        $users = $directory->users($schoolId);
 
         DB::table('idp_merge_candidates')->truncate();
 
@@ -84,38 +84,6 @@ final class MergeProposalBuilder
         ]);
 
         return $counts;
-    }
-
-    /**
-     * Fold IdpGroup member lists into the user list.
-     *
-     * A directory can expose real names on group members while the user listing
-     * carries a pseudonym, and can list a group member the user listing omits,
-     * so a proposal built from either list alone is short of names and rows.
-     *
-     * @param  list<IdpUser>  $users
-     * @param  list<IdpGroup>  $groups
-     * @return list<IdpUser>
-     */
-    private function mergeGroupMembers(array $users, array $groups): array
-    {
-        $merged = [];
-
-        foreach ($groups as $group) {
-            foreach ($group->members as $member) {
-                $merged[$member->id] = isset($merged[$member->id])
-                    ? $merged[$member->id]->mergedWith($member)
-                    : $member;
-            }
-        }
-
-        foreach ($users as $user) {
-            $merged[$user->id] = isset($merged[$user->id])
-                ? $merged[$user->id]->mergedWith($user)
-                : $user;
-        }
-
-        return array_values($merged);
     }
 
     /**

@@ -8,7 +8,6 @@ use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Migration\MergeProposalBuilder;
-use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -319,21 +318,9 @@ class IdpMergeProposalTest extends TestCase
                 ]),
                 (bool) preg_match('#/schools/[^/]+/groups$#', $path) => Http::response($this->idmGroups),
                 (bool) preg_match('#/schools/[^/]+/(people|users)$#', $path) => Http::response($this->idmUsers),
-                (bool) preg_match('#/groups/([^/]+)$#', $path, $m) => $this->groupDetail(urldecode($m[1])),
                 default => Http::response(status: 404),
             };
         });
-    }
-
-    private function groupDetail(string $id): PromiseInterface
-    {
-        foreach ($this->idmGroups as $group) {
-            if ($group['id'] === $id) {
-                return Http::response($group + ['members' => []]);
-            }
-        }
-
-        return Http::response(status: 404);
     }
 
     private function clean(): void

@@ -59,12 +59,7 @@ final readonly class IdpUser
 
     /**
      * Combine two views of one directory user, keeping whichever carries each
-     * field.
-     *
-     * No single endpoint returns everything: `name` can come from a group
-     * member list, `status` and `pseudonym` from a user record, and
-     * `sourceSystemIdentifier` from a person record. Group refs are unioned
-     * rather than replaced, so a view through one group does not drop the rest.
+     * field. Group refs are unioned.
      */
     public function mergedWith(self $other): self
     {
@@ -92,10 +87,7 @@ final readonly class IdpUser
     /**
      * The name to write to `displayname`.
      *
-     * Which name fields an endpoint returns depends on the app's entitlements:
-     * `/users` carries a `pseudonym` ("Denk Kapitän") and no `name`, a group
-     * member list carries `name` and no pseudonym. The real name wins, with the
-     * pseudonym as fallback so no account is left showing a generated username.
+     * The real name, or the pseudonym when /users returns none.
      */
     public function displayName(): string
     {

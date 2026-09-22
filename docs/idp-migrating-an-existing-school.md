@@ -114,16 +114,9 @@ alone and stay unmanaged.
 Matched on **full name**, with two complications that the review must surface
 rather than hide.
 
-**Not everyone has a real name.** With `users:read` but not `people:read`, the
-provider returns `pseudonym` ("Denk Raumfahrer") for a user and a real `name`
-only inside a group's member list. So:
-
-| directory user is…    | name available | matchable |
-|-----------------------|----------------|-----------|
-| in at least one group | real name      | yes       |
-| in no group           | pseudonym only | **no**    |
-
-A pseudonym-only row is recorded with `idp_name_kind = pseudonym`, carries no
+**Not everyone has a real name.** Whether `/users` carries a `name` next to
+the `pseudonym` ("Denk Raumfahrer") depends on the app's entitlements. A
+pseudonym-only row is recorded with `idp_name_kind = pseudonym`, carries no
 name keys, and can be paired by hand only.
 
 **Names are not unique.** Two rows called "Max Müller" on either side make an

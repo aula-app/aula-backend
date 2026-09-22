@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\Idp\DirectoryException;
 use App\Services\Idp\Providers\Eduplaces\EduplacesDirectory;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -108,29 +109,23 @@ class EduplacesDirectoryTest extends TestCase
         $this->assertSame('Bio Akrobat', $users[0]->displayName());
     }
 
-    public function test_reads_each_group_in_full_to_reach_member_names(): void
+    public function test_reads_the_group_list_without_group_detail(): void
     {
         Http::fake([
             self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
             self::API_URL.'/idm/ep/v1/schools/*/groups' => Http::response([
-                ['id' => 'group-1', 'name' => 'Klasse 5a'],
+                ['id' => 'group-1', 'name' => 'Klasse 5a', 'status' => 'ACTIVE'],
             ]),
-            self::API_URL.'/idm/ep/v1/groups/*' => Http::response([
-                'id' => 'group-1',
-                'name' => 'Klasse 5a',
-                'members' => [
-                    ['id' => 'person-1', 'role' => 'TEACHER', 'name' => ['firstCall' => 'Stephanie', 'last' => 'Schuster']],
-                ],
-            ]),
+            self::API_URL.'/idm/ep/v1/groups/*' => Http::response(status: 500),
         ]);
 
         $groups = $this->directory->groups('school-1');
 
-        // The school listing carries no members; the per-group call does.
         $this->assertCount(1, $groups);
         $this->assertSame('Klasse 5a', $groups[0]->name);
-        $this->assertSame(['person-1'], $groups[0]->memberIds());
-        $this->assertSame('Stephanie Schuster', $groups[0]->members[0]->displayName());
+        $this->assertTrue($groups[0]->isActive());
+        $this->assertSame([], $groups[0]->members);
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/idm/ep/v1/groups/'));
     }
 
     public function test_reads_a_school(): void
