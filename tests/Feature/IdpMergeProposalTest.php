@@ -201,6 +201,30 @@ class IdpMergeProposalTest extends TestCase
         $this->assertNull($this->candidateForIdp('p-linked')->local_id);
     }
 
+    public function test_it_stores_the_groups_a_directory_user_belongs_to(): void
+    {
+        $aulaOnly = $this->seedAulaUser('Nur In Aula');
+        $this->idmGroups = [['id' => 'g1', 'name' => 'Klasse 5A']];
+        $this->idmUsers = [
+            ['groups' => [
+                ['id' => 'g1', 'name' => 'Klasse 5A'],
+                ['id' => 'g2', 'name' => 'AG Schach'],
+            ]] + $this->person('p-grouped', 'In', 'Gruppen'),
+            $this->person('p-alone', 'Ohne', 'Gruppe'),
+        ];
+
+        $this->build();
+
+        // Stored with the row, so the listing needs no directory call.
+        $this->assertSame(
+            [['id' => 'g1', 'name' => 'Klasse 5A'], ['id' => 'g2', 'name' => 'AG Schach']],
+            json_decode((string) $this->candidateForIdp('p-grouped')->idp_groups, true),
+        );
+        $this->assertSame([], json_decode((string) $this->candidateForIdp('p-alone')->idp_groups, true));
+        $this->assertNull($this->candidateForIdp('g1')->idp_groups);
+        $this->assertNull($this->candidateForLocal($aulaOnly)?->idp_groups);
+    }
+
     public function test_rebuilding_replaces_the_previous_proposal(): void
     {
         $this->seedAulaUser('Erste Runde');
