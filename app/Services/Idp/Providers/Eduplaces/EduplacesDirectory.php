@@ -118,30 +118,23 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * Every group of the school, read in full.
-     *
-     * schoolGroupRefs() returns id and name only. group() adds members, the one
-     * place Eduplaces exposes real names to an app holding pseudonymous
-     * entitlements, at one call per group.
+     * Every group of the school, without members. users() carries memberships.
      *
      * @return list<IdpGroup>
      */
     public function groups(string $schoolId): array
     {
-        $groups = [];
-
-        foreach ($this->schoolGroupRefs($schoolId) as $ref) {
-            $groups[] = $this->group($ref->id) ?? new IdpGroup($ref->id, $ref->name, $ref->status);
-        }
-
-        return $groups;
+        return array_map(
+            fn (IdpGroupRef $ref): IdpGroup => new IdpGroup($ref->id, $ref->name, $ref->status),
+            $this->schoolGroupRefs($schoolId),
+        );
     }
 
     /**
      * Everyone at the school, merged by id across the two endpoints Eduplaces
      * splits this over: `/people` adds sourceSystemIdentifier and needs a scope
-     * the app may not hold, `/users` adds status and a pseudonym. A refusal on
-     * `/people` is logged and stepped over.
+     * the app may not hold, `/users` carries name, status, pseudonym and
+     * groups. A refusal on `/people` is logged and stepped over.
      *
      * @return list<IdpUser>
      */

@@ -92,25 +92,21 @@ end up privileged in one and not the other.
 
 ## Names
 
-No single endpoint returns everything, and what you get depends on the app's
-entitlements:
+What an endpoint returns depends on the app's entitlements:
 
 | Endpoint                          | Carries                                  |
 |-----------------------------------|------------------------------------------|
-| `/schools/{id}/users`, `/users/{id}` | `pseudonym` ("Denk Kapitän"), `status`, `groups` |
-| `/groups/{id}` members            | real `name` (`firstFull`/`firstCall`/`last`), `role` |
+| `/schools/{id}/users`, `/users/{id}` | real `name` (`firstFull`/`firstCall`/`last`), `pseudonym` ("Denk Kapitän"), `status`, `role`, `groups` |
 | `/people/{id}`                    | `sourceSystemIdentifier` (optional scope) |
+| `/groups/{id}`                    | `members`, read only when a group webhook arrives |
 
-So the import reads **each group in full**, not the school's group list alone:
-that per-group call is the only place real names appear. The views are merged
-by id, keeping whichever endpoint carried each field.
+The import and the merge proposal read `/schools/{id}/groups` for the group
+list and `/schools/{id}/users` for everyone in them. The views are merged by
+id, keeping whichever endpoint carried each field.
 
 `displayname` prefers the real name and falls back to the pseudonym, so no
 account is left showing a generated username. `realname` is set from a real name
 only: a pseudonym is not a legal name and does not belong there.
-
-Reading group detail also catches directory users that appear in a group's
-member list and are absent from `/users`, which reading `/users` alone loses.
 
 ## Identity
 
