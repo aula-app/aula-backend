@@ -3,6 +3,8 @@
 
 # v2
 
+- feat(oauth): migration to create one public Passport PasswordGrant Client
+
 ## v2.2.0
 
 - feat: add SSO login via Keycloak
