@@ -3,7 +3,7 @@
 
 # v2
 
-- feat(oauth): migration to create one public Passport PasswordGrant Client
+- feat(oauth): migration to craete Passport Clients for PasswordGrant & PersonalAccessToken
 
 ## v2.2.0
 
