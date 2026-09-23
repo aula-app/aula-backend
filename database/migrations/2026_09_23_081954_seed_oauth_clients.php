@@ -17,6 +17,15 @@ return new class () extends Migration {
         Log::info("Client Name:   {$client->name}");
         Log::info("Client ID:     {$client->id}");
         Log::info('Client Secret: N/A');
+
+        // SsoController uses createToken() to issue sso sessions, which resolves a
+        // personal_access client or throws.
+        $personalAccessClient = $clientRepo->createPersonalAccessGrantClient(
+            'personal_access_tenant_users',
+            'aula_users',
+        );
+
+        Log::info("Personal Access Client ID: {$personalAccessClient->id}");
     }
 
     /**
