@@ -5,21 +5,24 @@ declare(strict_types=1);
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class TenantStatisticsReport extends Mailable
+class TenantStatisticsReport extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public function __construct(
         private readonly string $csvContent,
         private readonly string $filename,
         private readonly int $tenantCount,
-    ) {}
+    ) {
+    }
 
     public function envelope(): Envelope
     {

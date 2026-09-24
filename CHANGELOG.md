@@ -3,6 +3,8 @@
 
 # v2
 
+- feat(oauth): migration to craete Passport Clients for PasswordGrant & PersonalAccessToken
+
 ## v2.2.0
 
 - feat: add SSO login via Keycloak

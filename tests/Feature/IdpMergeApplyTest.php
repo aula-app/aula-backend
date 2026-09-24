@@ -8,9 +8,9 @@ use App\Enums\UserStatus;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
-use App\Services\LegacyJwtService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
+use Laravel\Passport\Passport;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -237,11 +237,11 @@ class IdpMergeApplyTest extends TestCase
      */
     private function headersFor(int $userId): array
     {
-        $jwt = self::$testTenant->run(
-            fn () => app(LegacyJwtService::class)->generateToken(LegacyUser::findOrFail($userId)),
+        Passport::actingAs(
+            self::$testTenant->run(fn () => LegacyUser::findOrFail($userId)),
         );
 
-        return ['aula-instance-code' => 'TEST001', 'Authorization' => "Bearer {$jwt}"];
+        return ['aula-instance-code' => 'TEST001'];
     }
 
     private function clean(): void

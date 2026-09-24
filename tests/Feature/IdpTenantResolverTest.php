@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Http;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
-class TenantResolverTest extends TestCase
+class IdpTenantResolverTest extends TestCase
 {
     use CreatesTestTenant;
 

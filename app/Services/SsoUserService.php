@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\LegacyUser;
@@ -66,7 +68,7 @@ class SsoUserService
         ]);
 
         /** @var list<array{role?: int, room?: string}> $roles */
-        $roles = json_decode($user->roles, true) ?: [];
+        $roles = json_decode((string) $user->roles, true) ?: [];
         $roles = array_values(array_filter($roles, fn (array $r) => ($r['room'] ?? null) !== $room->hash_id));
         $roles[] = ['role' => 20, 'room' => $room->hash_id];
 

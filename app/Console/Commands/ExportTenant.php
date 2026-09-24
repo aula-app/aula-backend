@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Str;
 
 class ExportTenant extends Command
 {
@@ -36,7 +37,7 @@ class ExportTenant extends Command
         $outputFile = $this->option('output')
             ?? getcwd().'/tenant_'.$tenant->instance_code.'_'.now()->format('Ymd_His').'.tar.gz';
 
-        $tmpDir = sys_get_temp_dir().'/tenant_export_'.uniqid();
+        $tmpDir = sys_get_temp_dir().'/tenant_export_'.Str::random(16);
         mkdir($tmpDir, 0700, true);
 
         try {

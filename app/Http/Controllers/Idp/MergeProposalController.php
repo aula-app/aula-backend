@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Idp;
 
 use App\Enums\UserLevel;
-use App\Http\Controllers\Controller;
 use App\Jobs\ImportSchoolForTenant;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Migration\MergeProposalApplier;
 use App\Services\Idp\Migration\MergeProposalBuilder;
 use App\Services\Idp\SchoolImport;
+use App\UseCases\Idp\ListMergeProposalsUseCase;
+use App\UseCases\Idp\MergeProposalFilter;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -29,6 +33,7 @@ class MergeProposalController extends Controller
     public function __construct(
         private readonly MergeProposalBuilder $builder,
         private readonly MergeProposalApplier $applier,
+        private readonly ListMergeProposalsUseCase $lister,
     ) {}
 
     /**
@@ -59,36 +64,19 @@ class MergeProposalController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        if ($denied = $this->denyNonAdmin($request)) {
-            return $denied;
+        $filter = new MergeProposalFilter(
+            kind: (string) $request->query('kind', ''),
+            search: (string) $request->query('search', ''),
+            bucket: (string) $request->query('bucket', ''),
+            page: (int) $request->query('page', 1),
+            perPage: (int) $request->query('per_page', MergeProposalFilter::DEFAULT_PER_PAGE),
+        );
+
+        try {
+            $page = $this->lister->execute($filter);
+        } catch (AuthorizationException) {
+            return response()->json(['error' => 'admin_required'], 403);
         }
-
-        $query = DB::table('idp_merge_candidates');
-
-        if (($kind = (string) $request->query('kind', '')) !== '') {
-            $query->where('kind', $kind);
-        }
-
-        // A thousand-row proposal is unusable unfiltered, so this endpoint
-        // searches and pages rather than returning everything.
-        if (($search = trim((string) $request->query('search', ''))) !== '') {
-            $query->where(function ($q) use ($search): void {
-                $q->where('local_name', 'like', "%{$search}%")
-                    ->orWhere('idp_name', 'like', "%{$search}%");
-            });
-        }
-
-        if (($bucket = (string) $request->query('bucket', '')) !== '') {
-            match ($bucket) {
-                'merges' => $query->whereNotNull('idp_id')->whereNotNull('local_id'),
-                'idp_only' => $query->whereNotNull('idp_id')->whereNull('local_id'),
-                'aula_only' => $query->whereNull('idp_id')->whereNotNull('local_id'),
-                default => null,
-            };
-        }
-
-        $page = $query->orderBy('kind')->orderBy('outcome')->orderBy('id')
-            ->paginate(perPage: min((int) $request->query('per_page', 50), 200));
 
         return response()->json([
             'data' => $page->items(),
@@ -209,7 +197,7 @@ class MergeProposalController extends Controller
     private function denyNonAdmin(Request $request): ?JsonResponse
     {
         /** @var LegacyUser|null $user */
-        $user = $request->attributes->get('authenticated_user');
+        $user = Auth::user();
 
         if (($user?->userlevel?->value ?? 0) < UserLevel::Admin->value) {
             return response()->json(['error' => 'admin_required'], 403);

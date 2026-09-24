@@ -9,14 +9,6 @@ Workflow:
   and fix them, one by one
 -->
 <files psalm-version="7.0.0-beta19@7e751c06a756fa64dc4c759c09fe4a173afcb433">
-  <file src="app/Auth/LegacyJwtGuard.php">
-    <InvalidReturnStatement>
-      <code><![CDATA[$this->user]]></code>
-    </InvalidReturnStatement>
-    <InvalidReturnType>
-      <code><![CDATA[?Authenticatable]]></code>
-    </InvalidReturnType>
-  </file>
   <file src="app/Filament/Pages/Statistics.php">
     <MissingTemplateParam>
       <code><![CDATA[Statistics]]></code>

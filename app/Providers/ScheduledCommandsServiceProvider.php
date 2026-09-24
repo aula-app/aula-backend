@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\ServiceProvider;
 
-class ScheduledCommandsProvider extends ServiceProvider
+class ScheduledCommandsServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap any commands that are running on a schedule.
