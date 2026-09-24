@@ -52,7 +52,7 @@ return [
          * This should be the key of one of the exporters defined in the exporters section
          * Supported drivers: "otlp", "console", "memory", "null"
          */
-        'exporter' => env(Variables::OTEL_METRICS_EXPORTER, 'otlp'),
+        'exporter' => env(Variables::OTEL_METRICS_EXPORTER, 'null'),
     ],
 
     /**
@@ -121,7 +121,7 @@ return [
          * This should be the key of one of the exporters defined in the exporters section
          * Supported drivers: "otlp", "console", "memory", "null"
          */
-        'exporter' => env(Variables::OTEL_LOGS_EXPORTER, 'otlp'),
+        'exporter' => env(Variables::OTEL_LOGS_EXPORTER, 'null'),
 
         /**
          * Inject active trace id in log context
