@@ -26,3 +26,9 @@ keycloak/
 nginx-reverse-proxy.conf
 Dockerfile*
 docker-compose*
+
+# IDE cache files
+*.cache
+
+# non-runtime example files
+*.example
