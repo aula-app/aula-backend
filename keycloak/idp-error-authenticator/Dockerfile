@@ -14,6 +14,7 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /build
 COPY pom.xml .
 COPY src ./src
+ENV KC_HEALTH_ENABLED=true
 RUN mvn -B -q clean package
 
 # ---- Stage 2: Keycloak image with the provider ----
