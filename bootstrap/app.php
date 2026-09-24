@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedByRequestDataException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,11 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
             '192.168.0.0/16',
             '10.0.0.0/8',
         ]);
-
-        $middleware->alias([
-            'legacy.jwt' => \App\Http\Middleware\LegacyJwtMiddleware::class,
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (TenantCouldNotBeIdentifiedByRequestDataException $e, Request $request) {
+            return response()->json(['message' => 'Tenant not set'], 404);
+        });
     })->create();

@@ -23,7 +23,7 @@ Route::name('public.')
             return response()->json([
                 'aula-backend' => [
                     // injected by docker build argument DOCKER_TAG
-                    'running' => env('APP_VERSION', 'unknown'),
+                    'running' => config('app.version', 'unknown'),
                     'latest' => 'TODO',
                 ],
                 'aula-frontend' => [

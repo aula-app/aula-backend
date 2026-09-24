@@ -18,9 +18,8 @@ $syslog = new Systemlog ($db);
 $jwt = new JWT($instance->jwt_key, $db, $crypt, $syslog);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-  // SSO-only tenants have no concept of local password recovery. Short-circuit
-  // before any DB work, returning the same response shape as the no-match case
-  // so the endpoint cannot be used to enumerate which tenants are SSO-locked.
+  // SSO-only tenants have no concept of local password, recovery for them is disabled.
+  // Return early the same response as if successful to prevent user enumeration
   if ($instance->sso_required) {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(["success" => true]);
@@ -28,9 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   }
 
   $email =  $_GET["email"];
-  // SSO-linked users (sso_sub IS NOT NULL) cannot reset a local password — their
-  // identity lives in the IdP. Filtering at the query level keeps the response
-  // shape identical to the no-match case, preserving anti-enumeration.
+  // SSO-linked users (sso_sub IS NOT NULL) cannot reset a local password — their identity is in the IdP.
+  // Filtering at the query level keeps the response identical to the no-match case, preventing user enumeration.
   $stmt = $db->query('SELECT id,username,realname FROM au_users_basedata WHERE email = :email AND sso_sub IS NULL');
   $db->bind(':email', $email);
 
@@ -88,6 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $email_body = str_replace("<SECRET_KEY>", $secret, $email_body);
 
     $mail = $smtp->send($email, $headers, $email_body);
+  } else {
+    // sleep between 2ms and 25ms to avoid user enumeration
+    usleep(microseconds: rand(2_000, 25_000));
   };
 
   header('Content-Type: application/json; charset=utf-8');

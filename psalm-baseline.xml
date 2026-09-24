@@ -9,35 +9,9 @@ Workflow:
   and fix them, one by one
 -->
 <files psalm-version="7.0.0-beta19@7e751c06a756fa64dc4c759c09fe4a173afcb433">
-  <file src="app/Auth/LegacyJwtGuard.php">
-    <InvalidReturnStatement>
-      <code><![CDATA[$this->user]]></code>
-    </InvalidReturnStatement>
-    <InvalidReturnType>
-      <code><![CDATA[?Authenticatable]]></code>
-    </InvalidReturnType>
-  </file>
   <file src="app/Filament/Pages/Statistics.php">
     <MissingTemplateParam>
       <code><![CDATA[Statistics]]></code>
-    </MissingTemplateParam>
-  </file>
-  <file src="app/Filament/Resources/TenantResource.php">
-    <MissingTemplateParam>
-      <code><![CDATA[TenantResource]]></code>
-    </MissingTemplateParam>
-    <UndefinedClass>
-      <code><![CDATA[Set]]></code>
-    </UndefinedClass>
-  </file>
-  <file src="app/Filament/Resources/TenantResource/Pages/CreateTenant.php">
-    <MissingTemplateParam>
-      <code><![CDATA[CreateTenant]]></code>
-    </MissingTemplateParam>
-  </file>
-  <file src="app/Filament/Resources/TenantResource/Pages/EditTenant.php">
-    <MissingTemplateParam>
-      <code><![CDATA[EditTenant]]></code>
     </MissingTemplateParam>
   </file>
   <file src="app/Models/LegacyUser.php">

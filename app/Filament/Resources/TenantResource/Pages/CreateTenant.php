@@ -11,6 +11,9 @@ use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @extends CreateRecord<\App\Models\Tenant>
+ */
 class CreateTenant extends CreateRecord
 {
     protected static string $resource = TenantResource::class;

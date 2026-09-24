@@ -9,6 +9,8 @@
 # The default $MARIADB_USER only gets access to $MARIADB_DATABASE while
 # stancl/tenancy library needs to CREATE/DROP databases and CREATE/DROP users for them dynamically.
 #
+# Should match app/Console/Commands/ExportTenant.php
+#
 mariadb -u root -p"${MARIADB_ROOT_PASSWORD}" <<-EOSQL
     GRANT USAGE, ALTER, ALTER ROUTINE, CREATE, CREATE ROUTINE, CREATE TEMPORARY TABLES, CREATE USER, CREATE VIEW, DELETE, DROP, EVENT, EXECUTE, INDEX, INSERT, LOCK TABLES, REFERENCES, SELECT, SHOW VIEW, TRIGGER, UPDATE ON *.* TO '${MARIADB_USER}'@'%' WITH GRANT OPTION;
     FLUSH PRIVILEGES;

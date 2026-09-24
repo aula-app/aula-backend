@@ -15,7 +15,6 @@ enum UserLevel: int
     case Principal = 44;
     case PrincipalPlus = 45;
     case Admin = 50;
-    case TechAdmin = 60;
 
     public function label(): string
     {
@@ -29,7 +28,6 @@ enum UserLevel: int
             self::Principal => 'Principal',
             self::PrincipalPlus => 'Principal+',
             self::Admin => 'Admin',
-            self::TechAdmin => 'Tech Admin',
         };
     }
 

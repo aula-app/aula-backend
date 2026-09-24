@@ -1516,6 +1516,9 @@ class User
         $returnvalue['data'] = false; // returned data
         $returnvalue['count'] = count($users); // returned count of datasets
 
+        // sleep between 2ms and 25ms to avoid user enumeration
+        usleep(microseconds: rand(2_000, 25_000));
+
         return $returnvalue;
       } // nothing found
 
@@ -1635,7 +1638,7 @@ class User
     }
 
     $stmt = $this->db->query(<<<EOD
-      SELECT roles, realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw, sso_sub, sso_provider
+      SELECT roles, realname, displayname, username, email, hash_id, about_me, status, registration_status, created, last_update, userlevel, temp_pw, sso_sub, idp_user_id
       FROM au_users_basedata u
       WHERE id > 0 {$extra_where}
       ORDER BY {$orderby_field} {$asc_field}
@@ -1838,7 +1841,7 @@ class User
   {
     /* adds a user and returns insert id (userid) if successful, accepts the above parameters
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
-     userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin 60 = tech admin
+     userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin
     */
 
     // sanitize vars

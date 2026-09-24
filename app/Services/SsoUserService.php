@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\LegacyUser;
-use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
@@ -23,14 +24,21 @@ class SsoUserService
         return LegacyUser::where('email', $email)->first();
     }
 
+    public function findByIdpUserId(?string $personId): ?LegacyUser
+    {
+        if ($personId === null || $personId === '') {
+            return null;
+        }
+
+        return LegacyUser::where('idp_user_id', $personId)->first();
+    }
+
     /**
      * Create a new user from the SSO claims and enrol them in the standard room.
      */
     public function provisionUser(SocialiteUser $socialiteUser): LegacyUser
     {
-        /** @var Tenant|null $tenant */
-        $tenant = tenant();
-        $user = LegacyUser::fromSocialiteUser($socialiteUser, $tenant?->sso_provider);
+        $user = LegacyUser::fromSocialiteUser($socialiteUser);
         $user->save();
 
         $this->addToStandardRoom($user);
@@ -60,7 +68,7 @@ class SsoUserService
         ]);
 
         /** @var list<array{role?: int, room?: string}> $roles */
-        $roles = json_decode($user->roles, true) ?: [];
+        $roles = json_decode((string) $user->roles, true) ?: [];
         $roles = array_values(array_filter($roles, fn (array $r) => ($r['room'] ?? null) !== $room->hash_id));
         $roles[] = ['role' => 20, 'room' => $room->hash_id];
 
