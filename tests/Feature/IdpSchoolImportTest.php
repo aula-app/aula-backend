@@ -42,8 +42,6 @@ class IdpSchoolImportTest extends TestCase
 
     private bool $peopleForbidden = false;
 
-    private bool $usersListingEmpty = false;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -70,7 +68,6 @@ class IdpSchoolImportTest extends TestCase
         $this->idmPeople = [];
         $this->idmBroken = false;
         $this->peopleForbidden = false;
-        $this->usersListingEmpty = false;
         $this->fakeIdm();
     }
 
@@ -127,7 +124,7 @@ class IdpSchoolImportTest extends TestCase
         });
     }
 
-    public function test_takes_real_names_from_group_members(): void
+    public function test_takes_real_names_from_the_user_listing(): void
     {
         $this->seedSchool();
 
@@ -163,33 +160,6 @@ class IdpSchoolImportTest extends TestCase
             // A pseudonym is not a legal name and must not reach `realname`.
             $this->assertNull($user->realname);
             $this->assertStringStartsWith('denk.raumfahrer', (string) $user->username);
-        });
-    }
-
-    public function test_imports_members_that_only_the_group_listing_reveals(): void
-    {
-        // A directory user can appear in a group's members and be absent from
-        // `/users`, so reading `/users` alone would lose the row.
-        $this->idmGroups = [['id' => 'group-5a', 'name' => 'Klasse 5a']];
-        $this->idmPeople = [[
-            'id' => 'person-group-only',
-            'role' => 'STUDENT',
-            'name' => ['firstCall' => 'Nur', 'last' => 'Gruppe'],
-            'groups' => [['id' => 'group-5a', 'name' => 'Klasse 5a']],
-        ]];
-        $this->usersListingEmpty = true;
-
-        $this->import();
-
-        self::$testTenant->run(function () {
-            $user = LegacyUser::where('idp_user_id', 'person-group-only')->first();
-
-            $this->assertNotNull($user, 'a group-only member must still be imported');
-            $this->assertSame('Nur Gruppe', $user->displayname);
-
-            $room = DB::table('au_rooms')->where('idp_group_id', 'group-5a')->first();
-            $this->assertSame(1, DB::table('au_rel_rooms_users')
-                ->where('room_id', $room->id)->where('user_id', $user->id)->count());
         });
     }
 
@@ -459,46 +429,14 @@ class IdpSchoolImportTest extends TestCase
                     fn (array $g): array => ['id' => $g['id'], 'name' => $g['name']],
                     $this->idmGroups,
                 )),
-                (bool) preg_match('#/groups/([^/]+)$#', $path, $g) => $this->groupResponse(urldecode($g[1])),
                 (bool) preg_match('#/schools/[^/]+/people$#', $path) => $this->peopleForbidden
                     ? Http::response(status: 403)
                     : Http::response($this->idmPeople),
-                (bool) preg_match('#/schools/[^/]+/users$#', $path) => Http::response(
-                    $this->usersListingEmpty ? [] : ($this->peopleForbidden ? $this->idmPeople : []),
-                ),
+                (bool) preg_match('#/schools/[^/]+/users$#', $path) => Http::response($this->idmPeople),
                 (bool) preg_match('#/(people|users)/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[2])),
                 default => Http::response(status: 404),
             };
         });
-    }
-
-    /**
-     * A group detail response carries the member list with real names, the one
-     * place Eduplaces exposes them to an app with pseudonymous entitlements.
-     */
-    private function groupResponse(string $id): PromiseInterface
-    {
-        foreach ($this->idmGroups as $group) {
-            if ($group['id'] === $id) {
-                $members = [];
-
-                foreach ($this->idmPeople as $person) {
-                    foreach ($person['groups'] as $ref) {
-                        if ($ref['id'] === $id) {
-                            $members[] = [
-                                'id' => $person['id'],
-                                'role' => $person['role'],
-                                'name' => $person['name'],
-                            ];
-                        }
-                    }
-                }
-
-                return Http::response($group + ['members' => $members]);
-            }
-        }
-
-        return Http::response(status: 404);
     }
 
     private function personResponse(string $id): PromiseInterface

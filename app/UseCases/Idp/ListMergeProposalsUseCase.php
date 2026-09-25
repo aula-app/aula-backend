@@ -8,6 +8,7 @@ use App\Enums\Gates;
 use App\Models\IdpMergeCandidate;
 use App\Models\LegacyUser;
 use App\Services\Idp\Migration\MergeProposalBuilder;
+use App\Services\Idp\RoomEnrolment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -16,20 +17,29 @@ use Illuminate\Support\Facades\Gate;
 /**
  * A page of idp_merge_candidates for the admin review.
  *
- * Each user row also carries the aula account's display name, real name and
- * avatar, read fresh from the account: local_name holds whichever name the
- * builder matched on, and a reviewer telling two accounts of one name apart
- * needs all three.
+ * User rows also carry the aula account's names, avatar and rooms, and the
+ * stored idp_groups. local_name is the name the builder matched on.
  *
  * Admin-only: the rows settle which account each directory identity ends up
  * on. Requires initialised tenancy.
  */
 final class ListMergeProposalsUseCase
 {
+    /** User row whose aula account is absent. */
     private const array NO_ACCOUNT = [
         'local_displayname' => null,
         'local_realname' => null,
         'local_avatar' => null,
+        'local_rooms' => [],
+    ];
+
+    /** Room rows carry no account or group details. */
+    private const array ROOM_ROW = [
+        'local_displayname' => null,
+        'local_realname' => null,
+        'local_avatar' => null,
+        'local_rooms' => null,
+        'idp_groups' => null,
     ];
 
     /**
@@ -66,18 +76,32 @@ final class ListMergeProposalsUseCase
         $accounts = $this->accountsFor($page->items());
 
         /** @var LengthAwarePaginator<int, array<string, mixed>> $rows */
-        $rows = $page->through(fn (IdpMergeCandidate $row): array => $row->toArray() + (
-            $row->kind === MergeProposalBuilder::KIND_USER && $row->local_id !== null
-                ? ($accounts[$row->local_id] ?? self::NO_ACCOUNT)
-                : self::NO_ACCOUNT
-        ));
+        $rows = $page->through(fn (IdpMergeCandidate $row): array => $this->present($row, $accounts));
 
         return $rows;
     }
 
     /**
+     * @param  array<int, array<string, mixed>>  $accounts
+     * @return array<string, mixed>
+     */
+    private function present(IdpMergeCandidate $row, array $accounts): array
+    {
+        if ($row->kind !== MergeProposalBuilder::KIND_USER) {
+            return self::ROOM_ROW + $row->toArray();
+        }
+
+        $account = $row->local_id !== null
+            ? ($accounts[$row->local_id] ?? self::NO_ACCOUNT)
+            : self::NO_ACCOUNT;
+
+        // Left operand wins: replaces the null idp_groups column value with [].
+        return ['idp_groups' => $row->idp_groups ?? []] + $account + $row->toArray();
+    }
+
+    /**
      * @param  list<IdpMergeCandidate>  $rows
-     * @return array<int, array{local_displayname: ?string, local_realname: ?string, local_avatar: ?string}>
+     * @return array<int, array{local_displayname: ?string, local_realname: ?string, local_avatar: ?string, local_rooms: list<array{id: int, name: string}>}>
      */
     private function accountsFor(array $rows): array
     {
@@ -94,6 +118,7 @@ final class ListMergeProposalsUseCase
         }
 
         $avatars = $this->avatarsFor($userIds);
+        $rooms = $this->roomsFor($userIds);
         $accounts = [];
 
         foreach (LegacyUser::whereIn('id', $userIds)->get(['id', 'displayname', 'realname']) as $user) {
@@ -101,10 +126,35 @@ final class ListMergeProposalsUseCase
                 'local_displayname' => $user->displayname,
                 'local_realname' => $user->realname,
                 'local_avatar' => $avatars[(int) $user->id] ?? null,
+                'local_rooms' => $rooms[(int) $user->id] ?? [],
             ];
         }
 
         return $accounts;
+    }
+
+    /**
+     * Active rooms by user id. Membership status is ignored, as in legacy.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, list<array{id: int, name: string}>>
+     */
+    private function roomsFor(array $userIds): array
+    {
+        $rows = DB::table('au_rel_rooms_users')
+            ->join('au_rooms', 'au_rooms.id', '=', 'au_rel_rooms_users.room_id')
+            ->whereIn('au_rel_rooms_users.user_id', $userIds)
+            ->where('au_rooms.status', '!=', RoomEnrolment::STATUS_ARCHIVED)
+            ->orderBy('au_rooms.room_name')
+            ->get(['au_rel_rooms_users.user_id', 'au_rooms.id', 'au_rooms.room_name']);
+
+        $rooms = [];
+
+        foreach ($rows as $row) {
+            $rooms[(int) $row->user_id][] = ['id' => (int) $row->id, 'name' => (string) $row->room_name];
+        }
+
+        return $rooms;
     }
 
     /**

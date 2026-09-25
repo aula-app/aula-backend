@@ -102,6 +102,46 @@ class ListMergeProposalsUseCaseTest extends TestCase
         $this->assertNull($rows[$withDocument]['local_avatar']);
     }
 
+    public function test_each_user_row_carries_its_aula_rooms(): void
+    {
+        $inRooms = $this->seedUser('in_rooms', 20);
+        $inNone = $this->seedUser('in_none', 20);
+        $this->seedCandidate('user', 'p-rooms', $inRooms);
+        $this->seedCandidate('user', 'p-none', $inNone);
+        $this->seedCandidate('user', 'p-nobody', null);
+        $active = $this->seedRoom('Klasse 5a');
+        $archived = $this->seedRoom('Klasse 4a', status: 3);
+        $this->seedMembership($inRooms, $active);
+        $this->seedMembership($inRooms, $archived);
+
+        $this->actAsAdmin();
+
+        $rows = collect($this->list(new MergeProposalFilter)->items())->keyBy('idp_id');
+
+        // Archived rooms are left out.
+        $this->assertSame([['id' => $active, 'name' => 'Klasse 5a']], $rows['p-rooms']['local_rooms']);
+        $this->assertSame([], $rows['p-none']['local_rooms']);
+        $this->assertSame([], $rows['p-nobody']['local_rooms']);
+    }
+
+    public function test_each_user_row_carries_its_stored_idp_groups(): void
+    {
+        $userId = $this->seedUser('grouped', 20);
+        $groups = [['id' => 'g1', 'name' => 'Klasse 5A'], ['id' => 'g2', 'name' => 'AG Schach']];
+        $this->seedCandidate('user', 'p-grouped', $userId, idpGroups: $groups);
+        $this->seedCandidate('user', 'p-plain', null, idpGroups: []);
+        $this->seedCandidate('user', null, $userId);
+
+        $this->actAsAdmin();
+
+        $rows = collect($this->list(new MergeProposalFilter)->items());
+
+        $this->assertSame($groups, $rows->firstWhere('idp_id', 'p-grouped')['idp_groups']);
+        $this->assertSame([], $rows->firstWhere('idp_id', 'p-plain')['idp_groups']);
+        // Aula-only rows get idp_groups [], not null.
+        $this->assertSame([], $rows->firstWhere('idp_id', null)['idp_groups']);
+    }
+
     public function test_a_room_row_never_carries_account_details(): void
     {
         $userId = $this->seedUser('with_avatar', 20, realname: 'Room Sharer');
@@ -120,6 +160,8 @@ class ListMergeProposalsUseCaseTest extends TestCase
         $this->assertNull($rows['room']['local_avatar']);
         $this->assertNull($rows['room']['local_displayname']);
         $this->assertNull($rows['room']['local_realname']);
+        $this->assertNull($rows['room']['local_rooms']);
+        $this->assertNull($rows['room']['idp_groups']);
     }
 
     public function test_it_narrows_by_kind_bucket_and_search(): void
@@ -177,8 +219,10 @@ class ListMergeProposalsUseCaseTest extends TestCase
     {
         $userId = $this->seedUser('with_avatar', 20, realname: 'Full Name');
         $this->seedMedia($userId, 'face.png', systemType: 0);
-        $this->seedCandidate('user', 'p-user', $userId);
+        $this->seedCandidate('user', 'p-user', $userId, idpGroups: [['id' => 'g-room', 'name' => 'Room']]);
         $this->seedCandidate('room', 'g-room', 7);
+        $roomId = $this->seedRoom('Klasse 5a');
+        $this->seedMembership($userId, $roomId);
 
         $this->actAsAdmin();
 
@@ -190,7 +234,9 @@ class ListMergeProposalsUseCaseTest extends TestCase
             ->assertJsonPath('data.0.idp_id', 'p-user')
             ->assertJsonPath('data.0.local_displayname', 'list_with_avatar')
             ->assertJsonPath('data.0.local_realname', 'Full Name')
-            ->assertJsonPath('data.0.local_avatar', 'face.png');
+            ->assertJsonPath('data.0.local_avatar', 'face.png')
+            ->assertJsonPath('data.0.local_rooms', [['id' => $roomId, 'name' => 'Klasse 5a']])
+            ->assertJsonPath('data.0.idp_groups', [['id' => 'g-room', 'name' => 'Room']]);
     }
 
     public function test_the_endpoint_refuses_a_non_admin(): void
@@ -228,18 +274,41 @@ class ListMergeProposalsUseCaseTest extends TestCase
         ?int $localId,
         ?string $idpName = null,
         ?string $localName = null,
+        ?array $idpGroups = null,
     ): int {
         return (int) self::$testTenant->run(fn () => DB::table('idp_merge_candidates')->insertGetId([
             'kind' => $kind,
             'idp_id' => $idpId,
             'idp_name' => $idpId === null ? null : ($idpName ?? 'Provider '.$idpId),
             'idp_name_kind' => $idpId === null ? null : 'real',
+            'idp_groups' => $idpGroups === null ? null : json_encode($idpGroups),
             'local_id' => $localId,
             'local_name' => $localId === null ? null : ($localName ?? 'Aula row'),
             'outcome' => $idpId !== null && $localId !== null ? 'confident' : 'none',
             'decision' => null,
             'created_at' => now(),
             'updated_at' => now(),
+        ]));
+    }
+
+    private function seedRoom(string $name, int $status = 1): int
+    {
+        return (int) self::$testTenant->run(fn () => DB::table('au_rooms')->insertGetId([
+            'room_name' => $name,
+            'status' => $status,
+            'type' => 0,
+            'hash_id' => self::PREFIX.md5($name.microtime(true)),
+        ]));
+    }
+
+    private function seedMembership(int $userId, int $roomId): void
+    {
+        self::$testTenant->run(fn () => DB::table('au_rel_rooms_users')->insert([
+            'room_id' => $roomId,
+            'user_id' => $userId,
+            'status' => 1,
+            'created' => now(),
+            'last_update' => now(),
         ]));
     }
 
@@ -304,6 +373,7 @@ class ListMergeProposalsUseCaseTest extends TestCase
                 LegacyUser::whereIn('id', $ids)->delete();
             }
 
+            DB::table('au_rooms')->where('hash_id', 'like', self::PREFIX.'%')->delete();
             DB::table('idp_merge_candidates')->truncate();
         });
     }
