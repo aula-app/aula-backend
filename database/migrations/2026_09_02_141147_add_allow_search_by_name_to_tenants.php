@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('tenants', function (Blueprint $table) {
             if (! Schema::hasColumn('tenants', 'allow_search_by_name')) {
                 $table->boolean('allow_search_by_name')
-                    ->default(false)
+                    ->default(true)
                     ->after('instance_code')
                     ->comment('Name of the school will be available in auto-complete search. If false, only the instance code will be accepted.');
             }
