@@ -26,8 +26,9 @@ COPY --from=build /build/target/aula-idp-error-authenticator.jar /opt/keycloak/p
 ENV KC_DB=postgres
 ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
+ENV KC_HTTP_RELATIVE_PATH=/auth
 
-RUN /opt/keycloak/bin/kc.sh build --http-relative-path=/auth
+RUN /opt/keycloak/bin/kc.sh build
 
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 CMD ["start", "--optimized"]
