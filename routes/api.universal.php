@@ -2,12 +2,16 @@
 
 use App\Http\Controllers\Auth\SsoController;
 use App\Http\Controllers\Idp\WebhookController;
+use App\Http\Controllers\TenantController;
 use App\Http\Middleware\VerifyIdpWebhookSignature;
 use Illuminate\Support\Facades\Route;
 
 Route::group(attributes: [], routes: [
     base_path('routes/api/public.php'),
 ]);
+
+Route::get('/api/v2/tenants', [TenantController::class, 'indexPublic'])
+    ->middleware(['api', 'universal']);
 
 // SSO callback: a universal route, so no tenant header is needed. The tenant
 // comes from the signed state parameter.

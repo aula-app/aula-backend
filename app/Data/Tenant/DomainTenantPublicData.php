@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Data\InstanceAutocomplete;
+namespace App\Data\Tenant;
 
 use Spatie\LaravelData\Data;
 
-class DomainInstanceAutocompleteData extends Data
+class DomainTenantPublicData extends Data
 {
     public function __construct(
         public readonly string $instance_code,
