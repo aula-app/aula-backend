@@ -19,7 +19,7 @@ class TenantController extends Controller
     public function indexPublic(): DataCollection
     {
         return DomainTenantPublicData::collect(
-            Tenant::where('allow_search_by_name', true)->get(),
+            Tenant::where('is_name_public', true)->get(),
             DataCollection::class
         );
     }

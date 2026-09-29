@@ -87,8 +87,8 @@ class TenantResource extends Resource
                                 ->dehydrated(false)
                         ),
 
-                    Toggle::make('allow_search_by_name')
-                        ->label('Allow selection by name')
+                    Toggle::make('is_name_public')
+                        ->label('Allow public display of school name')
                         ->helperText('Name of the school will be available in auto-complete search. If disabled, only the instance code will be accepted.')
                         ->default(true),
 

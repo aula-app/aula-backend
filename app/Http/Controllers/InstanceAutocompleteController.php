@@ -19,7 +19,7 @@ class InstanceAutocompleteController extends Controller
     public function index(): DataCollection
     {
         return DomainInstanceAutocompleteData::collect(
-            Tenant::where('allow_search_by_name', true)->get(),
+            Tenant::where('is_name_public', true)->get(),
             DataCollection::class
         );
     }
