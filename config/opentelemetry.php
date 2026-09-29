@@ -203,18 +203,18 @@ return [
         Instrumentation\HttpServerInstrumentation::class => [
             'enabled' => filter_var(env('OTEL_INSTRUMENTATION_HTTP_SERVER', true), FILTER_VALIDATE_BOOLEAN),
             'excluded_paths' => [],
-            'excluded_methods' => [],
+            'excluded_methods' => ["OPTIONS", "HEAD"],
             'allowed_headers' => [],
-            'sensitive_headers' => [],
-            'sensitive_query_parameters' => [],
+            'sensitive_headers' => ["Authorization"],
+            'sensitive_query_parameters' => ["state", "sso_link_token"],
         ],
 
         Instrumentation\HttpClientInstrumentation::class => [
             'enabled' => filter_var(env('OTEL_INSTRUMENTATION_HTTP_CLIENT', true), FILTER_VALIDATE_BOOLEAN),
             'manual' => false, // When set to true, you need to call `withTrace()` on the request to enable tracing
             'allowed_headers' => [],
-            'sensitive_headers' => [],
-            'sensitive_query_parameters' => [],
+            'sensitive_headers' => ["Authorization"],
+            'sensitive_query_parameters' => ["state"],
         ],
 
         Instrumentation\QueryInstrumentation::class => filter_var(env('OTEL_INSTRUMENTATION_QUERY', true), FILTER_VALIDATE_BOOLEAN),
