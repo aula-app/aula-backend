@@ -70,6 +70,10 @@ class AuthzServiceProvider extends ServiceProvider
 
         Gate::define(Gates::DeleteUser, fn () => false);
 
+        // Admins only, via Gate::before: the proposal settles which account
+        // each directory identity lands on.
+        Gate::define(Gates::ListMergeProposals, fn () => false);
+
         Gate::define(Gates::ExportUserGdprInfo, function (LegacyUser $user, string $publicId) {
             return $user->hash_id === $publicId;
         });

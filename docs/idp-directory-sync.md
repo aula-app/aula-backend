@@ -10,10 +10,9 @@ Nothing below is specific to one vendor. A provider is a block in
 and is used for the examples.
 
 A tenant picks its provider with `tenants.sso_provider`, the same alias Keycloak
-brokers under, so a tenant's login and its directory always agree.
+uses to broker, so a tenant's SSO connection and its directory are the same.
 
 Eduplaces specification: <https://developer.eduplaces.de/idm/webhooks>.
-For the login flow itself, see [sso-architecture.md](sso-architecture.md).
 
 ## Onboarding a school
 
