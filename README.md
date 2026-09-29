@@ -41,6 +41,7 @@ php artisan passport:keys -q
 Then, to start aula-backend(s), run:
 
 ```bash
+docker network create --attachable aula_local
 # Run both legacy aula-backend:v1 (:8080) and current Laravel-based aula-backend:v2 (:8000)
 docker compose up --build -d
 ```
