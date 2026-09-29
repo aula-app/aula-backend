@@ -60,7 +60,7 @@ class UserController extends Controller
         $this->deleteUserUseCase->execute($publicId);
     }
 
-    public function export(string $publicId): array
+    public function export(string $publicId): string
     {
         return $this->exportUserGdprInfoUseCase->execute($publicId);
     }

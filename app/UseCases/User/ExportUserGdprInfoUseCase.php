@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class ExportUserGdprInfoUseCase
 {
-    public function execute(string $publicId): array
+    public function execute(string $publicId): string
     {
         Gate::authorize(Gates::ExportUserGdprInfo, [$publicId]);
 
@@ -23,25 +23,23 @@ class ExportUserGdprInfoUseCase
         // TODO: refactor query once relation is established
         $ideas = DB::table('au_ideas')->where('user_id', $userId)
             ->get(['content', 'created', 'last_update']);
-        // serialization format from legacy User.php
-        $ideasFlat = $ideas->map(fn ($idea) =>
-            "{$idea->content}, IDEA CREATED: {$idea->created}, IDEA LAST UPDATE: {$idea->last_update}*§$"
-        )
-            ->implode('');
 
         $comments = DB::table('au_comments')->where('user_id', $userId)
             ->get(['content', 'created', 'last_update']);
-        // serialization format from legacy User.php
-        $commentsFlat = $comments->map(fn ($comment) =>
-            "{$comment->content}, COMMENT CREATED: {$comment->created}, COMMENT LAST UPDATE: {$comment->last_update}*§$"
-        )
-            ->implode('');
 
-        return [
+        $data = [
             "user" => $user->toArray(),
-            "userIdeas" => $ideasFlat,
-            "userComments" => $commentsFlat,
+            "userIdeas" => $ideas->toArray(),
+            "userComments" => $comments->toArray(),
         ];
+
+        $jsonPretty = json_encode($data, JSON_PRETTY_PRINT);
+
+        if ($jsonPretty === false) {
+            return 'Error, please contact support';
+        }
+
+        return $jsonPretty;
     }
 }
 
