@@ -485,9 +485,12 @@ class CrudUserTest extends TestCase
                     'displayName' => 'Distinct',
                     'realName' => 'Distinct User',
                 ],
-                // last_update==null becomes empty string
-                'userIdeas' => "$content, IDEA CREATED: $created, IDEA LAST UPDATE: *§$",
-                'userComments' => "$content, COMMENT CREATED: $created, COMMENT LAST UPDATE: *§$",
+                'userIdeas' => [
+                    ['content' => $content, 'created' => $created, 'last_update' => null],
+                ],
+                'userComments' => [
+                    ['content' => $content, 'created' => $created, 'last_update' => null],
+                ],
             ]);
     }
 
