@@ -90,7 +90,7 @@ class TenantResource extends Resource
                     Toggle::make('allow_search_by_name')
                         ->label('Allow selection by name')
                         ->helperText('Name of the school will be available in auto-complete search. If disabled, only the instance code will be accepted.')
-                        ->default(false),
+                        ->default(true),
 
                     TextInput::make('api_base_url')
                         ->label('API Base URL')
