@@ -20,8 +20,6 @@ Route::name('public.')
             return response()->json(['TODO' => 'gather health information'], 200);
         });
 
-        Route::get('/schools', [InstanceAutocompleteController::class, 'index']);
-
         Route::get('/versions', function () {
             return response()->json([
                 'aula-backend' => [
