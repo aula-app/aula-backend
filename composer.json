@@ -17,12 +17,12 @@
     "corbosman/laravel-passport-claims": "^9.0",
     "filament/filament": "^5.0",
     "gladcodes/keygen": "^1.1.2",
-    "keepsuit/laravel-opentelemetry": "*",
+    "keepsuit/laravel-opentelemetry": "^2.2",
     "laravel/framework": "^12.0",
     "laravel/passport": "^13",
     "laravel/socialite": "^5.26",
     "laravel/tinker": "^2.10.1",
-    "pear/mail": "*",
+    "pear/mail": "^2.0",
     "socialiteproviders/keycloak": "^5.3",
     "spatie/laravel-data": "^4.23",
     "stancl/tenancy": "dev-master",
@@ -37,7 +37,7 @@
     "nunomaduro/collision": "^8.6",
     "pestphp/pest": "^4.1",
     "psalm/plugin-laravel": "^4.8",
-    "vimeo/psalm": "*"
+    "vimeo/psalm": "^7.0@beta"
   },
   "autoload": {
     "psr-4": {
