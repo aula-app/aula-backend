@@ -18,7 +18,8 @@ RUN mvn -B -q clean package
 
 # ---- Stage 2: Keycloak image with the provider ----
 FROM quay.io/keycloak/keycloak:26.6.1
-COPY --from=build /build/target/aula-idp-error-authenticator.jar /opt/keycloak/providers/
+COPY --chown=keycloak:keycloak --chmod=644 --from=build \
+  /build/target/aula-idp-error-authenticator.jar /opt/keycloak/providers/
 
 # Augment the server at build time so the container starts pre-built and immutable.
 # Bake the build-time options that match the runtime env (KC_DB, KC_HTTP_RELATIVE_PATH)
@@ -27,7 +28,13 @@ ENV KC_DB=postgres
 ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
 ENV KC_HTTP_RELATIVE_PATH=/auth
+ENV KC_HTTP_METRICS_HISTOGRAMS_ENABLED=true
+ENV KC_HTTP_METRICS_SLOS="250,500,1000,2500"
+ENV KC_EVENT_METRICS_USER_ENABLED=true
+ENV KC_EVENT_METRICS_USER_TAGS="realm,idp,clientId"
+ENV KC_CACHE_METRICS_HISTOGRAMS_ENABLED=true
 
+RUN find /opt/keycloak/providers -type f -exec touch -a -m --date=@1743466600 {} +
 RUN /opt/keycloak/bin/kc.sh build
 
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
