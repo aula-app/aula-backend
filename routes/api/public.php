@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\InstanceAutocompleteController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance;
 use Illuminate\Support\Facades\Route;
 
