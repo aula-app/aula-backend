@@ -164,6 +164,62 @@ class IdpMergeApplyTest extends TestCase
         });
     }
 
+    public function test_unlinking_a_pair_puts_the_aula_account_back_in_the_review(): void
+    {
+        $localId = $this->seedUser('apply_unlinked', 20);
+        $candidateId = $this->seedCandidate('user', 'p1', $localId, 'merge');
+
+        $this->decide([['id' => $candidateId, 'decision' => null, 'local_id' => null]]);
+
+        self::$testTenant->run(function () use ($candidateId, $localId) {
+            $this->assertNull(DB::table('idp_merge_candidates')->where('id', $candidateId)->value('local_id'));
+            $this->assertSame(1, $this->aulaOnlyRows('user', $localId));
+        });
+    }
+
+    public function test_repointing_a_pair_frees_the_old_account_and_takes_the_new_one(): void
+    {
+        $wrongId = $this->seedUser('apply_wrong', 20);
+        $rightId = $this->seedUser('apply_right', 20);
+        $candidateId = $this->seedCandidate('user', 'p1', $wrongId, null);
+        $this->seedCandidate('user', null, $rightId, null);
+
+        $this->decide([['id' => $candidateId, 'decision' => 'merge', 'local_id' => $rightId]]);
+
+        self::$testTenant->run(function () use ($wrongId, $rightId) {
+            $this->assertSame(1, $this->aulaOnlyRows('user', $wrongId));
+            $this->assertSame(0, $this->aulaOnlyRows('user', $rightId));
+        });
+    }
+
+    public function test_unlinking_one_of_two_claims_keeps_the_account_on_the_other(): void
+    {
+        $localId = $this->seedUser('apply_shared', 20);
+        $first = $this->seedCandidate('user', 'p1', $localId, null);
+        $this->seedCandidate('user', 'p2', $localId, null);
+
+        $this->decide([['id' => $first, 'decision' => null, 'local_id' => null]]);
+
+        self::$testTenant->run(fn () => $this->assertSame(0, $this->aulaOnlyRows('user', $localId)));
+    }
+
+    public function test_unlinking_a_room_puts_the_aula_room_back_in_the_review(): void
+    {
+        $roomId = (int) self::$testTenant->run(fn () => DB::table('au_rooms')->insertGetId([
+            'room_name' => 'apply_room', 'status' => 1, 'type' => 0, 'hash_id' => md5('apply_room'.microtime(true)),
+        ]));
+        $candidateId = $this->seedCandidate('room', 'g1', $roomId, 'merge');
+
+        $this->decide([['id' => $candidateId, 'decision' => null, 'local_id' => null]]);
+
+        self::$testTenant->run(function () use ($roomId) {
+            $this->assertSame(1, $this->aulaOnlyRows('room', $roomId));
+            $this->assertSame('apply_room', DB::table('idp_merge_candidates')
+                ->where('kind', 'room')->whereNull('idp_id')->value('local_name'));
+            DB::table('au_rooms')->where('id', $roomId)->delete();
+        });
+    }
+
     public function test_a_non_admin_can_neither_see_nor_apply_the_proposal(): void
     {
         $pupilId = $this->seedUser('apply_pupil', 20);
@@ -190,13 +246,31 @@ class IdpMergeApplyTest extends TestCase
     // Helpers
     // =========================================================
 
-    private function seedCandidate(string $kind, string $idpId, ?int $localId, ?string $decision): int
+    /**
+     * @param  list<array<string, mixed>>  $decisions
+     */
+    private function decide(array $decisions): void
+    {
+        $this->postJson('/api/v2/auth/idp/merge-proposal/decisions', ['decisions' => $decisions], $this->adminHeaders())
+            ->assertOk();
+    }
+
+    private function aulaOnlyRows(string $kind, int $localId): int
+    {
+        return DB::table('idp_merge_candidates')
+            ->where('kind', $kind)
+            ->whereNull('idp_id')
+            ->where('local_id', $localId)
+            ->count();
+    }
+
+    private function seedCandidate(string $kind, ?string $idpId, ?int $localId, ?string $decision): int
     {
         return (int) self::$testTenant->run(fn () => DB::table('idp_merge_candidates')->insertGetId([
             'kind' => $kind,
             'idp_id' => $idpId,
-            'idp_name' => 'Provider '.$idpId,
-            'idp_name_kind' => 'real',
+            'idp_name' => $idpId === null ? null : 'Provider '.$idpId,
+            'idp_name_kind' => $idpId === null ? null : 'real',
             'local_id' => $localId,
             'local_name' => 'Aula row',
             'outcome' => 'confident',
