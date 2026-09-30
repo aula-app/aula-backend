@@ -42,6 +42,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'admin2_email',
             'admin2_init_pass_url',
             'instance_code',
+            'is_name_public',
             'jwt_key',
             'sso_enabled',
             'sso_provider',
