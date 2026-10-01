@@ -465,12 +465,13 @@ class CrudUserTest extends TestCase
     {
         $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
 
+        $title = "Testtitle";
         $content = "Testcontent";
         $created = "2026-01-01 01:23:45";
         $tenant = self::$testTenant;
-        $tenant->run(function () use ($user, $content, $created) {
+        $tenant->run(function () use ($user, $title, $content, $created) {
             DB::table('au_ideas')->insert(
-                ['user_id' => $user->id, 'content' => $content, 'created' => $created]
+                ['user_id' => $user->id, 'title' => $title, 'content' => $content, 'created' => $created]
             );
             DB::table('au_comments')->insert(
                 ['user_id' => $user->id, 'content' => $content, 'created' => $created]
@@ -486,7 +487,7 @@ class CrudUserTest extends TestCase
                     'realName' => 'Distinct User',
                 ],
                 'userIdeas' => [
-                    ['content' => $content, 'created' => $created, 'last_update' => null],
+                    ['title' => $title, 'content' => $content, 'created' => $created, 'last_update' => null],
                 ],
                 'userComments' => [
                     ['content' => $content, 'created' => $created, 'last_update' => null],
