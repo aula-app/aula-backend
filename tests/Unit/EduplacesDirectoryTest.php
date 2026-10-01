@@ -91,7 +91,36 @@ class EduplacesDirectoryTest extends TestCase
         $this->assertSame('Denk Kapitaen', $user->pseudonym);
     }
 
-    public function test_falls_back_to_users_when_people_is_not_granted(): void
+    public function test_lists_the_people_of_a_school(): void
+    {
+        Http::fake([
+            self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
+            self::API_URL.'/idm/ep/v1/schools/*/people' => Http::response([
+                [
+                    'id' => 'person-1',
+                    'role' => 'STUDENT',
+                    'status' => 'ACTIVE',
+                    'name' => ['firstFull' => 'Yetta', 'firstCall' => 'Yetta', 'last' => 'Doucet'],
+                    'groups' => [['id' => 'group-1', 'name' => '5a']],
+                ],
+            ]),
+            self::API_URL.'/idm/ep/v1/schools/*/users' => Http::response([
+                ['id' => 'user-2', 'pseudonym' => 'Denk Kapitaen', 'role' => 'TEACHER', 'status' => 'ACTIVE'],
+            ]),
+        ]);
+
+        $users = $this->directory->users('school-1');
+
+        // `/people` omits deleted people and people the school does not sync.
+        $this->assertCount(1, $users);
+        $this->assertSame('person-1', $users[0]->id);
+        $this->assertSame('Yetta Doucet', $users[0]->displayName());
+        $this->assertTrue($users[0]->isActive());
+        $this->assertSame(['group-1'], $users[0]->groupIds());
+        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/users'));
+    }
+
+    public function test_throws_when_people_is_not_granted(): void
     {
         Http::fake([
             self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
@@ -101,12 +130,9 @@ class EduplacesDirectoryTest extends TestCase
             ]),
         ]);
 
-        $users = $this->directory->users('school-1');
+        $this->expectException(DirectoryException::class);
 
-        // `people:read` is a separate scope an app may not hold, and users()
-        // still returns the school without it.
-        $this->assertCount(1, $users);
-        $this->assertSame('Bio Akrobat', $users[0]->displayName());
+        $this->directory->users('school-1');
     }
 
     public function test_reads_the_group_list_without_group_detail(): void

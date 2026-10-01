@@ -87,7 +87,7 @@ final readonly class IdpUser
     /**
      * The name to write to `displayname`.
      *
-     * The real name, or the pseudonym when /users returns none.
+     * The real name, or the pseudonym when the directory returns none.
      */
     public function displayName(): string
     {

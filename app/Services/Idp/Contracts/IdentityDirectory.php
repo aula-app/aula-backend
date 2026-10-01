@@ -40,7 +40,7 @@ interface IdentityDirectory
     public function group(string $groupId): ?IdpGroup;
 
     /**
-     * Everyone in the school, across whichever listings the provider exposes.
+     * Everyone currently in the school. Deleted people are left out.
      *
      * @return list<IdpUser>
      */

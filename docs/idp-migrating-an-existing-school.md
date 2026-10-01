@@ -114,9 +114,9 @@ alone and stay unmanaged.
 Matched on **full name**, with two complications that the review must surface
 rather than hide.
 
-**Not everyone has a real name.** Whether `/users` carries a `name` next to
-the `pseudonym` ("Denk Raumfahrer") depends on the app's entitlements. A
-pseudonym-only row is recorded with `idp_name_kind = pseudonym`, carries no
+**Not everyone has a real name.** Whether `/people` carries a `name` depends
+on the app's entitlements; without one the row can show only a `pseudonym`
+("Denk Raumfahrer"). A pseudonym-only row is recorded with `idp_name_kind = pseudonym`, carries no
 name keys, and can be paired by hand only.
 
 **Names are not unique.** Two rows called "Max Müller" on either side make an
