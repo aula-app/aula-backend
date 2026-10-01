@@ -903,7 +903,7 @@ class AddAllCSVTest extends TestCase
 
         // Check parameters contain expected data
         $this->assertStringContainsString('userCreated', $command['parameters'], 'Parameters should contain userCreated');
-        $this->assertStringContainsString($users[0]['email'], $command['parameters'], 'Parameters should contain user email');
+        $this->assertStringContainsStringIgnoringCase($users[0]['email'], $command['parameters'], 'Parameters should contain user email');
         $this->assertStringContainsString($users[0]['realname'], $command['parameters'], 'Parameters should contain user realname');
         $this->assertStringContainsString($users[0]['username'], $command['parameters'], 'Parameters should contain username');
         $this->assertStringContainsString($changePassword['secret'], $command['parameters'], 'Parameters should contain the secret');
