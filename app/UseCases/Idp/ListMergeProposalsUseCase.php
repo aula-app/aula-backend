@@ -8,7 +8,6 @@ use App\Enums\Gates;
 use App\Models\IdpMergeCandidate;
 use App\Models\LegacyUser;
 use App\Services\Idp\Migration\MergeProposalBuilder;
-use App\Services\Idp\RoomEnrolment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -134,7 +133,8 @@ final class ListMergeProposalsUseCase
     }
 
     /**
-     * Active rooms by user id. Membership status is ignored, as in legacy.
+     * Rooms by user id, archived ones included: MergeProposalBuilder proposes
+     * those too. Membership status is ignored, as in legacy.
      *
      * @param  list<int>  $userIds
      * @return array<int, list<array{id: int, name: string}>>
@@ -144,7 +144,6 @@ final class ListMergeProposalsUseCase
         $rows = DB::table('au_rel_rooms_users')
             ->join('au_rooms', 'au_rooms.id', '=', 'au_rel_rooms_users.room_id')
             ->whereIn('au_rel_rooms_users.user_id', $userIds)
-            ->where('au_rooms.status', '!=', RoomEnrolment::STATUS_ARCHIVED)
             ->orderBy('au_rooms.room_name')
             ->get(['au_rel_rooms_users.user_id', 'au_rooms.id', 'au_rooms.room_name']);
 

@@ -118,8 +118,11 @@ class ListMergeProposalsUseCaseTest extends TestCase
 
         $rows = collect($this->list(new MergeProposalFilter)->items())->keyBy('idp_id');
 
-        // Archived rooms are left out.
-        $this->assertSame([['id' => $active, 'name' => 'Klasse 5a']], $rows['p-rooms']['local_rooms']);
+        // Archived rooms are proposed for merging too, so they are listed.
+        $this->assertSame([
+            ['id' => $archived, 'name' => 'Klasse 4a'],
+            ['id' => $active, 'name' => 'Klasse 5a'],
+        ], $rows['p-rooms']['local_rooms']);
         $this->assertSame([], $rows['p-none']['local_rooms']);
         $this->assertSame([], $rows['p-nobody']['local_rooms']);
     }
