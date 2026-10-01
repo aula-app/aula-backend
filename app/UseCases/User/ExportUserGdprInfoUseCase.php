@@ -22,7 +22,7 @@ class ExportUserGdprInfoUseCase
 
         // TODO: refactor query once relation is established
         $ideas = DB::table('au_ideas')->where('user_id', $userId)
-            ->get(['content', 'created', 'last_update']);
+            ->get(['title', 'content', 'created', 'last_update']);
 
         $comments = DB::table('au_comments')->where('user_id', $userId)
             ->get(['content', 'created', 'last_update']);
