@@ -95,13 +95,14 @@ What an endpoint returns depends on the app's entitlements:
 
 | Endpoint                          | Carries                                  |
 |-----------------------------------|------------------------------------------|
-| `/schools/{id}/users`, `/users/{id}` | real `name` (`firstFull`/`firstCall`/`last`), `pseudonym` ("Denk Kapitän"), `status`, `role`, `groups` |
-| `/people/{id}`                    | `sourceSystemIdentifier` (optional scope) |
+| `/schools/{id}/people`, `/people/{id}` | real `name` (`firstFull`/`firstCall`/`last`), `status`, `role`, `groups`; deleted and unsynced people are left out |
+| `/schools/{id}/users`, `/users/{id}` | `pseudonym` ("Denk Kapitän"), `status`, `role`, `groups`, for accounts with access only |
 | `/groups/{id}`                    | `members`, read only when a group webhook arrives |
 
-The import and the merge proposal read `/schools/{id}/groups` for the group
-list and `/schools/{id}/users` for everyone in them. The views are merged by
-id, keeping whichever endpoint carried each field.
+The import, the merge proposal and the tenant scan read `/schools/{id}/groups`
+for the group list and `/schools/{id}/people` for everyone in the school. A
+person missing from `/people` is no longer present. `/schools/{id}/users` is
+not read: it lists only accounts with access.
 
 `displayname` prefers the real name and falls back to the pseudonym, so no
 account is left showing a generated username. `realname` is set from a real name
@@ -201,10 +202,8 @@ EDUPLACES_WEBHOOK_SECRET=
 
 Sandbox: `https://auth.sandbox.eduplaces.dev`, `https://api.sandbox.eduplaces.dev`.
 
-Scopes: `urn:eduplaces:idm:v1:{schools,groups,users}:read` are required.
-`people:read` is **optional**: over `/users` it adds `sourceSystemIdentifier`
-alone, which nothing here reads, so a school imports completely without it and a
-refusal is logged and stepped over.
+Scopes: `urn:eduplaces:idm:v1:{schools,groups,people,users}:read` are all
+required. Without `people:read` the import and the merge proposal fail.
 
 Request only the scopes the Eduplaces app holds, through `EDUPLACES_IDM_SCOPES`.
 The token endpoint rejects the **whole** request with `invalid_scope` when one

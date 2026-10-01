@@ -102,8 +102,6 @@ class IdpTenantResolverTest extends TestCase
         // school is now answerable from idp_directory alone.
         $this->assertDirectoryHas(IdpDirectoryEntry::TYPE_USER, 'person-a');
         $this->assertDirectoryHas(IdpDirectoryEntry::TYPE_USER, 'person-b');
-        // Present in the `/users` listing and absent from `/people`.
-        $this->assertDirectoryHas(IdpDirectoryEntry::TYPE_USER, 'user-only-c');
         // Indexed from the group refs nested in the user payload.
         $this->assertDirectoryHas(IdpDirectoryEntry::TYPE_GROUP, 'group-a');
     }
@@ -218,9 +216,6 @@ class IdpTenantResolverTest extends TestCase
                     'access_token' => 'token', 'token_type' => 'bearer', 'expires_in' => 3599,
                 ]),
                 (bool) preg_match('#/schools/[^/]+/people$#', $path) => Http::response($people),
-                (bool) preg_match('#/schools/[^/]+/users$#', $path) => Http::response([
-                    ['id' => 'user-only-c', 'name' => ['last' => 'C'], 'groups' => []],
-                ]),
                 (bool) preg_match('#/schools/[^/]+/groups$#', $path) => Http::response($groups),
                 (bool) preg_match('#/groups/([^/]+)$#', $path, $m) => $this->groupDetail($groups, urldecode($m[1])),
                 default => Http::response(status: 404),

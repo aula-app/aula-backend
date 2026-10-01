@@ -314,21 +314,24 @@ class IdpSchoolImportTest extends TestCase
         });
     }
 
-    public function test_imports_from_users_alone_when_people_is_not_granted(): void
+    public function test_fails_when_people_is_not_granted(): void
     {
-        // `people:read` is a separate scope an app may not hold. Over `/users`
-        // it adds sourceSystemIdentifier alone, which nothing reads, so the
-        // import has to complete without it.
+        // `/users` alone lists only accounts with access, so importing from it
+        // would drop most of the school.
         $this->seedSchool();
         $this->peopleForbidden = true;
 
-        $this->import();
+        try {
+            $this->import();
+            $this->fail('the import should have surfaced the refusal');
+        } catch (\Throwable) {
+            // expected
+        }
 
-        $this->assertSame(SchoolImport::STATUS_COMPLETED, self::$testTenant->fresh()->idp_import_status);
+        $this->assertSame(SchoolImport::STATUS_FAILED, self::$testTenant->fresh()->idp_import_status);
 
         self::$testTenant->run(function () {
-            $this->assertSame(2, DB::table('au_rooms')->whereNotNull('idp_group_id')->count());
-            $this->assertSame(3, LegacyUser::whereNotNull('idp_user_id')->count());
+            $this->assertSame(0, LegacyUser::whereNotNull('idp_user_id')->count());
         });
     }
 

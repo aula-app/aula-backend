@@ -38,7 +38,7 @@ return [
             'scopes' => array_filter(array_map('trim', explode(' ', (string) env(
                 'EDUPLACES_IDM_SCOPES',
                 'urn:eduplaces:idm:v1:schools:read urn:eduplaces:idm:v1:groups:read '
-                .'urn:eduplaces:idm:v1:users:read',
+                .'urn:eduplaces:idm:v1:people:read urn:eduplaces:idm:v1:users:read',
             )))),
 
             'webhook_secret' => env('EDUPLACES_WEBHOOK_SECRET'),
