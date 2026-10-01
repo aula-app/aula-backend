@@ -85,29 +85,6 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * @return list<IdpUser>
-     */
-    private function schoolPeople(string $schoolId): array
-    {
-        $data = $this->get(self::API_PREFIX.'/schools/'.urlencode($schoolId).'/people');
-
-        return $this->mapList($data, fn (array $row): IdpUser => IdpUser::fromArray($row));
-    }
-
-    /**
-     * Accounts that can sign in. Overlaps schoolPeople() without being a subset
-     * of it: a user can exist with no person record.
-     *
-     * @return list<IdpUser>
-     */
-    private function schoolUsers(string $schoolId): array
-    {
-        $data = $this->get(self::API_PREFIX.'/schools/'.urlencode($schoolId).'/users');
-
-        return $this->mapList($data, fn (array $row): IdpUser => IdpUser::fromArray($row));
-    }
-
-    /**
      * @return list<IdpGroupRef>
      */
     private function schoolGroupRefs(string $schoolId): array
@@ -118,65 +95,32 @@ final class EduplacesDirectory implements IdentityDirectory
     }
 
     /**
-     * Every group of the school, read in full.
-     *
-     * schoolGroupRefs() returns id and name only. group() adds members, the one
-     * place Eduplaces exposes real names to an app holding pseudonymous
-     * entitlements, at one call per group.
+     * Every group of the school, without members. users() carries memberships.
      *
      * @return list<IdpGroup>
      */
     public function groups(string $schoolId): array
     {
-        $groups = [];
-
-        foreach ($this->schoolGroupRefs($schoolId) as $ref) {
-            $groups[] = $this->group($ref->id) ?? new IdpGroup($ref->id, $ref->name, $ref->status);
-        }
-
-        return $groups;
+        return array_map(
+            fn (IdpGroupRef $ref): IdpGroup => new IdpGroup($ref->id, $ref->name, $ref->status),
+            $this->schoolGroupRefs($schoolId),
+        );
     }
 
     /**
-     * Everyone at the school, merged by id across the two endpoints Eduplaces
-     * splits this over: `/people` adds sourceSystemIdentifier and needs a scope
-     * the app may not hold, `/users` adds status and a pseudonym. A refusal on
-     * `/people` is logged and stepped over.
+     * Everyone at the school, from `/people`. Deleted people and people the
+     * school does not sync are left out, so a person missing here is no longer
+     * present. `/users` lists only accounts with access and is not read.
+     *
+     * Requires `people:read`; a refusal throws.
      *
      * @return list<IdpUser>
      */
     public function users(string $schoolId): array
     {
-        $merged = [];
+        $data = $this->get(self::API_PREFIX.'/schools/'.urlencode($schoolId).'/people');
 
-        foreach ($this->optionalPeople($schoolId) as $person) {
-            $merged[$person->id] = $person;
-        }
-
-        foreach ($this->schoolUsers($schoolId) as $user) {
-            $merged[$user->id] = isset($merged[$user->id])
-                ? $merged[$user->id]->mergedWith($user)
-                : $user;
-        }
-
-        return array_values($merged);
-    }
-
-    /**
-     * @return list<IdpUser>
-     */
-    private function optionalPeople(string $schoolId): array
-    {
-        try {
-            return $this->schoolPeople($schoolId);
-        } catch (DirectoryException $e) {
-            Log::warning('Eduplaces: people listing unavailable, using users alone', [
-                'school' => $schoolId,
-                'reason' => $e->reason,
-            ]);
-
-            return [];
-        }
+        return $this->mapList($data, fn (array $row): IdpUser => IdpUser::fromArray($row));
     }
 
     /**
