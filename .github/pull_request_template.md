@@ -6,6 +6,7 @@ After the last update it became apparent that we did fetch the new results, but 
 
 ## Checklist
 
+- [ ] Changed code covered by tests
 - [ ] Tested manually <!-- you can strikethrough this option in case you haven't tested manually -->
 - [ ] GitHub issue linked <!-- Use the "Development" field of the Issue, or add a link if it's outside this Repo -->
 - [ ] Changelist updated

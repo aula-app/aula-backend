@@ -573,6 +573,7 @@ function checkPermissions($db, $crypt, $syslog, $model_name, $method, $arguments
         "checks" => ["user_id:user_id"]
       ],
 
+      // TODO remove this once FE uses v2 endpoint
       "getUserGDPRData" => [
         "roles" => [
           "guest",

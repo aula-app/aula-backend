@@ -256,6 +256,7 @@ class User
 
   } // end function
 
+  // TODO remove this once FE uses v2 endpoint
   public function getUserGDPRData($user_id)
   {
     //retrieves all data associated to a certain user according to GDPR and returns it

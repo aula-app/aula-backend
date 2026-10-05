@@ -73,5 +73,9 @@ class AuthzServiceProvider extends ServiceProvider
         // Admins only, via Gate::before: the proposal settles which account
         // each directory identity lands on.
         Gate::define(Gates::ListMergeProposals, fn () => false);
+
+        Gate::define(Gates::ExportUserGdprInfo, function (LegacyUser $user, string $publicId) {
+            return $user->hash_id === $publicId;
+        });
     }
 }
