@@ -58,6 +58,12 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'otlp' => [
+            'driver' => 'monolog',
+            'handler' => \Keepsuit\LaravelOpenTelemetry\Support\OpenTelemetryMonologHandler::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/'.php_sapi_name().'/laravel.log'),
