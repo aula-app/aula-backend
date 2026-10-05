@@ -206,7 +206,7 @@ return [
             'excluded_methods' => ["OPTIONS", "HEAD"],
             'allowed_headers' => [],
             'sensitive_headers' => ["Authorization"],
-            'sensitive_query_parameters' => ["state", "sso_link_token"],
+            'sensitive_query_parameters' => ["state", "sso_link_token", "session_code", "client_data", "code"],
         ],
 
         Instrumentation\HttpClientInstrumentation::class => [
@@ -214,7 +214,7 @@ return [
             'manual' => false, // When set to true, you need to call `withTrace()` on the request to enable tracing
             'allowed_headers' => [],
             'sensitive_headers' => ["Authorization"],
-            'sensitive_query_parameters' => ["state"],
+            'sensitive_query_parameters' => ["state", "code_challenge", "nonce", "login_challenge"],
         ],
 
         Instrumentation\QueryInstrumentation::class => filter_var(env('OTEL_INSTRUMENTATION_QUERY', true), FILTER_VALIDATE_BOOLEAN),
