@@ -6,7 +6,6 @@ namespace App\Services\Idp;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
-use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpGroup;
@@ -18,10 +17,6 @@ use Throwable;
 
 /**
  * Pulls a whole school from an identity provider into a tenant in one pass.
- *
- * Webhooks report changes only, and no provider replays an existing roster, so
- * without this a freshly connected school stays empty until people arrive one
- * login at a time.
  *
  * Runs inside ImportSchoolForTenant, which SsoController::bootstrapIdpTenant()
  * dispatches. Progress is written to the tenants row for ImportStatusController
@@ -47,9 +42,9 @@ final class SchoolImport
     public function __construct(
         private readonly IdpProviders $providers,
         private readonly RoomEnrolment $rooms,
-        private readonly TenantResolver $resolver,
         private readonly RoleMap $roles,
-    ) {}
+    ) {
+    }
 
     /**
      * Import the school in tenants.idp_school_id. Requires initialised tenancy.
@@ -98,7 +93,6 @@ final class SchoolImport
     {
         foreach ($groups as $group) {
             $this->rooms->upsertRoom($group->id, $group->name, $group->isActive());
-            $this->resolver->remember(IdpDirectoryEntry::TYPE_GROUP, $group->id, $tenant->id);
         }
 
         return count($groups);
@@ -124,7 +118,7 @@ final class SchoolImport
         $user = LegacyUser::where('idp_user_id', $person->id)->first();
 
         if ($user === null) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->idp_user_id = $person->id;
             $user->username = $this->uniqueUsername($person);
             $user->hash_id = md5($person->id.(string) microtime(true).random_int(100, 10000000));
@@ -153,8 +147,6 @@ final class SchoolImport
 
         $this->enrolInSchoolRoom($user, $role);
         $this->rooms->syncUserRooms($user->id, $person->groups, $role);
-
-        $this->resolver->remember(IdpDirectoryEntry::TYPE_USER, $person->id, $tenant->id);
 
         return $user;
     }

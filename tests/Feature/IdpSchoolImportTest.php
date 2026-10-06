@@ -6,7 +6,6 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ImportSchoolForTenant;
-use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\SchoolImport;
@@ -61,7 +60,6 @@ class IdpSchoolImportTest extends TestCase
         ]);
 
         Cache::flush();
-        IdpDirectoryEntry::query()->delete();
         $this->cleanTenant();
 
         $this->idmGroups = [];
@@ -74,7 +72,6 @@ class IdpSchoolImportTest extends TestCase
     protected function tearDown(): void
     {
         $this->cleanTenant();
-        IdpDirectoryEntry::query()->delete();
         Tenant::where('id', self::$testTenant->id)->update([
             'idp_school_id' => null,
             'idp_import_status' => null,
@@ -352,18 +349,6 @@ class IdpSchoolImportTest extends TestCase
 
         $this->assertSame(SchoolImport::STATUS_FAILED, $tenant->idp_import_status);
         $this->assertNotNull($tenant->idp_import_error);
-    }
-
-    public function test_indexes_everything_it_imported(): void
-    {
-        $this->seedSchool();
-
-        $this->import();
-
-        // idp_directory is populated, so the first webhook for any of these
-        // ids skips TenantResolver's scan.
-        $this->assertSame(3, IdpDirectoryEntry::where('entity_type', IdpDirectoryEntry::TYPE_USER)->count());
-        $this->assertSame(2, IdpDirectoryEntry::where('entity_type', IdpDirectoryEntry::TYPE_GROUP)->count());
     }
 
     // =========================================================
