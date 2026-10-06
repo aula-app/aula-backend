@@ -44,7 +44,7 @@
 
 ## ?
 
--
+- feat: expand Users::getUserBaseData with SSO info
 
 ## v1.9.6
 
