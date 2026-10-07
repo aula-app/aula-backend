@@ -26,7 +26,7 @@ class CreateTenantUseCase
         ?string $adminPassword = null,
     ): Tenant {
         $jwtKey = Str::random(64);
-        $apiBaseUrl = config('app.url');
+        $apiBaseUrl = config('app.api_url');
         $admin1Secret = Str::random(64);
         $admin2Secret = Str::random(64);
 

@@ -35,7 +35,9 @@ ENTRYPOINT ["/root/entrypoint.sh"]
 # Fetch composer from its docker image, and run it
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 COPY composer.json composer.lock ./
-RUN composer install --no-interaction --no-scripts --optimize-autoloader --no-dev
+# no --no-dev, we need dev to run tests
+# TODO: or mirror frontend container: volumify vendor, install on the fly
+RUN composer install --no-interaction --no-scripts --optimize-autoloader
 
 ARG DOCKER_TAG
 ENV APP_VERSION=$DOCKER_TAG

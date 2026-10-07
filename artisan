@@ -16,3 +16,9 @@ $app = require_once __DIR__.'/bootstrap/app.php';
 $status = $app->handleCommand(new ArgvInput);
 
 exit($status);
+
+# TODO: can't be called like `docker compose exec backend-v2 php artisan`
+#   and also probably php artisan, for that matter
+#   might just need ./artisan-docker ...
+##!/bin/sh
+#cd ../aula-frontend && docker compose exec -it backend-v2 php artisan "$@"
