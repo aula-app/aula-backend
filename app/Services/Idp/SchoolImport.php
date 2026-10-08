@@ -32,11 +32,8 @@ final class SchoolImport
 {
     /** Queued but not yet picked up by a worker. */
     public const string STATUS_PENDING = 'pending';
-
     public const string STATUS_RUNNING = 'running';
-
     public const string STATUS_COMPLETED = 'completed';
-
     public const string STATUS_FAILED = 'failed';
 
     public function __construct(
@@ -130,7 +127,7 @@ final class SchoolImport
 
         $displayName = $person->displayName();
 
-        $user->displayname = $displayName !== '' ? $displayName : (string) $user->username;
+        $user->displayname = !empty($displayName) ? $displayName : (string) $user->username;
         $user->realname = $person->realName() ?? $user->realname;
         $user->status = $person->isActive() ? UserStatus::Active : UserStatus::Archived;
 
@@ -160,6 +157,7 @@ final class SchoolImport
         $room = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
 
         if ($room === null) {
+            Log::warning("Tenant is missing the standard room.", ['tenant' => tenant('instance_code')]);
             return;
         }
 

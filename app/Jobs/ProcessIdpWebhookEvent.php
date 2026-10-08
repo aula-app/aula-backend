@@ -12,7 +12,6 @@ use App\Services\Idp\Sync\GroupSync;
 use App\Services\Idp\Sync\SchoolSync;
 use App\Services\Idp\Sync\SyncOutcome;
 use App\Services\Idp\Sync\UserSync;
-use App\Services\Idp\TenantResolver;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
