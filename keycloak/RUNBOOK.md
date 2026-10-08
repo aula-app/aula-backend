@@ -323,6 +323,56 @@ signs straight back in, the Eduplaces session was not ended, so check 3A.1.
 
 ---
 
+## 3B. The aula login theme
+
+People normally never see a Keycloak page: the redirector sends them straight to the IdP.
+They do see Keycloak's **error**, **logout confirmation** and **info** pages, and stock those
+are PatternFly blue with "We are sorry...". `keycloak/idp-error-authenticator/themes/aula/`
+restyles them in aula's look and rewords them in aula's voice (du-form).
+
+The theme is CSS and message bundles over the stock `keycloak.v2` theme. No template is
+overridden, so a Keycloak upgrade needs a visual check of the three pages, nothing more.
+It is baked into the image by the Dockerfile and lives at `/opt/keycloak/themes/aula`.
+
+### 3B.1 Enable it
+
+Admin console → realm **aula** → **Realm settings** → **Themes** → **Login theme** → `aula`.
+Takes effect on the next page render, no restart.
+
+### 3B.2 Give the error page a way out
+
+The "Zurück zu aula" button on error and info pages is only rendered when the client that
+started the login has a **Base URL**. Admin console → **Clients** → `aula-backend` →
+**Settings** → **Base URL**: the frontend origin, e.g. `https://sso.aula.de`.
+
+### 3B.3 Preview or edit locally
+
+Runs the stock image with the theme directory mounted and caching off, so edits show on
+reload:
+
+```bash
+docker run --rm -p 8089:8080 \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
+  -v "$PWD/keycloak/idp-error-authenticator/themes/aula:/opt/keycloak/themes/aula:ro" \
+  quay.io/keycloak/keycloak:26.6.1 start-dev --http-relative-path=/auth \
+  --spi-theme-static-max-age=-1 --spi-theme-cache-themes=false --spi-theme-cache-templates=false
+```
+
+Create a realm with `loginTheme=aula` and a client, then an error page is one bad request
+away:
+
+```
+http://localhost:8089/auth/realms/<realm>/protocol/openid-connect/auth?client_id=<client>&response_type=code&redirect_uri=https://wrong.example
+```
+
+### 3B.4 Wording
+
+`themes/aula/login/messages/messages_de.properties` and `messages_en.properties` hold only
+the keys aula rewords; everything else falls back to Keycloak's bundles. The key behind
+"You are already authenticated as different user" is `differentUserAuthenticated`.
+
+---
+
 ## 4. Rollback
 
 ```bash
