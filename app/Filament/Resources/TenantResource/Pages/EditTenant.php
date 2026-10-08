@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\Resources\TenantResource\Pages;
 
 use App\Filament\Resources\TenantResource;
+use App\Models\Tenant;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
 /**
@@ -18,6 +20,17 @@ class EditTenant extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('releaseIdpSchool')
+                ->label('Release from IdP school')
+                ->icon('heroicon-o-link-slash')
+                ->color('warning')
+                ->visible(fn (Tenant $record): bool => $record->idp_school_id !== null)
+                ->requiresConfirmation()
+                ->modalDescription(fn (Tenant $record): string => "Unlinks school {$record->idp_school_id} from this tenant so it can be connected to another tenant. Imported users and rooms are kept.")
+                ->action(function (Tenant $record): void {
+                    $record->update(['idp_school_id' => null]);
+                    Notification::make()->title('Tenant released from IdP school')->success()->send();
+                }),
             Actions\DeleteAction::make(),
         ];
     }

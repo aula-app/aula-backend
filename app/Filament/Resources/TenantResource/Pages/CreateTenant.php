@@ -10,6 +10,7 @@ use App\UseCases\CreateTenantUseCase;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 
 /**
  * @extends CreateRecord<\App\Models\Tenant>
@@ -35,7 +36,7 @@ class CreateTenant extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        return app(CreateTenantUseCase::class)->execute(
+        $tenant = app(CreateTenantUseCase::class)->execute(
             name: $data['name'],
             instanceCode: $data['instance_code'],
             admin1Username: $data['admin1_username'],
@@ -45,6 +46,16 @@ class CreateTenant extends CreateRecord
             admin2FullName: $data['admin2_name'] ?? $data['admin2_username'],
             admin2Email: $data['admin2_email'],
         );
+
+        // The use case takes the identity fields only; the rest of the form
+        // (SSO, contact, school type) is saved here.
+        $tenant->update(Arr::except($data, [
+            'name', 'instance_code', 'admin1_username_manual', 'admin2_username_manual',
+            'admin1_name', 'admin1_username', 'admin1_email',
+            'admin2_name', 'admin2_username', 'admin2_email',
+        ]));
+
+        return $tenant;
     }
 
     protected function getRedirectUrl(): string
