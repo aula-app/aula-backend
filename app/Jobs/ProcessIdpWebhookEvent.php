@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\IdpWebhookEvent;
+use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\Sync\GroupSync;
@@ -14,6 +15,7 @@ use App\Services\Idp\Sync\UserSync;
 use App\Services\Idp\TenantResolver;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -49,7 +51,8 @@ class ProcessIdpWebhookEvent implements ShouldQueue
 
     public function __construct(
         public readonly int $eventId,
-    ) {}
+    ) {
+    }
 
     public function handle(
         IdpProviders $providers,
@@ -58,13 +61,26 @@ class ProcessIdpWebhookEvent implements ShouldQueue
         GroupSync $groupSync,
         SchoolSync $schoolSync,
     ): void {
+        Log::warning(
+            "Processing the record with eventId: '{$this->eventId}' not found.",
+            ['event_id' => $this->eventId]
+        );
         $record = IdpWebhookEvent::find($this->eventId);
-
         if ($record === null) {
+            Log::warning(
+                "Cannot process webhook event, the record with eventId: '{$this->eventId}' not found.",
+                ['event_id' => $this->eventId]
+            );
             return;
         }
 
+        $provider = (string) $record->provider;
+
         if ($record->status === IdpWebhookEvent::STATUS_PROCESSED) {
+            Log::info(
+                "Webhook event already processed.",
+                ['event_id' => $this->eventId, 'provider' => $provider, 'tenant_id' => $record->tenant_id]
+            );
             // Already applied: a duplicate dispatch, not a duplicate delivery.
             return;
         }
@@ -79,14 +95,26 @@ class ProcessIdpWebhookEvent implements ShouldQueue
             payload: (array) $record->payload,
         );
 
-        $provider = (string) $record->provider;
-        $tenant = $resolver->resolve($provider, $event->entityType, $event->entityId);
-
-        if ($tenant === null) {
-            // A provider notifies about every school it knows, including the
-            // schools that do not use aula.
+        $schoolId = $event->getSchoolId();
+        if ($schoolId === null) {
+            Log::error(
+                "Cannot resolve tenant from '{provider}', received no schoolId info.",
+                ['event_id' => $this->eventId, 'school_id' => null, 'provider' => $provider]
+            );
             $record->markSkipped('tenant_unresolved');
+            return;
+        }
 
+        try {
+            $tenant = Tenant::where('sso_provider', $provider)
+                ->where('idp_school_id', $schoolId)
+                ->sole();
+        } catch (ModelNotFoundException $e) {
+            Log::warning(
+                "Cannot resolve tenant from '{provider}' based on received schoolId: '{school_id}'.",
+                ['event_id' => $this->eventId, 'school_id' => $schoolId, 'provider' => $provider]
+            );
+            $record->markSkipped('tenant_unresolved');
             return;
         }
 
