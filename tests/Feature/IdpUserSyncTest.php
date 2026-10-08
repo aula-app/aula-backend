@@ -6,7 +6,6 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
-use App\Models\IdpDirectoryEntry;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
@@ -15,6 +14,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -28,11 +28,8 @@ class IdpUserSyncTest extends TestCase
     use CreatesTestTenant;
 
     private const string API_URL = 'https://api.eduplaces.test';
-
     private const string AUTH_URL = 'https://auth.eduplaces.test';
-
     private const string SCHOOL = 'school-person-sync';
-
     private const string PERSON = 'person-sync-1';
 
     /** @var array<string, array<string, mixed>> the users the IDM stand-in holds */
@@ -61,7 +58,6 @@ class IdpUserSyncTest extends TestCase
 
         Cache::flush();
         IdpWebhookEvent::query()->delete();
-        IdpDirectoryEntry::query()->delete();
         $this->clearSyncedUsers();
 
         $this->idmPeople = [];
@@ -73,7 +69,6 @@ class IdpUserSyncTest extends TestCase
     {
         $this->clearSyncedUsers();
         IdpWebhookEvent::query()->delete();
-        IdpDirectoryEntry::query()->delete();
         self::$testTenant->update(['idp_school_id' => null]);
         parent::tearDown();
     }
@@ -352,9 +347,8 @@ class IdpUserSyncTest extends TestCase
 
     public function test_skips_an_event_for_a_school_we_do_not_host(): void
     {
-        // No school in the directory holds this id, so TenantResolver's scan
-        // finds no tenant to open.
-        $event = $this->event('update', 'person-from-another-school');
+        // Somehow we receive the same personId, but coming from another school that we don't integrate with
+        $event = $this->event('update', $this::PERSON, schoolId: 'another-school');
         $this->process($event);
 
         $this->assertSame(IdpWebhookEvent::STATUS_SKIPPED, $event->fresh()->status);
@@ -397,7 +391,7 @@ class IdpUserSyncTest extends TestCase
         $this->app->call([new ProcessIdpWebhookEvent($event->id), 'handle']);
     }
 
-    private function event(string $action, string $personId = self::PERSON, array $properties = []): IdpWebhookEvent
+    private function event(string $action, string $personId = self::PERSON, array $properties = [], string $schoolId = self::SCHOOL): IdpWebhookEvent
     {
         return IdpWebhookEvent::create([
             'provider' => 'eduplaces',
@@ -405,7 +399,7 @@ class IdpUserSyncTest extends TestCase
             'action' => $action,
             'entity_id' => $personId,
             'updated_properties' => $properties,
-            'payload' => ['event' => 'person', 'action' => $action, 'personId' => $personId],
+            'payload' => ['event' => 'person', 'action' => $action, 'personId' => $personId, 'schoolId' => $schoolId],
             'status' => IdpWebhookEvent::STATUS_PENDING,
             'received_at' => now(),
         ]);
