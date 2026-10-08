@@ -28,12 +28,8 @@ Route::get('/api/v2/auth/sso/idp-initiated', [SsoController::class, 'idpInitiate
     ->middleware(['api'])
     ->name('sso.idp_initiated');
 
-// Identity-provider directory webhooks. The provider segment selects the
+// Identity-provider directory webhooks. The {provider} segment selects the
 // adapter that verifies the signature and normalises the payload.
-//
-// Universal route: user and group events need not carry a school identifier, so
-// the tenant is unknown at routing time and TenantResolver resolves it on the
-// queue instead.
 Route::post('/api/v2/webhooks/idp/{provider}', [WebhookController::class, 'handle'])
     ->middleware(['api', VerifyIdpWebhookSignature::class])
     ->name('webhooks.idp');

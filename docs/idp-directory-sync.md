@@ -3,10 +3,10 @@
 How a school gets into aula from an identity provider's directory, and how it
 stays in step afterwards.
 
-Nothing below is specific to one vendor. A provider is a block in
-`config/idp.php` plus two classes, an `IdentityDirectory` and a
-`WebhookAdapter`. No migrations, no routes, and no change to `SchoolImport`,
-`TenantResolver` or the syncs. Eduplaces is currently the only implementation
+Nothing in this flow is specific to one vendor. Each IdP is represented by a block in
+`config/idp.php` plus two implemented interfaces: `IdentityDirectory` and
+`WebhookAdapter`. No migrations, no routes (except webhooks), and no foreseeable 
+change to `SchoolImport` or the syncs. Eduplaces is currently the only implementation
 and is used for the examples.
 
 A tenant picks its provider with `tenants.sso_provider`, the same alias Keycloak
@@ -168,12 +168,8 @@ a tenant destroys a school's whole database.
 ### Resolving the tenant
 
 School events map straight onto `tenants.idp_school_id`. Person and group
-payloads carry no school identifier, so `TenantResolver` looks the id up in the
-central `idp_directory` table and, on a miss, scans that provider's tenants
-while indexing every id it sees. The import populates the index up front, so in
-practice the scan runs only for entities created after onboarding. An
-unresolvable id is cached for an hour, so a school this installation does not
-host cannot start a scan per event.
+payloads also carry school identifier, so the Tenant is resolved by looking up
+the centralDB table `tenants` by schoolId received from the IdP.
 
 ## What is never touched
 

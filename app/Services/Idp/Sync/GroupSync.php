@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Idp\Sync;
 
-use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
@@ -12,7 +11,6 @@ use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\RoleMap;
 use App\Services\Idp\RoomEnrolment;
-use App\Services\Idp\TenantResolver;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -32,9 +30,9 @@ final class GroupSync
     public function __construct(
         private readonly IdpProviders $providers,
         private readonly RoomEnrolment $rooms,
-        private readonly TenantResolver $resolver,
         private readonly RoleMap $roles,
-    ) {}
+    ) {
+    }
 
     public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
     {
@@ -55,9 +53,6 @@ final class GroupSync
         $room = $this->rooms->upsertRoom($group->id, $group->name, $active);
 
         $this->syncMembers($room, $group->members, $provider);
-
-        $this->resolver->remember(IdpDirectoryEntry::TYPE_GROUP, $group->id, $tenant->id);
-        $this->resolver->rememberMany(IdpDirectoryEntry::TYPE_USER, $group->memberIds(), $tenant->id);
 
         return SyncOutcome::processed();
     }

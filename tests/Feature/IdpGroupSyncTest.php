@@ -6,7 +6,6 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
-use App\Models\IdpDirectoryEntry;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
@@ -28,11 +27,8 @@ class IdpGroupSyncTest extends TestCase
     use CreatesTestTenant;
 
     private const string API_URL = 'https://api.eduplaces.test';
-
     private const string AUTH_URL = 'https://auth.eduplaces.test';
-
     private const string SCHOOL = 'school-room-sync';
-
     private const string GROUP = 'group-room-sync';
 
     /** @var array<string, array<string, mixed>> */
@@ -58,7 +54,6 @@ class IdpGroupSyncTest extends TestCase
 
         Cache::flush();
         IdpWebhookEvent::query()->delete();
-        IdpDirectoryEntry::query()->delete();
         $this->cleanTenant();
 
         $this->idmGroups = [];
@@ -69,7 +64,6 @@ class IdpGroupSyncTest extends TestCase
     {
         $this->cleanTenant();
         IdpWebhookEvent::query()->delete();
-        IdpDirectoryEntry::query()->delete();
         self::$testTenant->update(['idp_school_id' => null]);
         parent::tearDown();
     }
@@ -227,7 +221,7 @@ class IdpGroupSyncTest extends TestCase
             'action' => $action,
             'entity_id' => self::GROUP,
             'updated_properties' => $properties,
-            'payload' => ['event' => 'group', 'action' => $action, 'groupId' => self::GROUP],
+            'payload' => ['event' => 'group', 'action' => $action, 'groupId' => self::GROUP, 'schoolId' => self::SCHOOL],
             'status' => IdpWebhookEvent::STATUS_PENDING,
             'received_at' => now(),
         ]);

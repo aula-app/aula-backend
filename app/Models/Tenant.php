@@ -15,15 +15,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     use HasDatabase;
 
     public const string IDP_MIGRATION_FLAGGED = 'flagged';
-
     public const string IDP_MIGRATION_CONNECTED = 'connected';
-
     public const string IDP_MIGRATION_REVIEWING = 'reviewing';
-
     public const string IDP_MIGRATION_IMPORTING = 'importing';
-
     public const string IDP_MIGRATION_LINKING = 'linking';
-
     public const string IDP_MIGRATION_COMPLETED = 'completed';
 
     public static function getCustomColumns(): array
