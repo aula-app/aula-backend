@@ -192,8 +192,6 @@ final class TenantResolver
 
         $directory = $this->providers->directory($provider);
 
-        // users() merges both provider listings, which overlap without nesting:
-        // a person may never sign in, a user may have no person record.
         $people = $directory->users($schoolId);
 
         $personIds = [];

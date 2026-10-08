@@ -7,6 +7,7 @@ namespace App\Services\Idp\Migration;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpGroup;
+use App\Services\Idp\Dto\IdpGroupRef;
 use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use Illuminate\Support\Facades\DB;
@@ -67,7 +68,7 @@ final class MergeProposalBuilder
         $directory = $this->providers->directory($provider);
 
         $groups = $directory->groups($schoolId);
-        $users = $this->mergeGroupMembers($directory->users($schoolId), $groups);
+        $users = $directory->users($schoolId);
 
         DB::table('idp_merge_candidates')->truncate();
 
@@ -83,38 +84,6 @@ final class MergeProposalBuilder
         ]);
 
         return $counts;
-    }
-
-    /**
-     * Fold IdpGroup member lists into the user list.
-     *
-     * A directory can expose real names on group members while the user listing
-     * carries a pseudonym, and can list a group member the user listing omits,
-     * so a proposal built from either list alone is short of names and rows.
-     *
-     * @param  list<IdpUser>  $users
-     * @param  list<IdpGroup>  $groups
-     * @return list<IdpUser>
-     */
-    private function mergeGroupMembers(array $users, array $groups): array
-    {
-        $merged = [];
-
-        foreach ($groups as $group) {
-            foreach ($group->members as $member) {
-                $merged[$member->id] = isset($merged[$member->id])
-                    ? $merged[$member->id]->mergedWith($member)
-                    : $member;
-            }
-        }
-
-        foreach ($users as $user) {
-            $merged[$user->id] = isset($merged[$user->id])
-                ? $merged[$user->id]->mergedWith($user)
-                : $user;
-        }
-
-        return array_values($merged);
     }
 
     /**
@@ -172,6 +141,10 @@ final class MergeProposalBuilder
                 // idp_name_kind records why.
                 'keys' => $real === null ? [] : NameKey::keys([$real, $user->name->display()]),
                 'name_kind' => $real === null ? self::NAME_PSEUDONYM : self::NAME_REAL,
+                'groups' => array_map(
+                    fn (IdpGroupRef $group): array => ['id' => $group->id, 'name' => $group->name],
+                    $user->groups,
+                ),
             ];
         }
 
@@ -186,7 +159,7 @@ final class MergeProposalBuilder
      * so is one aula row being the only match for two directory entries, since
      * applying both would merge two people into one account.
      *
-     * @param  list<array{id: string, name: string, keys: list<string>, name_kind: string}>  $provider
+     * @param  list<array{id: string, name: string, keys: list<string>, name_kind: string, groups?: list<array{id: string, name: string}>}>  $provider
      * @param  list<array{id: int, name: string, keys: list<string>}>  $local
      * @return array<string, int>
      */
@@ -247,6 +220,7 @@ final class MergeProposalBuilder
                 'idp_id' => $row['id'],
                 'idp_name' => $row['name'],
                 'idp_name_kind' => $row['name_kind'],
+                'idp_groups' => isset($row['groups']) ? json_encode($row['groups']) : null,
                 'local_id' => $outcome === self::OUTCOME_NONE ? null : ($local[$localIndex]['id'] ?? null),
                 'local_name' => $outcome === self::OUTCOME_NONE ? null : ($local[$localIndex]['name'] ?? null),
                 'outcome' => $outcome,
@@ -270,6 +244,7 @@ final class MergeProposalBuilder
                 'idp_id' => null,
                 'idp_name' => null,
                 'idp_name_kind' => null,
+                'idp_groups' => null,
                 'local_id' => $row['id'],
                 'local_name' => $row['name'],
                 'outcome' => self::OUTCOME_NONE,
