@@ -10,7 +10,6 @@ use App\UseCases\CreateTenantUseCase;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 
 /**
  * @extends CreateRecord<\App\Models\Tenant>
@@ -36,7 +35,7 @@ class CreateTenant extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        $tenant = app(CreateTenantUseCase::class)->execute(
+        return app(CreateTenantUseCase::class)->execute(
             name: $data['name'],
             instanceCode: $data['instance_code'],
             admin1Username: $data['admin1_username'],
@@ -45,17 +44,35 @@ class CreateTenant extends CreateRecord
             admin2Username: $data['admin2_username'],
             admin2FullName: $data['admin2_name'] ?? $data['admin2_username'],
             admin2Email: $data['admin2_email'],
+            apiBaseUrl: $this->optionalString($data, 'api_base_url'),
+            isNamePublic: $this->optionalBool($data, 'is_name_public'),
+            contactInfo: $this->optionalString($data, 'contact_info'),
+            schoolTypeId: isset($data['school_type_id']) ? (int) $data['school_type_id'] : null,
+            ssoEnabled: $this->optionalBool($data, 'sso_enabled'),
+            ssoProvider: $this->optionalString($data, 'sso_provider'),
+            ssoForceLogout: $this->optionalBool($data, 'sso_force_logout'),
+            ssoRequired: $this->optionalBool($data, 'sso_required'),
+            ssoRequireEmailVerified: $this->optionalBool($data, 'sso_require_email_verified'),
+            idpMigrationStatus: $this->optionalString($data, 'idp_migration_status'),
         );
+    }
 
-        // The use case takes the identity fields only; the rest of the form
-        // (SSO, contact, school type) is saved here.
-        $tenant->update(Arr::except($data, [
-            'name', 'instance_code', 'admin1_username_manual', 'admin2_username_manual',
-            'admin1_name', 'admin1_username', 'admin1_email',
-            'admin2_name', 'admin2_username', 'admin2_email',
-        ]));
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function optionalString(array $data, string $key): ?string
+    {
+        $value = $data[$key] ?? null;
 
-        return $tenant;
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function optionalBool(array $data, string $key): ?bool
+    {
+        return isset($data[$key]) ? (bool) $data[$key] : null;
     }
 
     protected function getRedirectUrl(): string
