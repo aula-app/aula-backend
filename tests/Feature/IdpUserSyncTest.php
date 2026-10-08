@@ -46,6 +46,15 @@ class IdpUserSyncTest extends TestCase
         // Eloquent would skip writes it wrongly believes are no-ops.
         self::$testTenant->refresh();
         self::$testTenant->update(['idp_school_id' => self::SCHOOL, 'sso_provider' => 'eduplaces']);
+        self::$testTenant->run(function () {
+            DB::table('au_rooms')->insert([
+                    'room_name' => 'Schule',
+                    'description_internal' => null,
+                    'hash_id' => Str::random(30),
+                    'status' => 1,
+                    'type' => 1,
+                ]);
+        });
 
         config([
             'idp.providers.eduplaces.auth_url' => self::AUTH_URL,
