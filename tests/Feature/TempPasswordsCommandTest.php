@@ -13,7 +13,7 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * Covers `tenant:temp-passwords`, which hands every active non-admin of a
+ * Covers `tenant:temp-passwords`, which hands every active regular user of a
  * tenant a fresh temporary password and writes one CSV per room so the
  * credentials can be handed out class by class.
  */
@@ -48,7 +48,7 @@ class TempPasswordsCommandTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_it_gives_active_non_admins_a_temporary_password(): void
+    public function test_it_gives_active_regular_users_a_temporary_password(): void
     {
         $this->run_command();
 
@@ -68,23 +68,22 @@ class TempPasswordsCommandTest extends TestCase
         });
     }
 
-    public function test_it_leaves_admins_and_inactive_users_alone(): void
+    public function test_it_leaves_moderators_admins_and_inactive_users_alone(): void
     {
-        $before = self::$testTenant->run(fn () => [
-            LegacyUser::find($this->users['admin'])->pw,
-            LegacyUser::find($this->users['inactive'])->pw,
-        ]);
+        $untouched = ['teacher', 'admin', 'inactive'];
+        $before = self::$testTenant->run(fn () => LegacyUser::whereIn('id', array_map(fn ($k) => $this->users[$k], $untouched))
+            ->pluck('pw', 'id')
+            ->all());
 
         $this->run_command();
 
-        self::$testTenant->run(function () use ($before) {
-            $admin = LegacyUser::find($this->users['admin']);
-            $inactive = LegacyUser::find($this->users['inactive']);
+        self::$testTenant->run(function () use ($before, $untouched) {
+            foreach ($untouched as $key) {
+                $user = LegacyUser::find($this->users[$key]);
 
-            $this->assertSame($before[0], $admin->pw);
-            $this->assertEmpty($admin->temp_pw);
-            $this->assertSame($before[1], $inactive->pw);
-            $this->assertEmpty($inactive->temp_pw);
+                $this->assertSame($before[$user->id], $user->pw, "{$key} password changed");
+                $this->assertEmpty($user->temp_pw, "{$key} got a temp password");
+            }
         });
     }
 
@@ -124,6 +123,16 @@ class TempPasswordsCommandTest extends TestCase
         // A user in two classes lists both, whichever room's CSV it is.
         $student2 = $byUsername[self::PREFIX.'student2'];
         $this->assertSame('Klasse 5a, Klasse 6b', $student2[3]);
+    }
+
+    public function test_a_moderator_does_not_appear_in_the_room_csv(): void
+    {
+        $this->run_command();
+
+        $usernames = array_column(array_slice($this->readCsv($this->rooms['Klasse 6b']), 1), 1);
+
+        // The teacher (moderator) is in 6b alongside student2.
+        $this->assertSame([self::PREFIX.'student2'], $usernames);
     }
 
     public function test_the_main_room_csv_still_names_the_class(): void

@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 use stdClass;
 
 /**
- * Hands every active non-admin of a tenant a fresh temporary password and
+ * Hands every active regular user (level User) of a tenant a fresh temporary password and
  * writes one CSV per room, so a teacher can hand the credentials out class by
  * class.
  *
@@ -38,7 +38,7 @@ class SetTemporaryPasswords extends Command
                             {--output= : Directory for the CSV files (default: storage/app/temp-passwords/<code>/<timestamp>)}
                             {--force : Skip the confirmation prompt}';
 
-    protected $description = 'Set a random temporary password for every active non-admin user and write one CSV per room';
+    protected $description = 'Set a random temporary password for every active regular user (no moderators or admins) and write one CSV per room';
 
     public function handle(): int
     {
@@ -58,7 +58,7 @@ class SetTemporaryPasswords extends Command
 
         $this->line("Tenant: <info>{$tenant->name}</info> ({$code})");
         $this->table(['', 'count'], [
-            ['active non-admin users (passwords will be reset)', $users->count()],
+            ['active regular users (passwords will be reset)', $users->count()],
             ['active rooms', $rooms->count()],
         ]);
         $this->line("CSV files go to: {$outputDir}");
@@ -94,7 +94,7 @@ class SetTemporaryPasswords extends Command
     {
         return DB::table('au_users_basedata')
             ->where('status', UserStatus::Active->value)
-            ->where('userlevel', '<', UserLevel::Admin->value)
+            ->where('userlevel', UserLevel::User->value)
             ->orderBy('realname')
             ->orderBy('id')
             ->get(['id', 'realname', 'displayname', 'username']);
