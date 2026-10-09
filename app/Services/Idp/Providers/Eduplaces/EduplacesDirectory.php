@@ -15,7 +15,6 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Read-only client for the Eduplaces IDM API.
@@ -56,16 +55,12 @@ final class EduplacesDirectory implements IdentityDirectory
         private readonly IdpProviders $providers,
     ) {}
 
-    private function person(string $personId): ?IdpUser
-    {
-        $data = $this->get(self::API_PREFIX.'/people/'.urlencode($personId));
-
-        return is_array($data) ? IdpUser::fromArray($data) : null;
-    }
-
+    /**
+     * One person, from `/people/{id}`, the single-entity view of users().
+     */
     public function user(string $userId): ?IdpUser
     {
-        $data = $this->get(self::API_PREFIX.'/users/'.urlencode($userId));
+        $data = $this->get(self::API_PREFIX.'/people/'.urlencode($userId));
 
         return is_array($data) ? IdpUser::fromArray($data) : null;
     }
@@ -121,30 +116,6 @@ final class EduplacesDirectory implements IdentityDirectory
         $data = $this->get(self::API_PREFIX.'/schools/'.urlencode($schoolId).'/people');
 
         return $this->mapList($data, fn (array $row): IdpUser => IdpUser::fromArray($row));
-    }
-
-    /**
-     * One user, merging the same two views as users().
-     */
-    public function personOrUser(string $userId): ?IdpUser
-    {
-        try {
-            $person = $this->person($userId);
-        } catch (DirectoryException $e) {
-            Log::warning('Eduplaces: person lookup unavailable, using the user record alone', [
-                'user' => $userId,
-                'reason' => $e->reason,
-            ]);
-            $person = null;
-        }
-
-        $user = $this->user($userId);
-
-        if ($person === null) {
-            return $user;
-        }
-
-        return $user === null ? $person : $person->mergedWith($user);
     }
 
     private function setting(string $key, mixed $default = null): mixed

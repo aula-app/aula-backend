@@ -5,13 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Idp\Dto;
 
 /**
- * A person in an identity provider directory.
- *
- * A provider can distinguish people, configured to exist and possibly never
- * signing in, from users, which can sign in. The endpoints overlap:
- * `/people/:id` adds `sourceSystemIdentifier`, `/users/:id` adds `status`.
- * Webhooks fire one `person` event for both, so this DTO covers both payloads
- * and leaves the absent field null.
+ * A person in an identity provider directory, whether or not they can sign in.
  */
 final readonly class IdpUser
 {
@@ -58,42 +52,14 @@ final readonly class IdpUser
     }
 
     /**
-     * Combine two views of one directory user, keeping whichever carries each
-     * field. Group refs are unioned.
-     */
-    public function mergedWith(self $other): self
-    {
-        $groups = $this->groups;
-        $seen = array_map(fn (IdpGroupRef $g): string => $g->id, $groups);
-
-        foreach ($other->groups as $group) {
-            if (! in_array($group->id, $seen, true)) {
-                $groups[] = $group;
-                $seen[] = $group->id;
-            }
-        }
-
-        return new self(
-            id: $this->id,
-            name: $this->name->real() !== '' ? $this->name : $other->name,
-            role: $this->role ?? $other->role,
-            status: $this->status ?? $other->status,
-            sourceSystemIdentifier: $this->sourceSystemIdentifier ?? $other->sourceSystemIdentifier,
-            groups: $groups,
-            pseudonym: $this->pseudonym ?? $other->pseudonym,
-        );
-    }
-
-    /**
-     * The name to write to `displayname`.
-     *
-     * The real name, or the pseudonym when the directory returns none.
+     * The name to write to `displayname`: the first name in use and the last
+     * name, or the pseudonym when the directory returns no name.
      */
     public function displayName(): string
     {
-        $real = $this->name->display();
+        $name = $this->name->display();
 
-        return $real !== '' ? $real : (string) $this->pseudonym;
+        return $name !== '' ? $name : (string) $this->pseudonym;
     }
 
     /**

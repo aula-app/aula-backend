@@ -427,11 +427,11 @@ class IdpUserSyncTest extends TestCase
                 str_ends_with($path, '/oauth2/token') => Http::response([
                     'access_token' => 'token', 'token_type' => 'bearer', 'expires_in' => 3599,
                 ]),
-                (bool) preg_match('#/schools/[^/]+/(people|users)$#', $path) => Http::response(
+                (bool) preg_match('#/schools/[^/]+/people$#', $path) => Http::response(
                     array_values($this->idmPeople),
                 ),
                 (bool) preg_match('#/schools/[^/]+/groups$#', $path) => Http::response([]),
-                (bool) preg_match('#/(people|users)/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[2])),
+                (bool) preg_match('#/people/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[1])),
                 default => Http::response(status: 404),
             };
         });

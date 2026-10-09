@@ -141,7 +141,7 @@ class IdpSchoolImportTest extends TestCase
 
     public function test_falls_back_to_the_pseudonym_when_no_real_name_is_exposed(): void
     {
-        // What `/users` returns to an app with pseudonymous entitlements: a
+        // What `/people` returns to an app with pseudonymous entitlements: a
         // pseudonym and no name.
         $this->idmGroups = [];
         $this->idmPeople = [[
@@ -316,8 +316,8 @@ class IdpSchoolImportTest extends TestCase
 
     public function test_fails_when_people_is_not_granted(): void
     {
-        // `/users` alone lists only accounts with access, so importing from it
-        // would drop most of the school.
+        // There is no other roster to fall back to, so the refusal must
+        // surface instead of importing an empty school.
         $this->seedSchool();
         $this->peopleForbidden = true;
 
@@ -435,8 +435,7 @@ class IdpSchoolImportTest extends TestCase
                 (bool) preg_match('#/schools/[^/]+/people$#', $path) => $this->peopleForbidden
                     ? Http::response(status: 403)
                     : Http::response($this->idmPeople),
-                (bool) preg_match('#/schools/[^/]+/users$#', $path) => Http::response($this->idmPeople),
-                (bool) preg_match('#/(people|users)/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[2])),
+                (bool) preg_match('#/people/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[1])),
                 default => Http::response(status: 404),
             };
         });

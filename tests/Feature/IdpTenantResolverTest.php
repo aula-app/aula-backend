@@ -177,7 +177,6 @@ class IdpTenantResolverTest extends TestCase
                 'access_token' => 'token', 'token_type' => 'bearer', 'expires_in' => 3599,
             ]),
             self::API_URL.'/idm/ep/v1/schools/*/people' => Http::response(status: 503),
-            self::API_URL.'/idm/ep/v1/schools/*/users' => Http::response(status: 503),
         ]);
 
         // No DirectoryException escapes: an unreachable school is logged and

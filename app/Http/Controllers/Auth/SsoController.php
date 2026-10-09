@@ -1351,9 +1351,7 @@ class SsoController extends Controller
         $directory = $this->idpProviders->directory($provider);
 
         try {
-            $person = method_exists($directory, 'personOrUser')
-                ? $directory->personOrUser($personId)
-                : $directory->user($personId);
+            $person = $directory->user($personId);
         } catch (DirectoryException $e) {
             Log::warning('SSO: cannot provision a newcomer, the directory is unreachable', [
                 'tenant' => $tenant->instance_code,
