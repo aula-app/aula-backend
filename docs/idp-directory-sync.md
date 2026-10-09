@@ -91,25 +91,24 @@ end up privileged in one and not the other.
 
 ## Names
 
-No single endpoint returns everything, and what you get depends on the app's
-entitlements:
+What an endpoint returns depends on the app's entitlements:
 
 | Endpoint                          | Carries                                  |
 |-----------------------------------|------------------------------------------|
-| `/schools/{id}/users`, `/users/{id}` | `pseudonym` ("Denk Kapitän"), `status`, `groups` |
-| `/groups/{id}` members            | real `name` (`firstFull`/`firstCall`/`last`), `role` |
-| `/people/{id}`                    | `sourceSystemIdentifier` (optional scope) |
+| `/schools/{id}/people`, `/people/{id}` | `name` (`firstFull`/`firstCall`/`last`), `status`, `role`, `groups`; deleted and unsynced people are left out |
+| `/groups/{id}`                    | `members`, read only when a group webhook arrives |
 
-So the import reads **each group in full**, not the school's group list alone:
-that per-group call is the only place real names appear. The views are merged
-by id, keeping whichever endpoint carried each field.
+Every read goes through `/people`: the import, the merge proposal and the
+tenant scan read `/schools/{id}/groups` for the group list and
+`/schools/{id}/people` for everyone in the school, and a webhook or a first
+login reads one person back from `/people/{id}`. A person missing from
+`/people` is no longer present. `/users` is never read: it lists only accounts
+with access, and the one field it adds is a `pseudonym` ("Denk Kapitän").
 
-`displayname` prefers the real name and falls back to the pseudonym, so no
-account is left showing a generated username. `realname` is set from a real name
-only: a pseudonym is not a legal name and does not belong there.
-
-Reading group detail also catches directory users that appear in a group's
-member list and are absent from `/users`, which reading `/users` alone loses.
+`displayname` is the name in use (`firstCall` and `last`). A person the
+directory returns no name for shows the generated username until one arrives.
+`realname` is set from a real name only: a pseudonym is not a legal name and
+does not belong there.
 
 ## Identity
 
@@ -205,10 +204,8 @@ EDUPLACES_WEBHOOK_SECRET=
 
 Sandbox: `https://auth.sandbox.eduplaces.dev`, `https://api.sandbox.eduplaces.dev`.
 
-Scopes: `urn:eduplaces:idm:v1:{schools,groups,users}:read` are required.
-`people:read` is **optional**: over `/users` it adds `sourceSystemIdentifier`
-alone, which nothing here reads, so a school imports completely without it and a
-refusal is logged and stepped over.
+Scopes: `urn:eduplaces:idm:v1:{schools,groups,people}:read` are all required.
+Without `people:read` the import and the merge proposal fail.
 
 Request only the scopes the Eduplaces app holds, through `EDUPLACES_IDM_SCOPES`.
 The token endpoint rejects the **whole** request with `invalid_scope` when one

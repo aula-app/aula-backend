@@ -10,7 +10,6 @@ use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpGroup;
-use App\Services\Idp\Dto\IdpGroupRef;
 use App\Services\Idp\Dto\IdpUser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -73,7 +72,7 @@ final class SchoolImport
             $users = $directory->users($schoolId);
 
             $roomCount = $this->importRooms($tenant, $groups);
-            $userCount = $this->importUsers($tenant, $provider, $users, $groups);
+            $userCount = $this->importUsers($tenant, $provider, $users);
         } catch (Throwable $e) {
             $this->markFailed($tenant, $e);
 
@@ -106,48 +105,15 @@ final class SchoolImport
     }
 
     /**
-     * Import everyone, merging the school user list with the group member
-     * lists.
-     *
-     * A provider can expose names on group members only, and can list a group
-     * member the user listing omits, so either list alone loses data.
-     *
      * @param  list<IdpUser>  $users
-     * @param  list<IdpGroup>  $groups
      */
-    private function importUsers(Tenant $tenant, string $provider, array $users, array $groups): int
+    private function importUsers(Tenant $tenant, string $provider, array $users): int
     {
-        $merged = [];
-
-        foreach ($groups as $group) {
-            foreach ($group->members as $member) {
-                $withGroup = new IdpUser(
-                    id: $member->id,
-                    name: $member->name,
-                    role: $member->role,
-                    status: $member->status,
-                    sourceSystemIdentifier: $member->sourceSystemIdentifier,
-                    groups: [new IdpGroupRef($group->id, $group->name)],
-                    pseudonym: $member->pseudonym,
-                );
-
-                $merged[$member->id] = isset($merged[$member->id])
-                    ? $merged[$member->id]->mergedWith($withGroup)
-                    : $withGroup;
-            }
-        }
-
         foreach ($users as $user) {
-            $merged[$user->id] = isset($merged[$user->id])
-                ? $merged[$user->id]->mergedWith($user)
-                : $user;
-        }
-
-        foreach ($merged as $user) {
             $this->importUser($tenant, $provider, $user);
         }
 
-        return count($merged);
+        return count($users);
     }
 
     /**

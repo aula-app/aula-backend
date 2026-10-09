@@ -26,6 +26,7 @@ class IdpMergeCandidate extends Model
         'idp_id',
         'idp_name',
         'idp_name_kind',
+        'idp_groups',
         'local_id',
         'local_name',
         'outcome',
@@ -34,5 +35,6 @@ class IdpMergeCandidate extends Model
 
     protected $casts = [
         'local_id' => 'integer',
+        'idp_groups' => 'array',
     ];
 }
