@@ -44,7 +44,35 @@ class CreateTenant extends CreateRecord
             admin2Username: $data['admin2_username'],
             admin2FullName: $data['admin2_name'] ?? $data['admin2_username'],
             admin2Email: $data['admin2_email'],
+            apiBaseUrl: $this->optionalString($data, 'api_base_url'),
+            isNamePublic: $this->optionalBool($data, 'is_name_public'),
+            contactInfo: $this->optionalString($data, 'contact_info'),
+            schoolTypeId: isset($data['school_type_id']) ? (int) $data['school_type_id'] : null,
+            ssoEnabled: $this->optionalBool($data, 'sso_enabled'),
+            ssoProvider: $this->optionalString($data, 'sso_provider'),
+            ssoForceLogout: $this->optionalBool($data, 'sso_force_logout'),
+            ssoRequired: $this->optionalBool($data, 'sso_required'),
+            ssoRequireEmailVerified: $this->optionalBool($data, 'sso_require_email_verified'),
+            idpMigrationStatus: $this->optionalString($data, 'idp_migration_status'),
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function optionalString(array $data, string $key): ?string
+    {
+        $value = $data[$key] ?? null;
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function optionalBool(array $data, string $key): ?bool
+    {
+        return isset($data[$key]) ? (bool) $data[$key] : null;
     }
 
     protected function getRedirectUrl(): string

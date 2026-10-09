@@ -15,8 +15,7 @@ use Tests\TestCase;
  * rejecting it, so a misnamed field saves without error while the app reads
  * NULL from the column it meant to write.
  *
- * Reads the resource's source rather than its schema: building the schema boots
- * a Filament panel, which needs more memory than the test container has.
+ * Reads the resource's source rather than building its schema.
  */
 class TenantResourceMigrationToggleTest extends TestCase
 {

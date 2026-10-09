@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Filament\Resources\TenantResource\Pages;
 
 use App\Filament\Resources\TenantResource;
+use App\Models\Tenant;
+use App\UseCases\ReleaseIdpSchoolUseCase;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
 /**
@@ -18,6 +21,20 @@ class EditTenant extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('releaseIdpSchool')
+                ->label('Release from IdP school')
+                ->icon('heroicon-o-link-slash')
+                ->color('warning')
+                ->visible(fn (Tenant $record): bool => $record->idp_school_id !== null)
+                ->requiresConfirmation()
+                ->modalDescription(fn (Tenant $record): string => "Unlinks school {$record->idp_school_id} from this tenant so it can be connected to another tenant. SSO logins to this tenant stop. SSO required is switched off and the two admins get new password setup links, shown on this page afterwards. Imported users and rooms are kept.")
+                ->action(function (Tenant $record, EditTenant $livewire): void {
+                    app(ReleaseIdpSchoolUseCase::class)->execute($record);
+                    $livewire->refreshFormData([
+                        'idp_school_id', 'sso_required', 'admin1_init_pass_url', 'admin2_init_pass_url',
+                    ]);
+                    Notification::make()->title('Tenant released from IdP school')->success()->send();
+                }),
             Actions\DeleteAction::make(),
         ];
     }
