@@ -11,7 +11,7 @@ use Tests\TestCase;
 
 /**
  * Covers EduplacesDirectory, which puts the IdentityDirectory contract in front
- * of Eduplaces' own shape: two overlapping user endpoints, a per-group call to
+ * of Eduplaces' own shape: a people listing per school, a per-group call to
  * reach member names, and a client-credentials token in front of both.
  */
 class EduplacesDirectoryTest extends TestCase
@@ -31,7 +31,7 @@ class EduplacesDirectoryTest extends TestCase
             'idp.providers.eduplaces.api_url' => self::API_URL,
             'idp.providers.eduplaces.client_id' => 'test-client',
             'idp.providers.eduplaces.client_secret' => 'test-secret',
-            'idp.providers.eduplaces.scopes' => ['urn:eduplaces:idm:v1:users:read'],
+            'idp.providers.eduplaces.scopes' => ['urn:eduplaces:idm:v1:people:read'],
         ]);
 
         Cache::flush();
@@ -39,56 +39,49 @@ class EduplacesDirectoryTest extends TestCase
         $this->directory = app(EduplacesDirectory::class);
     }
 
-    public function test_reads_a_user(): void
+    public function test_reads_a_person(): void
     {
-        Http::fake([
-            self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::response([
-                'id' => 'user-1',
-                'status' => 'ACTIVE',
-                'role' => 'STUDENT',
-                'pseudonym' => 'Denk Raumfahrer',
-                'groups' => [['id' => 'group-2', 'name' => 'Klasse 10a', 'status' => 'ACTIVE']],
-            ]),
-        ]);
-
-        $user = $this->directory->user('user-1');
-
-        $this->assertNotNull($user);
-        $this->assertSame('ACTIVE', $user->status);
-        // This endpoint returns no `name`, only a pseudonym.
-        $this->assertSame('Denk Raumfahrer', $user->displayName());
-        $this->assertNull($user->realName());
-        $this->assertSame(['group-2'], $user->groupIds());
-    }
-
-    public function test_merges_the_people_and_users_views_of_one_person(): void
-    {
-        // Eduplaces splits one user across two endpoints and neither is
-        // complete: `name` and sourceSystemIdentifier on one, `status` and
-        // `pseudonym` on the other.
         Http::fake([
             self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
             self::API_URL.'/idm/ep/v1/people/*' => Http::response([
                 'id' => 'person-1',
                 'role' => 'TEACHER',
+                'status' => 'ACTIVE',
                 'name' => ['firstFull' => 'Stephanie', 'firstCall' => 'Stephanie', 'last' => 'Schuster'],
                 'sourceSystemIdentifier' => '123xyz',
-            ]),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::response([
-                'id' => 'person-1',
-                'status' => 'ACTIVE',
-                'pseudonym' => 'Denk Kapitaen',
+                'groups' => [['id' => 'group-2', 'name' => 'Klasse 10a', 'status' => 'ACTIVE']],
             ]),
         ]);
 
-        $user = $this->directory->personOrUser('person-1');
+        $user = $this->directory->user('person-1');
 
         $this->assertNotNull($user);
         $this->assertSame('Stephanie Schuster', $user->displayName());
+        $this->assertSame('Stephanie Schuster', $user->realName());
         $this->assertSame('123xyz', $user->sourceSystemIdentifier);
         $this->assertSame('ACTIVE', $user->status);
-        $this->assertSame('Denk Kapitaen', $user->pseudonym);
+        $this->assertSame(['group-2'], $user->groupIds());
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/idm/ep/v1/users/'));
+    }
+
+    public function test_falls_back_to_the_pseudonym_when_no_name_is_exposed(): void
+    {
+        Http::fake([
+            self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
+            self::API_URL.'/idm/ep/v1/people/*' => Http::response([
+                'id' => 'person-1',
+                'status' => 'ACTIVE',
+                'role' => 'STUDENT',
+                'pseudonym' => 'Denk Raumfahrer',
+                'groups' => [],
+            ]),
+        ]);
+
+        $user = $this->directory->user('person-1');
+
+        $this->assertNotNull($user);
+        $this->assertSame('Denk Raumfahrer', $user->displayName());
+        $this->assertNull($user->realName());
     }
 
     public function test_lists_the_people_of_a_school(): void
@@ -103,9 +96,6 @@ class EduplacesDirectoryTest extends TestCase
                     'name' => ['firstFull' => 'Yetta', 'firstCall' => 'Yetta', 'last' => 'Doucet'],
                     'groups' => [['id' => 'group-1', 'name' => '5a']],
                 ],
-            ]),
-            self::API_URL.'/idm/ep/v1/schools/*/users' => Http::response([
-                ['id' => 'user-2', 'pseudonym' => 'Denk Kapitaen', 'role' => 'TEACHER', 'status' => 'ACTIVE'],
             ]),
         ]);
 
@@ -125,9 +115,6 @@ class EduplacesDirectoryTest extends TestCase
         Http::fake([
             self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
             self::API_URL.'/idm/ep/v1/schools/*/people' => Http::response(status: 403),
-            self::API_URL.'/idm/ep/v1/schools/*/users' => Http::response([
-                ['id' => 'user-1', 'pseudonym' => 'Bio Akrobat', 'role' => 'STUDENT'],
-            ]),
         ]);
 
         $this->expectException(DirectoryException::class);
@@ -177,7 +164,7 @@ class EduplacesDirectoryTest extends TestCase
     {
         Http::fake([
             self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::response(status: 404),
+            self::API_URL.'/idm/ep/v1/people/*' => Http::response(status: 404),
         ]);
 
         $this->assertNull($this->directory->user('missing'));
@@ -187,7 +174,7 @@ class EduplacesDirectoryTest extends TestCase
     {
         Http::fake([
             self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::response(status: 500),
+            self::API_URL.'/idm/ep/v1/people/*' => Http::response(status: 500),
         ]);
 
         $this->expectException(DirectoryException::class);
@@ -199,7 +186,7 @@ class EduplacesDirectoryTest extends TestCase
     {
         Http::fake([
             self::AUTH_URL.'/oauth2/token' => Http::response($this->token()),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::response(['id' => 'user-1']),
+            self::API_URL.'/idm/ep/v1/people/*' => Http::response(['id' => 'user-1']),
         ]);
 
         $this->directory->user('user-1');
@@ -214,7 +201,7 @@ class EduplacesDirectoryTest extends TestCase
             self::AUTH_URL.'/oauth2/token' => Http::sequence()
                 ->push($this->token('stale-token'))
                 ->push($this->token('fresh-token')),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::sequence()
+            self::API_URL.'/idm/ep/v1/people/*' => Http::sequence()
                 ->push(status: 401)
                 ->push(['id' => 'user-1']),
         ]);
