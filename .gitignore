@@ -14,6 +14,7 @@ _ide_helper.php
 /.phpunit.cache
 /.zed
 /auth.json
+/db
 /node_modules
 /public/build
 /public/hot
