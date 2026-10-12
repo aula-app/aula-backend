@@ -16,10 +16,6 @@ return [
     | from. A tenant selects one by `tenants.sso_provider`, which is also the
     | Keycloak IdP alias, so a tenant's login and its directory always agree.
     |
-    | Adding a provider is a block here plus two classes, an IdentityDirectory
-    | and a WebhookAdapter. No migrations, no routes, and no change to
-    | SchoolImport, TenantResolver or the syncs.
-    |
     */
 
     'providers' => [

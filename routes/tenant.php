@@ -79,7 +79,7 @@ Route::name('aula.')
         /* \Illuminate\Session\Middleware\StartSession::class, */
         /* \Illuminate\View\Middleware\ShareErrorsFromSession::class, */
         InitializeTenancyByRequestData::class,
-        'auth:api_compat', // our 'api' guard should be configured to use 'passport'
+        'auth:api', // our 'api' guard should be configured to use 'passport'
     ])
     ->prefix('/api/v2')
     ->group(base_path('routes/tenant/api/v2/aula.php'));

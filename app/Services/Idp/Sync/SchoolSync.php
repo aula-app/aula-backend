@@ -23,7 +23,8 @@ final class SchoolSync
 {
     public function __construct(
         private readonly IdpProviders $providers,
-    ) {}
+    ) {
+    }
 
     public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
     {
@@ -44,7 +45,7 @@ final class SchoolSync
 
         $this->renameTenant($tenant, $school->name);
 
-        Log::info('IdP: school attributes with no home in aula', [
+        Log::info('IdP: Dump of school attributes that aren\'t being tracked in aula', [
             'tenant' => $tenant->instance_code,
             'address' => $school->address,
             'location' => $school->location,
@@ -69,7 +70,7 @@ final class SchoolSync
         if ($taken) {
             Log::warning('IdP: school rename collides with another tenant', [
                 'tenant' => $tenant->instance_code,
-                'wanted' => $name,
+                'tenant_name' => $name,
             ]);
 
             return;
@@ -78,10 +79,10 @@ final class SchoolSync
         $previous = $tenant->name;
         $tenant->update(['name' => $name]);
 
-        Log::info('IdP: renamed a tenant from an IDM webhook', [
+        Log::info('IdP: renamed a tenant', [
             'tenant' => $tenant->instance_code,
-            'from' => $previous,
-            'to' => $name,
+            'tenant_old_name' => $previous,
+            'tenant_name' => $name,
         ]);
     }
 }

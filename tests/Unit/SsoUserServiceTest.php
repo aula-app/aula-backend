@@ -138,7 +138,7 @@ class SsoUserServiceTest extends TestCase
 
             $this->service->addToStandardRoom($user);
 
-            $count = \Illuminate\Support\Facades\DB::table('au_rel_rooms_users')
+            $count = DB::table('au_rel_rooms_users')
                 ->where('user_id', $user->id)
                 ->where('room_id', $standardRoom->id)
                 ->count();
@@ -146,7 +146,7 @@ class SsoUserServiceTest extends TestCase
             $this->assertEquals(1, $count);
 
             // Cleanup
-            \Illuminate\Support\Facades\DB::table('au_rel_rooms_users')->where('user_id', $user->id)->delete();
+            DB::table('au_rel_rooms_users')->where('user_id', $user->id)->delete();
         });
     }
 

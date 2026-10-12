@@ -3,7 +3,8 @@
 
 # v2
 
-- feat(oauth): migration to craete Passport Clients for PasswordGrant & PersonalAccessToken
+- feat(sso): refactored resolving tenants from webhooks 
+- feat(oauth): migration to create Passport Clients for PasswordGrant & PersonalAccessToken
 
 ## v2.2.0
 

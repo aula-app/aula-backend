@@ -6,7 +6,6 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ImportSchoolForTenant;
-use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\SchoolImport;
@@ -61,7 +60,6 @@ class IdpSchoolImportTest extends TestCase
         ]);
 
         Cache::flush();
-        IdpDirectoryEntry::query()->delete();
         $this->cleanTenant();
 
         $this->idmGroups = [];
@@ -74,7 +72,6 @@ class IdpSchoolImportTest extends TestCase
     protected function tearDown(): void
     {
         $this->cleanTenant();
-        IdpDirectoryEntry::query()->delete();
         Tenant::where('id', self::$testTenant->id)->update([
             'idp_school_id' => null,
             'idp_import_status' => null,
@@ -316,8 +313,8 @@ class IdpSchoolImportTest extends TestCase
 
     public function test_fails_when_people_is_not_granted(): void
     {
-        // There is no other roster to fall back to, so the refusal must
-        // surface instead of importing an empty school.
+        // `/users` alone lists only accounts with access, so importing from it
+        // would drop most of the school.
         $this->seedSchool();
         $this->peopleForbidden = true;
 
@@ -352,18 +349,6 @@ class IdpSchoolImportTest extends TestCase
 
         $this->assertSame(SchoolImport::STATUS_FAILED, $tenant->idp_import_status);
         $this->assertNotNull($tenant->idp_import_error);
-    }
-
-    public function test_indexes_everything_it_imported(): void
-    {
-        $this->seedSchool();
-
-        $this->import();
-
-        // idp_directory is populated, so the first webhook for any of these
-        // ids skips TenantResolver's scan.
-        $this->assertSame(3, IdpDirectoryEntry::where('entity_type', IdpDirectoryEntry::TYPE_USER)->count());
-        $this->assertSame(2, IdpDirectoryEntry::where('entity_type', IdpDirectoryEntry::TYPE_GROUP)->count());
     }
 
     // =========================================================
@@ -435,6 +420,7 @@ class IdpSchoolImportTest extends TestCase
                 (bool) preg_match('#/schools/[^/]+/people$#', $path) => $this->peopleForbidden
                     ? Http::response(status: 403)
                     : Http::response($this->idmPeople),
+                (bool) preg_match('#/schools/[^/]+/users$#', $path) => Http::response($this->idmPeople),
                 (bool) preg_match('#/people/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[1])),
                 default => Http::response(status: 404),
             };
