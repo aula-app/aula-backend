@@ -53,7 +53,8 @@ final class EduplacesDirectory implements IdentityDirectory
 
     public function __construct(
         private readonly IdpProviders $providers,
-    ) {}
+    ) {
+    }
 
     /**
      * One person, from `/people/{id}`, the single-entity view of users().

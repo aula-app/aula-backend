@@ -10,9 +10,7 @@ namespace App\Services\Idp\Dto;
 final readonly class IdpUser
 {
     public const string ROLE_TEACHER = 'TEACHER';
-
     public const string ROLE_STUDENT = 'STUDENT';
-
     public const string STATUS_ACTIVE = 'ACTIVE';
 
     /**
@@ -26,7 +24,8 @@ final readonly class IdpUser
         public ?string $sourceSystemIdentifier = null,
         public array $groups = [],
         public ?string $pseudonym = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array<string, mixed>  $data
