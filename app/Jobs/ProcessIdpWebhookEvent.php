@@ -38,7 +38,7 @@ class ProcessIdpWebhookEvent implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    protected int $tries = 5;
+    public int $tries = 5;
 
     /**
      * Spread over roughly twenty minutes: long enough to ride out a provider
