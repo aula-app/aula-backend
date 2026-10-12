@@ -3,10 +3,10 @@
 How a school gets into aula from an identity provider's directory, and how it
 stays in step afterwards.
 
-Nothing below is specific to one vendor. A provider is a block in
-`config/idp.php` plus two classes, an `IdentityDirectory` and a
-`WebhookAdapter`. No migrations, no routes, and no change to `SchoolImport`,
-`TenantResolver` or the syncs. Eduplaces is currently the only implementation
+Nothing in this flow is specific to one vendor. Each IdP is represented by a block in
+`config/idp.php` plus two implemented interfaces: `IdentityDirectory` and
+`WebhookAdapter`. No migrations, no routes (except webhooks), and no foreseeable 
+change to `SchoolImport` or the syncs. Eduplaces is currently the only implementation
 and is used for the examples.
 
 A tenant picks its provider with `tenants.sso_provider`, the same alias Keycloak
@@ -91,25 +91,24 @@ end up privileged in one and not the other.
 
 ## Names
 
-No single endpoint returns everything, and what you get depends on the app's
-entitlements:
+What an endpoint returns depends on the app's entitlements:
 
 | Endpoint                          | Carries                                  |
 |-----------------------------------|------------------------------------------|
-| `/schools/{id}/users`, `/users/{id}` | `pseudonym` ("Denk Kapitän"), `status`, `groups` |
-| `/groups/{id}` members            | real `name` (`firstFull`/`firstCall`/`last`), `role` |
-| `/people/{id}`                    | `sourceSystemIdentifier` (optional scope) |
+| `/schools/{id}/people`, `/people/{id}` | `name` (`firstFull`/`firstCall`/`last`), `status`, `role`, `groups`; deleted and unsynced people are left out |
+| `/groups/{id}`                    | `members`, read only when a group webhook arrives |
 
-So the import reads **each group in full**, not the school's group list alone:
-that per-group call is the only place real names appear. The views are merged
-by id, keeping whichever endpoint carried each field.
+Every read goes through `/people`: the import, the merge proposal and the
+tenant scan read `/schools/{id}/groups` for the group list and
+`/schools/{id}/people` for everyone in the school, and a webhook or a first
+login reads one person back from `/people/{id}`. A person missing from
+`/people` is no longer present. `/users` is never read: it lists only accounts
+with access, and the one field it adds is a `pseudonym` ("Denk Kapitän").
 
-`displayname` prefers the real name and falls back to the pseudonym, so no
-account is left showing a generated username. `realname` is set from a real name
-only: a pseudonym is not a legal name and does not belong there.
-
-Reading group detail also catches directory users that appear in a group's
-member list and are absent from `/users`, which reading `/users` alone loses.
+`displayname` is the name in use (`firstCall` and `last`). A person the
+directory returns no name for shows the generated username until one arrives.
+`realname` is set from a real name only: a pseudonym is not a legal name and
+does not belong there.
 
 ## Identity
 
@@ -171,12 +170,8 @@ a tenant destroys a school's whole database.
 ### Resolving the tenant
 
 School events map straight onto `tenants.idp_school_id`. Person and group
-payloads carry no school identifier, so `TenantResolver` looks the id up in the
-central `idp_directory` table and, on a miss, scans that provider's tenants
-while indexing every id it sees. The import populates the index up front, so in
-practice the scan runs only for entities created after onboarding. An
-unresolvable id is cached for an hour, so a school this installation does not
-host cannot start a scan per event.
+payloads also carry school identifier, so the Tenant is resolved by looking up
+the centralDB table `tenants` by schoolId received from the IdP.
 
 ## What is never touched
 
@@ -205,10 +200,8 @@ EDUPLACES_WEBHOOK_SECRET=
 
 Sandbox: `https://auth.sandbox.eduplaces.dev`, `https://api.sandbox.eduplaces.dev`.
 
-Scopes: `urn:eduplaces:idm:v1:{schools,groups,users}:read` are required.
-`people:read` is **optional**: over `/users` it adds `sourceSystemIdentifier`
-alone, which nothing here reads, so a school imports completely without it and a
-refusal is logged and stepped over.
+Scopes: `urn:eduplaces:idm:v1:{schools,groups,people}:read` are all required.
+Without `people:read` the import and the merge proposal fail.
 
 Request only the scopes the Eduplaces app holds, through `EDUPLACES_IDM_SCOPES`.
 The token endpoint rejects the **whole** request with `invalid_scope` when one

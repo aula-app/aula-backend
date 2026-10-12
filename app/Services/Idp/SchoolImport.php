@@ -6,11 +6,9 @@ namespace App\Services\Idp;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
-use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpGroup;
-use App\Services\Idp\Dto\IdpGroupRef;
 use App\Services\Idp\Dto\IdpUser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,10 +17,6 @@ use Throwable;
 
 /**
  * Pulls a whole school from an identity provider into a tenant in one pass.
- *
- * Webhooks report changes only, and no provider replays an existing roster, so
- * without this a freshly connected school stays empty until people arrive one
- * login at a time.
  *
  * Runs inside ImportSchoolForTenant, which SsoController::bootstrapIdpTenant()
  * dispatches. Progress is written to the tenants row for ImportStatusController
@@ -38,19 +32,16 @@ final class SchoolImport
 {
     /** Queued but not yet picked up by a worker. */
     public const string STATUS_PENDING = 'pending';
-
     public const string STATUS_RUNNING = 'running';
-
     public const string STATUS_COMPLETED = 'completed';
-
     public const string STATUS_FAILED = 'failed';
 
     public function __construct(
         private readonly IdpProviders $providers,
         private readonly RoomEnrolment $rooms,
-        private readonly TenantResolver $resolver,
         private readonly RoleMap $roles,
-    ) {}
+    ) {
+    }
 
     /**
      * Import the school in tenants.idp_school_id. Requires initialised tenancy.
@@ -73,7 +64,7 @@ final class SchoolImport
             $users = $directory->users($schoolId);
 
             $roomCount = $this->importRooms($tenant, $groups);
-            $userCount = $this->importUsers($tenant, $provider, $users, $groups);
+            $userCount = $this->importUsers($tenant, $provider, $users);
         } catch (Throwable $e) {
             $this->markFailed($tenant, $e);
 
@@ -99,55 +90,21 @@ final class SchoolImport
     {
         foreach ($groups as $group) {
             $this->rooms->upsertRoom($group->id, $group->name, $group->isActive());
-            $this->resolver->remember(IdpDirectoryEntry::TYPE_GROUP, $group->id, $tenant->id);
         }
 
         return count($groups);
     }
 
     /**
-     * Import everyone, merging the school user list with the group member
-     * lists.
-     *
-     * A provider can expose names on group members only, and can list a group
-     * member the user listing omits, so either list alone loses data.
-     *
      * @param  list<IdpUser>  $users
-     * @param  list<IdpGroup>  $groups
      */
-    private function importUsers(Tenant $tenant, string $provider, array $users, array $groups): int
+    private function importUsers(Tenant $tenant, string $provider, array $users): int
     {
-        $merged = [];
-
-        foreach ($groups as $group) {
-            foreach ($group->members as $member) {
-                $withGroup = new IdpUser(
-                    id: $member->id,
-                    name: $member->name,
-                    role: $member->role,
-                    status: $member->status,
-                    sourceSystemIdentifier: $member->sourceSystemIdentifier,
-                    groups: [new IdpGroupRef($group->id, $group->name)],
-                    pseudonym: $member->pseudonym,
-                );
-
-                $merged[$member->id] = isset($merged[$member->id])
-                    ? $merged[$member->id]->mergedWith($withGroup)
-                    : $withGroup;
-            }
-        }
-
         foreach ($users as $user) {
-            $merged[$user->id] = isset($merged[$user->id])
-                ? $merged[$user->id]->mergedWith($user)
-                : $user;
-        }
-
-        foreach ($merged as $user) {
             $this->importUser($tenant, $provider, $user);
         }
 
-        return count($merged);
+        return count($users);
     }
 
     /**
@@ -158,7 +115,7 @@ final class SchoolImport
         $user = LegacyUser::where('idp_user_id', $person->id)->first();
 
         if ($user === null) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->idp_user_id = $person->id;
             $user->username = $this->uniqueUsername($person);
             $user->hash_id = md5($person->id.(string) microtime(true).random_int(100, 10000000));
@@ -170,7 +127,7 @@ final class SchoolImport
 
         $displayName = $person->displayName();
 
-        $user->displayname = $displayName !== '' ? $displayName : (string) $user->username;
+        $user->displayname = !empty($displayName) ? $displayName : (string) $user->username;
         $user->realname = $person->realName() ?? $user->realname;
         $user->status = $person->isActive() ? UserStatus::Active : UserStatus::Archived;
 
@@ -188,8 +145,6 @@ final class SchoolImport
         $this->enrolInSchoolRoom($user, $role);
         $this->rooms->syncUserRooms($user->id, $person->groups, $role);
 
-        $this->resolver->remember(IdpDirectoryEntry::TYPE_USER, $person->id, $tenant->id);
-
         return $user;
     }
 
@@ -202,6 +157,7 @@ final class SchoolImport
         $room = DB::table('au_rooms')->where('type', 1)->first(['id', 'hash_id']);
 
         if ($room === null) {
+            Log::warning("Tenant is missing the standard room.", ['tenant' => tenant('instance_code')]);
             return;
         }
 

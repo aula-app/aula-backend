@@ -505,8 +505,7 @@ class IdpBootstrapTest extends TestCase
                 ]),
                 (bool) preg_match('#/schools/[^/]+/groups$#', $path) => Http::response($groups),
                 (bool) preg_match('#/schools/[^/]+/people$#', $path) => Http::response($people),
-                (bool) preg_match('#/schools/[^/]+/users$#', $path) => Http::response([]),
-                (bool) preg_match('#/(people|users)/([^/]+)$#', $path, $m) => $this->onePerson($people, urldecode($m[2])),
+                (bool) preg_match('#/people/([^/]+)$#', $path, $m) => $this->onePerson($people, urldecode($m[1])),
                 default => Http::response(status: 404),
             };
         });
