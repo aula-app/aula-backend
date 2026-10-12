@@ -27,17 +27,20 @@ interface IdentityDirectory
     public function school(string $schoolId): ?IdpSchool;
 
     /**
-     * Every group in the school, with members populated where the provider
-     * exposes them.
+     * Every group in the school. Members may be empty: users() carries
+     * memberships.
      *
      * @return list<IdpGroup>
      */
     public function groups(string $schoolId): array;
 
+    /**
+     * One group with its members.
+     */
     public function group(string $groupId): ?IdpGroup;
 
     /**
-     * Everyone in the school, across whichever listings the provider exposes.
+     * Everyone currently in the school. Deleted people are left out.
      *
      * @return list<IdpUser>
      */

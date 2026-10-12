@@ -8,7 +8,6 @@ use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
-use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\RoomEnrolment;
 use App\Services\Idp\SchoolImport;
@@ -43,7 +42,7 @@ final class UserSync
             return $this->archive($event->entityId);
         }
 
-        $person = $this->fetch($provider, $event->entityId);
+        $person = $this->providers->directory($provider)->user($event->entityId);
 
         if ($person === null) {
             // Deleted between the event firing and this read-back. Not an
@@ -62,22 +61,6 @@ final class UserSync
         }
 
         return SyncOutcome::processed();
-    }
-
-    /**
-     * Read the user back from the directory.
-     *
-     * A provider can offer a richer single-entity lookup than IdentityDirectory
-     * requires, such as EduplacesDirectory::personOrUser(), which merges two
-     * upstream views. IdentityDirectory::user() is the fallback.
-     */
-    private function fetch(string $provider, string $userId): ?IdpUser
-    {
-        $directory = $this->providers->directory($provider);
-
-        return method_exists($directory, 'personOrUser')
-            ? $directory->personOrUser($userId)
-            : $directory->user($userId);
     }
 
     private function archive(string $userId): SyncOutcome
