@@ -26,13 +26,14 @@ class CreateTenantUseCase
         ?string $adminPassword = null,
     ): Tenant {
         $jwtKey = Str::random(64);
-        $apiBaseUrl = config('app.api_url');
+        $apiBaseUrl = config('app.url');
+        $apiFrontendUrl = config('app.frontend_url');
         $admin1Secret = Str::random(64);
         $admin2Secret = Str::random(64);
 
         // When a password is pre-set, admins can log in immediately — no email setup needed.
-        $admin1InitPassUrl = $adminPassword === null ? "{$apiBaseUrl}/password/{$admin1Secret}?code={$instanceCode}" : null;
-        $admin2InitPassUrl = $adminPassword === null ? "{$apiBaseUrl}/password/{$admin2Secret}?code={$instanceCode}" : null;
+        $admin1InitPassUrl = $adminPassword === null ? "{$apiFrontendUrl}/password/{$admin1Secret}?code={$instanceCode}" : null;
+        $admin2InitPassUrl = $adminPassword === null ? "{$apiFrontendUrl}/password/{$admin2Secret}?code={$instanceCode}" : null;
 
         $tenant = Tenant::create([
             'name' => $name,
