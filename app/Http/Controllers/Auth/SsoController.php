@@ -279,8 +279,8 @@ class SsoController extends Controller
         // wrong: a forged state cannot aim callback() anywhere new.
         $this->nativeClient = $this->stateWantsNativeClient($state);
 
-        $instanceCode = $this->verifySignedState($state);
-        if ($instanceCode === null) {
+        $instanceCodeFromState = $this->verifySignedState($state);
+        if ($instanceCodeFromState === null) {
             return $this->frontendError('invalid_state');
         }
 
@@ -290,7 +290,6 @@ class SsoController extends Controller
         $oauthError = $request->query('error');
         if ($oauthError !== null && $oauthError !== '') {
             Log::info('SSO: identity provider returned an OAuth error', [
-                'tenant' => $instanceCode,
                 'error' => $oauthError,
                 'error_description' => $request->query('error_description'),
             ]);
@@ -300,37 +299,34 @@ class SsoController extends Controller
             );
         }
 
-        $session = $this->completeOauthAndResolveTenant($instanceCode);
+        $session = $this->completeOauthAndResolveTenant($instanceCodeFromState);
         if ($session instanceof RedirectResponse) {
             return $session;
         }
 
-        [$tenant, $socialiteUser, $instanceCode] = $session;
+        [$tenant, $socialiteUser, $instanceCodeFromSession] = $session;
 
         tenancy()->initialize($tenant);
 
-        $idToken = $this->verifyCallbackIdToken($socialiteUser, $tenant, $instanceCode);
+        $idToken = $this->verifyCallbackIdToken($socialiteUser, $tenant, $instanceCodeFromSession);
         if ($idToken instanceof RedirectResponse) {
             return $idToken;
         }
-
-        /** @var Tenant $callbackTenant */
-        $callbackTenant = tenant();
 
         // link_user_id is set by connectIdentity(): link to that account instead
         // of resolving one.
         $linkUserId = $this->stateLinkUserId($state);
 
         if ($linkUserId !== null) {
-            return $this->completeIdentityConnection($linkUserId, $socialiteUser, $callbackTenant, $instanceCode);
+            return $this->completeIdentityConnection($linkUserId, $socialiteUser, $tenant, $instanceCodeFromSession);
         }
 
-        $user = $this->resolveCallbackUser($socialiteUser, $callbackTenant, $instanceCode);
+        $user = $this->resolveCallbackUser($socialiteUser, $tenant, $instanceCodeFromSession);
         if ($user instanceof RedirectResponse) {
             return $user;
         }
 
-        return $this->issueSsoSession($user, $socialiteUser, $idToken, $callbackTenant);
+        return $this->issueSsoSession($user, $socialiteUser, $idToken, $tenant);
     }
 
     /**
@@ -341,12 +337,13 @@ class SsoController extends Controller
      *
      * @return array{0: Tenant, 1: SocialiteOAuth2User, 2: string}|RedirectResponse
      */
-    protected function completeOauthAndResolveTenant(string $instanceCode): array|RedirectResponse
+    protected function completeOauthAndResolveTenant(string $instanceCodeFromState): array|RedirectResponse
     {
-        $idpInitiated = $instanceCode === self::IDP_INITIATED_EDUPLACES;
+        $isFlowIdpInitiated = $instanceCodeFromState === self::IDP_INITIATED_EDUPLACES;
 
-        if (! $idpInitiated) {
-            $tenant = Tenant::where('instance_code', $instanceCode)->first();
+        if (! $isFlowIdpInitiated) {
+            $tenant = Tenant::where('instance_code', $instanceCodeFromState)->first();
+            Log::withContext(['tenant' => $tenant?->instance_code]);
 
             if ($tenant === null) {
                 return $this->frontendError('unknown_tenant');
@@ -357,10 +354,7 @@ class SsoController extends Controller
             // initiate() at all. The IdP-initiated branch runs the same check
             // once resolveTenantFromEduplacesClaim() has returned.
             if (! $tenant->sso_enabled) {
-                Log::warning('SSO: login attempted on a tenant with SSO disabled', [
-                    'tenant' => $instanceCode,
-                ]);
-
+                Log::warning('SSO: login attempted on a tenant with SSO disabled');
                 return $this->frontendError('sso_disabled');
             }
         }
@@ -370,34 +364,45 @@ class SsoController extends Controller
         /** @var SocialiteOAuth2User $socialiteUser */
         $socialiteUser = $driver->stateless()->user();
 
-        if ($idpInitiated) {
-            $resolveResult = $this->resolveTenantFromEduplacesClaim($socialiteUser);
+        $resolvedTenant = $this->resolveTenantFromEduplacesClaim($socialiteUser);
 
-            if ($resolveResult instanceof RedirectResponse) {
-                return $resolveResult;
+        if (! $isFlowIdpInitiated) {
+            // if we're not in the process of connecting the IdP school with a Tenant
+            if ($tenant->idp_school_id !== null) {
+                // then the Tenant must be resolved from IdP's claim
+                if ($resolvedTenant instanceof RedirectResponse) {
+                    return $resolvedTenant;
+                }
+
+                // and the resolved Tenant must match the instance code from the state
+                if ($instanceCodeFromState !== $resolvedTenant->instance_code) {
+                    Log::warning(
+                        "Resolved different Tenant from Idp Token and from 'state' parameter.",
+                        ['tenant' => $resolvedTenant->instance_code, 'tenant_wrong' => $instanceCodeFromState]
+                    );
+
+                    return $this->frontendError('school_mismatch');
+                }
             }
-
-            $tenant = $resolveResult;
-            $instanceCode = $tenant->instance_code;
         }
 
         // Psalm cannot correlate the two $idpInitiated checks to see that
         // exactly one branch assigns $tenant.
         /** @var Tenant $tenant */
-        return [$tenant, $socialiteUser, $instanceCode];
+        return [$resolvedTenant, $socialiteUser, $instanceCodeFromState];
     }
 
-    protected function issueSsoSession(LegacyUser $user, LaravelSocialiteUser $laravelSocialiteUser, string $idToken, Tenant $callbackTenant): RedirectResponse
+    protected function issueSsoSession(LegacyUser $user, LaravelSocialiteUser $laravelSocialiteUser, string $idToken, Tenant $tenant): RedirectResponse
     {
         $user->sso_id_token = $idToken;
         $user->sso_refresh_token = $laravelSocialiteUser->refreshToken;
-        $this->recordIdpUserId($user, $laravelSocialiteUser, $callbackTenant);
+        $this->recordIdpUserId($user, $laravelSocialiteUser, $tenant);
 
         $user->save();
 
-        $token = $user->createToken("sso_token_{$callbackTenant->sso_provider}")->accessToken;
+        $token = $user->createToken("sso_token_{$tenant->sso_provider}")->accessToken;
 
-        return $this->frontendRedirect($token, $callbackTenant->instance_code);
+        return $this->frontendRedirect($token, $tenant->instance_code);
     }
 
     /**
@@ -680,6 +685,7 @@ class SsoController extends Controller
     protected function verifySignedState(string $state): ?string
     {
         $code = $this->decodeSignedState($state)['instance_code'] ?? null;
+        Log::withContext(['instance_code' => $code]);
 
         return is_string($code) ? $code : null;
     }
@@ -742,11 +748,11 @@ class SsoController extends Controller
         $payload = $this->decodeIdTokenPayload(
             $this->fetchIdpIdToken($socialiteUser->token, (string) config('services.eduplaces.idp_alias', 'eduplaces')),
         );
-        $schoolId = null;
 
+        $schoolId = null;
         foreach ($this->idpProviders->all() as $alias) {
-            $name = (string) $this->idpProviders->config($alias, 'claims.school', 'school');
-            $value = is_array($payload) ? ($payload[$name] ?? null) : null;
+            $schoolClaimKey = (string) $this->idpProviders->config($alias, 'claims.school', 'school');
+            $value = is_array($payload) ? ($payload[$schoolClaimKey] ?? null) : null;
 
             if (is_string($value) && $value !== '') {
                 $schoolId = $value;
@@ -754,8 +760,7 @@ class SsoController extends Controller
             }
         }
 
-        // The loop assigns only a non-empty string.
-        if (! is_string($schoolId)) {
+        if (empty($schoolId)) {
             Log::warning('SSO: IdP-initiated login has no school claim', [
                 'keycloak_sub' => $socialiteUser->getId(),
                 'claim_keys' => is_array($payload) ? array_keys($payload) : null,
@@ -769,6 +774,7 @@ class SsoController extends Controller
         if ($tenant === null) {
             Log::warning('SSO: no aula tenant matches Eduplaces school', [
                 'idp_school_id' => $schoolId,
+                'frontend_error' => 'school_not_provisioned'
             ]);
 
             return $this->frontendError('school_not_provisioned');
@@ -799,7 +805,7 @@ class SsoController extends Controller
      *
      * @param  array<string, mixed>|null  $claims
      */
-    protected function idpClaim(?array $claims, Tenant $tenant, string $which): ?string
+    protected function idpClaim(?array $claims, Tenant $tenant, string $claimKey): ?string
     {
         $provider = $tenant->sso_provider;
 
@@ -807,7 +813,7 @@ class SsoController extends Controller
             return null;
         }
 
-        $name = (string) $this->idpProviders->config($provider, "claims.{$which}", $which === 'user' ? 'sub' : $which);
+        $name = (string) $this->idpProviders->config($provider, "claims.{$claimKey}", $claimKey === 'user' ? 'sub' : $claimKey);
         $value = $claims[$name] ?? null;
 
         return is_string($value) && $value !== '' ? $value : null;
@@ -1005,13 +1011,12 @@ class SsoController extends Controller
     }
 
     /**
-     * Refuse a login whose `school` claim is not this tenant's idp_school_id.
+     * Refuse:
+     * - a login whose `school` claim is not this tenant's `idp_school_id`
+     * - tenant with `idp_school_id` still `null` (should be set by `bootstrapIdpTenant`)
      *
-     * A tenant with idp_school_id still null is refused too: setting it is
-     * bootstrapIdpTenant()'s job, which by here has already declined.
-     *
-     * Kept apart from learnSchoolId(), which writes the school it reads when the
-     * tenant holds none. The shared part is claimedSchoolId().
+     * This method is separate from `learnSchoolId`, which writes the school it reads when the
+     * tenant doesn't have one. The shared part is claimedSchoolId().
      *
      * @return RedirectResponse|null null when the login may proceed
      */
@@ -1023,9 +1028,9 @@ class SsoController extends Controller
         }
 
         if ($tenant->idp_school_id === null) {
-            Log::warning('SSO: refusing a login to a tenant with no school of its own', [
+            Log::warning('SSO: refusing a login to a tenant with no IdP School configured.', [
                 'tenant' => $instanceCode,
-                'keycloak_sub' => $socialiteUser->getId(),
+                'keycloak_sub' => $socialiteUser->getId()
             ]);
 
             return $this->frontendError('school_not_provisioned');
@@ -1527,6 +1532,11 @@ class SsoController extends Controller
 
     protected function frontendError(string $code, array $extra = []): RedirectResponse
     {
+        Log::info('SsoController::frontendError.', [
+            'tenant' => tenant('instance_code'),
+            'frontend_error' => $code
+        ]);
+
         return redirect()->away($this->clientUrl('login', ['sso_error' => $code] + $extra));
     }
 

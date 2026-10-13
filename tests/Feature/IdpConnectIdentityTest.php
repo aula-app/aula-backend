@@ -34,13 +34,9 @@ class IdpConnectIdentityTest extends TestCase
     use SignsIdTokens;
 
     private const string KEYCLOAK_BASE = 'https://sso.test.local';
-
     private const string KEYCLOAK_REALM = 'aula-test';
-
     private const string KEYCLOAK_CLIENT_ID = 'aula-backend-test';
-
     private const string SCHOOL = 'school-connect-test';
-
     private const string ADMIN = 'connect_admin';
 
     protected function setUp(): void
@@ -103,7 +99,7 @@ class IdpConnectIdentityTest extends TestCase
     {
         $adminId = $this->seedUser(self::ADMIN, 50);
 
-        $this->completeConnect($adminId, 'kc-sub-admin', 'person-admin');
+        $this->completeConnect($adminId);
 
         // idp_school_id came from the id_token, not from configuration.
         $this->assertSame(self::SCHOOL, self::$testTenant->fresh()->idp_school_id);
@@ -113,7 +109,7 @@ class IdpConnectIdentityTest extends TestCase
     {
         $adminId = $this->seedUser(self::ADMIN, 50);
 
-        $token = $this->completeConnect($adminId, 'kc-sub-admin', 'person-admin');
+        $token = $this->completeConnect($adminId);
 
         $this->postJson('/api/v2/auth/sso/link', ['sso_link_token' => $token], $this->headersFor($adminId))
             ->assertOk()->assertJsonPath('success', true);
@@ -143,7 +139,7 @@ class IdpConnectIdentityTest extends TestCase
         $adminId = $this->seedUser(self::ADMIN, 50);
         self::$testTenant->run(function () {
             LegacyUser::where('username', 'connect_other')->delete();
-            $other = new LegacyUser;
+            $other = new LegacyUser();
             $other->username = 'connect_other';
             $other->displayname = 'Other';
             $other->idp_user_id = 'person-admin';
@@ -153,7 +149,7 @@ class IdpConnectIdentityTest extends TestCase
             $other->save();
         });
 
-        $response = $this->connectCallback($adminId, 'kc-sub-admin', 'person-admin');
+        $response = $this->connectCallback($adminId);
 
         // Two accounts claiming one idp_user_id needs an operator.
         $this->assertStringContainsString('sso_error=idp_identity_taken', $response->headers->get('Location'));
@@ -165,11 +161,11 @@ class IdpConnectIdentityTest extends TestCase
         $otherId = $this->seedRivalTenant(self::SCHOOL);
 
         try {
-            $response = $this->connectCallback($adminId, 'kc-sub-admin', 'person-admin');
+            $response = $this->connectCallback($adminId, self::SCHOOL);
 
-            // idp_school_taken, not idp_school_missing: the claim was present,
+            // not idp_school_missing: the claim was present,
             // and the likely cause is the wrong instance_code.
-            $this->assertStringContainsString('sso_error=idp_school_taken', $response->headers->get('Location'));
+            $this->assertStringContainsString('sso_error=school_mismatch', $response->headers->get('Location'));
             $this->assertNull(self::$testTenant->fresh()->idp_school_id);
         } finally {
             // The callback leaves tenancy initialised, so an unqualified query
@@ -202,10 +198,9 @@ class IdpConnectIdentityTest extends TestCase
     {
         $adminId = $this->seedUser(self::ADMIN, 50);
 
-        $response = $this->connectCallback($adminId, 'kc-sub-admin', 'person-admin');
+        $response = $this->connectCallback($adminId);
 
-        // The admin holds a JWT already; this leg returns an sso_link token
-        // only.
+        // The admin holds a JWT already; this part of the flow returns an sso_link token only.
         $location = (string) $response->headers->get('Location');
         $this->assertStringNotContainsString('/oauth-login/', $location);
         $this->assertStringContainsString('sso_link=', $location);
@@ -215,18 +210,19 @@ class IdpConnectIdentityTest extends TestCase
     // Helpers
     // =========================================================
 
-    private function completeConnect(int $adminId, string $keycloakSub, string $personId): string
+    private function completeConnect(int $adminId): string
     {
-        $response = $this->connectCallback($adminId, $keycloakSub, $personId);
-        parse_str((string) parse_url((string) $response->headers->get('Location'), PHP_URL_QUERY), $query);
+        $response = $this->connectCallback($adminId);
 
+        $query = [];
+        parse_str((string) parse_url((string) $response->headers->get('Location'), PHP_URL_QUERY), $query);
         return (string) ($query['sso_link'] ?? '');
     }
 
-    private function connectCallback(int $adminId, string $keycloakSub, string $personId): TestResponse
+    private function connectCallback(int $adminId, ?string $school = null): TestResponse
     {
-        $this->fakeUpstream($personId);
-        $this->mockSocialiteUser($keycloakSub);
+        $this->fakeUpstreamEduplacesClaim('person-admin');
+        $this->mockSocialiteUser('kc-sub-admin', $school);
 
         $payload = base64_encode((string) json_encode([
             'instance_code' => 'TEST001',
@@ -258,6 +254,7 @@ class IdpConnectIdentityTest extends TestCase
             'api_base_url' => 'http://rival.test',
             'admin1_username' => 'rival_admin',
             'admin1_email' => 'rival@rival.test',
+            'sso_enabled' => true,
             'instance_code' => substr($id, 0, 10),
             'idp_school_id' => $schoolId,
             'data' => '{}',
@@ -279,7 +276,7 @@ class IdpConnectIdentityTest extends TestCase
         ]);
     }
 
-    private function fakeUpstream(string $personId): void
+    private function fakeUpstreamEduplacesClaim(string $personId): void
     {
         $header = rtrim(strtr(base64_encode((string) json_encode(['alg' => 'RS256'])), '+/', '-_'), '=');
         $body = rtrim(strtr(base64_encode((string) json_encode([
@@ -292,17 +289,20 @@ class IdpConnectIdentityTest extends TestCase
         ]);
     }
 
-    private function mockSocialiteUser(string $keycloakSub): void
+    private function mockSocialiteUser(string $keycloakSub, ?string $school = null): void
     {
-        $idToken = $this->signIdToken([
-            'iss' => self::KEYCLOAK_BASE.'/realms/'.self::KEYCLOAK_REALM,
-            'aud' => self::KEYCLOAK_CLIENT_ID,
-            'azp' => self::KEYCLOAK_CLIENT_ID,
-            'iat' => time() - 30,
-            'exp' => time() + 600,
-            'sub' => $keycloakSub,
-            'email_verified' => true,
-        ]);
+        $idToken = $this->signIdToken(array_merge(
+            [
+                'iss' => self::KEYCLOAK_BASE.'/realms/'.self::KEYCLOAK_REALM,
+                'aud' => self::KEYCLOAK_CLIENT_ID,
+                'azp' => self::KEYCLOAK_CLIENT_ID,
+                'iat' => time() - 30,
+                'exp' => time() + 600,
+                'sub' => $keycloakSub,
+                'email_verified' => true
+            ],
+            $school !== null ? [ 'school' => $school ] : []
+        ));
 
         $user = \Mockery::mock(User::class);
         $user->token = 'kc-access-token';
@@ -335,7 +335,7 @@ class IdpConnectIdentityTest extends TestCase
         return (int) self::$testTenant->run(function () use ($username, $level) {
             LegacyUser::where('username', $username)->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = $username;
             $user->displayname = $username;
             $user->pw = password_hash('secret', PASSWORD_BCRYPT);

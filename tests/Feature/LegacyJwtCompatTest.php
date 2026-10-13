@@ -137,7 +137,7 @@ class LegacyJwtCompatTest extends TestCase
         return self::$testTenant->run(function () use ($username, $level, $status) {
             LegacyUser::where('username', $username)->delete();
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = $username;
             $user->displayname = $username;
             $user->realname = $username;

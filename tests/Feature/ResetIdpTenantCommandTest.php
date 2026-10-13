@@ -86,7 +86,7 @@ class ResetIdpTenantCommandTest extends TestCase
         Tenant::where('id', self::$testTenant->id)->update(['admin1_username' => $username]);
 
         $adminId = (int) self::$testTenant->run(function () use ($username) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = $username;
             $user->displayname = $username;
             $user->email = 'reset.admin@test.example';
@@ -120,7 +120,7 @@ class ResetIdpTenantCommandTest extends TestCase
     public function test_it_deletes_an_imported_row_whose_owner_has_signed_in(): void
     {
         $importedId = (int) self::$testTenant->run(function () {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'reset.adopted.'.random_int(1000, 999999);
             $user->displayname = $user->username;
             // adoptDirectoryProvisionedUser() writes an address onto an
@@ -210,7 +210,7 @@ class ResetIdpTenantCommandTest extends TestCase
                 'room_name' => 'Schülerzeitung', 'status' => 1, 'type' => 0, 'hash_id' => $nativeRoomHash,
             ]);
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'reset.roles.'.random_int(1000, 999999);
             $user->displayname = $user->username;
             $user->status = UserStatus::Active;
@@ -290,7 +290,7 @@ class ResetIdpTenantCommandTest extends TestCase
     private function seedNativeUser(): int
     {
         return (int) self::$testTenant->run(function () {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'reset.native.'.random_int(1000, 999999);
             $user->displayname = $user->username;
             $user->email = 'reset.native@test.example';
