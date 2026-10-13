@@ -31,9 +31,11 @@ make prepare-legacy-local
 
 cp .env.example .env
 # and edit .env
+# TODO
 # for use with mariadb from docker compose, set DB_PORT=3307
 
 composer install
+TODO
 # Generate keypair for oauth
 php artisan passport:keys -q
 ```

@@ -38,7 +38,8 @@ chmod -R g+ws ./storage
 echo "🔑 Ensuring Passport keys are present and with correct permissions..."
 php artisan passport:keys -q
 chown www-data:www-data ./storage/oauth-*.key
-chmod 660 ./storage/oauth-public.key
+# Note o+r here, backend-legacy container needs read permissions and its UIDs are different
+chmod 664 ./storage/oauth-public.key
 chmod 600 ./storage/oauth-private.key
 echo "✅ Passport keys ready."
 
