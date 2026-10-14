@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Data\Room\Requests;
 
-use Spatie\LaravelData\Attributes\Validation\Prohibits;
 use Spatie\LaravelData\Data;
 use App\Data\Room\Requests\RoomMembershipData;
 
