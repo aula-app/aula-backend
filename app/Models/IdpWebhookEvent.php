@@ -22,12 +22,9 @@ class IdpWebhookEvent extends Model
     use CentralConnection;
 
     public const string STATUS_PENDING = 'pending';
-
     public const string STATUS_PROCESSED = 'processed';
-
     /** Nothing to do: no tenant holds the entity, or the sync had no work. */
     public const string STATUS_SKIPPED = 'skipped';
-
     public const string STATUS_FAILED = 'failed';
 
     protected $table = 'idp_webhook_events';

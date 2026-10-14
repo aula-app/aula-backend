@@ -87,6 +87,11 @@ class TenantResource extends Resource
                                 ->dehydrated(false)
                         ),
 
+                    Toggle::make('is_name_public')
+                        ->label('Allow public display of school name')
+                        ->helperText('Name of the school will be available in auto-complete search. If disabled, only the instance code will be accepted.')
+                        ->default(true),
+
                     TextInput::make('api_base_url')
                         ->label('API Base URL')
                         ->default(config('app.url'))

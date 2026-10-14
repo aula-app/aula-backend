@@ -111,7 +111,7 @@ class User
     /* returns user base data for a specified db id */
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
 
-    $stmt = $this->db->query('SELECT username, displayname, hash_id, realname, email, about_me, status FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
+    $stmt = $this->db->query('SELECT username, displayname, hash_id, realname, email, about_me, status, idp_user_id, sso_sub FROM ' . $this->db->au_users_basedata . ' WHERE id = :id');
     $this->db->bind(':id', $user_id); // bind userid
     $users = $this->db->resultSet();
     if (count($users) < 1) {
@@ -256,6 +256,7 @@ class User
 
   } // end function
 
+  // TODO remove this once FE uses v2 endpoint
   public function getUserGDPRData($user_id)
   {
     //retrieves all data associated to a certain user according to GDPR and returns it
@@ -1841,7 +1842,7 @@ class User
   {
     /* adds a user and returns insert id (userid) if successful, accepts the above parameters
      realname = actual name of the user, status = status of inserted user (0 = inactive, 1=active)
-     userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin 60 = tech admin
+     userlevel = Rights level for the user 0 = inactive, 10 = guest, 20 = standard, 30 = moderator 40 = super mod 50 = admin
     */
 
     // sanitize vars

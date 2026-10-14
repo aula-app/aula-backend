@@ -3,8 +3,10 @@ WORKDIR /opt/laravel
 EXPOSE 80
 
 # Install additional packages
-RUN apk --no-cache add supervisor nginx mariadb-client icu-dev icu-libs libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql intl zip
+RUN apk --no-cache add supervisor nginx mariadb-client icu-dev icu-libs libzip-dev autoconf gcc g++ make \
+    && docker-php-ext-install pdo pdo_mysql intl zip \
+    && pecl install opentelemetry \
+    && docker-php-ext-enable opentelemetry
 
 # Declare image volumes
 VOLUME /opt/laravel/storage

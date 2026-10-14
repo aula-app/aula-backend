@@ -22,10 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
             '192.168.0.0/16',
             '10.0.0.0/8',
         ]);
-
-        $middleware->alias([
-            'legacy.jwt' => \App\Http\Middleware\LegacyJwtMiddleware::class,
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (TenantCouldNotBeIdentifiedByRequestDataException $e, Request $request) {

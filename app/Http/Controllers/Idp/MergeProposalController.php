@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Idp;
 
 use App\Enums\UserLevel;
-use App\Http\Controllers\Controller;
 use App\Jobs\ImportSchoolForTenant;
+use App\Models\IdpMergeCandidate;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Migration\MergeProposalApplier;
 use App\Services\Idp\Migration\MergeProposalBuilder;
 use App\Services\Idp\SchoolImport;
+use App\UseCases\Idp\ListMergeProposalsUseCase;
+use App\UseCases\Idp\MergeProposalFilter;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -29,6 +34,7 @@ class MergeProposalController extends Controller
     public function __construct(
         private readonly MergeProposalBuilder $builder,
         private readonly MergeProposalApplier $applier,
+        private readonly ListMergeProposalsUseCase $lister,
     ) {}
 
     /**
@@ -59,36 +65,19 @@ class MergeProposalController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        if ($denied = $this->denyNonAdmin($request)) {
-            return $denied;
+        $filter = new MergeProposalFilter(
+            kind: (string) $request->query('kind', ''),
+            search: (string) $request->query('search', ''),
+            bucket: (string) $request->query('bucket', ''),
+            page: (int) $request->query('page', 1),
+            perPage: (int) $request->query('per_page', MergeProposalFilter::DEFAULT_PER_PAGE),
+        );
+
+        try {
+            $page = $this->lister->execute($filter);
+        } catch (AuthorizationException) {
+            return response()->json(['error' => 'admin_required'], 403);
         }
-
-        $query = DB::table('idp_merge_candidates');
-
-        if (($kind = (string) $request->query('kind', '')) !== '') {
-            $query->where('kind', $kind);
-        }
-
-        // A thousand-row proposal is unusable unfiltered, so this endpoint
-        // searches and pages rather than returning everything.
-        if (($search = trim((string) $request->query('search', ''))) !== '') {
-            $query->where(function ($q) use ($search): void {
-                $q->where('local_name', 'like', "%{$search}%")
-                    ->orWhere('idp_name', 'like', "%{$search}%");
-            });
-        }
-
-        if (($bucket = (string) $request->query('bucket', '')) !== '') {
-            match ($bucket) {
-                'merges' => $query->whereNotNull('idp_id')->whereNotNull('local_id'),
-                'idp_only' => $query->whereNotNull('idp_id')->whereNull('local_id'),
-                'aula_only' => $query->whereNull('idp_id')->whereNotNull('local_id'),
-                default => null,
-            };
-        }
-
-        $page = $query->orderBy('kind')->orderBy('outcome')->orderBy('id')
-            ->paginate(perPage: min((int) $request->query('per_page', 50), 200));
 
         return response()->json([
             'data' => $page->items(),
@@ -117,16 +106,11 @@ class MergeProposalController extends Controller
             'decisions.*.local_id' => 'nullable|integer',
         ]);
 
-        foreach ($data['decisions'] as $decision) {
-            $update = ['decision' => $decision['decision'] ?? null, 'updated_at' => now()];
-
-            if (array_key_exists('local_id', $decision)) {
-                $update['local_id'] = $decision['local_id'];
-                $update['local_name'] = $this->localName($decision['id'], $decision['local_id']);
+        DB::transaction(function () use ($data): void {
+            foreach ($data['decisions'] as $decision) {
+                $this->recordDecision($decision);
             }
-
-            DB::table('idp_merge_candidates')->where('id', $decision['id'])->update($update);
-        }
+        });
 
         return response()->json(['success' => true]);
     }
@@ -193,23 +177,93 @@ class MergeProposalController extends Controller
         ]);
     }
 
-    private function localName(int $candidateId, ?int $localId): ?string
+    /**
+     * @param  array{id: int, decision?: ?string, local_id?: ?int}  $decision
+     */
+    private function recordDecision(array $decision): void
+    {
+        $row = IdpMergeCandidate::find($decision['id']);
+
+        if ($row === null) {
+            return;
+        }
+
+        $previous = $row->local_id;
+        $row->decision = $decision['decision'] ?? null;
+
+        if (array_key_exists('local_id', $decision)) {
+            $row->local_id = $decision['local_id'];
+            $row->local_name = $this->localName($row->kind, $decision['local_id']);
+        }
+
+        $row->save();
+
+        if ($row->local_id !== $previous) {
+            $this->releaseLocal($row->kind, $previous);
+            $this->claimLocal($row->kind, $row->local_id);
+        }
+    }
+
+    /**
+     * Give an aula row no candidate references any more its aula-only row
+     * back, or the review loses it and it cannot be paired again.
+     */
+    private function releaseLocal(string $kind, ?int $localId): void
+    {
+        if ($localId === null) {
+            return;
+        }
+
+        if (IdpMergeCandidate::where('kind', $kind)->where('local_id', $localId)->exists()) {
+            return;
+        }
+
+        IdpMergeCandidate::create([
+            'kind' => $kind,
+            'local_id' => $localId,
+            'local_name' => $this->localName($kind, $localId),
+            'outcome' => MergeProposalBuilder::OUTCOME_NONE,
+        ]);
+    }
+
+    /**
+     * Drop the aula-only row of an aula row a candidate now pairs with.
+     */
+    private function claimLocal(string $kind, ?int $localId): void
+    {
+        if ($localId === null) {
+            return;
+        }
+
+        IdpMergeCandidate::where('kind', $kind)
+            ->whereNull('idp_id')
+            ->where('local_id', $localId)
+            ->delete();
+    }
+
+    /**
+     * The name MergeProposalBuilder records for the same aula row.
+     */
+    private function localName(string $kind, ?int $localId): ?string
     {
         if ($localId === null) {
             return null;
         }
 
-        $kind = DB::table('idp_merge_candidates')->where('id', $candidateId)->value('kind');
+        // au_rooms has no model.
+        if ($kind === MergeProposalBuilder::KIND_ROOM) {
+            return DB::table('au_rooms')->where('id', $localId)->value('room_name');
+        }
 
-        return $kind === MergeProposalBuilder::KIND_ROOM
-            ? DB::table('au_rooms')->where('id', $localId)->value('room_name')
-            : DB::table('au_users_basedata')->where('id', $localId)->value('displayname');
+        $user = LegacyUser::find($localId, ['realname', 'displayname']);
+
+        return $user === null ? null : (string) ($user->realname ?: $user->displayname);
     }
 
     private function denyNonAdmin(Request $request): ?JsonResponse
     {
         /** @var LegacyUser|null $user */
-        $user = $request->attributes->get('authenticated_user');
+        $user = Auth::user();
 
         if (($user?->userlevel?->value ?? 0) < UserLevel::Admin->value) {
             return response()->json(['error' => 'admin_required'], 403);

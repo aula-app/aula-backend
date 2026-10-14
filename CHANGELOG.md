@@ -3,6 +3,9 @@
 
 # v2
 
+- feat(sso): refactored resolving tenants from webhooks 
+- feat(oauth): migration to create Passport Clients for PasswordGrant & PersonalAccessToken
+
 ## v2.2.0
 
 - feat: add SSO login via Keycloak
@@ -42,7 +45,7 @@
 
 ## ?
 
--
+- feat: expand Users::getUserBaseData with SSO info
 
 ## v1.9.6
 

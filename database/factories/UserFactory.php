@@ -2,15 +2,24 @@
 
 namespace Database\Factories;
 
+use App\Models\Manager\AulaManagerUser;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends Factory<AulaManagerUser>
  */
 class UserFactory extends Factory
 {
+    /**
+     * Named explicitly: the guess from the class name is App\Models\User, which
+     * no longer exists.
+     *
+     * @var class-string<AulaManagerUser>
+     */
+    protected $model = AulaManagerUser::class;
+
     /**
      * The current password being used by the factory.
      */

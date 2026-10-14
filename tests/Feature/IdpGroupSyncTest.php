@@ -6,7 +6,6 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
-use App\Models\IdpDirectoryEntry;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
@@ -23,16 +22,13 @@ use Tests\TestCase;
  * directory group is an aula room, so these keep `au_rooms` and
  * `au_rel_rooms_users` in step.
  */
-class GroupSyncTest extends TestCase
+class IdpGroupSyncTest extends TestCase
 {
     use CreatesTestTenant;
 
     private const string API_URL = 'https://api.eduplaces.test';
-
     private const string AUTH_URL = 'https://auth.eduplaces.test';
-
     private const string SCHOOL = 'school-room-sync';
-
     private const string GROUP = 'group-room-sync';
 
     /** @var array<string, array<string, mixed>> */
@@ -58,7 +54,6 @@ class GroupSyncTest extends TestCase
 
         Cache::flush();
         IdpWebhookEvent::query()->delete();
-        IdpDirectoryEntry::query()->delete();
         $this->cleanTenant();
 
         $this->idmGroups = [];
@@ -69,7 +64,6 @@ class GroupSyncTest extends TestCase
     {
         $this->cleanTenant();
         IdpWebhookEvent::query()->delete();
-        IdpDirectoryEntry::query()->delete();
         self::$testTenant->update(['idp_school_id' => null]);
         parent::tearDown();
     }
@@ -227,7 +221,7 @@ class GroupSyncTest extends TestCase
             'action' => $action,
             'entity_id' => self::GROUP,
             'updated_properties' => $properties,
-            'payload' => ['event' => 'group', 'action' => $action, 'groupId' => self::GROUP],
+            'payload' => ['event' => 'group', 'action' => $action, 'groupId' => self::GROUP, 'schoolId' => self::SCHOOL],
             'status' => IdpWebhookEvent::STATUS_PENDING,
             'received_at' => now(),
         ]);
@@ -280,7 +274,7 @@ class GroupSyncTest extends TestCase
     private function seedUser(?string $personId): int
     {
         return (int) self::$testTenant->run(function () use ($personId) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'roomtest.'.($personId ?? 'native').'.'.random_int(1000, 999999);
             $user->displayname = $user->username;
             $user->idp_user_id = $personId;

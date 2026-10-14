@@ -10,17 +10,11 @@ namespace App\Services\Idp\Dto;
 final readonly class IdpEvent
 {
     public const string ENTITY_USER = 'user';
-
     public const string ENTITY_GROUP = 'group';
-
     public const string ENTITY_SCHOOL = 'school';
-
     public const string ACTION_CREATE = 'create';
-
     public const string ACTION_UPDATE = 'update';
-
     public const string ACTION_DELETE = 'delete';
-
     public const string ACTION_RESTORE = 'restore';
 
     /**
@@ -33,7 +27,13 @@ final readonly class IdpEvent
         public string $entityId,
         public array $updatedProperties = [],
         public array $payload = [],
-    ) {}
+    ) {
+    }
+
+    public function getSchoolId(): ?string
+    {
+        return array_key_exists('schoolId', $this->payload) ? (string) $this->payload['schoolId'] : null;
+    }
 
     /**
      * @return list<string>

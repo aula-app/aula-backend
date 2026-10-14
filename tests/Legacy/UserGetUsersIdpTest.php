@@ -2,6 +2,7 @@
 
 namespace Tests\Legacy;
 
+use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -45,7 +46,7 @@ class UserGetUsersIdpTest extends TestCase
 
     public function test_it_reports_the_provider_identity_of_an_imported_account(): void
     {
-        $username = 'idpcol_imported_'.uniqid();
+        $username = 'idpcol_imported_'.Str::random(16);
         $this->insertUser($username, idpUserId: 'person-from-directory', ssoSub: null);
 
         $row = $this->findUser($username);
@@ -60,7 +61,7 @@ class UserGetUsersIdpTest extends TestCase
 
     public function test_an_account_made_in_aula_carries_neither(): void
     {
-        $username = 'idpcol_local_'.uniqid();
+        $username = 'idpcol_local_'.Str::random(16);
         $this->insertUser($username, idpUserId: null, ssoSub: null);
 
         $row = $this->findUser($username);

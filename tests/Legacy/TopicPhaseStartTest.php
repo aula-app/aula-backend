@@ -2,6 +2,7 @@
 
 namespace Tests\Legacy;
 
+use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -31,7 +32,7 @@ class TopicPhaseStartTest extends TestCase
         $this->ensureTestTenantExists();
         $this->loadLegacyClasses();
         $this->initializeDependencies();
-        $this->testTag = 'phpunit_topic_' . uniqid();
+        $this->testTag = 'phpunit_topic_' . Str::random(16);
         $this->roomId = $this->insertRoom();
     }
 
@@ -151,8 +152,20 @@ class TopicPhaseStartTest extends TestCase
     public function test_addTopic_sets_phase_start_to_now(): void
     {
         $result = $this->topic->addTopic(
-            $this->testTag, '', '', 1, 10, 0, $this->roomId, 1, 10,
-            0, 14, 14, 14, 14
+            $this->testTag,
+            '',
+            '',
+            1,
+            10,
+            0,
+            $this->roomId,
+            1,
+            10,
+            0,
+            14,
+            14,
+            14,
+            14
         );
         $this->assertTrue($result['success']);
         $topicId = (int) $result['data'];
@@ -171,8 +184,21 @@ class TopicPhaseStartTest extends TestCase
 
         // Moderator advances the box to voting (phase 30).
         $result = $this->topic->editTopic(
-            $this->testTag, '', $topicId, '', 1, 10, 0, $this->roomId, 1, 30,
-            0, 14, 14, 14, 14
+            $this->testTag,
+            '',
+            $topicId,
+            '',
+            1,
+            10,
+            0,
+            $this->roomId,
+            1,
+            30,
+            0,
+            14,
+            14,
+            14,
+            14
         );
         $this->assertTrue($result['success']);
 
@@ -191,8 +217,21 @@ class TopicPhaseStartTest extends TestCase
 
         // A plain edit that re-sends the same phase_id (e.g. description change).
         $result = $this->topic->editTopic(
-            $this->testTag, 'updated description', $topicId, '', 1, 10, 0, $this->roomId, 1, 30,
-            0, 14, 14, 14, 14
+            $this->testTag,
+            'updated description',
+            $topicId,
+            '',
+            1,
+            10,
+            0,
+            $this->roomId,
+            1,
+            30,
+            0,
+            14,
+            14,
+            14,
+            14
         );
         $this->assertTrue($result['success']);
 

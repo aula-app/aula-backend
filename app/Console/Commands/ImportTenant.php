@@ -30,7 +30,7 @@ class ImportTenant extends Command
             return self::FAILURE;
         }
 
-        $tmpDir = sys_get_temp_dir().'/tenant_import_'.uniqid();
+        $tmpDir = sys_get_temp_dir().'/tenant_import_'.Str::random(16);
         mkdir($tmpDir, 0700, true);
 
         try {

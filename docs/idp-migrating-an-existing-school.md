@@ -38,6 +38,8 @@ another person, so no name match is applied without review.
 
 ```
 1. aula-manager (Filament)   operator flags the tenant: will sync with <provider>
+2. is admin logged in before the operator change?
+2. should we put the school in the maintenance mode?
 2. aula settings             admin sees "Sync with Eduplaces"
 3.   ├─ Connect my account   admin signs in via the provider, links it to their
    │                         own aula admin account (password already proved by
@@ -112,16 +114,9 @@ alone and stay unmanaged.
 Matched on **full name**, with two complications that the review must surface
 rather than hide.
 
-**Not everyone has a real name.** With `users:read` but not `people:read`, the
-provider returns `pseudonym` ("Denk Raumfahrer") for a user and a real `name`
-only inside a group's member list. So:
-
-| directory user is…    | name available | matchable |
-|-----------------------|----------------|-----------|
-| in at least one group | real name      | yes       |
-| in no group           | pseudonym only | **no**    |
-
-A pseudonym-only row is recorded with `idp_name_kind = pseudonym`, carries no
+**Not everyone has a real name.** Whether `/people` carries a `name` depends
+on the app's entitlements; without one the row can show only a `pseudonym`
+("Denk Raumfahrer"). A pseudonym-only row is recorded with `idp_name_kind = pseudonym`, carries no
 name keys, and can be paired by hand only.
 
 **Names are not unique.** Two rows called "Max Müller" on either side make an

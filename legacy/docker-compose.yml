@@ -1,5 +1,6 @@
 networks:
   aula_local:
+    external: true # this external means network is defined outside of this compose
 
 services:
   aula-backend-legacy:

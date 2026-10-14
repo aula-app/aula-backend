@@ -2,6 +2,7 @@
 
 namespace Tests\Legacy;
 
+use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -20,7 +21,7 @@ class CommandGetCommandsTest extends TestCase
         $this->ensureTestTenantExists();
         $this->loadLegacyClasses();
         $this->initializeDependencies();
-        $this->testTag = 'phpunit_cmd_' . uniqid();
+        $this->testTag = 'phpunit_cmd_' . Str::random(16);
     }
 
     protected function tearDown(): void

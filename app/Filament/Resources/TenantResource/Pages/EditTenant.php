@@ -53,6 +53,8 @@ class EditTenant extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         unset($data['instance_code'], $data['jwt_key']);
+        // these are just ephemeral fields for the filament page
+        unset($data['admin1_username_manual'], $data['admin2_username_manual']);
 
         return $data;
     }

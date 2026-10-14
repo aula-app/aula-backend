@@ -185,7 +185,7 @@ class TenancyServiceProvider extends ServiceProvider
     {
         // Override default TenantDB username and password generators
         DatabaseConfig::$usernameGenerator = function (Tenant&Model $tenant, $self) {
-            return "aula_{$self->tenant->instance_code}";
+            return "aula_{$self->tenant->instance_code}_{$self->tenant->id}";
         };
         DatabaseConfig::$passwordGenerator = function () {
             return Str::random(63);

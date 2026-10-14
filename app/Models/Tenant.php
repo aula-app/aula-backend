@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Services\Idp\IdpProviders;
@@ -13,15 +15,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     use HasDatabase;
 
     public const string IDP_MIGRATION_FLAGGED = 'flagged';
-
     public const string IDP_MIGRATION_CONNECTED = 'connected';
-
     public const string IDP_MIGRATION_REVIEWING = 'reviewing';
-
     public const string IDP_MIGRATION_IMPORTING = 'importing';
-
     public const string IDP_MIGRATION_LINKING = 'linking';
-
     public const string IDP_MIGRATION_COMPLETED = 'completed';
 
     public static function getCustomColumns(): array
@@ -40,6 +37,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'admin2_email',
             'admin2_init_pass_url',
             'instance_code',
+            'is_name_public',
             'jwt_key',
             'sso_enabled',
             'sso_provider',

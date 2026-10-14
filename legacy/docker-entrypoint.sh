@@ -13,6 +13,7 @@ if [[ "$APP_ENV" == "local" ]]; then
   usermod -aG $APACHE_RUN_GROUP $TARGET_USER_NAME
   chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./errors
   chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./files
+  chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./config/oauth-public.key
 else
   # set up directory structure in the container
   chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./

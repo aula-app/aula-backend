@@ -6,7 +6,6 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
-use App\Models\IdpDirectoryEntry;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
@@ -15,6 +14,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -23,16 +23,13 @@ use Tests\TestCase;
  * UserSync reads the user back from the directory, and SchoolImport::importUser()
  * converges the local row onto it.
  */
-class UserSyncTest extends TestCase
+class IdpUserSyncTest extends TestCase
 {
     use CreatesTestTenant;
 
     private const string API_URL = 'https://api.eduplaces.test';
-
     private const string AUTH_URL = 'https://auth.eduplaces.test';
-
     private const string SCHOOL = 'school-person-sync';
-
     private const string PERSON = 'person-sync-1';
 
     /** @var array<string, array<string, mixed>> the users the IDM stand-in holds */
@@ -49,6 +46,15 @@ class UserSyncTest extends TestCase
         // Eloquent would skip writes it wrongly believes are no-ops.
         self::$testTenant->refresh();
         self::$testTenant->update(['idp_school_id' => self::SCHOOL, 'sso_provider' => 'eduplaces']);
+        self::$testTenant->run(function () {
+            DB::table('au_rooms')->insert([
+                    'room_name' => 'Schule',
+                    'description_internal' => null,
+                    'hash_id' => Str::random(30),
+                    'status' => 1,
+                    'type' => 1,
+                ]);
+        });
 
         config([
             'idp.providers.eduplaces.auth_url' => self::AUTH_URL,
@@ -61,7 +67,6 @@ class UserSyncTest extends TestCase
 
         Cache::flush();
         IdpWebhookEvent::query()->delete();
-        IdpDirectoryEntry::query()->delete();
         $this->clearSyncedUsers();
 
         $this->idmPeople = [];
@@ -73,7 +78,6 @@ class UserSyncTest extends TestCase
     {
         $this->clearSyncedUsers();
         IdpWebhookEvent::query()->delete();
-        IdpDirectoryEntry::query()->delete();
         self::$testTenant->update(['idp_school_id' => null]);
         parent::tearDown();
     }
@@ -352,9 +356,8 @@ class UserSyncTest extends TestCase
 
     public function test_skips_an_event_for_a_school_we_do_not_host(): void
     {
-        // No school in the directory holds this id, so TenantResolver's scan
-        // finds no tenant to open.
-        $event = $this->event('update', 'person-from-another-school');
+        // Somehow we receive the same personId, but coming from another school that we don't integrate with
+        $event = $this->event('update', $this::PERSON, schoolId: 'another-school');
         $this->process($event);
 
         $this->assertSame(IdpWebhookEvent::STATUS_SKIPPED, $event->fresh()->status);
@@ -397,7 +400,7 @@ class UserSyncTest extends TestCase
         $this->app->call([new ProcessIdpWebhookEvent($event->id), 'handle']);
     }
 
-    private function event(string $action, string $personId = self::PERSON, array $properties = []): IdpWebhookEvent
+    private function event(string $action, string $personId = self::PERSON, array $properties = [], string $schoolId = self::SCHOOL): IdpWebhookEvent
     {
         return IdpWebhookEvent::create([
             'provider' => 'eduplaces',
@@ -405,7 +408,7 @@ class UserSyncTest extends TestCase
             'action' => $action,
             'entity_id' => $personId,
             'updated_properties' => $properties,
-            'payload' => ['event' => 'person', 'action' => $action, 'personId' => $personId],
+            'payload' => ['event' => 'person', 'action' => $action, 'personId' => $personId, 'schoolId' => $schoolId],
             'status' => IdpWebhookEvent::STATUS_PENDING,
             'received_at' => now(),
         ]);
@@ -427,11 +430,11 @@ class UserSyncTest extends TestCase
                 str_ends_with($path, '/oauth2/token') => Http::response([
                     'access_token' => 'token', 'token_type' => 'bearer', 'expires_in' => 3599,
                 ]),
-                (bool) preg_match('#/schools/[^/]+/(people|users)$#', $path) => Http::response(
+                (bool) preg_match('#/schools/[^/]+/people$#', $path) => Http::response(
                     array_values($this->idmPeople),
                 ),
                 (bool) preg_match('#/schools/[^/]+/groups$#', $path) => Http::response([]),
-                (bool) preg_match('#/(people|users)/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[2])),
+                (bool) preg_match('#/people/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[1])),
                 default => Http::response(status: 404),
             };
         });
