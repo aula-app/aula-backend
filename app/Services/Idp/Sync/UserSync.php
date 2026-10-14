@@ -8,6 +8,7 @@ use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
+use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\RoomEnrolment;
 use App\Services\Idp\SchoolImport;
@@ -34,6 +35,7 @@ final class UserSync
         private readonly IdpProviders $providers,
         private readonly SchoolImport $import,
         private readonly RoomEnrolment $rooms,
+        private readonly GroupSync $groups,
     ) {}
 
     public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
@@ -51,6 +53,8 @@ final class UserSync
             return SyncOutcome::skipped('user_not_found_upstream');
         }
 
+        $this->importUnknownGroups($person, $tenant, $provider);
+
         $user = $this->import->importUser($tenant, $provider, $person);
 
         if ($event->action === IdpEvent::ACTION_RESTORE && ! $user->isActive()) {
@@ -61,6 +65,30 @@ final class UserSync
         }
 
         return SyncOutcome::processed();
+    }
+
+    /**
+     * Create the room for every group of this person that aula has no room for.
+     *
+     * Eduplaces announces a membership change as a person event and need not
+     * send a group event for a newly synced group.
+     */
+    private function importUnknownGroups(IdpUser $person, Tenant $tenant, string $provider): void
+    {
+        $managed = $this->rooms->managedRooms();
+
+        foreach ($person->groups as $group) {
+            if (isset($managed[$group->id])) {
+                continue;
+            }
+
+            if (! $this->groups->importGroup($group->id, $tenant, $provider)) {
+                Log::info('IdP: group named on a person is gone upstream', [
+                    'idp_user_id' => $person->id,
+                    'idp_group_id' => $group->id,
+                ]);
+            }
+        }
     }
 
     private function archive(string $userId): SyncOutcome

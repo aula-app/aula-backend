@@ -38,6 +38,9 @@ class IdpUserSyncTest extends TestCase
     /** @var list<string> listed at the school, but 404 on individual lookup */
     private array $idmVanished = [];
 
+    /** @var array<string, array<string, mixed>> the groups the IDM stand-in holds, with members */
+    private array $idmGroups = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -71,6 +74,7 @@ class IdpUserSyncTest extends TestCase
 
         $this->idmPeople = [];
         $this->idmVanished = [];
+        $this->idmGroups = [];
         $this->fakeIdm();
     }
 
@@ -307,6 +311,107 @@ class IdpUserSyncTest extends TestCase
         });
     }
 
+    public function test_creates_the_room_for_a_group_aula_does_not_have_yet(): void
+    {
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['firstFull' => 'New', 'last' => 'Member'],
+            'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
+        ]);
+        $this->setGroup('group-new', 'Aula Group', [
+            ['id' => self::PERSON, 'role' => 'STUDENT'],
+        ]);
+
+        $this->process($this->event('update', properties: ['groups']));
+
+        self::$testTenant->run(function () {
+            $room = DB::table('au_rooms')->where('idp_group_id', 'group-new')->first();
+            $this->assertNotNull($room);
+            $this->assertSame('Aula Group', $room->room_name);
+
+            $user = LegacyUser::where('idp_user_id', self::PERSON)->firstOrFail();
+            $this->assertSame(1, DB::table('au_rel_rooms_users')
+                ->where('user_id', $user->id)->where('room_id', $room->id)->count());
+        });
+    }
+
+    public function test_imports_every_member_of_a_newly_created_room(): void
+    {
+        $this->seedLocalUser('person-already-local', 'Local');
+
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Trigger'],
+            'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
+        ]);
+        $this->setPerson([
+            'role' => 'TEACHER',
+            'name' => ['firstFull' => 'Not', 'last' => 'Imported'],
+            'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
+        ], 'person-not-local');
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Local'],
+            'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
+        ], 'person-already-local');
+        $this->setGroup('group-new', 'Aula Group', [
+            ['id' => self::PERSON, 'role' => 'STUDENT'],
+            ['id' => 'person-not-local', 'role' => 'TEACHER'],
+            ['id' => 'person-already-local', 'role' => 'STUDENT'],
+        ]);
+
+        $this->process($this->event('update', properties: ['groups']));
+
+        self::$testTenant->run(function () {
+            $roomId = DB::table('au_rooms')->where('idp_group_id', 'group-new')->value('id');
+
+            $members = DB::table('au_rel_rooms_users')
+                ->join('au_users_basedata', 'au_users_basedata.id', '=', 'au_rel_rooms_users.user_id')
+                ->where('room_id', $roomId)
+                ->pluck('au_users_basedata.idp_user_id')
+                ->sort()->values()->all();
+
+            $this->assertSame(['person-already-local', 'person-not-local', self::PERSON], $members);
+
+            $imported = LegacyUser::where('idp_user_id', 'person-not-local')->firstOrFail();
+            $this->assertSame('Not Imported', $imported->realname);
+            $this->assertSame(40, $imported->userlevel->value);
+        });
+    }
+
+    public function test_does_not_fetch_a_group_whose_room_already_exists(): void
+    {
+        $this->seedLocalRoom('group-known', 'Klasse 5a');
+
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Known'],
+            'groups' => [['id' => 'group-known', 'name' => 'Klasse 5a']],
+        ]);
+
+        $this->process($this->event('update', properties: ['groups']));
+
+        Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '/groups/'));
+    }
+
+    public function test_still_syncs_the_user_when_the_new_group_is_gone_upstream(): void
+    {
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Orphan'],
+            'groups' => [['id' => 'group-gone', 'name' => 'Gone']],
+        ]);
+
+        $event = $this->event('update', properties: ['groups']);
+        $this->process($event);
+
+        $this->assertSame(IdpWebhookEvent::STATUS_PROCESSED, $event->fresh()->status);
+        $this->assertNotNull($this->syncedUser());
+        self::$testTenant->run(fn () => $this->assertFalse(
+            DB::table('au_rooms')->where('idp_group_id', 'group-gone')->exists(),
+        ));
+    }
+
     public function test_leaves_aula_native_group_memberships_alone(): void
     {
         // A room created inside aula carries no idp_group_id, so
@@ -435,6 +540,9 @@ class IdpUserSyncTest extends TestCase
                 ),
                 (bool) preg_match('#/schools/[^/]+/groups$#', $path) => Http::response([]),
                 (bool) preg_match('#/people/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[1])),
+                (bool) preg_match('#/groups/([^/]+)$#', $path, $m) => isset($this->idmGroups[urldecode($m[1])])
+                    ? Http::response($this->idmGroups[urldecode($m[1])])
+                    : Http::response(status: 404),
                 default => Http::response(status: 404),
             };
         });
@@ -462,6 +570,20 @@ class IdpUserSyncTest extends TestCase
         return self::$testTenant->run(
             fn () => LegacyUser::where('idp_user_id', $personId)->first(),
         );
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $members
+     */
+    private function setGroup(string $groupId, string $name, array $members): void
+    {
+        $this->idmGroups[$groupId] = ['id' => $groupId, 'name' => $name, 'status' => 'ACTIVE', 'members' => $members];
+    }
+
+    private function seedLocalUser(string $personId, string $lastName): void
+    {
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => $lastName]], $personId);
+        $this->process($this->event('create', $personId));
     }
 
     private function seedLocalRoom(?string $eduplacesId, string $name): int
