@@ -35,11 +35,10 @@ class RoomTest extends TestCase
         $this->ensureTestTenantExists();
 
         $adminUser = $this->createDistinctUser(UserLevel::Admin, UserStatus::Active);
-        $adminJwt = $this->jwtForUser($adminUser);
+        Passport::actingAs($adminUser);
 
         $this->withHeaders([
-            ...self::TENANT_HEADERS,
-            ...['Authorization' => "Bearer {$adminJwt}"],
+            ...self::TENANT_HEADERS
         ]);
     }
 
@@ -94,11 +93,9 @@ class RoomTest extends TestCase
     public function test_create_room_authz()
     {
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
+        Passport::actingAs($nonAdminUser);
         $this->getJson(
-            '/api/v2/rooms',
-            // override default admin headers
-            ['Authorization' => "Bearer {$nonAdminJwt}"]
+            '/api/v2/rooms'
         )
             ->assertForbidden();
     }
