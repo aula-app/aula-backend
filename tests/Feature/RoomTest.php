@@ -23,10 +23,20 @@ class RoomTest extends TestCase
 
     private const array NEW_ROOM_DATA = [
         'name' => 'Testroom',
+        'status' => 1,
         'descriptionPublic' => 'Public test description',
         'descriptionInternal' => 'Internal test description',
         'phaseDuration1' => 14,
         'phaseDuration3' => 14,
+    ];
+
+    private const array UPDATE_ROOM_DATA = [
+        'name' => 'Testroom renamed',
+        'status' => 1,
+        'descriptionPublic' => 'Public test description changed',
+        'descriptionInternal' => 'Internal test description changed',
+        'phaseDuration1' => 15,
+        'phaseDuration3' => 15,
     ];
 
     protected function setUp(): void
@@ -90,14 +100,131 @@ class RoomTest extends TestCase
         return $newRoomPublicId;
     }
 
-    public function test_create_room_authz()
+    public function test_create_room_required()
+    {
+        $this->postJson(
+            '/api/v2/rooms',
+            []
+        )
+            ->assertInvalid(['name', 'status', 'descriptionPublic', 'descriptionInternal', 'phaseDuration1', 'phaseDuration3'])
+            ->assertUnprocessable();
+    }
+
+    public function test_create_room_validation()
+    {
+        foreach ([
+            ['createdAt' => '2001-01-23T12:34:56Z'],
+            ['createdAt' => 'nondate'],
+            ['createdAt' => ''],
+            ['publicId' => ''],
+            ['publicId' => null],
+            ['updatedAt' => ''],
+            ['name' => null],
+            ['name' => ''],
+            ['name' => str_repeat('A', 2000)],
+            ['status' => null],
+            ['status' => ''],
+            ['status' => 'a'],
+            ['descriptionPublic' => ''],
+            ['descriptionPublic' => null],
+            ['phaseDuration1' => ''],
+            ['phaseDuration1' => -1],
+            ['phaseDuration1' => 0],
+            ['phaseDuration3' => ''],
+        ] as $kv) {
+            $this->postJson('/api/v2/rooms', [...self::NEW_ROOM_DATA, ...$kv])
+                ->assertInvalid(array_key_first($kv))
+                ->assertUnprocessable();
+        }
+    }
+
+    #[Depends('test_create_room')]
+    public function test_update_room($newRoomPublicId)
+    {
+        $result = $this->putJson(
+            "/api/v2/rooms/$newRoomPublicId",
+            self::UPDATE_ROOM_DATA,
+        )
+            ->assertOk()
+            ->assertJsonMissingPath('id')
+            ->assertJson(self::UPDATE_ROOM_DATA);
+        $updatedRoom = $result->decodeResponseJson();
+        $this->assertIsString($updatedRoom['updatedAt']);
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedRoom['updatedAt']));
+        $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedRoom['createdAt']));
+        $this->assertGreaterThanOrEqual($updatedRoom['createdAt'], $updatedRoom['updatedAt']);
+        return $newRoomPublicId;
+    }
+
+    #[Depends('test_create_room')]
+    public function test_update_room_required($newRoomPublicId)
+    {
+        $this->putJson(
+            "/api/v2/rooms/$newRoomPublicId",
+            []
+        )
+            ->assertInvalid(['name', 'status', 'descriptionPublic', 'descriptionInternal', 'phaseDuration1', 'phaseDuration3'])
+            ->assertUnprocessable();
+    }
+
+    public function test_create_update_room_authz()
     {
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
         Passport::actingAs($nonAdminUser);
-        $this->getJson(
-            '/api/v2/rooms'
-        )
+        $this->getJson('/api/v2/rooms')
             ->assertForbidden();
+        $this->postJson(
+            '/api/v2/rooms',
+            self::NEW_ROOM_DATA,
+        )->assertForbidden();
+    }
+
+    #[Depends('test_create_room')]
+    public function test_index_read_delete_room_authz($newRoomPublicId)
+    {
+        $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
+        Passport::actingAs($nonAdminUser);
+        $this->getJson("/api/v2/rooms")
+            ->assertForbidden();
+        $this->getJson("/api/v2/rooms/$newRoomPublicId")
+            ->assertForbidden();
+        $this->deleteJson("/api/v2/rooms/$newRoomPublicId")
+            ->assertForbidden();
+    }
+
+    #[Depends('test_create_room')]
+    public function test_index_room($newRoomPublicId)
+    {
+        $allRooms = $this->getJson("/api/v2/rooms")
+            ->assertOk()
+            ->json();
+        $allRoomPublicIds = array_column($allRooms, 'publicId');
+        $this->assertContains($newRoomPublicId, $allRoomPublicIds);
+    }
+
+    #[Depends('test_update_room')]
+    public function test_show_room($newRoomPublicId)
+    {
+        $this->getJson("/api/v2/rooms/$newRoomPublicId")
+            ->assertOk()
+            ->assertJson(self::UPDATE_ROOM_DATA);
+    }
+
+    public function test_bad_show()
+    {
+        $this->getJson('/api/v2/rooms/1', [])
+            ->assertNotFound();
+        $this->getJson('/api/v2/rooms/foo', [])
+            ->assertNotFound();
+        $this->getJson('/api/v2/rooms/0123456789abcdef0123456789abcdef', [])
+            ->assertNotFound();
+    }
+
+    #[Depends('test_create_room')]
+    public function test_patch_disallowed($newRoomPublicId)
+    {
+        $this->patchJson('/api/v2/rooms/'.$newRoomPublicId, [])
+            ->assertMethodNotAllowed();
     }
 
     // TODO create seperate functions
@@ -203,6 +330,8 @@ class RoomTest extends TestCase
         $newUserPublicId2 = $user2->hash_id;
         $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
             ->assertExactJson([]);
+
+        // add user1 and user2 to room
         $this->patchJson(
             "/api/v2/rooms/{$newRoomPublicId}/membership",
             [
@@ -212,6 +341,8 @@ class RoomTest extends TestCase
                 ]
             ]
         )->assertOk();
+
+        // check if their userlevels and roomlevels are correct
         $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
             ->assertOk()
             ->assertJson(
@@ -220,6 +351,8 @@ class RoomTest extends TestCase
                     ["publicId" => $newUserPublicId2, "userLevel" => 30, "roomLevel" => 20],
                 ]
             );
+
+        // set user1's roomlevel to 30
         $this->patchJson(
             "/api/v2/rooms/{$newRoomPublicId}/membership",
             [
@@ -228,7 +361,12 @@ class RoomTest extends TestCase
                 ]
             ]
         )->assertOk();
-        // test transaction; add 404s, so remove, which runs first, should be rolled back
+        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
+            ->assertJson(
+                [["publicId" => $newUserPublicId1, "userLevel" => 20, "roomLevel" => 30]]
+            );
+
+        // test transaction; `add` will 404, so `remove`, which runs first, should be rolled back
         $this->patchJson(
             "/api/v2/rooms/{$newRoomPublicId}/membership",
             [
@@ -248,6 +386,8 @@ class RoomTest extends TestCase
                     ["publicId" => $newUserPublicId2, "userLevel" => 30, "roomLevel" => 20],
                 ]
             );
+
+        // test remove
         $this->patchJson(
             "/api/v2/rooms/{$newRoomPublicId}/membership",
             ["remove" => [$newUserPublicId1]]
