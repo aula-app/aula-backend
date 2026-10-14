@@ -11,6 +11,7 @@ use App\UseCases\RoomMembership\DeleteRoomMemberUseCase;
 use App\UseCases\RoomMembership\ListRoomMemberUseCase;
 use App\UseCases\RoomMembership\ShowRoomMemberUseCase;
 use Spatie\LaravelData\DataCollection;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 
 // TODO Authz

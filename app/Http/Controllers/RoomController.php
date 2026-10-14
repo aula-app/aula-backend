@@ -19,6 +19,7 @@ use App\UseCases\Room\UpdateRoomUseCase;
 use App\UseCases\Room\ListRoomMembershipUseCase;
 use App\UseCases\Room\PatchRoomMembershipUseCase;
 use Spatie\LaravelData\DataCollection;
+use Illuminate\Routing\Controller;
 
 class RoomController extends Controller
 {
