@@ -44,29 +44,22 @@ final class GroupSync
                 : SyncOutcome::skipped('room_not_local');
         }
 
-        $group = $this->providers->directory($provider)->group($event->entityId);
+        $forceActive = $event->action === IdpEvent::ACTION_RESTORE;
 
-        if ($group === null) {
-            return SyncOutcome::skipped('group_not_found_upstream');
-        }
-
-        $active = $event->action === IdpEvent::ACTION_RESTORE || $group->isActive();
-
-        $room = $this->rooms->upsertRoom($group->id, $group->name, $active);
-
-        $this->syncMembers($room, $group->members, $provider);
-
-        return SyncOutcome::processed();
+        return $this->refreshGroup($event->entityId, $tenant, $provider, $forceActive)
+            ? SyncOutcome::processed()
+            : SyncOutcome::skipped('group_not_found_upstream');
     }
 
     /**
-     * Create the room for a group aula does not hold yet and import every
-     * member without a local row.
+     * Converge one room on the group read back from the directory: name,
+     * status, members and per-room roles. Members without a local row are
+     * imported.
      *
-     * Reached from UserSync: a person event can name a group that no group
-     * event announced, and a person event alone only enrols into existing rooms.
+     * Used for group events and, per group of the person, for person events.
+     * Returns false when the group is gone upstream.
      */
-    public function importGroup(string $groupId, Tenant $tenant, string $provider): bool
+    public function refreshGroup(string $groupId, Tenant $tenant, string $provider, bool $forceActive = false): bool
     {
         $directory = $this->providers->directory($provider);
         $group = $directory->group($groupId);
@@ -76,7 +69,7 @@ final class GroupSync
         }
 
         // The room comes first, so importUser() below enrols each new member.
-        $room = $this->rooms->upsertRoom($group->id, $group->name, $group->isActive());
+        $room = $this->rooms->upsertRoom($group->id, $group->name, $forceActive || $group->isActive());
 
         $imported = 0;
 
@@ -95,12 +88,13 @@ final class GroupSync
 
         $this->syncMembers($room, $group->members, $provider);
 
-        Log::info('IdP: created a room for a group first seen on a person', [
-            'room_id' => $room['id'],
-            'idp_group_id' => $group->id,
-            'members' => count($group->members),
-            'imported' => $imported,
-        ]);
+        if ($imported > 0) {
+            Log::info('IdP: imported group members aula did not hold', [
+                'room_id' => $room['id'],
+                'idp_group_id' => $group->id,
+                'imported' => $imported,
+            ]);
+        }
 
         return true;
     }
@@ -108,9 +102,8 @@ final class GroupSync
     /**
      * Reconcile room membership, carrying each member's role across.
      *
-     * A member with no `idp_user_id` row is counted and skipped, not created: a
-     * group payload is thinner than a user record, and that member's own user
-     * event builds the row and reconciles this room from the other side.
+     * refreshGroup() imports missing members first, so a member still without
+     * an `idp_user_id` row here is one the directory could not return.
      *
      * @param  array{id: int, hash_id: string}  $room
      * @param  list<IdpUser>  $members

@@ -53,9 +53,9 @@ final class UserSync
             return SyncOutcome::skipped('user_not_found_upstream');
         }
 
-        $this->importUnknownGroups($person, $tenant, $provider);
-
         $user = $this->import->importUser($tenant, $provider, $person);
+
+        $this->refreshGroups($person, $tenant, $provider);
 
         if ($event->action === IdpEvent::ACTION_RESTORE && ! $user->isActive()) {
             // ACTION_RESTORE means active even when the directory read-back
@@ -68,21 +68,16 @@ final class UserSync
     }
 
     /**
-     * Create the room for every group of this person that aula has no room for.
+     * Converge the room of every group this person belongs to.
      *
-     * Eduplaces announces a membership change as a person event and need not
-     * send a group event for a newly synced group.
+     * A person event is treated as a ping: Eduplaces reports membership
+     * changes as person events and need not send group events, so each one
+     * re-reads the person's groups in full.
      */
-    private function importUnknownGroups(IdpUser $person, Tenant $tenant, string $provider): void
+    private function refreshGroups(IdpUser $person, Tenant $tenant, string $provider): void
     {
-        $managed = $this->rooms->managedRooms();
-
         foreach ($person->groups as $group) {
-            if (isset($managed[$group->id])) {
-                continue;
-            }
-
-            if (! $this->groups->importGroup($group->id, $tenant, $provider)) {
+            if (! $this->groups->refreshGroup($group->id, $tenant, $provider)) {
                 Log::info('IdP: group named on a person is gone upstream', [
                     'idp_user_id' => $person->id,
                     'idp_group_id' => $group->id,

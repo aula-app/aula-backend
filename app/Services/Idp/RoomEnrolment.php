@@ -65,18 +65,40 @@ final class RoomEnrolment
         return ['id' => $id, 'hash_id' => $hashId];
     }
 
+    /**
+     * Archive the room and remove every membership and `roles` entry for it,
+     * aula-native members included.
+     */
     public function archiveRoom(string $idpGroupId): bool
     {
-        $existing = DB::table('au_rooms')->where('idp_group_id', $idpGroupId)->first(['id']);
+        $existing = DB::table('au_rooms')->where('idp_group_id', $idpGroupId)->first(['id', 'hash_id']);
 
         if ($existing === null) {
             return false;
         }
 
-        DB::table('au_rooms')->where('id', $existing->id)->update([
+        $roomId = (int) $existing->id;
+        $hashId = (string) $existing->hash_id;
+
+        DB::table('au_rooms')->where('id', $roomId)->update([
             'status' => self::STATUS_ARCHIVED,
             'last_update' => now(),
         ]);
+
+        $memberIds = DB::table('au_rel_rooms_users')->where('room_id', $roomId)->pluck('user_id');
+
+        foreach ($memberIds as $userId) {
+            $this->unenrol((int) $userId, $roomId, $hashId);
+        }
+
+        // `roles` entries can outlive their membership row.
+        $staleRoleIds = DB::table('au_users_basedata')
+            ->where('roles', 'like', '%'.$hashId.'%')
+            ->pluck('id');
+
+        foreach ($staleRoleIds as $userId) {
+            $this->writeRole((int) $userId, $hashId, null);
+        }
 
         return true;
     }

@@ -176,7 +176,31 @@ class IdpUserSyncTest extends TestCase
 
         $this->assertSame($originalId, $user->id, 'the same row should have been updated');
         $this->assertSame('Maxine Mustermann', $user->displayname);
-        $this->assertSame(40, $user->userlevel->value);
+    }
+
+    public function test_keeps_the_userlevel_when_the_role_changes_upstream(): void
+    {
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Promoted']]);
+        $this->process($this->event('create'));
+        $this->assertSame(20, $this->syncedUser()->userlevel->value);
+
+        $this->setPerson(['role' => 'TEACHER', 'name' => ['last' => 'Promoted']]);
+        $this->process($this->event('update', properties: ['role']));
+
+        // userlevel is set from the role once, on creation; aula owns it after.
+        $this->assertSame(20, $this->syncedUser()->userlevel->value);
+    }
+
+    public function test_keeps_a_userlevel_changed_inside_aula(): void
+    {
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Moderator']]);
+        $this->process($this->event('create'));
+
+        self::$testTenant->run(fn () => LegacyUser::where('idp_user_id', self::PERSON)->update(['userlevel' => 45]));
+
+        $this->process($this->event('update', properties: ['name']));
+
+        $this->assertSame(45, $this->syncedUser()->userlevel->value);
     }
 
     public function test_archives_a_user_the_idm_reports_as_inactive(): void
@@ -379,19 +403,39 @@ class IdpUserSyncTest extends TestCase
         });
     }
 
-    public function test_does_not_fetch_a_group_whose_room_already_exists(): void
+    public function test_refreshes_every_group_of_the_person_on_any_update(): void
     {
-        $this->seedLocalRoom('group-known', 'Klasse 5a');
+        $roomId = $this->seedLocalRoom('group-known', 'Klasse 5a');
 
         $this->setPerson([
             'role' => 'STUDENT',
-            'name' => ['last' => 'Known'],
-            'groups' => [['id' => 'group-known', 'name' => 'Klasse 5a']],
+            'name' => ['last' => 'Pinger'],
+            'groups' => [['id' => 'group-known', 'name' => 'Klasse 6a']],
+        ]);
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Classmate'],
+            'groups' => [['id' => 'group-known', 'name' => 'Klasse 6a']],
+        ], 'person-classmate');
+        $this->setGroup('group-known', 'Klasse 6a', [
+            ['id' => self::PERSON, 'role' => 'STUDENT'],
+            ['id' => 'person-classmate', 'role' => 'STUDENT'],
         ]);
 
-        $this->process($this->event('update', properties: ['groups']));
+        // Not a groups change: any person event refreshes the person's groups.
+        $this->process($this->event('update', properties: ['name']));
 
-        Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '/groups/'));
+        self::$testTenant->run(function () use ($roomId) {
+            $this->assertSame('Klasse 6a', DB::table('au_rooms')->where('id', $roomId)->value('room_name'));
+
+            $members = DB::table('au_rel_rooms_users')
+                ->join('au_users_basedata', 'au_users_basedata.id', '=', 'au_rel_rooms_users.user_id')
+                ->where('room_id', $roomId)
+                ->pluck('au_users_basedata.idp_user_id')
+                ->sort()->values()->all();
+
+            $this->assertSame(['person-classmate', self::PERSON], $members);
+        });
     }
 
     public function test_still_syncs_the_user_when_the_new_group_is_gone_upstream(): void
