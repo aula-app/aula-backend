@@ -19,7 +19,6 @@ class UpdateRoomData extends AbstractRoomData
     #[Max(1024)]
     public readonly string $name;
 
-    // TODO type this
     public readonly int $status;
 
     public readonly string $descriptionPublic;

@@ -1,7 +1,5 @@
 <?php
 
-// TODO: this is WIP, mostly testing room/membership
-
 declare(strict_types=1);
 
 namespace Tests\Feature;
