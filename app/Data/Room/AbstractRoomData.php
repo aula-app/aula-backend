@@ -11,7 +11,8 @@ abstract class AbstractRoomData extends Data
 {
     abstract public null|string $publicId { get; }
     abstract public null|string $name { get; }
-    // TODO: make RoomStatus
+    // TODO: make RoomStatus. currently:
+    // 0=inactive, 1=active, 2=suspended, 3=archived
     abstract public null|int $status { get; }
     abstract public null|string $descriptionPublic { get; }
     abstract public null|string $descriptionInternal { get; }

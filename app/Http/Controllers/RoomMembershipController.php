@@ -14,8 +14,6 @@ use Spatie\LaravelData\DataCollection;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 
-// TODO Authz
-
 class RoomMembershipController extends Controller
 {
     public function __construct(

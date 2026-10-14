@@ -78,7 +78,8 @@ class AuthzServiceProvider extends ServiceProvider
             return $user->hash_id === $publicId;
         });
 
-        // TODO
+        // only admins may CRUD Rooms and Members for now
+
         Gate::define(Gates::ListRooms,  fn () => false);
         Gate::define(Gates::CreateRoom, fn () => false);
         Gate::define(Gates::DeleteRoom, fn () => false);

@@ -16,11 +16,10 @@ class UpdateRoomData extends AbstractRoomData
     #[Rule('missing')]
     public readonly null|string $publicId;
 
-    // TODO check if required
-
     #[Max(1024)]
     public readonly string $name;
 
+    // TODO type this
     public readonly int $status;
 
     public readonly string $descriptionPublic;
@@ -34,8 +33,8 @@ class UpdateRoomData extends AbstractRoomData
     public readonly int $phaseDuration3;
 
     #[Rule('missing')]
-    public readonly DateTimeImmutable $createdAt;
+    public readonly null|DateTimeImmutable $createdAt;
 
     #[Rule('missing')]
-    public readonly DateTimeImmutable $updatedAt;
+    public readonly null|DateTimeImmutable $updatedAt;
 }
