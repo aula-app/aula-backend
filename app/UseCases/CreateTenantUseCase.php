@@ -6,13 +6,17 @@ namespace App\UseCases;
 
 use App\Enums\UserLevel;
 use App\Models\Tenant;
+use App\Services\PasswordSetupLinks;
 use App\Services\TenantsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CreateTenantUseCase
 {
-    public function __construct(private readonly TenantsService $tenantsService) {}
+    public function __construct(
+        private readonly TenantsService $tenantsService,
+        private readonly PasswordSetupLinks $links,
+    ) {}
 
     public function execute(
         string $name,
@@ -24,15 +28,38 @@ class CreateTenantUseCase
         string $admin2FullName,
         string $admin2Email,
         ?string $adminPassword = null,
+        ?string $apiBaseUrl = null,
+        ?bool $isNamePublic = null,
+        ?string $contactInfo = null,
+        ?int $schoolTypeId = null,
+        ?bool $ssoEnabled = null,
+        ?string $ssoProvider = null,
+        ?bool $ssoForceLogout = null,
+        ?bool $ssoRequired = null,
+        ?bool $ssoRequireEmailVerified = null,
+        ?string $idpMigrationStatus = null,
     ): Tenant {
         $jwtKey = Str::random(64);
-        $apiBaseUrl = config('app.url');
+        $apiBaseUrl ??= config('app.url');
         $admin1Secret = Str::random(64);
         $admin2Secret = Str::random(64);
 
         // When a password is pre-set, admins can log in immediately — no email setup needed.
-        $admin1InitPassUrl = $adminPassword === null ? "{$apiBaseUrl}/password/{$admin1Secret}?code={$instanceCode}" : null;
-        $admin2InitPassUrl = $adminPassword === null ? "{$apiBaseUrl}/password/{$admin2Secret}?code={$instanceCode}" : null;
+        $admin1InitPassUrl = $adminPassword === null ? $this->links->url($apiBaseUrl, $instanceCode, $admin1Secret) : null;
+        $admin2InitPassUrl = $adminPassword === null ? $this->links->url($apiBaseUrl, $instanceCode, $admin2Secret) : null;
+
+        // A null optional leaves the column on its database default.
+        $optional = array_filter([
+            'is_name_public' => $isNamePublic,
+            'contact_info' => $contactInfo,
+            'school_type_id' => $schoolTypeId,
+            'sso_enabled' => $ssoEnabled,
+            'sso_provider' => $ssoProvider,
+            'sso_force_logout' => $ssoForceLogout,
+            'sso_required' => $ssoRequired,
+            'sso_require_email_verified' => $ssoRequireEmailVerified,
+            'idp_migration_status' => $idpMigrationStatus,
+        ], fn (mixed $value): bool => $value !== null);
 
         $tenant = Tenant::create([
             'name' => $name,
@@ -47,6 +74,7 @@ class CreateTenantUseCase
             'admin2_email' => $admin2Email,
             'admin1_init_pass_url' => $admin1InitPassUrl,
             'admin2_init_pass_url' => $admin2InitPassUrl,
+            ...$optional,
         ]);
 
         // Tenant::create() triggers CreateDatabase + MigrateDatabase via TenancyServiceProvider events.
