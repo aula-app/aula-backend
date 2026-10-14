@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\UseCases;
 
-use App\Models\IdpDirectoryEntry;
 use App\Models\Tenant;
 use App\Services\PasswordSetupLinks;
 use Illuminate\Support\Facades\DB;
@@ -34,9 +33,6 @@ class ReleaseIdpSchoolUseCase
             'sso_required' => false,
             ...$urls,
         ]);
-
-        // Stale index rows would keep routing the school's webhooks here.
-        IdpDirectoryEntry::where('tenant_id', $tenant->id)->delete();
     }
 
     /**

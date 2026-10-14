@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\UserStatus;
-use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\UseCases\ReleaseIdpSchoolUseCase;
@@ -38,7 +37,6 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
             'admin1_init_pass_url' => null,
             'admin2_init_pass_url' => null,
         ]);
-        IdpDirectoryEntry::create(['provider' => 'eduplaces', 'entity_type' => 'user', 'idp_id' => 'p1', 'tenant_id' => $this->tenant->id]);
     }
 
     protected function tearDown(): void
@@ -67,7 +65,6 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
         $this->assertNull($row->idp_school_id);
         $this->assertSame('eduplaces', $row->sso_provider);
         $this->assertFalse((bool) $row->sso_required);
-        $this->assertSame(0, IdpDirectoryEntry::where('tenant_id', $row->id)->count());
 
         $this->tenant->run(function () use ($row, $admin1Id, $admin2Id, $importedId): void {
             foreach ([$admin1Id => $row->admin1_init_pass_url, $admin2Id => $row->admin2_init_pass_url] as $userId => $url) {
@@ -135,7 +132,7 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
 
     private function seedUser(string $username, string $ssoSub, string $idpUserId): int
     {
-        $user = new LegacyUser;
+        $user = new LegacyUser();
         $user->username = $username;
         $user->displayname = $username;
         $user->email = "{$username}@test.example";
@@ -152,7 +149,6 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
 
     private function clean(): void
     {
-        IdpDirectoryEntry::where('tenant_id', $this->tenant->id)->delete();
         $this->tenant->run(function (): void {
             $ids = LegacyUser::where('username', 'like', 'release.%')->pluck('id');
             DB::table('au_change_password')->whereIn('user_id', $ids)->delete();
