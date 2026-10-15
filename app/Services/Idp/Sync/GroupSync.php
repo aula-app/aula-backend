@@ -7,11 +7,13 @@ namespace App\Services\Idp\Sync;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
+use App\Services\Idp\Dto\IdpGroup;
 use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\RoleMap;
 use App\Services\Idp\RoomEnrolment;
 use App\Services\Idp\SchoolImport;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -97,6 +99,56 @@ final class GroupSync
         }
 
         return true;
+    }
+
+    /**
+     * Converge the tenant's rooms on the school's group list.
+     *
+     * Eduplaces sends no group events, so a group added to the sync, emptied
+     * or deleted upstream surfaces only here. A listed group without an active
+     * room is refreshed; an active room whose group is no longer listed is
+     * archived, with its memberships and `roles` entries.
+     *
+     * Skipped when the school itself is not visible: a school disconnected
+     * from the app lists no groups, which must not archive every room.
+     *
+     * @param  list<string>  $alreadyRefreshed  provider group ids refreshed during this event
+     */
+    public function reconcileSchool(Tenant $tenant, string $provider, array $alreadyRefreshed = []): void
+    {
+        $schoolId = (string) $tenant->idp_school_id;
+        $directory = $this->providers->directory($provider);
+
+        if ($schoolId === '' || $directory->school($schoolId) === null) {
+            Log::warning('IdP: school not visible, skipping group reconcile', [
+                'tenant' => $tenant->instance_code,
+                'idp_school_id' => $schoolId,
+            ]);
+
+            return;
+        }
+
+        $listed = array_map(fn (IdpGroup $group): string => $group->id, $directory->groups($schoolId));
+
+        $active = DB::table('au_rooms')
+            ->whereNotNull('idp_group_id')
+            ->where('status', '!=', RoomEnrolment::STATUS_ARCHIVED)
+            ->pluck('idp_group_id')
+            ->map(fn ($id): string => (string) $id)
+            ->all();
+
+        foreach (array_diff($listed, $active, $alreadyRefreshed) as $groupId) {
+            $this->refreshGroup($groupId, $tenant, $provider);
+        }
+
+        foreach (array_diff($active, $listed) as $groupId) {
+            $this->rooms->archiveRoom($groupId);
+
+            Log::info('IdP: archived a room whose group is no longer listed', [
+                'tenant' => $tenant->instance_code,
+                'idp_group_id' => $groupId,
+            ]);
+        }
     }
 
     /**

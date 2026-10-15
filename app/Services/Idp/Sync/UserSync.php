@@ -56,6 +56,7 @@ final class UserSync
         $user = $this->import->importUser($tenant, $provider, $person);
 
         $this->refreshGroups($person, $tenant, $provider);
+        $this->groups->reconcileSchool($tenant, $provider, $person->groupIds());
 
         if ($event->action === IdpEvent::ACTION_RESTORE && ! $user->isActive()) {
             // ACTION_RESTORE means active even when the directory read-back
