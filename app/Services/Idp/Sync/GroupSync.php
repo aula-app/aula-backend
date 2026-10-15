@@ -7,10 +7,13 @@ namespace App\Services\Idp\Sync;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
+use App\Services\Idp\Dto\IdpGroup;
 use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\RoleMap;
 use App\Services\Idp\RoomEnrolment;
+use App\Services\Idp\SchoolImport;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -31,6 +34,7 @@ final class GroupSync
         private readonly IdpProviders $providers,
         private readonly RoomEnrolment $rooms,
         private readonly RoleMap $roles,
+        private readonly SchoolImport $import,
     ) {
     }
 
@@ -42,27 +46,116 @@ final class GroupSync
                 : SyncOutcome::skipped('room_not_local');
         }
 
-        $group = $this->providers->directory($provider)->group($event->entityId);
+        $forceActive = $event->action === IdpEvent::ACTION_RESTORE;
+
+        return $this->refreshGroup($event->entityId, $tenant, $provider, $forceActive)
+            ? SyncOutcome::processed()
+            : SyncOutcome::skipped('group_not_found_upstream');
+    }
+
+    /**
+     * Converge one room on the group read back from the directory: name,
+     * status, members and per-room roles. Members without a local row are
+     * imported.
+     *
+     * Used for group events and, per group of the person, for person events.
+     * Returns false when the group is gone upstream.
+     */
+    public function refreshGroup(string $groupId, Tenant $tenant, string $provider, bool $forceActive = false): bool
+    {
+        $directory = $this->providers->directory($provider);
+        $group = $directory->group($groupId);
 
         if ($group === null) {
-            return SyncOutcome::skipped('group_not_found_upstream');
+            return false;
         }
 
-        $active = $event->action === IdpEvent::ACTION_RESTORE || $group->isActive();
+        // The room comes first, so importUser() below enrols each new member.
+        $room = $this->rooms->upsertRoom($group->id, $group->name, $forceActive || $group->isActive());
 
-        $room = $this->rooms->upsertRoom($group->id, $group->name, $active);
+        $imported = 0;
+
+        foreach ($group->members as $member) {
+            if (LegacyUser::where('idp_user_id', $member->id)->exists()) {
+                continue;
+            }
+
+            $person = $directory->user($member->id);
+
+            if ($person !== null) {
+                $this->import->importUser($tenant, $provider, $person);
+                $imported++;
+            }
+        }
 
         $this->syncMembers($room, $group->members, $provider);
 
-        return SyncOutcome::processed();
+        if ($imported > 0) {
+            Log::info('IdP: imported group members aula did not hold', [
+                'room_id' => $room['id'],
+                'idp_group_id' => $group->id,
+                'imported' => $imported,
+            ]);
+        }
+
+        return true;
+    }
+
+    /**
+     * Converge the tenant's rooms on the school's group list.
+     *
+     * Eduplaces sends no group events, so a group added to the sync, emptied
+     * or deleted upstream surfaces only here. A listed group without an active
+     * room is refreshed; an active room whose group is no longer listed is
+     * archived, with its memberships and `roles` entries.
+     *
+     * Skipped when the school itself is not visible: a school disconnected
+     * from the app lists no groups, which must not archive every room.
+     *
+     * @param  list<string>  $alreadyRefreshed  provider group ids refreshed during this event
+     */
+    public function reconcileSchool(Tenant $tenant, string $provider, array $alreadyRefreshed = []): void
+    {
+        $schoolId = (string) $tenant->idp_school_id;
+        $directory = $this->providers->directory($provider);
+
+        if ($schoolId === '' || $directory->school($schoolId) === null) {
+            Log::warning('IdP: school not visible, skipping group reconcile', [
+                'tenant' => $tenant->instance_code,
+                'idp_school_id' => $schoolId,
+            ]);
+
+            return;
+        }
+
+        $listed = array_map(fn (IdpGroup $group): string => $group->id, $directory->groups($schoolId));
+
+        $active = DB::table('au_rooms')
+            ->whereNotNull('idp_group_id')
+            ->where('status', '!=', RoomEnrolment::STATUS_ARCHIVED)
+            ->pluck('idp_group_id')
+            ->map(fn ($id): string => (string) $id)
+            ->all();
+
+        foreach (array_diff($listed, $active, $alreadyRefreshed) as $groupId) {
+            $this->refreshGroup($groupId, $tenant, $provider);
+        }
+
+        foreach (array_diff($active, $listed) as $groupId) {
+            $this->rooms->archiveRoom($groupId);
+
+            Log::info('IdP: archived a room whose group is no longer listed', [
+                'tenant' => $tenant->instance_code,
+                'idp_group_id' => $groupId,
+            ]);
+        }
     }
 
     /**
      * Reconcile room membership, carrying each member's role across.
      *
-     * A member with no `idp_user_id` row is counted and skipped, not created: a
-     * group payload is thinner than a user record, and that member's own user
-     * event builds the row and reconciles this room from the other side.
+     * refreshGroup() imports missing members first, so a member still without
+     * an `idp_user_id` row here is one the directory could not return.
      *
      * @param  array{id: int, hash_id: string}  $room
      * @param  list<IdpUser>  $members

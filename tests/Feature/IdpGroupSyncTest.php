@@ -34,6 +34,9 @@ class IdpGroupSyncTest extends TestCase
     /** @var array<string, array<string, mixed>> */
     private array $idmGroups = [];
 
+    /** @var array<string, array<string, mixed>> */
+    private array $idmPeople = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -57,6 +60,7 @@ class IdpGroupSyncTest extends TestCase
         $this->cleanTenant();
 
         $this->idmGroups = [];
+        $this->idmPeople = [];
         $this->fakeIdm();
     }
 
@@ -158,17 +162,22 @@ class IdpGroupSyncTest extends TestCase
         $this->assertMembership((int) $room->id, $native, 1);
     }
 
-    public function test_skips_members_aula_does_not_hold_yet(): void
+    public function test_imports_members_aula_does_not_hold_yet(): void
     {
+        $this->idmPeople['person-unknown'] = ['id' => 'person-unknown', 'role' => 'TEACHER', 'name' => ['last' => 'Unknown'], 'groups' => [['id' => self::GROUP, 'name' => 'Klasse 5a']]];
         $this->setGroup(['name' => 'Klasse 5a', 'members' => [
-            ['id' => 'person-unknown', 'role' => 'STUDENT', 'name' => ['last' => 'Unknown']],
+            ['id' => 'person-unknown', 'role' => 'TEACHER', 'name' => ['last' => 'Unknown']],
         ]]);
 
         $this->process($this->event('create'));
 
-        $this->assertSame(0, self::$testTenant->run(
-            fn () => LegacyUser::where('idp_user_id', 'person-unknown')->count(),
-        ));
+        $userId = (int) self::$testTenant->run(
+            fn () => LegacyUser::where('idp_user_id', 'person-unknown')->value('id'),
+        );
+
+        $this->assertGreaterThan(0, $userId);
+        $this->assertMembership((int) $this->room()->id, $userId, 1);
+        $this->assertSame(40, $this->roleFor($userId, (string) $this->room()->hash_id));
     }
 
     public function test_delete_archives_the_room(): void
@@ -179,6 +188,41 @@ class IdpGroupSyncTest extends TestCase
         $this->process($this->event('delete'));
 
         $this->assertSame(3, (int) $this->room()->status);
+    }
+
+    public function test_delete_removes_every_membership_and_room_role(): void
+    {
+        $teacherId = $this->seedUser('person-teacher');
+        $studentId = $this->seedUser('person-student');
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-teacher', 'role' => 'TEACHER', 'name' => ['last' => 'Schuster']],
+            ['id' => 'person-student', 'role' => 'STUDENT', 'name' => ['last' => 'Becker']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $room = $this->room();
+        $native = $this->seedUser(null);
+
+        // An aula-native member, and a stale `roles` entry with no membership row.
+        self::$testTenant->run(function () use ($room, $native) {
+            DB::table('au_rel_rooms_users')->insert([
+                'room_id' => $room->id, 'user_id' => $native, 'status' => 1, 'updater_id' => 0,
+            ]);
+            DB::table('au_users_basedata')->where('id', $native)->update([
+                'roles' => json_encode([['role' => 20, 'room' => $room->hash_id], ['role' => 30, 'room' => 'other-room']]),
+            ]);
+        });
+
+        $this->process($this->event('delete'));
+
+        foreach ([$teacherId, $studentId, $native] as $userId) {
+            $this->assertMembership((int) $room->id, $userId, 0);
+            $this->assertNull($this->roleFor($userId, (string) $room->hash_id));
+        }
+
+        // Entries for other rooms survive.
+        $this->assertSame(30, $this->roleFor($native, 'other-room'));
     }
 
     public function test_restore_reactivates_the_room(): void
@@ -252,6 +296,9 @@ class IdpGroupSyncTest extends TestCase
                     )),
                 ),
                 (bool) preg_match('#/groups/([^/]+)$#', $path, $m) => $this->groupResponse(urldecode($m[1])),
+                (bool) preg_match('#/people/([^/]+)$#', $path, $m) => isset($this->idmPeople[urldecode($m[1])])
+                    ? Http::response($this->idmPeople[urldecode($m[1])])
+                    : Http::response(status: 404),
                 default => Http::response(status: 404),
             };
         });
@@ -313,7 +360,9 @@ class IdpGroupSyncTest extends TestCase
     {
         self::$testTenant->run(function () {
             $roomIds = DB::table('au_rooms')->whereNotNull('idp_group_id')->pluck('id')->all();
-            $userIds = LegacyUser::where('username', 'like', 'roomtest.%')->pluck('id')->all();
+            $userIds = LegacyUser::where('username', 'like', 'roomtest.%')
+                ->orWhere('idp_user_id', 'like', 'person-%')
+                ->pluck('id')->all();
 
             if ($roomIds !== []) {
                 DB::table('au_rel_rooms_users')->whereIn('room_id', $roomIds)->delete();

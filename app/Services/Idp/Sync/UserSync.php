@@ -8,6 +8,7 @@ use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
+use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\RoomEnrolment;
 use App\Services\Idp\SchoolImport;
@@ -34,6 +35,7 @@ final class UserSync
         private readonly IdpProviders $providers,
         private readonly SchoolImport $import,
         private readonly RoomEnrolment $rooms,
+        private readonly GroupSync $groups,
     ) {}
 
     public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
@@ -53,6 +55,9 @@ final class UserSync
 
         $user = $this->import->importUser($tenant, $provider, $person);
 
+        $this->refreshGroups($person, $tenant, $provider);
+        $this->groups->reconcileSchool($tenant, $provider, $person->groupIds());
+
         if ($event->action === IdpEvent::ACTION_RESTORE && ! $user->isActive()) {
             // ACTION_RESTORE means active even when the directory read-back
             // still reports otherwise.
@@ -61,6 +66,25 @@ final class UserSync
         }
 
         return SyncOutcome::processed();
+    }
+
+    /**
+     * Converge the room of every group this person belongs to.
+     *
+     * A person event is treated as a ping: Eduplaces reports membership
+     * changes as person events and need not send group events, so each one
+     * re-reads the person's groups in full.
+     */
+    private function refreshGroups(IdpUser $person, Tenant $tenant, string $provider): void
+    {
+        foreach ($person->groups as $group) {
+            if (! $this->groups->refreshGroup($group->id, $tenant, $provider)) {
+                Log::info('IdP: group named on a person is gone upstream', [
+                    'idp_user_id' => $person->id,
+                    'idp_group_id' => $group->id,
+                ]);
+            }
+        }
     }
 
     private function archive(string $userId): SyncOutcome
