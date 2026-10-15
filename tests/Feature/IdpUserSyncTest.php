@@ -6,6 +6,8 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
+use App\Jobs\ReconcileIdpSchool;
+use App\Jobs\RefreshIdpGroup;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
@@ -14,6 +16,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -568,6 +571,68 @@ class IdpUserSyncTest extends TestCase
     }
 
     // =========================================================
+    // Follow-up jobs and write economy
+    // =========================================================
+
+    public function test_queues_a_refresh_per_group_and_one_school_reconcile(): void
+    {
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Queued'],
+            'groups' => [['id' => 'group-a', 'name' => 'A'], ['id' => 'group-b', 'name' => 'B']],
+        ]);
+
+        $event = $this->event('update', properties: ['name']);
+        $this->process($event);
+
+        $this->assertSame(IdpWebhookEvent::STATUS_PROCESSED, $event->fresh()->status);
+        Queue::assertPushed(RefreshIdpGroup::class, 2);
+        Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job) => $job->groupId === 'group-a'
+            && $job->tenantId === self::$testTenant->id
+            && $job->provider === 'eduplaces');
+        Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job) => $job->groupId === 'group-b');
+        Queue::assertPushed(ReconcileIdpSchool::class, fn (ReconcileIdpSchool $job) => $job->alreadyRefreshed === ['group-a', 'group-b']);
+    }
+
+    public function test_queues_nothing_for_a_delete(): void
+    {
+        $this->seedLocalUser(self::PERSON, 'Leaving');
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+
+        $this->process($this->event('delete'));
+
+        Queue::assertNotPushed(RefreshIdpGroup::class);
+        Queue::assertNotPushed(ReconcileIdpSchool::class);
+    }
+
+    public function test_an_unchanged_person_and_group_write_nothing(): void
+    {
+        $this->schoolVisible = true;
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Steady'],
+            'groups' => [['id' => 'group-steady', 'name' => 'Klasse 5a']],
+        ]);
+        $this->setPerson([
+            'role' => 'TEACHER',
+            'name' => ['last' => 'Colleague'],
+            'groups' => [['id' => 'group-steady', 'name' => 'Klasse 5a']],
+        ], 'person-colleague');
+        $this->setGroup('group-steady', 'Klasse 5a', [
+            ['id' => self::PERSON, 'role' => 'STUDENT', 'name' => ['last' => 'Steady']],
+            ['id' => 'person-colleague', 'role' => 'TEACHER', 'name' => ['last' => 'Colleague']],
+        ]);
+
+        $this->process($this->event('update', properties: ['groups']));
+
+        $writes = $this->recordTenantWrites(fn () => $this->process($this->event('update', properties: ['name'])));
+
+        $this->assertSame([], $writes);
+    }
+
+    // =========================================================
     // Event bookkeeping
     // =========================================================
 
@@ -716,6 +781,28 @@ class IdpUserSyncTest extends TestCase
     {
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => $lastName]], $personId);
         $this->process($this->event('create', $personId));
+    }
+
+    /**
+     * Inserts, updates and deletes against the membership, user and room
+     * tables while $callback runs.
+     *
+     * @return list<string>
+     */
+    private function recordTenantWrites(callable $callback): array
+    {
+        $writes = [];
+
+        DB::listen(function ($query) use (&$writes) {
+            if (preg_match('/^\s*(insert|update|delete)\b/i', $query->sql) === 1
+                && preg_match('/`?(au_rel_rooms_users|au_users_basedata|au_rooms)`?/', $query->sql) === 1) {
+                $writes[] = $query->sql;
+            }
+        });
+
+        $callback();
+
+        return $writes;
     }
 
     private function seedLocalRoom(?string $eduplacesId, string $name): int

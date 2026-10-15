@@ -73,10 +73,14 @@ final class GroupSync
         // The room comes first, so importUser() below enrols each new member.
         $room = $this->rooms->upsertRoom($group->id, $group->name, $forceActive || $group->isActive());
 
+        $local = LegacyUser::whereIn('idp_user_id', $group->memberIds())
+            ->pluck('idp_user_id')
+            ->all();
+
         $imported = 0;
 
         foreach ($group->members as $member) {
-            if (LegacyUser::where('idp_user_id', $member->id)->exists()) {
+            if (in_array($member->id, $local, true)) {
                 continue;
             }
 
@@ -105,16 +109,16 @@ final class GroupSync
      * Converge the tenant's rooms on the school's group list.
      *
      * Eduplaces sends no group events, so a group added to the sync, emptied
-     * or deleted upstream surfaces only here. A listed group without an active
-     * room is refreshed; an active room whose group is no longer listed is
-     * archived, with its memberships and `roles` entries.
+     * or deleted upstream surfaces only here. An active room whose group is no
+     * longer listed is archived, with its memberships and `roles` entries.
      *
      * Skipped when the school itself is not visible: a school disconnected
      * from the app lists no groups, which must not archive every room.
      *
-     * @param  list<string>  $alreadyRefreshed  provider group ids refreshed during this event
+     * @param  list<string>  $alreadyRefreshed  provider group ids the same event already refreshes
+     * @return list<string> listed groups without an active room, for the caller to refresh
      */
-    public function reconcileSchool(Tenant $tenant, string $provider, array $alreadyRefreshed = []): void
+    public function reconcileSchool(Tenant $tenant, string $provider, array $alreadyRefreshed = []): array
     {
         $schoolId = (string) $tenant->idp_school_id;
         $directory = $this->providers->directory($provider);
@@ -125,7 +129,7 @@ final class GroupSync
                 'idp_school_id' => $schoolId,
             ]);
 
-            return;
+            return [];
         }
 
         $listed = array_map(fn (IdpGroup $group): string => $group->id, $directory->groups($schoolId));
@@ -137,10 +141,6 @@ final class GroupSync
             ->map(fn ($id): string => (string) $id)
             ->all();
 
-        foreach (array_diff($listed, $active, $alreadyRefreshed) as $groupId) {
-            $this->refreshGroup($groupId, $tenant, $provider);
-        }
-
         foreach (array_diff($active, $listed) as $groupId) {
             $this->rooms->archiveRoom($groupId);
 
@@ -149,6 +149,8 @@ final class GroupSync
                 'idp_group_id' => $groupId,
             ]);
         }
+
+        return array_values(array_diff($listed, $active, $alreadyRefreshed));
     }
 
     /**
@@ -162,21 +164,25 @@ final class GroupSync
      */
     private function syncMembers(array $room, array $members, string $provider): void
     {
+        $locals = LegacyUser::whereIn('idp_user_id', array_map(fn (IdpUser $m): string => $m->id, $members))
+            ->get(['id', 'idp_user_id', 'realname', 'displayname'])
+            ->keyBy('idp_user_id');
+
         $roles = [];
         $missing = 0;
 
         foreach ($members as $member) {
-            $userId = LegacyUser::where('idp_user_id', $member->id)->value('id');
+            $user = $locals->get($member->id);
 
-            if ($userId === null) {
+            if ($user === null) {
                 $missing++;
 
                 continue;
             }
 
-            $roles[(int) $userId] = $this->roles->roomRole($provider, $member->role);
+            $roles[(int) $user->id] = $this->roles->roomRole($provider, $member->role);
 
-            $this->backfillName((int) $userId, $member);
+            $this->backfillName($user, $member);
         }
 
         if ($missing > 0) {
@@ -195,17 +201,11 @@ final class GroupSync
      * A provider can expose real names on group members only, so a user
      * imported from the user listing alone can still be showing a pseudonym.
      */
-    private function backfillName(int $userId, IdpUser $member): void
+    private function backfillName(LegacyUser $user, IdpUser $member): void
     {
         $real = $member->realName();
 
-        if ($real === null) {
-            return;
-        }
-
-        $user = LegacyUser::find($userId);
-
-        if ($user === null || $user->realname === $real) {
+        if ($real === null || $user->realname === $real) {
             return;
         }
 

@@ -13,14 +13,22 @@ namespace App\Services\Idp\Sync;
  */
 final readonly class SyncOutcome
 {
+    /**
+     * @param  list<string>  $groupsToRefresh  provider group ids to refresh in follow-up jobs
+     */
     private function __construct(
         public bool $wasProcessed,
         public ?string $reason = null,
+        public array $groupsToRefresh = [],
+        public bool $reconcileSchool = false,
     ) {}
 
-    public static function processed(): self
+    /**
+     * @param  list<string>  $groupsToRefresh
+     */
+    public static function processed(array $groupsToRefresh = [], bool $reconcileSchool = false): self
     {
-        return new self(true);
+        return new self(true, null, $groupsToRefresh, $reconcileSchool);
     }
 
     public static function skipped(string $reason): self

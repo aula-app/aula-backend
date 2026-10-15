@@ -101,6 +101,7 @@ class ProcessIdpWebhookEvent implements ShouldQueue
 
         if ($outcome->wasProcessed) {
             $record->markProcessed($tenant->id);
+            $this->dispatchFollowUps($outcome, $tenant, $provider);
             Log::info('IdP webhook: processed', [
                 'event_id' => $record->id,
                 'provider' => $provider,
@@ -111,6 +112,20 @@ class ProcessIdpWebhookEvent implements ShouldQueue
         } else {
             $record->tenant_id = $tenant->id;
             $record->markSkipped((string) $outcome->reason);
+        }
+    }
+
+    /**
+     * Queued after tenancy has ended, so the jobs land on the central queue.
+     */
+    private function dispatchFollowUps(SyncOutcome $outcome, Tenant $tenant, string $provider): void
+    {
+        foreach ($outcome->groupsToRefresh as $groupId) {
+            RefreshIdpGroup::dispatch((string) $tenant->id, $provider, $groupId);
+        }
+
+        if ($outcome->reconcileSchool) {
+            ReconcileIdpSchool::dispatch((string) $tenant->id, $provider, $outcome->groupsToRefresh);
         }
     }
 

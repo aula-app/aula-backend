@@ -236,6 +236,30 @@ class IdpGroupSyncTest extends TestCase
         $this->assertSame(1, (int) $this->room()->status);
     }
 
+    public function test_an_unchanged_group_writes_nothing(): void
+    {
+        $this->seedUser('person-teacher');
+        $this->seedUser('person-student');
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-teacher', 'role' => 'TEACHER', 'name' => ['last' => 'Schuster']],
+            ['id' => 'person-student', 'role' => 'STUDENT', 'name' => ['last' => 'Becker']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $writes = [];
+        DB::listen(function ($query) use (&$writes) {
+            if (preg_match('/^\s*(insert|update|delete)\b/i', $query->sql) === 1
+                && preg_match('/`?(au_rel_rooms_users|au_users_basedata|au_rooms)`?/', $query->sql) === 1) {
+                $writes[] = $query->sql;
+            }
+        });
+
+        $this->process($this->event('update', ['name']));
+
+        $this->assertSame([], $writes);
+    }
+
     public function test_applying_the_same_event_twice_does_not_duplicate(): void
     {
         $this->setGroup(['name' => 'Klasse 5a']);
