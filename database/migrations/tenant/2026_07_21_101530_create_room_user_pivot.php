@@ -14,7 +14,7 @@ return new class extends Migration
         $created = false;
         Schema::table('au_rel_rooms_users', function (Blueprint $table) use (&$created) {
             if (! Schema::hasColumn('au_rel_rooms_users', 'room_user_level')) {
-                $table->integer('room_user_level');
+                $table->integer('room_user_level')->default(0);
                 $created = true;
             }
             // TODO foreign restrictions?
