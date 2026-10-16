@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\RoomMembershipController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoomController;
 
 // ===================
 // Passport-authenticated routes with prefix('/api/v2')
@@ -9,7 +11,21 @@ use App\Http\Controllers\UserController;
 
 Route::apiResource('users', UserController::class)
     ->except(['update']);
+/** n.b. {user} and {room} have patterns
+ * @see App\Providers\AppServiceProvider::boot
+ */
 Route::put('users/{user}', [UserController::class, 'update'])
     ->name('users.update');
 Route::get('users/{user}/export', [UserController::class, 'export'])
     ->name('users.export');
+
+Route::apiResource('rooms', RoomController::class)
+    ->except(['update']);
+Route::put('rooms/{room}', [RoomController::class, 'update'])
+    ->name('rooms.update');
+
+Route::patch('rooms/{room}/membership', [RoomController::class, 'patchMembership'])
+    ->name('rooms.patch.membership');
+// TODO: check if response with roomLevel embedded makes sense
+Route::get('rooms/{room}/membership', [RoomController::class, 'indexMembership'])
+    ->name('rooms.index.membership');

@@ -2103,12 +2103,25 @@ class User
     $new_roles = array_values(array_filter($roles, fn($r) => $r->room != $room_hash));
     array_push($new_roles, ["role" => $role, "room" => $room_hash]);
 
-    $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = :roles, last_update= NOW() WHERE id = :user_id');
-    $this->db->bind(':user_id', $user_id);
-    $this->db->bind(':roles', json_encode($new_roles));
-
     try {
-      $action = $this->db->execute(); // do the query
+      $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = :roles, last_update= NOW() WHERE id = :user_id');
+      $this->db->bind(':user_id', $user_id);
+      $this->db->bind(':roles', json_encode($new_roles));
+      $this->db->execute();
+
+      // upsert v2 pivot element
+      // there is 1 instance where addUserRole is invoked before the relation exists
+      // but both upserts will just merge
+      $this->db->query(
+        'INSERT INTO ' . $this->db->au_rel_rooms_users .
+        ' (room_id, user_id, room_user_level) VALUES (:room_id, :user_id, :room_user_level)' .
+        'ON DUPLICATE KEY UPDATE room_id=:room_id, user_id=:user_id, room_user_level=:room_user_level'
+      );
+      $this->db->bind(':user_id', $user_id);
+      $this->db->bind(':room_id', $room_id);
+      $this->db->bind(':room_user_level', $role);
+      $this->db->execute();
+
       if ($use_transaction) {
         $this->db->commitTransaction();
       }
@@ -2231,6 +2244,19 @@ class User
     $this->db->bind(':roles', json_encode($new_roles));
 
     $this->db->execute();
+
+    /* we don't need to update v2 pivot element here,
+       don't even need to set to 0/None,
+       because at this point the row does not exist any more!
+    $this->db->query(
+      'UPDATE ' . $this->db->au_rel_rooms_users .
+      ' SET room_user_level=0 WHERE user_id=:user_id AND room_id=:room_id'
+    );
+    $this->db->bind(':user_id', $user_id);
+    $this->db->bind(':room_id', $room_id);
+    $this->db->execute();
+    */
+
     $this->db->commitTransaction();
 
   }
@@ -2239,6 +2265,20 @@ class User
   public function setUserRoles($user_id, $roles, $updater_id = 0)
   {
     $user_id = $this->converters->checkUserId($user_id); // checks user id and converts user id to db user id if necessary (when user hash id was passed)
+    /* no need to update v2 pivot elements because this function seems unused!
+    foreach ($roles as ['room' => $room_hash, 'role' => $role]) {
+      $room_id = $this->converters->checkRoomId($room_hash);
+      $this->db->query(
+        'INSERT INTO ' . $this->db->au_rel_rooms_users .
+        ' (room_id, user_id, room_user_level) VALUES (:room_id, :user_id, :room_user_level)' .
+        'ON DUPLICATE KEY UPDATE room_id=:room_id, user_id=:user_id, room_user_level=:room_user_level'
+      );
+      $this->db->bind(':user_id', $user_id);
+      $this->db->bind(':room_id', $room_id);
+      $this->db->bind(':room_user_level', $role);
+      $this->db->execute();
+    }
+    */
     $stmt = $this->db->query('UPDATE ' . $this->db->au_users_basedata . ' SET roles = json_merge_patch(roles, :roles), last_update= NOW(), updater_id= :updater_id WHERE id = :user_id');
     $this->db->bind(':user_id', $user_id);
     $this->db->bind(':roles', $roles);
