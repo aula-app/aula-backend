@@ -12,6 +12,7 @@ use Tests\TestCase;
 use Tests\Concerns\CreatesTestTenant;
 use App\Models\LegacyUser;
 use Laravel\Passport\Passport;
+use Illuminate\Support\Facades\DB;
 
 class RoomTest extends TestCase
 {
@@ -333,4 +334,92 @@ class RoomTest extends TestCase
         )->assertNotFound();
     }
 
+    #[Depends('test_create_room')]
+    public function test_room_delete($newRoomPublicId)
+    {
+        $this->deleteJson("/api/v2/rooms/{$newRoomPublicId}")
+            ->assertOk();
+    }
+
+    public function test_room_membership_legacy_sync()
+    {
+        $newRoomPublicId1 = $this->postJson('/api/v2/rooms', self::NEW_ROOM_DATA)
+            ->decodeResponseJson()['publicId'];
+        $newRoomPublicId2 = $this->postJson('/api/v2/rooms', self::NEW_ROOM_DATA)
+            ->decodeResponseJson()['publicId'];
+        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
+        $newUserPublicId = $user->hash_id;
+
+        // add user to room
+
+        $this->patchJson(
+            "/api/v2/rooms/{$newRoomPublicId1}/membership",
+            [
+                "add" => [
+                    ["publicId" => $newUserPublicId, "level" => 10],
+                ]
+            ]
+        )->assertOk();
+        $this->assertJsonStringEqualsJsonString(
+            json_encode([["room" => $newRoomPublicId1, "role" => 10]]),
+            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
+        );
+
+        // add user to another room
+
+        $this->patchJson(
+            "/api/v2/rooms/{$newRoomPublicId2}/membership",
+            [
+                "add" => [
+                    ["publicId" => $newUserPublicId, "level" => 20],
+                ]
+            ]
+        )->assertOk();
+        $this->assertJsonStringEqualsJsonString(
+            json_encode([
+                ["room" => $newRoomPublicId1, "role" => 10],
+                ["room" => $newRoomPublicId2, "role" => 20]
+            ]),
+            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
+        );
+
+        // change user's room role
+
+        $this->patchJson(
+            "/api/v2/rooms/{$newRoomPublicId1}/membership",
+            [
+                "add" => [
+                    ["publicId" => $newUserPublicId, "level" => 30],
+                ]
+            ]
+        )->assertOk();
+        $this->assertJsonStringEqualsJsonString(
+            json_encode([
+                ["room" => $newRoomPublicId1, "role" => 30],
+                ["room" => $newRoomPublicId2, "role" => 20]
+            ]),
+            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
+        );
+
+        // delete room
+
+        $this->deleteJson("/api/v2/rooms/{$newRoomPublicId1}")->assertOk();
+        // checks exact (order, no sub/supersets, only whitespaces diffs ok)
+        // so we don't need to assert that the deleted is missing
+        $this->assertJsonStringEqualsJsonString(
+            json_encode([["room" => $newRoomPublicId2, "role" => 20]]),
+            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
+        );
+
+        // remove user's membership
+
+        $this->patchJson(
+            "/api/v2/rooms/{$newRoomPublicId2}/membership",
+            ["remove" => [$newUserPublicId]]
+        )->assertOk();
+        $this->assertJsonStringEqualsJsonString(
+            json_encode([]),
+            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
+        );
+    }
 }
