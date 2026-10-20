@@ -15,7 +15,7 @@ class DeleteRoomUseCase
     public function execute(string $publicId): void
     {
         Gate::authorize(Gates::DeleteRoom);
-        $legacyRoom = LegacyRoom::where('hash_id', $publicId)->sole(['id'])->firstOrfail();
+        $legacyRoom = LegacyRoom::where('hash_id', $publicId)->sole(['id']);
         DB::transaction(function () use ($legacyRoom) {
             $legacyRoom->deleteOrFail();
             // TODO add a test
