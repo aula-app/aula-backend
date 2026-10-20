@@ -86,8 +86,9 @@ Role mapping, from `services.eduplaces.role_userlevels`:
 | `STUDENT`      | 20          | 20              |
 | anything else  | 20          | 20              |
 
-Account-wide rank and per-room rank come from the same map, so a teacher cannot
-end up privileged in one and not the other.
+Both are applied once: `userlevel` when the account is created, the per-room
+`role` when the user joins the room. A later role change in Eduplaces changes
+neither, so ranks set inside aula are kept.
 
 ## Names
 
@@ -178,7 +179,7 @@ the centralDB table `tenants` by schoolId received from the IdP.
 - Rooms without an `idp_group_id`: the school room and anything created inside
   aula.
 - Users without an `idp_user_id` are never unenrolled by a sync.
-- Admin-level accounts are never demoted by role mapping.
+- `userlevel` after account creation, and a per-room `role` once set.
 - Nothing is hard-deleted; legacy tables reference user rows.
 
 ## Replays and ordering

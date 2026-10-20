@@ -120,6 +120,23 @@ class IdpGroupSyncTest extends TestCase
         $this->assertSame(20, $this->roleFor($studentId, (string) $room->hash_id));
     }
 
+    public function test_a_member_role_change_upstream_keeps_the_room_role(): void
+    {
+        $userId = $this->seedUser('person-promoted');
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-promoted', 'role' => 'STUDENT', 'name' => ['last' => 'Promoted']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-promoted', 'role' => 'TEACHER', 'name' => ['last' => 'Promoted']],
+        ]]);
+        $this->process($this->event('update', ['name']));
+
+        $this->assertSame(20, $this->roleFor($userId, (string) $this->room()->hash_id));
+    }
+
     public function test_unenrols_a_member_the_idm_dropped(): void
     {
         $stays = $this->seedUser('person-stays');

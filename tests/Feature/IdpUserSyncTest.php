@@ -210,6 +210,43 @@ class IdpUserSyncTest extends TestCase
         $this->assertSame(45, $this->syncedUser()->userlevel->value);
     }
 
+    public function test_a_role_change_upstream_keeps_room_roles(): void
+    {
+        $roomId = $this->seedLocalRoom('group-known', 'Klasse 5a');
+        $groups = [['id' => 'group-known', 'name' => 'Klasse 5a']];
+
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Promoted'], 'groups' => $groups]);
+        $this->setGroup('group-known', 'Klasse 5a', [['id' => self::PERSON, 'role' => 'STUDENT']]);
+        $this->process($this->event('update', properties: ['groups']));
+        $this->assertSame(20, $this->roomRole(self::PERSON, $roomId));
+
+        $this->setPerson(['role' => 'TEACHER', 'name' => ['last' => 'Promoted'], 'groups' => $groups]);
+        $this->setGroup('group-known', 'Klasse 5a', [['id' => self::PERSON, 'role' => 'TEACHER']]);
+        $this->process($this->event('update', properties: ['role']));
+
+        $this->assertSame(20, $this->roomRole(self::PERSON, $roomId));
+        $this->assertSame(20, $this->syncedUser()->userlevel->value);
+    }
+
+    public function test_keeps_a_room_role_set_inside_aula(): void
+    {
+        $roomId = $this->seedLocalRoom('group-known', 'Klasse 5a');
+        $groups = [['id' => 'group-known', 'name' => 'Klasse 5a']];
+
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Moderated'], 'groups' => $groups]);
+        $this->setGroup('group-known', 'Klasse 5a', [['id' => self::PERSON, 'role' => 'STUDENT']]);
+        $this->process($this->event('update', properties: ['groups']));
+
+        self::$testTenant->run(function () use ($roomId) {
+            $hashId = DB::table('au_rooms')->where('id', $roomId)->value('hash_id');
+            LegacyUser::where('idp_user_id', self::PERSON)->update(['roles' => json_encode([['role' => 30, 'room' => $hashId]])]);
+        });
+
+        $this->process($this->event('update', properties: ['name']));
+
+        $this->assertSame(30, $this->roomRole(self::PERSON, $roomId));
+    }
+
     public function test_archives_a_user_the_idm_reports_as_inactive(): void
     {
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Leaver']]);
@@ -803,6 +840,22 @@ class IdpUserSyncTest extends TestCase
         $callback();
 
         return $writes;
+    }
+
+    private function roomRole(string $personId, int $roomId): ?int
+    {
+        return self::$testTenant->run(function () use ($personId, $roomId) {
+            $hashId = DB::table('au_rooms')->where('id', $roomId)->value('hash_id');
+            $roles = LegacyUser::where('idp_user_id', $personId)->value('roles');
+
+            foreach (json_decode((string) $roles, true) ?: [] as $entry) {
+                if (($entry['room'] ?? null) === $hashId) {
+                    return (int) $entry['role'];
+                }
+            }
+
+            return null;
+        });
     }
 
     private function seedLocalRoom(?string $eduplacesId, string $name): int

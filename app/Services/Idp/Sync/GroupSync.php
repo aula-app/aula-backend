@@ -55,8 +55,8 @@ final class GroupSync
 
     /**
      * Converge one room on the group read back from the directory: name,
-     * status, members and per-room roles. Members without a local row are
-     * imported.
+     * status, members and the initial per-room role of new members. Members
+     * without a local row are imported.
      *
      * Used for group events and, per group of the person, for person events.
      * Returns false when the group is gone upstream.

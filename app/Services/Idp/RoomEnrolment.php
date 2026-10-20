@@ -106,8 +106,8 @@ final class RoomEnrolment
     }
 
     /**
-     * Put a user in a room with a role, or update the role if already there.
-     * Writes only what differs.
+     * Put a user in a room. $role is the initial room role: a role the user
+     * already holds for the room, set upstream or inside aula, is kept.
      */
     public function enrol(int $userId, int $roomId, string $roomHashId, int $role): void
     {
@@ -118,7 +118,11 @@ final class RoomEnrolment
 
         $this->writeMembership($userId, $roomId, $status === null ? null : (int) $status);
 
-        $this->writeRole($userId, $roomHashId, $role);
+        $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
+
+        if ($this->roleIn($roles, $roomHashId) === null) {
+            $this->writeRole($userId, $roomHashId, $role);
+        }
     }
 
     public function unenrol(int $userId, int $roomId, string $roomHashId): void
@@ -159,7 +163,8 @@ final class RoomEnrolment
             if (in_array($idpGroupId, $wantedGroupIds, true)) {
                 $this->writeMembership($userId, $room['id'], $status);
 
-                if ($this->roleIn($roles, $room['hash_id']) !== $role) {
+                // Initial role only: an upstream role change does not reach aula.
+                if ($this->roleIn($roles, $room['hash_id']) === null) {
                     $this->writeRole($userId, $room['hash_id'], $role);
                 }
             } elseif ($status !== null) {
@@ -203,7 +208,8 @@ final class RoomEnrolment
 
             $this->writeMembership((int) $userId, $roomId, $status);
 
-            if ($this->roleIn($this->decodeRoles($currentRoles[$userId] ?? null), $roomHashId) !== (int) $role) {
+            // Initial role only: an upstream role change does not reach aula.
+            if ($this->roleIn($this->decodeRoles($currentRoles[$userId] ?? null), $roomHashId) === null) {
                 $this->writeRole((int) $userId, $roomHashId, (int) $role);
             }
         }
