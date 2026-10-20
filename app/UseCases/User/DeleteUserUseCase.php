@@ -18,8 +18,6 @@ class DeleteUserUseCase
 
         $legacyUser = LegacyUser::where('hash_id', $publicId)->sole(['id']);
         DB::transaction(function () use ($legacyUser) {
-            // or, detach?
-            // TODO add a test
             DB::table('au_rel_rooms_users')->where('user_id', $legacyUser->id)->delete();
             $legacyUser->deleteOrFail();
         });

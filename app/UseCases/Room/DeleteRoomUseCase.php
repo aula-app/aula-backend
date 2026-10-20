@@ -18,7 +18,6 @@ class DeleteRoomUseCase
         $legacyRoom = LegacyRoom::where('hash_id', $publicId)->sole(['id']);
         DB::transaction(function () use ($legacyRoom, $publicId) {
             $legacyRoom->deleteOrFail();
-            // TODO add a test
             DB::table('au_rel_rooms_users')->where('room_id', $legacyRoom->id)->delete();
             // remove room from the JSONs of affected users to keep legacy in sync
             // query copied from legacy Room.php as temporary shim

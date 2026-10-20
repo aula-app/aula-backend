@@ -311,7 +311,7 @@ class RoomTest extends TestCase
                 ]
             );
 
-        // test remove
+        // test remove room
         $this->patchJson(
             "/api/v2/rooms/{$newRoomPublicId}/membership",
             ["remove" => [$newUserPublicId1]]
@@ -319,6 +319,12 @@ class RoomTest extends TestCase
         $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
             ->assertJsonMissing([["publicId" => $newUserPublicId1]])
             ->assertJson([["publicId" => $newUserPublicId2]]);
+
+        // test remove user
+        $this->deleteJson("/api/v2/users/{$newUserPublicId2}")
+            ->assertOk();
+        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
+            ->assertJson([]);
     }
 
     #[Depends('test_create_room')]
@@ -339,6 +345,12 @@ class RoomTest extends TestCase
     {
         $this->deleteJson("/api/v2/rooms/{$newRoomPublicId}")
             ->assertOk();
+        $this->assertEquals(
+            0,
+            DB::table('au_rooms')
+                ->whereIn('hash_id', [$newRoomPublicId])
+                ->count()
+        );
     }
 
     public function test_room_membership_legacy_sync()
