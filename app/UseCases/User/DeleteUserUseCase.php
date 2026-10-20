@@ -16,7 +16,7 @@ class DeleteUserUseCase
     {
         Gate::authorize(Gates::DeleteUser, $publicId);
 
-        $legacyUser = LegacyUser::where('hash_id', $publicId)->sole(['id'])->firstOrFail();
+        $legacyUser = LegacyUser::where('hash_id', $publicId)->sole(['id']);
         DB::transaction(function () use ($legacyUser) {
             // or, detach?
             // TODO add a test

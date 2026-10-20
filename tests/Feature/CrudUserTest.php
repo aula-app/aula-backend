@@ -394,6 +394,12 @@ class CrudUserTest extends TestCase
             ->assertOk();
         $this->deleteJson('/api/v2/users/'.$newUserPublicId2, [])
             ->assertOk();
+        $this->assertEquals(
+            0,
+            DB::table('au_users_basedata')
+                ->whereIn('hash_id', [$newUserPublicId1, $newUserPublicId2])
+                ->count()
+        );
     }
 
     public function test_create_validation()
