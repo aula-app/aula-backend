@@ -33,7 +33,7 @@ RUN chmod +x /root/entrypoint.sh
 ENTRYPOINT ["/root/entrypoint.sh"]
 
 # Fetch composer from its docker image, and run it
-COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
+COPY --from=composer/composer:latest /composer /usr/bin/composer
 COPY composer.json composer.lock ./
 RUN composer install --no-interaction --no-scripts --optimize-autoloader --no-dev
 
