@@ -52,7 +52,6 @@ class ReconcileIdpSchool implements ShouldQueue
             fn (): array => $groups->reconcileSchool($tenant, $this->provider, $this->alreadyRefreshed),
         );
 
-        // Queued outside tenancy, so the jobs land on the central queue.
         foreach ($toRefresh as $groupId) {
             RefreshIdpGroup::dispatch($this->tenantId, $this->provider, $groupId);
         }

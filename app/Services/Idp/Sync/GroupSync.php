@@ -63,14 +63,13 @@ final class GroupSync
      */
     public function refreshGroup(string $groupId, Tenant $tenant, string $provider, bool $forceActive = false): bool
     {
-        $directory = $this->providers->directory($provider);
-        $group = $directory->group($groupId);
+        $group = $this->providers->directory($provider)->group($groupId);
 
         if ($group === null) {
             return false;
         }
 
-        // The room comes first, so importUser() below enrols each new member.
+        // The room comes first, so importMember() below enrols each new member.
         $room = $this->rooms->upsertRoom($group->id, $group->name, $forceActive || $group->isActive());
 
         $local = LegacyUser::whereIn('idp_user_id', $group->memberIds())
@@ -79,15 +78,11 @@ final class GroupSync
 
         $imported = 0;
 
+        // Built from the member list instead of a `/people/{id}` read per
+        // member; the member's own person event fills in the rest.
         foreach ($group->members as $member) {
-            if (in_array($member->id, $local, true)) {
-                continue;
-            }
-
-            $person = $directory->user($member->id);
-
-            if ($person !== null) {
-                $this->import->importUser($tenant, $provider, $person);
+            if (! in_array($member->id, $local, true)) {
+                $this->import->importMember($tenant, $provider, $member);
                 $imported++;
             }
         }
@@ -156,33 +151,30 @@ final class GroupSync
     /**
      * Reconcile room membership, carrying each member's role across.
      *
-     * refreshGroup() imports missing members first, so a member still without
-     * an `idp_user_id` row here is one the directory could not return.
+     * refreshGroup() imports missing members first, so every member normally
+     * has a row here.
      *
      * @param  array{id: int, hash_id: string}  $room
      * @param  list<IdpUser>  $members
      */
     private function syncMembers(array $room, array $members, string $provider): void
     {
-        $locals = LegacyUser::whereIn('idp_user_id', array_map(fn (IdpUser $m): string => $m->id, $members))
-            ->get(['id', 'idp_user_id', 'realname', 'displayname'])
-            ->keyBy('idp_user_id');
+        $localIds = LegacyUser::whereIn('idp_user_id', array_map(fn (IdpUser $m): string => $m->id, $members))
+            ->pluck('id', 'idp_user_id');
 
         $roles = [];
         $missing = 0;
 
         foreach ($members as $member) {
-            $user = $locals->get($member->id);
+            $userId = $localIds->get($member->id);
 
-            if ($user === null) {
+            if ($userId === null) {
                 $missing++;
 
                 continue;
             }
 
-            $roles[(int) $user->id] = $this->roles->roomRole($provider, $member->role);
-
-            $this->backfillName($user, $member);
+            $roles[(int) $userId] = $this->roles->level($provider, $member->role);
         }
 
         if ($missing > 0) {
@@ -193,24 +185,5 @@ final class GroupSync
         }
 
         $this->rooms->syncRoomMembers($room['id'], $room['hash_id'], $roles);
-    }
-
-    /**
-     * Write `realname` once a group event carries one.
-     *
-     * A provider can expose real names on group members only, so a user
-     * imported from the user listing alone can still be showing a pseudonym.
-     */
-    private function backfillName(LegacyUser $user, IdpUser $member): void
-    {
-        $real = $member->realName();
-
-        if ($real === null || $user->realname === $real) {
-            return;
-        }
-
-        $user->realname = $real;
-        $user->displayname = $member->displayName();
-        $user->save();
     }
 }

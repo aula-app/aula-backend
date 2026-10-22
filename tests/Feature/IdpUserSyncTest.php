@@ -423,9 +423,9 @@ class IdpUserSyncTest extends TestCase
             'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
         ], 'person-already-local');
         $this->setGroup('group-new', 'Aula Group', [
-            ['id' => self::PERSON, 'role' => 'STUDENT'],
-            ['id' => 'person-not-local', 'role' => 'TEACHER'],
-            ['id' => 'person-already-local', 'role' => 'STUDENT'],
+            ['id' => self::PERSON, 'role' => 'STUDENT', 'name' => ['last' => 'Trigger']],
+            ['id' => 'person-not-local', 'role' => 'TEACHER', 'name' => ['firstFull' => 'Not', 'last' => 'Imported']],
+            ['id' => 'person-already-local', 'role' => 'STUDENT', 'name' => ['last' => 'Local']],
         ]);
 
         $this->process($this->event('update', properties: ['groups']));
@@ -445,6 +445,8 @@ class IdpUserSyncTest extends TestCase
             $this->assertSame('Not Imported', $imported->realname);
             $this->assertSame(40, $imported->userlevel->value);
         });
+
+        Http::assertNotSent(fn (Request $request) => str_ends_with($request->url(), '/people/person-not-local'));
     }
 
     public function test_refreshes_every_group_of_the_person_on_any_update(): void

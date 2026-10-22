@@ -115,9 +115,6 @@ class ProcessIdpWebhookEvent implements ShouldQueue
         }
     }
 
-    /**
-     * Queued after tenancy has ended, so the jobs land on the central queue.
-     */
     private function dispatchFollowUps(SyncOutcome $outcome, Tenant $tenant, string $provider): void
     {
         foreach ($outcome->groupsToRefresh as $groupId) {

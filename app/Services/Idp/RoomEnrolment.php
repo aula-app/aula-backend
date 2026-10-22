@@ -68,8 +68,8 @@ final class RoomEnrolment
     }
 
     /**
-     * Archive the room and remove every membership and `roles` entry for it,
-     * aula-native members included.
+     * Archive the room and remove the memberships and `roles` entries of its
+     * directory users. Members added inside aula keep both.
      */
     public function archiveRoom(string $idpGroupId): bool
     {
@@ -87,7 +87,11 @@ final class RoomEnrolment
             'last_update' => now(),
         ]);
 
-        $memberIds = DB::table('au_rel_rooms_users')->where('room_id', $roomId)->pluck('user_id');
+        $memberIds = DB::table('au_rel_rooms_users')
+            ->join('au_users_basedata', 'au_users_basedata.id', '=', 'au_rel_rooms_users.user_id')
+            ->where('au_rel_rooms_users.room_id', $roomId)
+            ->whereNotNull('au_users_basedata.idp_user_id')
+            ->pluck('au_rel_rooms_users.user_id');
 
         foreach ($memberIds as $userId) {
             $this->unenrol((int) $userId, $roomId, $hashId);
@@ -95,6 +99,7 @@ final class RoomEnrolment
 
         // `roles` entries can outlive their membership row.
         $staleRoleIds = DB::table('au_users_basedata')
+            ->whereNotNull('idp_user_id')
             ->where('roles', 'like', '%'.$hashId.'%')
             ->pluck('id');
 
@@ -116,13 +121,13 @@ final class RoomEnrolment
             ->where('user_id', $userId)
             ->value('status');
 
-        $this->writeMembership($userId, $roomId, $status === null ? null : (int) $status);
-
         $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
 
         if ($this->roleIn($roles, $roomHashId) === null) {
             $this->writeRole($userId, $roomHashId, $role);
         }
+
+        $this->writeMembership($userId, $roomId, $status === null ? null : (int) $status);
     }
 
     public function unenrol(int $userId, int $roomId, string $roomHashId): void
@@ -161,12 +166,12 @@ final class RoomEnrolment
             $status = isset($memberships[$room['id']]) ? (int) $memberships[$room['id']] : null;
 
             if (in_array($idpGroupId, $wantedGroupIds, true)) {
-                $this->writeMembership($userId, $room['id'], $status);
-
                 // Initial role only: an upstream role change does not reach aula.
                 if ($this->roleIn($roles, $room['hash_id']) === null) {
                     $this->writeRole($userId, $room['hash_id'], $role);
                 }
+
+                $this->writeMembership($userId, $room['id'], $status);
             } elseif ($status !== null) {
                 $this->unenrol($userId, $room['id'], $room['hash_id']);
             }
@@ -206,12 +211,12 @@ final class RoomEnrolment
         foreach ($userRoles as $userId => $role) {
             $status = isset($memberships[$userId]) ? (int) $memberships[$userId] : null;
 
-            $this->writeMembership((int) $userId, $roomId, $status);
-
             // Initial role only: an upstream role change does not reach aula.
             if ($this->roleIn($this->decodeRoles($currentRoles[$userId] ?? null), $roomHashId) === null) {
                 $this->writeRole((int) $userId, $roomHashId, (int) $role);
             }
+
+            $this->writeMembership((int) $userId, $roomId, $status);
         }
     }
 
@@ -259,10 +264,15 @@ final class RoomEnrolment
             return;
         }
 
-        DB::table('au_users_basedata')->where('id', $userId)->update([
+        $written = DB::table('au_users_basedata')->where('id', $userId)->update([
             'roles' => json_encode($updated),
             'last_update' => now(),
         ]);
+
+        // Only reached when the JSON differs, so 0 rows means no such user.
+        if ($written === 0) {
+            throw new RoomRoleNotWritten($userId, $roomHashId);
+        }
     }
 
     /**

@@ -17,7 +17,11 @@ final class RoleMap
         private readonly IdpProviders $providers,
     ) {}
 
-    public function userlevel(string $provider, ?string $role): int
+    /**
+     * The aula level for a provider role: the initial `userlevel` of a new
+     * account and the initial role in each room it joins.
+     */
+    public function level(string $provider, ?string $role): int
     {
         $default = (int) $this->providers->config($provider, 'default_role', 20);
 
@@ -29,13 +33,5 @@ final class RoleMap
         $map = (array) $this->providers->config($provider, 'roles', []);
 
         return $map[strtoupper($role)] ?? $default;
-    }
-
-    /**
-     * The role written to the `roles` entry for each of the user's rooms.
-     */
-    public function roomRole(string $provider, ?string $role): int
-    {
-        return $this->userlevel($provider, $role);
     }
 }

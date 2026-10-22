@@ -107,9 +107,21 @@ final class SchoolImport
     }
 
     /**
+     * Create a user from a group's member entry, leaving an existing row alone.
+     *
+     * A member entry carries no status and no group list, so it may only build
+     * a new row; converging an existing one is the person read-back's job.
+     */
+    public function importMember(Tenant $tenant, string $provider, IdpUser $member): LegacyUser
+    {
+        return LegacyUser::where('idp_user_id', $member->id)->first()
+            ?? $this->importUser($tenant, $provider, $member, syncRooms: false);
+    }
+
+    /**
      * Create or converge one LegacyUser, then sync its rooms.
      */
-    public function importUser(Tenant $tenant, string $provider, IdpUser $person): LegacyUser
+    public function importUser(Tenant $tenant, string $provider, IdpUser $person, bool $syncRooms = true): LegacyUser
     {
         $user = LegacyUser::where('idp_user_id', $person->id)->first();
 
@@ -124,7 +136,7 @@ final class SchoolImport
             $user->email = null;
             // Set from the provider role on creation only. aula owns userlevel
             // afterwards, so an upstream role change does not overwrite it.
-            $user->userlevel = $this->roles->userlevel($provider, $person->role);
+            $user->userlevel = $this->roles->level($provider, $person->role);
         }
 
         $displayName = $person->displayName();
@@ -135,10 +147,13 @@ final class SchoolImport
 
         $user->save();
 
-        $role = $this->roles->roomRole($provider, $person->role);
+        $role = $this->roles->level($provider, $person->role);
 
         $this->enrolInSchoolRoom($user, $role);
-        $this->rooms->syncUserRooms($user->id, $person->groups, $role);
+
+        if ($syncRooms) {
+            $this->rooms->syncUserRooms($user->id, $person->groups, $role);
+        }
 
         return $user;
     }

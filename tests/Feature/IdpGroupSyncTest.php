@@ -9,6 +9,8 @@ use App\Jobs\ProcessIdpWebhookEvent;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
+use App\Services\Idp\RoomEnrolment;
+use App\Services\Idp\RoomRoleNotWritten;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -181,20 +183,36 @@ class IdpGroupSyncTest extends TestCase
 
     public function test_imports_members_aula_does_not_hold_yet(): void
     {
-        $this->idmPeople['person-unknown'] = ['id' => 'person-unknown', 'role' => 'TEACHER', 'name' => ['last' => 'Unknown'], 'groups' => [['id' => self::GROUP, 'name' => 'Klasse 5a']]];
         $this->setGroup(['name' => 'Klasse 5a', 'members' => [
-            ['id' => 'person-unknown', 'role' => 'TEACHER', 'name' => ['last' => 'Unknown']],
+            ['id' => 'person-unknown', 'role' => 'TEACHER', 'name' => ['firstFull' => 'Ute', 'last' => 'Unknown']],
         ]]);
 
         $this->process($this->event('create'));
 
-        $userId = (int) self::$testTenant->run(
-            fn () => LegacyUser::where('idp_user_id', 'person-unknown')->value('id'),
-        );
+        $user = self::$testTenant->run(fn () => LegacyUser::where('idp_user_id', 'person-unknown')->first());
 
-        $this->assertGreaterThan(0, $userId);
-        $this->assertMembership((int) $this->room()->id, $userId, 1);
-        $this->assertSame(40, $this->roleFor($userId, (string) $this->room()->hash_id));
+        $this->assertNotNull($user);
+        $this->assertSame('Ute Unknown', $user->realname);
+        $this->assertSame(40, $user->userlevel->value);
+        $this->assertMembership((int) $this->room()->id, (int) $user->id, 1);
+        $this->assertSame(40, $this->roleFor((int) $user->id, (string) $this->room()->hash_id));
+        // Built from the group's member list, without a per-member lookup.
+        Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '/people/'));
+    }
+
+    public function test_leaves_existing_members_untouched_by_the_thinner_member_payload(): void
+    {
+        $userId = $this->seedUser('person-known');
+        self::$testTenant->run(fn () => LegacyUser::where('id', $userId)->update(['realname' => 'Kept Name', 'status' => 3]));
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-known', 'role' => 'TEACHER', 'name' => ['last' => 'Other']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $user = self::$testTenant->run(fn () => LegacyUser::find($userId));
+        $this->assertSame('Kept Name', $user->realname);
+        $this->assertSame(3, $user->status->value);
     }
 
     public function test_delete_archives_the_room(): void
@@ -207,10 +225,11 @@ class IdpGroupSyncTest extends TestCase
         $this->assertSame(3, (int) $this->room()->status);
     }
 
-    public function test_delete_removes_every_membership_and_room_role(): void
+    public function test_delete_removes_eduplaces_members_and_keeps_aula_members(): void
     {
         $teacherId = $this->seedUser('person-teacher');
         $studentId = $this->seedUser('person-student');
+        $staleId = $this->seedUser('person-stale');
 
         $this->setGroup(['name' => 'Klasse 5a', 'members' => [
             ['id' => 'person-teacher', 'role' => 'TEACHER', 'name' => ['last' => 'Schuster']],
@@ -221,25 +240,47 @@ class IdpGroupSyncTest extends TestCase
         $room = $this->room();
         $native = $this->seedUser(null);
 
-        // An aula-native member, and a stale `roles` entry with no membership row.
-        self::$testTenant->run(function () use ($room, $native) {
+        // An aula-native member, and an Eduplaces user with a stale `roles`
+        // entry but no membership row.
+        self::$testTenant->run(function () use ($room, $native, $staleId) {
             DB::table('au_rel_rooms_users')->insert([
                 'room_id' => $room->id, 'user_id' => $native, 'status' => 1, 'updater_id' => 0,
             ]);
             DB::table('au_users_basedata')->where('id', $native)->update([
                 'roles' => json_encode([['role' => 20, 'room' => $room->hash_id], ['role' => 30, 'room' => 'other-room']]),
             ]);
+            DB::table('au_users_basedata')->where('id', $staleId)->update([
+                'roles' => json_encode([['role' => 20, 'room' => $room->hash_id], ['role' => 30, 'room' => 'other-room']]),
+            ]);
         });
 
         $this->process($this->event('delete'));
 
-        foreach ([$teacherId, $studentId, $native] as $userId) {
+        foreach ([$teacherId, $studentId, $staleId] as $userId) {
             $this->assertMembership((int) $room->id, $userId, 0);
             $this->assertNull($this->roleFor($userId, (string) $room->hash_id));
         }
 
+        // The aula-native member keeps membership and role.
+        $this->assertMembership((int) $room->id, $native, 1);
+        $this->assertSame(20, $this->roleFor($native, (string) $room->hash_id));
+
         // Entries for other rooms survive.
+        $this->assertSame(30, $this->roleFor($staleId, 'other-room'));
         $this->assertSame(30, $this->roleFor($native, 'other-room'));
+    }
+
+    public function test_writing_a_role_for_a_missing_user_fails(): void
+    {
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+        $room = $this->room();
+
+        $missingUserId = (int) self::$testTenant->run(fn () => DB::table('au_users_basedata')->max('id')) + 1000;
+
+        $this->expectException(RoomRoleNotWritten::class);
+
+        self::$testTenant->run(fn () => app(RoomEnrolment::class)->enrol($missingUserId, (int) $room->id, (string) $room->hash_id, 20));
     }
 
     public function test_restore_reactivates_the_room(): void
