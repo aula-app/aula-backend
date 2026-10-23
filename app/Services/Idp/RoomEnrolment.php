@@ -35,16 +35,18 @@ final class RoomEnrolment
     {
         $existing = DB::table('au_rooms')
             ->where('idp_group_id', $idpGroupId)
-            ->first(['id', 'hash_id']);
+            ->first(['id', 'hash_id', 'room_name', 'status']);
 
         $status = $active ? self::STATUS_ACTIVE : self::STATUS_ARCHIVED;
 
         if ($existing !== null) {
-            DB::table('au_rooms')->where('id', $existing->id)->update([
-                'room_name' => $name,
-                'status' => $status,
-                'last_update' => now(),
-            ]);
+            if ($existing->room_name !== $name || (int) $existing->status !== $status) {
+                DB::table('au_rooms')->where('id', $existing->id)->update([
+                    'room_name' => $name,
+                    'status' => $status,
+                    'last_update' => now(),
+                ]);
+            }
 
             return ['id' => (int) $existing->id, 'hash_id' => (string) $existing->hash_id];
         }
@@ -65,33 +67,67 @@ final class RoomEnrolment
         return ['id' => $id, 'hash_id' => $hashId];
     }
 
+    /**
+     * Archive the room and remove the memberships and `roles` entries of its
+     * directory users. Members added inside aula keep both.
+     */
     public function archiveRoom(string $idpGroupId): bool
     {
-        $existing = DB::table('au_rooms')->where('idp_group_id', $idpGroupId)->first(['id']);
+        $existing = DB::table('au_rooms')->where('idp_group_id', $idpGroupId)->first(['id', 'hash_id']);
 
         if ($existing === null) {
             return false;
         }
 
-        DB::table('au_rooms')->where('id', $existing->id)->update([
+        $roomId = (int) $existing->id;
+        $hashId = (string) $existing->hash_id;
+
+        DB::table('au_rooms')->where('id', $roomId)->update([
             'status' => self::STATUS_ARCHIVED,
             'last_update' => now(),
         ]);
+
+        $memberIds = DB::table('au_rel_rooms_users')
+            ->join('au_users_basedata', 'au_users_basedata.id', '=', 'au_rel_rooms_users.user_id')
+            ->where('au_rel_rooms_users.room_id', $roomId)
+            ->whereNotNull('au_users_basedata.idp_user_id')
+            ->pluck('au_rel_rooms_users.user_id');
+
+        foreach ($memberIds as $userId) {
+            $this->unenrol((int) $userId, $roomId, $hashId);
+        }
+
+        // `roles` entries can outlive their membership row.
+        $staleRoleIds = DB::table('au_users_basedata')
+            ->whereNotNull('idp_user_id')
+            ->where('roles', 'like', '%'.$hashId.'%')
+            ->pluck('id');
+
+        foreach ($staleRoleIds as $userId) {
+            $this->writeRole((int) $userId, $hashId, null);
+        }
 
         return true;
     }
 
     /**
-     * Put a user in a room with a role, or update the role if already there.
+     * Put a user in a room. $role is the initial room role: a role the user
+     * already holds for the room, set upstream or inside aula, is kept.
      */
     public function enrol(int $userId, int $roomId, string $roomHashId, int $role): void
     {
-        DB::table('au_rel_rooms_users')->updateOrInsert(
-            ['room_id' => $roomId, 'user_id' => $userId],
-            ['status' => self::STATUS_ACTIVE, 'last_update' => now(), 'updater_id' => 0],
-        );
+        $status = DB::table('au_rel_rooms_users')
+            ->where('room_id', $roomId)
+            ->where('user_id', $userId)
+            ->value('status');
 
-        $this->writeRole($userId, $roomHashId, $role);
+        $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
+
+        if ($this->roleIn($roles, $roomHashId) === null) {
+            $this->writeRole($userId, $roomHashId, $role);
+        }
+
+        $this->writeMembership($userId, $roomId, $status === null ? null : (int) $status);
     }
 
     public function unenrol(int $userId, int $roomId, string $roomHashId): void
@@ -119,18 +155,24 @@ final class RoomEnrolment
             $groups,
         );
 
-        $managed = $this->managedRooms();
+        $memberships = DB::table('au_rel_rooms_users')
+            ->where('user_id', $userId)
+            ->pluck('status', 'room_id')
+            ->all();
 
-        foreach ($managed as $idpGroupId => $room) {
-            $shouldBeIn = in_array($idpGroupId, $wantedGroupIds, true);
-            $isIn = DB::table('au_rel_rooms_users')
-                ->where('room_id', $room['id'])
-                ->where('user_id', $userId)
-                ->exists();
+        $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
 
-            if ($shouldBeIn) {
-                $this->enrol($userId, $room['id'], $room['hash_id'], $role);
-            } elseif ($isIn) {
+        foreach ($this->managedRooms() as $idpGroupId => $room) {
+            $status = isset($memberships[$room['id']]) ? (int) $memberships[$room['id']] : null;
+
+            if (in_array($idpGroupId, $wantedGroupIds, true)) {
+                // Initial role only: an upstream role change does not reach aula.
+                if ($this->roleIn($roles, $room['hash_id']) === null) {
+                    $this->writeRole($userId, $room['hash_id'], $role);
+                }
+
+                $this->writeMembership($userId, $room['id'], $status);
+            } elseif ($status !== null) {
                 $this->unenrol($userId, $room['id'], $room['hash_id']);
             }
         }
@@ -146,26 +188,35 @@ final class RoomEnrolment
      */
     public function syncRoomMembers(int $roomId, string $roomHashId, array $userRoles): void
     {
-        $managedUserIds = DB::table('au_users_basedata')
-            ->whereNotNull('idp_user_id')
-            ->pluck('id')
-            ->map(fn ($id): int => (int) $id)
+        $memberships = DB::table('au_rel_rooms_users')
+            ->where('room_id', $roomId)
+            ->pluck('status', 'user_id')
             ->all();
 
-        $wanted = array_keys($userRoles);
-
-        $toRemove = DB::table('au_rel_rooms_users')
-            ->where('room_id', $roomId)
-            ->whereIn('user_id', $managedUserIds ?: [0])
-            ->whereNotIn('user_id', $wanted ?: [0])
-            ->pluck('user_id');
+        $toRemove = DB::table('au_users_basedata')
+            ->whereIn('id', array_keys($memberships) ?: [0])
+            ->whereNotNull('idp_user_id')
+            ->whereNotIn('id', array_keys($userRoles) ?: [0])
+            ->pluck('id');
 
         foreach ($toRemove as $userId) {
             $this->unenrol((int) $userId, $roomId, $roomHashId);
         }
 
+        $currentRoles = DB::table('au_users_basedata')
+            ->whereIn('id', array_keys($userRoles) ?: [0])
+            ->pluck('roles', 'id')
+            ->all();
+
         foreach ($userRoles as $userId => $role) {
-            $this->enrol((int) $userId, $roomId, $roomHashId, (int) $role);
+            $status = isset($memberships[$userId]) ? (int) $memberships[$userId] : null;
+
+            // Initial role only: an upstream role change does not reach aula.
+            if ($this->roleIn($this->decodeRoles($currentRoles[$userId] ?? null), $roomHashId) === null) {
+                $this->writeRole((int) $userId, $roomHashId, (int) $role);
+            }
+
+            $this->writeMembership((int) $userId, $roomId, $status);
         }
     }
 
@@ -196,23 +247,71 @@ final class RoomEnrolment
      */
     private function writeRole(int $userId, string $roomHashId, ?int $role): void
     {
-        $current = DB::table('au_users_basedata')->where('id', $userId)->value('roles');
+        $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
 
-        /** @var list<array{role?: int, room?: string}> $roles */
-        $roles = json_decode((string) $current, true) ?: [];
-
-        $roles = array_values(array_filter(
+        $others = array_values(array_filter(
             $roles,
             fn ($entry): bool => is_array($entry) && ($entry['room'] ?? null) !== $roomHashId,
         ));
 
-        if ($role !== null) {
-            $roles[] = ['role' => $role, 'room' => $roomHashId];
+        $updated = $role === null ? $others : [...$others, ['role' => $role, 'room' => $roomHashId]];
+
+        $unchanged = $role === null
+            ? count($others) === count($roles)
+            : count($others) === count($roles) - 1 && $this->roleIn($roles, $roomHashId) === $role;
+
+        if ($unchanged) {
+            return;
         }
 
-        DB::table('au_users_basedata')->where('id', $userId)->update([
-            'roles' => json_encode($roles),
+        $written = DB::table('au_users_basedata')->where('id', $userId)->update([
+            'roles' => json_encode($updated),
             'last_update' => now(),
         ]);
+
+        // Only reached when the JSON differs, so 0 rows means no such user.
+        if ($written === 0) {
+            throw new RoomRoleNotWritten($userId, $roomHashId);
+        }
+    }
+
+    /**
+     * Insert or reactivate a membership row; $status is the row's current
+     * status, null when there is none.
+     */
+    private function writeMembership(int $userId, int $roomId, ?int $status): void
+    {
+        if ($status === self::STATUS_ACTIVE) {
+            return;
+        }
+
+        DB::table('au_rel_rooms_users')->updateOrInsert(
+            ['room_id' => $roomId, 'user_id' => $userId],
+            ['status' => self::STATUS_ACTIVE, 'last_update' => now(), 'updater_id' => 0],
+        );
+    }
+
+    /**
+     * @return list<array{role?: int, room?: string}>
+     */
+    private function decodeRoles(mixed $json): array
+    {
+        $roles = json_decode((string) $json, true);
+
+        return is_array($roles) ? array_values($roles) : [];
+    }
+
+    /**
+     * @param  list<array{role?: int, room?: string}>  $roles
+     */
+    private function roleIn(array $roles, string $roomHashId): ?int
+    {
+        foreach ($roles as $entry) {
+            if (is_array($entry) && ($entry['room'] ?? null) === $roomHashId) {
+                return isset($entry['role']) ? (int) $entry['role'] : null;
+            }
+        }
+
+        return null;
     }
 }

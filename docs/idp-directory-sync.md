@@ -86,8 +86,9 @@ Role mapping, from `services.eduplaces.role_userlevels`:
 | `STUDENT`      | 20          | 20              |
 | anything else  | 20          | 20              |
 
-Account-wide rank and per-room rank come from the same map, so a teacher cannot
-end up privileged in one and not the other.
+Both are applied once: `userlevel` when the account is created, the per-room
+`role` when the user joins the room. A later role change in Eduplaces changes
+neither, so ranks set inside aula are kept.
 
 ## Names
 
@@ -96,7 +97,7 @@ What an endpoint returns depends on the app's entitlements:
 | Endpoint                          | Carries                                  |
 |-----------------------------------|------------------------------------------|
 | `/schools/{id}/people`, `/people/{id}` | `name` (`firstFull`/`firstCall`/`last`), `status`, `role`, `groups`; deleted and unsynced people are left out |
-| `/groups/{id}`                    | `members`, read only when a group webhook arrives |
+| `/groups/{id}`                    | `members` (`id`, `name`, `role`), read on every group refresh |
 
 Every read goes through `/people`: the import, the merge proposal and the
 tenant scan read `/schools/{id}/groups` for the group list and
@@ -152,16 +153,29 @@ the queue moves the retries to aula (`tries = 5`, backoff 10s/1m/5m/15m).
 
 ### What each event does
 
-**person**: `create` and `update` converge the row through
-`SchoolImport::importUser()`, the same call the import makes, so both paths
-write identical rows including room membership and roles. `delete` sets
-`status = 3` and leaves every directory-sourced room. `restore` sets
-`status = 1`.
+**person**: `create`, `update` and `restore` converge the row through
+`SchoolImport::importUser()`, the same call the import makes, then queue one
+`RefreshIdpGroup` per group of the person and one `ReconcileIdpSchool`.
+`delete` sets `status = 3` and leaves every directory-sourced room. `restore`
+sets `status = 1`.
 
-**group**: `create` and `update` upsert the room and reconcile its members.
-`delete` archives the room and keeps the membership rows so a restore is clean.
-A member with no local row is skipped rather than created, since that member's
-own person event creates it.
+Eduplaces sends no group events in practice (none seen on staging for create,
+rename, delete or a sync-config change), so groups are kept current from
+person events:
+
+- `RefreshIdpGroup` reads `/groups/{id}` and converges the room: name, status,
+  members. A member without a local row is created from the member entry
+  (`SchoolImport::importMember()`); existing rows are not touched by it.
+- `ReconcileIdpSchool` reads the school's group list. A room whose group is no
+  longer listed is archived; a listed group without an active room is
+  refreshed. Skipped when the school itself returns 404, so a disconnected
+  school does not archive every room.
+
+A group rename reaches aula only through an event for a member of that group.
+
+**group**: `create` and `update` refresh the room as above. `delete` archives
+the room and removes the memberships and `roles` entries of directory users;
+members added inside aula keep both.
 
 **school**: updates `tenants.name`. Address, location, official id and schooling
 level are read and logged but not stored. `delete` is **not** honoured: dropping
@@ -178,7 +192,7 @@ the centralDB table `tenants` by schoolId received from the IdP.
 - Rooms without an `idp_group_id`: the school room and anything created inside
   aula.
 - Users without an `idp_user_id` are never unenrolled by a sync.
-- Admin-level accounts are never demoted by role mapping.
+- `userlevel` after account creation, and a per-room `role` once set.
 - Nothing is hard-deleted; legacy tables reference user rows.
 
 ## Replays and ordering

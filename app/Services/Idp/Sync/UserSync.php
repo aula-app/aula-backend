@@ -53,6 +53,7 @@ final class UserSync
 
         $user = $this->import->importUser($tenant, $provider, $person);
 
+
         if ($event->action === IdpEvent::ACTION_RESTORE && ! $user->isActive()) {
             // ACTION_RESTORE means active even when the directory read-back
             // still reports otherwise.
@@ -60,7 +61,10 @@ final class UserSync
             $user->save();
         }
 
-        return SyncOutcome::processed();
+        // A person event is a ping: Eduplaces reports membership changes as
+        // person events and sends no group events, so the person's groups and
+        // the school's group list are re-read in follow-up jobs.
+        return SyncOutcome::processed(groupsToRefresh: $person->groupIds(), reconcileSchool: true);
     }
 
     private function archive(string $userId): SyncOutcome
