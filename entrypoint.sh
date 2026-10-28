@@ -24,6 +24,7 @@ fi
 echo "⏳ Waiting for database connection..."
 until php artisan db:show > /dev/null 2>&1; do
   sleep 2
+  echo "⏳ ...pinging database..."
 done
 echo "✅ Database is ready."
 
@@ -37,11 +38,12 @@ chmod -R g+ws ./storage
 
 echo "🔑 Ensuring Passport keys are present and with correct permissions..."
 php artisan passport:keys -q
-chown www-data:www-data ./storage/oauth-*.key
+chown www-data:33 ./storage/oauth-*.key
 # Note o+r here, backend-legacy container needs read permissions and its UIDs are different
-chmod 664 ./storage/oauth-public.key
-chmod 600 ./storage/oauth-private.key
+chmod -v 660 ./storage/oauth-public.key
+chmod -v 600 ./storage/oauth-private.key
 echo "✅ Passport keys ready."
+ls -lah ./storage/oauth*.key
 
 echo "🗃️ Copying assets for aula manager (filament)..."
 php artisan filament:assets

@@ -4,6 +4,7 @@
 _ide_helper.php
 /.idea
 /.junie
+/db
 
 .DS_Store
 
