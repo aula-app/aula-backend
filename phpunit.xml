@@ -30,6 +30,7 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="OTEL_SDK_DISABLED" value="true"/>
+        <!-- we have to set env OTEL_SDK_DISABLED in .env.testing -->
+        <server name="OTEL_SDK_DISABLED" value="true"/>
     </php>
 </phpunit>
