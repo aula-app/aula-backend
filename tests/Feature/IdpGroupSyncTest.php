@@ -220,9 +220,63 @@ class IdpGroupSyncTest extends TestCase
         $this->setGroup(['name' => 'Klasse 5a']);
         $this->process($this->event('create'));
 
+        unset($this->idmGroups[self::GROUP]);
         $this->process($this->event('delete'));
 
         $this->assertSame(3, (int) $this->room()->status);
+    }
+
+    public function test_a_late_delete_does_not_archive_a_group_active_upstream(): void
+    {
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+
+        // The delete is stale: upstream still reports the group.
+        $this->process($this->event('delete'));
+
+        $this->assertSame(1, (int) $this->room()->status);
+    }
+
+    public function test_a_late_restore_does_not_reactivate_a_group_deleted_upstream(): void
+    {
+        // Upstream: deleted, restored, deleted. Delivered: delete, delete, restore.
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+        unset($this->idmGroups[self::GROUP]);
+
+        $this->process($this->event('delete'));
+        $this->process($this->event('delete'));
+        $this->process($this->event('restore'));
+
+        $this->assertSame(3, (int) $this->room()->status);
+    }
+
+    public function test_a_restore_does_not_override_an_inactive_read_back(): void
+    {
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+
+        $this->setGroup(['name' => 'Klasse 5a', 'status' => 'INACTIVE']);
+        $this->process($this->event('restore'));
+
+        $this->assertSame(3, (int) $this->room()->status);
+    }
+
+    public function test_an_inactive_group_is_archived_like_a_deleted_one(): void
+    {
+        $memberId = $this->seedUser('person-member');
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-member', 'role' => 'STUDENT', 'name' => ['last' => 'Member']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $this->setGroup(['name' => 'Klasse 5a', 'status' => 'INACTIVE', 'members' => [
+            ['id' => 'person-member', 'role' => 'STUDENT', 'name' => ['last' => 'Member']],
+        ]]);
+        $this->process($this->event('update', ['status']));
+
+        $this->assertSame(3, (int) $this->room()->status);
+        $this->assertMembership((int) $this->room()->id, $memberId, 0);
     }
 
     public function test_delete_removes_eduplaces_members_and_keeps_aula_members(): void
@@ -254,6 +308,7 @@ class IdpGroupSyncTest extends TestCase
             ]);
         });
 
+        unset($this->idmGroups[self::GROUP]);
         $this->process($this->event('delete'));
 
         foreach ([$teacherId, $studentId, $staleId] as $userId) {
@@ -287,8 +342,10 @@ class IdpGroupSyncTest extends TestCase
     {
         $this->setGroup(['name' => 'Klasse 5a']);
         $this->process($this->event('create'));
+        unset($this->idmGroups[self::GROUP]);
         $this->process($this->event('delete'));
 
+        $this->setGroup(['name' => 'Klasse 5a']);
         $this->process($this->event('restore'));
 
         $this->assertSame(1, (int) $this->room()->status);

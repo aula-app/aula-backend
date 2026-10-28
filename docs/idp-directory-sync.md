@@ -153,11 +153,14 @@ the queue moves the retries to aula (`tries = 5`, backoff 10s/1m/5m/15m).
 
 ### What each event does
 
-**person**: `create`, `update` and `restore` converge the row through
-`SchoolImport::importUser()`, the same call the import makes, then queue one
-`RefreshIdpGroup` per group of the person and one `ReconcileIdpSchool`.
-`delete` sets `status = 3` and leaves every directory-sourced room. `restore`
-sets `status = 1`.
+The event's `action` is not trusted, since deliveries can arrive out of
+order: every event reads the entity back and the read-back decides.
+
+**person**: found upstream, the row converges through
+`SchoolImport::importUser()`, the same call the import makes, then one
+`RefreshIdpGroup` per group of the person and one `ReconcileIdpSchool` are
+queued. Gone upstream (404), the row gets `status = 3` and leaves every
+directory-sourced room.
 
 Eduplaces sends no group events in practice (none seen on staging for create,
 rename, delete or a sync-config change), so groups are kept current from
@@ -171,11 +174,15 @@ person events:
   refreshed. Skipped when the school itself returns 404, so a disconnected
   school does not archive every room.
 
+Both jobs are unique until processing (keyed by tenant, and tenant + group):
+a dispatch while one is queued is dropped, and a change arriving mid-run still
+queues a new one. Locks use the central cache (`cache_locks`).
+
 A group rename reaches aula only through an event for a member of that group.
 
-**group**: `create` and `update` refresh the room as above. `delete` archives
-the room and removes the memberships and `roles` entries of directory users;
-members added inside aula keep both.
+**group**: found and active upstream, the room is refreshed as above. Gone
+upstream or inactive, the room is archived and the memberships and `roles`
+entries of directory users are removed; members added inside aula keep both.
 
 **school**: updates `tenants.name`. Address, location, official id and schooling
 level are read and logged but not stored. `delete` is **not** honoured: dropping

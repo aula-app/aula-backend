@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\Tenant;
 use App\Services\Idp\Sync\GroupSync;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -19,7 +20,7 @@ use Illuminate\Queue\SerializesModels;
  * for each listed group without an active room. Dispatched by
  * ProcessIdpWebhookEvent after every person event.
  */
-class ReconcileIdpSchool implements ShouldQueue
+class ReconcileIdpSchool implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -31,6 +32,9 @@ class ReconcileIdpSchool implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [10, 60, 300, 900];
 
+    /** Lock lifetime if the job is lost before it is processed. */
+    public int $uniqueFor = 3600;
+
     /**
      * @param  list<string>  $alreadyRefreshed  group ids the same event already queued a refresh for
      */
@@ -39,6 +43,16 @@ class ReconcileIdpSchool implements ShouldQueue
         public readonly string $provider,
         public readonly array $alreadyRefreshed = [],
     ) {}
+
+    /**
+     * One pending reconcile per tenant: a dispatch while one is queued is
+     * dropped, and the lock is released when processing starts, so a change
+     * arriving mid-run still queues a new one.
+     */
+    public function uniqueId(): string
+    {
+        return $this->tenantId;
+    }
 
     public function handle(GroupSync $groups): void
     {

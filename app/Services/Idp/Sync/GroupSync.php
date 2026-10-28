@@ -40,17 +40,20 @@ final class GroupSync
 
     public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
     {
-        if ($event->action === IdpEvent::ACTION_DELETE) {
-            return $this->rooms->archiveRoom($event->entityId)
-                ? SyncOutcome::processed()
-                : SyncOutcome::skipped('room_not_local');
-        }
-
-        $forceActive = $event->action === IdpEvent::ACTION_RESTORE;
-
-        return $this->refreshGroup($event->entityId, $tenant, $provider, $forceActive)
+        // The action is not trusted: deliveries can arrive out of order, so
+        // the read-back decides.
+        return $this->syncGroup($event->entityId, $tenant, $provider)
             ? SyncOutcome::processed()
             : SyncOutcome::skipped('group_not_found_upstream');
+    }
+
+    /**
+     * Refresh the room from upstream, or archive it when the group is gone.
+     * False when there is neither a group upstream nor a room in aula.
+     */
+    public function syncGroup(string $groupId, Tenant $tenant, string $provider): bool
+    {
+        return $this->refreshGroup($groupId, $tenant, $provider) || $this->rooms->archiveRoom($groupId);
     }
 
     /**
@@ -58,10 +61,10 @@ final class GroupSync
      * status, members and the initial per-room role of new members. Members
      * without a local row are imported.
      *
-     * Used for group events and, per group of the person, for person events.
-     * Returns false when the group is gone upstream.
+     * An inactive group archives the room. Returns false when the group is
+     * gone upstream.
      */
-    public function refreshGroup(string $groupId, Tenant $tenant, string $provider, bool $forceActive = false): bool
+    public function refreshGroup(string $groupId, Tenant $tenant, string $provider): bool
     {
         $group = $this->providers->directory($provider)->group($groupId);
 
@@ -69,8 +72,14 @@ final class GroupSync
             return false;
         }
 
+        if (! $group->isActive()) {
+            $this->rooms->archiveRoom($group->id);
+
+            return true;
+        }
+
         // The room comes first, so importMember() below enrols each new member.
-        $room = $this->rooms->upsertRoom($group->id, $group->name, $forceActive || $group->isActive());
+        $room = $this->rooms->upsertRoom($group->id, $group->name);
 
         $local = LegacyUser::whereIn('idp_user_id', $group->memberIds())
             ->pluck('idp_user_id')

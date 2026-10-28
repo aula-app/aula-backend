@@ -25,8 +25,8 @@ use Illuminate\Support\Facades\Log;
  * Converges on the state read back from the directory instead of applying the
  * reported delta, so redelivered and out-of-order events are harmless.
  *
- * ACTION_DELETE archives instead of deleting: the legacy ideas, votes and
- * comments tables reference `au_users_basedata` rows.
+ * A person gone upstream is archived, not deleted: the legacy ideas, votes
+ * and comments tables reference `au_users_basedata` rows.
  */
 final class UserSync
 {
@@ -38,32 +38,19 @@ final class UserSync
 
     public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
     {
-        if ($event->action === IdpEvent::ACTION_DELETE) {
-            return $this->archive($event->entityId);
-        }
-
+        // The action is not trusted: deliveries can arrive out of order, so
+        // the read-back decides. Gone upstream archives, present converges.
         $person = $this->providers->directory($provider)->user($event->entityId);
 
         if ($person === null) {
-            // Deleted between the event firing and this read-back. Not an
-            // error, and not a reason to drop a local row: an ACTION_DELETE
-            // event says so explicitly.
-            return SyncOutcome::skipped('user_not_found_upstream');
+            return $this->archive($event->entityId);
         }
 
-        $user = $this->import->importUser($tenant, $provider, $person);
+        $this->import->importUser($tenant, $provider, $person);
 
-
-        if ($event->action === IdpEvent::ACTION_RESTORE && ! $user->isActive()) {
-            // ACTION_RESTORE means active even when the directory read-back
-            // still reports otherwise.
-            $user->status = UserStatus::Active;
-            $user->save();
-        }
-
-        // A person event is a ping: Eduplaces reports membership changes as
-        // person events and sends no group events, so the person's groups and
-        // the school's group list are re-read in follow-up jobs.
+        // Eduplaces reports membership changes as person events and sends no
+        // group events, so the person's groups and the school's group list
+        // are re-read in follow-up jobs.
         return SyncOutcome::processed(groupsToRefresh: $person->groupIds(), reconcileSchool: true);
     }
 
@@ -72,7 +59,7 @@ final class UserSync
         $user = LegacyUser::where('idp_user_id', $userId)->first();
 
         if ($user === null) {
-            return SyncOutcome::skipped('user_not_local');
+            return SyncOutcome::skipped('user_not_found_upstream');
         }
 
         $user->status = UserStatus::Archived;
@@ -82,7 +69,7 @@ final class UserSync
         // entries. Rooms created inside aula are left alone.
         $this->rooms->syncUserRooms($user->id, [], 0);
 
-        Log::info('IdP: archived a user on directory delete', [
+        Log::info('IdP: archived a user gone upstream', [
             'user_id' => $user->id,
             'idp_user_id' => $userId,
         ]);

@@ -288,6 +288,7 @@ class IdpUserSyncTest extends TestCase
         $this->process($this->event('create'));
         $userId = $this->syncedUser()->id;
 
+        $this->idmVanished[] = self::PERSON;
         $this->process($this->event('delete'));
 
         $user = $this->syncedUser();
@@ -299,42 +300,68 @@ class IdpUserSyncTest extends TestCase
         $this->assertSame(UserStatus::Archived, $user->status);
     }
 
-    public function test_delete_does_not_call_the_idm(): void
+    public function test_a_late_delete_does_not_archive_a_person_active_upstream(): void
     {
-        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Departed']]);
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Stays']]);
         $this->process($this->event('create'));
 
-        Http::fake();
+        // The delete is stale: upstream still reports the person.
         $this->process($this->event('delete'));
 
-        // No read-back on ACTION_DELETE: the payload carries all UserSync
-        // needs.
-        Http::assertNothingSent();
+        $this->assertSame(UserStatus::Active, $this->syncedUser()->status);
     }
 
     public function test_restore_reactivates_an_archived_user(): void
     {
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Returner']]);
         $this->process($this->event('create'));
+        $this->idmVanished[] = self::PERSON;
         $this->process($this->event('delete'));
 
-        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Returner']]);
+        $this->idmVanished = [];
         $this->process($this->event('restore'));
 
         $this->assertSame(UserStatus::Active, $this->syncedUser()->status);
     }
 
+    public function test_a_late_restore_does_not_reactivate_a_person_deleted_upstream(): void
+    {
+        // Upstream: deleted, restored, deleted. Delivered: delete, delete, restore.
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Flapping']]);
+        $this->process($this->event('create'));
+        $this->idmVanished[] = self::PERSON;
+
+        $this->process($this->event('delete'));
+        $this->process($this->event('delete'));
+        $this->process($this->event('restore'));
+
+        $this->assertSame(UserStatus::Archived, $this->syncedUser()->status);
+    }
+
+    public function test_a_restore_does_not_override_an_inactive_read_back(): void
+    {
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Inactive']]);
+        $this->process($this->event('create'));
+
+        $this->setPerson(['role' => 'STUDENT', 'status' => 'INACTIVE', 'name' => ['last' => 'Inactive']]);
+        $this->process($this->event('restore'));
+
+        $this->assertSame(UserStatus::Archived, $this->syncedUser()->status);
+    }
+
     public function test_deleting_a_person_we_never_had_is_a_skip_not_a_failure(): void
     {
-        // The event resolves to a tenant, but no row carries this
-        // idp_user_id, so there is nothing to archive.
+        // The event resolves to a tenant, but the person is gone upstream and
+        // no row carries this idp_user_id, so there is nothing to archive.
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Neverwas']]);
+        $this->idmVanished[] = self::PERSON;
 
         $event = $this->event('delete');
         $this->process($event);
 
         $this->assertSame(IdpWebhookEvent::STATUS_SKIPPED, $event->fresh()->status);
-        $this->assertSame('user_not_local', $event->fresh()->error);
+        $this->assertSame('user_not_found_upstream', $event->fresh()->error);
+        $this->assertNull($this->syncedUser());
     }
 
     // =========================================================
@@ -350,6 +377,8 @@ class IdpUserSyncTest extends TestCase
             'name' => ['last' => 'Grouped'],
             'groups' => [['id' => 'group-known', 'name' => 'Klasse 5a']],
         ]);
+
+        $this->setGroup('group-known', 'Klasse 5a', [['id' => self::PERSON, 'role' => 'STUDENT', 'name' => ['last' => 'Grouped']]]);
 
         $this->process($this->event('update', properties: ['groups']));
 
@@ -640,10 +669,27 @@ class IdpUserSyncTest extends TestCase
         $this->seedLocalUser(self::PERSON, 'Leaving');
         Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
 
+        $this->idmVanished[] = self::PERSON;
         $this->process($this->event('delete'));
 
         Queue::assertNotPushed(RefreshIdpGroup::class);
         Queue::assertNotPushed(ReconcileIdpSchool::class);
+    }
+
+    public function test_does_not_queue_duplicates_while_one_is_pending(): void
+    {
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+        $groups = [['id' => 'group-shared', 'name' => 'Klasse 5a']];
+
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'First']], self::PERSON);
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Second'], 'groups' => $groups], 'person-second');
+        $this->idmPeople[self::PERSON]['groups'] = $groups;
+
+        $this->process($this->event('update', properties: ['groups']));
+        $this->process($this->event('update', 'person-second', ['groups']));
+
+        Queue::assertPushed(RefreshIdpGroup::class, 1);
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
     }
 
     public function test_an_unchanged_person_and_group_write_nothing(): void

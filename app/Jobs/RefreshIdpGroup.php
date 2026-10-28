@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\Tenant;
 use App\Services\Idp\Sync\GroupSync;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -14,13 +15,14 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Converges one directory-sourced room on its group upstream: name, status,
- * members and per-room roles, importing members aula does not hold.
+ * Converges one directory-sourced room on its group upstream: name, status
+ * and members, importing members aula does not hold. A group gone upstream
+ * archives the room.
  *
  * Dispatched by ProcessIdpWebhookEvent for every group of a person event and
  * by ReconcileIdpSchool for listed groups without an active room.
  */
-class RefreshIdpGroup implements ShouldQueue
+class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -32,11 +34,24 @@ class RefreshIdpGroup implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [10, 60, 300, 900];
 
+    /** Lock lifetime if the job is lost before it is processed. */
+    public int $uniqueFor = 3600;
+
     public function __construct(
         public readonly string $tenantId,
         public readonly string $provider,
         public readonly string $groupId,
     ) {}
+
+    /**
+     * One pending refresh per group: a dispatch while one is queued is
+     * dropped, and the lock is released when processing starts, so a change
+     * arriving mid-run still queues a new one.
+     */
+    public function uniqueId(): string
+    {
+        return $this->tenantId.':'.$this->groupId;
+    }
 
     public function handle(GroupSync $groups): void
     {
@@ -46,10 +61,10 @@ class RefreshIdpGroup implements ShouldQueue
             return;
         }
 
-        $found = $tenant->run(fn (): bool => $groups->refreshGroup($this->groupId, $tenant, $this->provider));
+        $found = $tenant->run(fn (): bool => $groups->syncGroup($this->groupId, $tenant, $this->provider));
 
         if (! $found) {
-            Log::info('IdP: group to refresh is gone upstream', [
+            Log::info('IdP: group to refresh is gone upstream and has no room', [
                 'tenant' => $tenant->instance_code,
                 'idp_group_id' => $this->groupId,
             ]);
