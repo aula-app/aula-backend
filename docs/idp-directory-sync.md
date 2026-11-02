@@ -181,8 +181,9 @@ queues a new one. Locks use the central cache (`cache_locks`).
 A group rename reaches aula only through an event for a member of that group.
 
 **group**: found and active upstream, the room is refreshed as above. Gone
-upstream or inactive, the room is archived and the memberships and `roles`
-entries of directory users are removed; members added inside aula keep both.
+upstream or inactive, the room is archived. Memberships and `roles` entries
+stay, as for a room archived inside aula; the refresh after a restore
+reconciles them against the group's member list.
 
 **school**: updates `tenants.name`. Address, location, official id and schooling
 level are read and logged but not stored. `delete` is **not** honoured: dropping

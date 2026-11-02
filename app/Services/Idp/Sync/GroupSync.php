@@ -114,7 +114,7 @@ final class GroupSync
      *
      * Eduplaces sends no group events, so a group added to the sync, emptied
      * or deleted upstream surfaces only here. An active room whose group is no
-     * longer listed is archived, with its memberships and `roles` entries.
+     * longer listed is archived.
      *
      * Skipped when the school itself is not visible: a school disconnected
      * from the app lists no groups, which must not archive every room.

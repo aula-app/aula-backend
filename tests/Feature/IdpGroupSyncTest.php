@@ -276,14 +276,13 @@ class IdpGroupSyncTest extends TestCase
         $this->process($this->event('update', ['status']));
 
         $this->assertSame(3, (int) $this->room()->status);
-        $this->assertMembership((int) $this->room()->id, $memberId, 0);
+        $this->assertMembership((int) $this->room()->id, $memberId, 1);
     }
 
-    public function test_delete_removes_eduplaces_members_and_keeps_aula_members(): void
+    public function test_delete_keeps_memberships_and_roles(): void
     {
         $teacherId = $this->seedUser('person-teacher');
         $studentId = $this->seedUser('person-student');
-        $staleId = $this->seedUser('person-stale');
 
         $this->setGroup(['name' => 'Klasse 5a', 'members' => [
             ['id' => 'person-teacher', 'role' => 'TEACHER', 'name' => ['last' => 'Schuster']],
@@ -294,35 +293,54 @@ class IdpGroupSyncTest extends TestCase
         $room = $this->room();
         $native = $this->seedUser(null);
 
-        // An aula-native member, and an Eduplaces user with a stale `roles`
-        // entry but no membership row.
-        self::$testTenant->run(function () use ($room, $native, $staleId) {
+        self::$testTenant->run(function () use ($room, $native) {
             DB::table('au_rel_rooms_users')->insert([
                 'room_id' => $room->id, 'user_id' => $native, 'status' => 1, 'updater_id' => 0,
             ]);
             DB::table('au_users_basedata')->where('id', $native)->update([
-                'roles' => json_encode([['role' => 20, 'room' => $room->hash_id], ['role' => 30, 'room' => 'other-room']]),
-            ]);
-            DB::table('au_users_basedata')->where('id', $staleId)->update([
-                'roles' => json_encode([['role' => 20, 'room' => $room->hash_id], ['role' => 30, 'room' => 'other-room']]),
+                'roles' => json_encode([['role' => 20, 'room' => $room->hash_id]]),
             ]);
         });
 
         unset($this->idmGroups[self::GROUP]);
         $this->process($this->event('delete'));
 
-        foreach ([$teacherId, $studentId, $staleId] as $userId) {
-            $this->assertMembership((int) $room->id, $userId, 0);
-            $this->assertNull($this->roleFor($userId, (string) $room->hash_id));
-        }
-
-        // The aula-native member keeps membership and role.
+        // Same as a room archived inside aula: nobody is removed.
+        $this->assertSame(3, (int) $this->room()->status);
+        $this->assertMembership((int) $room->id, $teacherId, 1);
+        $this->assertSame(40, $this->roleFor($teacherId, (string) $room->hash_id));
+        $this->assertMembership((int) $room->id, $studentId, 1);
+        $this->assertSame(20, $this->roleFor($studentId, (string) $room->hash_id));
         $this->assertMembership((int) $room->id, $native, 1);
         $this->assertSame(20, $this->roleFor($native, (string) $room->hash_id));
+    }
 
-        // Entries for other rooms survive.
-        $this->assertSame(30, $this->roleFor($staleId, 'other-room'));
-        $this->assertSame(30, $this->roleFor($native, 'other-room'));
+    public function test_restore_reconciles_the_members_kept_through_the_archive(): void
+    {
+        $stayingId = $this->seedUser('person-staying');
+        $leavingId = $this->seedUser('person-leaving');
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-staying', 'role' => 'STUDENT', 'name' => ['last' => 'Bleibt']],
+            ['id' => 'person-leaving', 'role' => 'STUDENT', 'name' => ['last' => 'Geht']],
+        ]]);
+        $this->process($this->event('create'));
+        $room = $this->room();
+
+        unset($this->idmGroups[self::GROUP]);
+        $this->process($this->event('delete'));
+
+        // Restored upstream without one of its former members.
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-staying', 'role' => 'STUDENT', 'name' => ['last' => 'Bleibt']],
+        ]]);
+        $this->process($this->event('restore'));
+
+        $this->assertSame(1, (int) $this->room()->status);
+        $this->assertMembership((int) $room->id, $stayingId, 1);
+        $this->assertSame(20, $this->roleFor($stayingId, (string) $room->hash_id));
+        $this->assertMembership((int) $room->id, $leavingId, 0);
+        $this->assertNull($this->roleFor($leavingId, (string) $room->hash_id));
     }
 
     public function test_writing_a_role_for_a_missing_user_fails(): void

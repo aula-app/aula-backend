@@ -577,7 +577,7 @@ class IdpUserSyncTest extends TestCase
         ));
     }
 
-    public function test_archives_and_empties_rooms_for_groups_no_longer_listed(): void
+    public function test_archives_rooms_for_groups_no_longer_listed_and_keeps_their_members(): void
     {
         $roomId = $this->seedLocalRoom('group-deleted', 'Gelöscht');
         $this->seedLocalUser('person-left-behind', 'Behind');
@@ -599,8 +599,8 @@ class IdpUserSyncTest extends TestCase
             $userId = LegacyUser::where('idp_user_id', 'person-left-behind')->value('id');
 
             $this->assertSame(3, (int) $room->status);
-            $this->assertSame(0, DB::table('au_rel_rooms_users')->where('room_id', $roomId)->count());
-            $this->assertStringNotContainsString(
+            $this->assertSame(1, DB::table('au_rel_rooms_users')->where('room_id', $roomId)->where('user_id', $userId)->count());
+            $this->assertStringContainsString(
                 (string) $room->hash_id,
                 (string) DB::table('au_users_basedata')->where('id', $userId)->value('roles'),
             );

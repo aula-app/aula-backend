@@ -68,43 +68,22 @@ final class RoomEnrolment
     }
 
     /**
-     * Archive the room and remove the memberships and `roles` entries of its
-     * directory users. Members added inside aula keep both.
+     * Archive the room. Memberships and `roles` entries stay, as they do for
+     * a room archived inside aula; a refresh after a restore reconciles them.
      */
     public function archiveRoom(string $idpGroupId): bool
     {
-        $existing = DB::table('au_rooms')->where('idp_group_id', $idpGroupId)->first(['id', 'hash_id']);
+        $existing = DB::table('au_rooms')->where('idp_group_id', $idpGroupId)->first(['id', 'status']);
 
         if ($existing === null) {
             return false;
         }
 
-        $roomId = (int) $existing->id;
-        $hashId = (string) $existing->hash_id;
-
-        DB::table('au_rooms')->where('id', $roomId)->update([
-            'status' => self::STATUS_ARCHIVED,
-            'last_update' => now(),
-        ]);
-
-        $memberIds = DB::table('au_rel_rooms_users')
-            ->join('au_users_basedata', 'au_users_basedata.id', '=', 'au_rel_rooms_users.user_id')
-            ->where('au_rel_rooms_users.room_id', $roomId)
-            ->whereNotNull('au_users_basedata.idp_user_id')
-            ->pluck('au_rel_rooms_users.user_id');
-
-        foreach ($memberIds as $userId) {
-            $this->unenrol((int) $userId, $roomId, $hashId);
-        }
-
-        // `roles` entries can outlive their membership row.
-        $staleRoleIds = DB::table('au_users_basedata')
-            ->whereNotNull('idp_user_id')
-            ->where('roles', 'like', '%'.$hashId.'%')
-            ->pluck('id');
-
-        foreach ($staleRoleIds as $userId) {
-            $this->writeRole((int) $userId, $hashId, null);
+        if ((int) $existing->status !== self::STATUS_ARCHIVED) {
+            DB::table('au_rooms')->where('id', $existing->id)->update([
+                'status' => self::STATUS_ARCHIVED,
+                'last_update' => now(),
+            ]);
         }
 
         return true;
