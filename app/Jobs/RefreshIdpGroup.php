@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\Tenant;
 use App\Services\Idp\Sync\GroupSync;
+use App\Services\Idp\Sync\SyncOutcome;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Converges one directory-sourced room on its group upstream: name, status
  * and members, importing members aula does not hold. A group gone upstream
- * archives the room.
+ * archives the room, unless the school itself has stopped answering.
  *
  * Dispatched by ProcessIdpWebhookEvent for every group of a person event and
  * by ReconcileIdpSchool for listed groups without an active room.
@@ -61,12 +62,13 @@ class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
             return;
         }
 
-        $found = $tenant->run(fn (): bool => $groups->syncGroup($this->groupId, $tenant, $this->provider));
+        $outcome = $tenant->run(fn (): SyncOutcome => $groups->syncGroup($this->groupId, $tenant, $this->provider));
 
-        if (! $found) {
-            Log::info('IdP: group to refresh is gone upstream and has no room', [
+        if (! $outcome->wasProcessed) {
+            Log::info('IdP: group refresh changed nothing', [
                 'tenant' => $tenant->instance_code,
                 'idp_group_id' => $this->groupId,
+                'reason' => $outcome->reason,
             ]);
         }
     }

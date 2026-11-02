@@ -185,6 +185,12 @@ upstream or inactive, the room is archived. Memberships and `roles` entries
 stay, as for a room archived inside aula; the refresh after a restore
 reconciles them against the group's member list.
 
+A missing group archives only while `/schools/{id}` still answers. A 404 on
+`/groups/{id}` cannot tell a group unshared from the app apart from a school
+deleted or disconnected from it, and the second must not archive every room.
+What a disconnected school actually returns has not been verified against
+Eduplaces; a non-404 error throws and the job retries, which archives nothing.
+
 **school**: updates `tenants.name`. Address, location, official id and schooling
 level are read and logged but not stored. `delete` is **not** honoured: dropping
 a tenant destroys a school's whole database.

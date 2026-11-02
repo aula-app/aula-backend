@@ -42,18 +42,35 @@ final class GroupSync
     {
         // The action is not trusted: deliveries can arrive out of order, so
         // the read-back decides.
-        return $this->syncGroup($event->entityId, $tenant, $provider)
-            ? SyncOutcome::processed()
-            : SyncOutcome::skipped('group_not_found_upstream');
+        return $this->syncGroup($event->entityId, $tenant, $provider);
     }
 
     /**
      * Refresh the room from upstream, or archive it when the group is gone.
-     * False when there is neither a group upstream nor a room in aula.
+     *
+     * `/groups/{id}` answers 404 both for a group unshared from the app and,
+     * presumably, for a school deleted or disconnected from it. Only the first
+     * may archive, so a missing group archives only while the school itself
+     * still answers.
      */
-    public function syncGroup(string $groupId, Tenant $tenant, string $provider): bool
+    public function syncGroup(string $groupId, Tenant $tenant, string $provider): SyncOutcome
     {
-        return $this->refreshGroup($groupId, $tenant, $provider) || $this->rooms->archiveRoom($groupId);
+        if ($this->refreshGroup($groupId, $tenant, $provider)) {
+            return SyncOutcome::processed();
+        }
+
+        if (! $this->schoolVisible($tenant, $provider)) {
+            Log::warning('IdP: school not visible, not archiving the room of a missing group', [
+                'tenant' => $tenant->instance_code,
+                'idp_group_id' => $groupId,
+            ]);
+
+            return SyncOutcome::skipped('school_not_visible');
+        }
+
+        return $this->rooms->archiveRoom($groupId)
+            ? SyncOutcome::processed()
+            : SyncOutcome::skipped('group_not_found_upstream');
     }
 
     /**
@@ -124,19 +141,19 @@ final class GroupSync
      */
     public function reconcileSchool(Tenant $tenant, string $provider, array $alreadyRefreshed = []): array
     {
-        $schoolId = (string) $tenant->idp_school_id;
-        $directory = $this->providers->directory($provider);
-
-        if ($schoolId === '' || $directory->school($schoolId) === null) {
+        if (! $this->schoolVisible($tenant, $provider)) {
             Log::warning('IdP: school not visible, skipping group reconcile', [
                 'tenant' => $tenant->instance_code,
-                'idp_school_id' => $schoolId,
+                'idp_school_id' => (string) $tenant->idp_school_id,
             ]);
 
             return [];
         }
 
-        $listed = array_map(fn (IdpGroup $group): string => $group->id, $directory->groups($schoolId));
+        $listed = array_map(
+            fn (IdpGroup $group): string => $group->id,
+            $this->providers->directory($provider)->groups((string) $tenant->idp_school_id),
+        );
 
         $active = DB::table('au_rooms')
             ->whereNotNull('idp_group_id')
@@ -155,6 +172,18 @@ final class GroupSync
         }
 
         return array_values(array_diff($listed, $active, $alreadyRefreshed));
+    }
+
+    /**
+     * Whether `/schools/{id}` still answers for the tenant's school. A school
+     * deleted or disconnected from the app does not, and nothing may be
+     * archived on its behalf.
+     */
+    private function schoolVisible(Tenant $tenant, string $provider): bool
+    {
+        $schoolId = (string) $tenant->idp_school_id;
+
+        return $schoolId !== '' && $this->providers->directory($provider)->school($schoolId) !== null;
     }
 
     /**

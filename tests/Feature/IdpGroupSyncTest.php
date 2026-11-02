@@ -39,6 +39,8 @@ class IdpGroupSyncTest extends TestCase
     /** @var array<string, array<string, mixed>> */
     private array $idmPeople = [];
 
+    private bool $schoolVisible = true;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -63,6 +65,7 @@ class IdpGroupSyncTest extends TestCase
 
         $this->idmGroups = [];
         $this->idmPeople = [];
+        $this->schoolVisible = true;
         $this->fakeIdm();
     }
 
@@ -224,6 +227,22 @@ class IdpGroupSyncTest extends TestCase
         $this->process($this->event('delete'));
 
         $this->assertSame(3, (int) $this->room()->status);
+    }
+
+    public function test_a_missing_group_does_not_archive_when_the_school_is_not_visible(): void
+    {
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+
+        // Every read 404s: the school was deleted or disconnected from the
+        // app, not this one group unshared.
+        unset($this->idmGroups[self::GROUP]);
+        $this->schoolVisible = false;
+        $event = $this->event('delete');
+        $this->process($event);
+
+        $this->assertSame(1, (int) $this->room()->status);
+        $this->assertSame(IdpWebhookEvent::STATUS_SKIPPED, $event->fresh()->status);
     }
 
     public function test_a_late_delete_does_not_archive_a_group_active_upstream(): void
@@ -452,6 +471,9 @@ class IdpGroupSyncTest extends TestCase
                         $this->idmGroups,
                     )),
                 ),
+                (bool) preg_match('#/schools/([^/]+)$#', $path, $m) => $this->schoolVisible
+                    ? Http::response(['id' => urldecode($m[1]), 'name' => 'Schule'])
+                    : Http::response(status: 404),
                 (bool) preg_match('#/groups/([^/]+)$#', $path, $m) => $this->groupResponse(urldecode($m[1])),
                 (bool) preg_match('#/people/([^/]+)$#', $path, $m) => isset($this->idmPeople[urldecode($m[1])])
                     ? Http::response($this->idmPeople[urldecode($m[1])])
