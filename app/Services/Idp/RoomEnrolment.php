@@ -33,38 +33,40 @@ final class RoomEnrolment
      */
     public function upsertRoom(string $idpGroupId, string $name, bool $active = true): array
     {
-        $existing = DB::table('au_rooms')
-            ->where('idp_group_id', $idpGroupId)
-            ->first(['id', 'hash_id', 'room_name', 'status']);
+        return DB::transaction(function () use ($idpGroupId, $name, $active) {
+            $existing = DB::table('au_rooms')
+                ->where('idp_group_id', $idpGroupId)
+                ->first(['id', 'hash_id', 'room_name', 'status']);
 
-        $status = $active ? self::STATUS_ACTIVE : self::STATUS_ARCHIVED;
+            $status = $active ? self::STATUS_ACTIVE : self::STATUS_ARCHIVED;
 
-        if ($existing !== null) {
-            if ($existing->room_name !== $name || (int) $existing->status !== $status) {
-                DB::table('au_rooms')->where('id', $existing->id)->update([
-                    'room_name' => $name,
-                    'status' => $status,
-                    'last_update' => now(),
-                ]);
+            if ($existing !== null) {
+                if ($existing->room_name !== $name || (int) $existing->status !== $status) {
+                    DB::table('au_rooms')->where('id', $existing->id)->update([
+                        'room_name' => $name,
+                        'status' => $status,
+                        'last_update' => now(),
+                    ]);
+                }
+
+                return ['id' => (int) $existing->id, 'hash_id' => (string) $existing->hash_id];
             }
 
-            return ['id' => (int) $existing->id, 'hash_id' => (string) $existing->hash_id];
-        }
+            $hashId = md5($idpGroupId.(string) microtime(true).random_int(100, 10000000));
 
-        $hashId = md5($idpGroupId.(string) microtime(true).random_int(100, 10000000));
+            $id = DB::table('au_rooms')->insertGetId([
+                'room_name' => $name,
+                'status' => $status,
+                'hash_id' => $hashId,
+                'idp_group_id' => $idpGroupId,
+                'type' => 0,
+                'restrict_to_roomusers_only' => true,
+                'order_importance' => 0,
+                'updater_id' => 0,
+            ]);
 
-        $id = (int) DB::table('au_rooms')->insertGetId([
-            'room_name' => $name,
-            'status' => $status,
-            'hash_id' => $hashId,
-            'idp_group_id' => $idpGroupId,
-            'type' => 0,
-            'restrict_to_roomusers_only' => true,
-            'order_importance' => 0,
-            'updater_id' => 0,
-        ]);
-
-        return ['id' => $id, 'hash_id' => $hashId];
+            return ['id' => $id, 'hash_id' => $hashId];
+        });
     }
 
     /**
@@ -73,20 +75,22 @@ final class RoomEnrolment
      */
     public function archiveRoom(string $idpGroupId): bool
     {
-        $existing = DB::table('au_rooms')->where('idp_group_id', $idpGroupId)->first(['id', 'status']);
+        return DB::transaction(function () use ($idpGroupId) {
+            $existing = DB::table('au_rooms')->where('idp_group_id', $idpGroupId)->first(['id', 'status']);
 
-        if ($existing === null) {
-            return false;
-        }
+            if ($existing === null) {
+                return false;
+            }
 
-        if ((int) $existing->status !== self::STATUS_ARCHIVED) {
-            DB::table('au_rooms')->where('id', $existing->id)->update([
-                'status' => self::STATUS_ARCHIVED,
-                'last_update' => now(),
-            ]);
-        }
+            if ((int) $existing->status !== self::STATUS_ARCHIVED) {
+                DB::table('au_rooms')->where('id', $existing->id)->update([
+                    'status' => self::STATUS_ARCHIVED,
+                    'last_update' => now(),
+                ]);
+            }
 
-        return true;
+            return true;
+        });
     }
 
     /**
@@ -95,28 +99,32 @@ final class RoomEnrolment
      */
     public function enrol(int $userId, int $roomId, string $roomHashId, int $role): void
     {
-        $status = DB::table('au_rel_rooms_users')
-            ->where('room_id', $roomId)
-            ->where('user_id', $userId)
-            ->value('status');
+        DB::transaction(function () use ($userId, $roomId, $roomHashId, $role) {
+            $status = DB::table('au_rel_rooms_users')
+                ->where('room_id', $roomId)
+                ->where('user_id', $userId)
+                ->value('status');
 
-        $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
+            $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
 
-        if ($this->roleIn($roles, $roomHashId) === null) {
-            $this->writeRole($userId, $roomHashId, $role);
-        }
+            if ($this->roleIn($roles, $roomHashId) === null) {
+                $this->writeRole($userId, $roomHashId, $role);
+            }
 
-        $this->writeMembership($userId, $roomId, $status === null ? null : (int) $status);
+            $this->writeMembership($userId, $roomId, $status === null ? null : (int) $status);
+        });
     }
 
     public function unenrol(int $userId, int $roomId, string $roomHashId): void
     {
-        DB::table('au_rel_rooms_users')
-            ->where('room_id', $roomId)
-            ->where('user_id', $userId)
-            ->delete();
+        DB::transaction(function () use ($userId, $roomId, $roomHashId) {
+            DB::table('au_rel_rooms_users')
+                ->where('room_id', $roomId)
+                ->where('user_id', $userId)
+                ->delete();
 
-        $this->writeRole($userId, $roomHashId, null);
+            $this->writeRole($userId, $roomHashId, null);
+        });
     }
 
     /**
@@ -134,27 +142,29 @@ final class RoomEnrolment
             $groups,
         );
 
-        $memberships = DB::table('au_rel_rooms_users')
-            ->where('user_id', $userId)
-            ->pluck('status', 'room_id')
-            ->all();
+        DB::transaction(function () use ($userId, $groups, $role, $wantedGroupIds) {
+            $memberships = DB::table('au_rel_rooms_users')
+                ->where('user_id', $userId)
+                ->pluck('status', 'room_id')
+                ->all();
 
-        $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
+            $roles = $this->decodeRoles(DB::table('au_users_basedata')->where('id', $userId)->value('roles'));
 
-        foreach ($this->managedRooms() as $idpGroupId => $room) {
-            $status = isset($memberships[$room['id']]) ? (int) $memberships[$room['id']] : null;
+            foreach ($this->managedRooms() as $idpGroupId => $room) {
+                $status = isset($memberships[$room['id']]) ? (int) $memberships[$room['id']] : null;
 
-            if (in_array($idpGroupId, $wantedGroupIds, true)) {
-                // Initial role only: an upstream role change does not reach aula.
-                if ($this->roleIn($roles, $room['hash_id']) === null) {
-                    $this->writeRole($userId, $room['hash_id'], $role);
+                if (in_array($idpGroupId, $wantedGroupIds, true)) {
+                    // Initial role only: an upstream role change does not reach aula.
+                    if ($this->roleIn($roles, $room['hash_id']) === null) {
+                        $this->writeRole($userId, $room['hash_id'], $role);
+                    }
+
+                    $this->writeMembership($userId, $room['id'], $status);
+                } elseif ($status !== null) {
+                    $this->unenrol($userId, $room['id'], $room['hash_id']);
                 }
-
-                $this->writeMembership($userId, $room['id'], $status);
-            } elseif ($status !== null) {
-                $this->unenrol($userId, $room['id'], $room['hash_id']);
             }
-        }
+        });
     }
 
     /**
@@ -167,36 +177,39 @@ final class RoomEnrolment
      */
     public function syncRoomMembers(int $roomId, string $roomHashId, array $userRoles): void
     {
-        $memberships = DB::table('au_rel_rooms_users')
-            ->where('room_id', $roomId)
-            ->pluck('status', 'user_id')
-            ->all();
+        DB::transaction(function () use ($roomId, $roomHashId, $userRoles) {
+            $memberships = DB::table('au_rel_rooms_users')
+                ->where('room_id', $roomId)
+                ->pluck('status', 'user_id')
+                ->all();
 
-        $toRemove = DB::table('au_users_basedata')
-            ->whereIn('id', array_keys($memberships) ?: [0])
-            ->whereNotNull('idp_user_id')
-            ->whereNotIn('id', array_keys($userRoles) ?: [0])
-            ->pluck('id');
+            $toRemove = DB::table('au_users_basedata')
+                ->whereIn('id', array_keys($memberships) ?: [0])
+                ->whereNotNull('idp_user_id')
+                ->whereNotIn('id', array_keys($userRoles) ?: [0])
+                ->pluck('id');
 
-        foreach ($toRemove as $userId) {
-            $this->unenrol((int) $userId, $roomId, $roomHashId);
-        }
-
-        $currentRoles = DB::table('au_users_basedata')
-            ->whereIn('id', array_keys($userRoles) ?: [0])
-            ->pluck('roles', 'id')
-            ->all();
-
-        foreach ($userRoles as $userId => $role) {
-            $status = isset($memberships[$userId]) ? (int) $memberships[$userId] : null;
-
-            // Initial role only: an upstream role change does not reach aula.
-            if ($this->roleIn($this->decodeRoles($currentRoles[$userId] ?? null), $roomHashId) === null) {
-                $this->writeRole((int) $userId, $roomHashId, (int) $role);
+            foreach ($toRemove as $userId) {
+                $this->unenrol((int) $userId, $roomId, $roomHashId);
             }
 
-            $this->writeMembership((int) $userId, $roomId, $status);
-        }
+            $currentRoles = DB::table('au_users_basedata')
+                ->whereIn('id', array_keys($userRoles) ?: [0])
+                ->pluck('roles', 'id')
+                ->all();
+
+            // @TODO: nikola - we should try to simplify this method
+            foreach ($userRoles as $userId => $role) {
+                $status = isset($memberships[$userId]) ? (int) $memberships[$userId] : null;
+
+                // Initial role only: an upstream role change does not reach aula.
+                if ($this->roleIn($this->decodeRoles($currentRoles[$userId] ?? null), $roomHashId) === null) {
+                    $this->writeRole((int) $userId, $roomHashId, (int) $role);
+                }
+
+                $this->writeMembership((int) $userId, $roomId, $status);
+            }
+        });
     }
 
     /**
@@ -204,7 +217,7 @@ final class RoomEnrolment
      *
      * @return array<string, array{id: int, hash_id: string}>
      */
-    public function managedRooms(): array
+    private function managedRooms(): array
     {
         $rooms = [];
 
