@@ -563,6 +563,7 @@ class IdpUserSyncTest extends TestCase
     // School-wide group reconcile
     // =========================================================
 
+    // @TODO: nikola - what is this test actually verifying? the name is confusing, and the assertion is pretty basic
     public function test_creates_rooms_for_listed_groups_no_person_names(): void
     {
         $this->schoolVisible = true;

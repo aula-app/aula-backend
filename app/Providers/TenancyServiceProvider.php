@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Tenant as AppTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -119,9 +121,23 @@ class TenancyServiceProvider extends ServiceProvider
             ],
 
             Events\BootstrappingTenancy::class => [],
-            Events\TenancyBootstrapped::class => [],
+            Events\TenancyBootstrapped::class => [
+                function (Events\TenancyBootstrapped $event) {
+                    /** @var ?AppTenant **/
+                    $tenant = $event->tenancy->tenant;
+                    if ($tenant === null) {
+                        return;
+                    }
+                    Log::withContext([
+                        'tenant' => $tenant->instance_code,
+                        'idp_school_id' => $tenant->idp_school_id
+                    ]);
+                },
+            ],
             Events\RevertingToCentralContext::class => [],
-            Events\RevertedToCentralContext::class => [],
+            Events\RevertedToCentralContext::class => [
+                fn (Events\RevertedToCentralContext $event) => Log::withoutContext(['tenant', 'idp_school_id']),
+            ],
 
             // Resource syncing
             ResourceSyncing\Events\SyncedResourceSaved::class => [
