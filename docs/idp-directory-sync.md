@@ -5,7 +5,7 @@ stays in step afterwards.
 
 Nothing in this flow is specific to one vendor. Each IdP is represented by a block in
 `config/idp.php` plus two implemented interfaces: `IdentityDirectory` and
-`WebhookAdapter`. No migrations, no routes (except webhooks), and no foreseeable 
+`WebhookAdapter`. No migrations, no routes (except webhooks), and no foreseeable
 change to `SchoolImport` or the syncs. Eduplaces is currently the only implementation
 and is used for the examples.
 
@@ -157,13 +157,17 @@ The event's `action` is not trusted, since deliveries can arrive out of
 order: every event reads the entity back and the read-back decides.
 
 **person**: found upstream, the row converges through
-`SchoolImport::importUser()`, the same call the import makes, then one
-`RefreshIdpGroup` per group of the person and one `ReconcileIdpSchool` are
-queued. Gone upstream (404), the row gets `status = 3` and leaves every
-directory-sourced room.
+`SchoolImport::importUser()`, the same call the import makes, then we fire
+`ReconcileIdpSchool` event so all the groups of the school are checked for
+existence or archival. If gone upstream (404), the row gets `status=ARCHIVED`,
+and if upstream group is missing from aula, it is created.
 
-Eduplaces sends no group events in practice (none seen on staging for create,
-rename, delete or a sync-config change), so groups are kept current from
+Eduplaces sends no group events in practice (none seen on staging for sharing
+or unsharing group via Eduplaces). We are told IServ group create/delete would
+send webhooks, but this needs to be tested when we share "whole school" data
+on Eduplaces.
+
+so groups are kept current from
 person events:
 
 - `RefreshIdpGroup` reads `/groups/{id}` and converges the room: name, status,

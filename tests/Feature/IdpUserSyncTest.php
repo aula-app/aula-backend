@@ -661,7 +661,7 @@ class IdpUserSyncTest extends TestCase
             && $job->tenantId === self::$testTenant->id
             && $job->provider === 'eduplaces');
         Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job) => $job->groupId === 'group-b');
-        Queue::assertPushed(ReconcileIdpSchool::class, fn (ReconcileIdpSchool $job) => $job->alreadyRefreshed === ['group-a', 'group-b']);
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
     }
 
     public function test_queues_nothing_for_a_delete(): void

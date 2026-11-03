@@ -35,13 +35,9 @@ class ReconcileIdpSchool implements ShouldBeUniqueUntilProcessing, ShouldQueue
     /** Lock lifetime if the job is lost before it is processed. */
     public int $uniqueFor = 3600;
 
-    /**
-     * @param  list<string>  $alreadyRefreshed  group ids the same event already queued a refresh for
-     */
     public function __construct(
         public readonly string $tenantId,
         public readonly string $provider,
-        public readonly array $alreadyRefreshed = [],
     ) {}
 
     /**
@@ -62,12 +58,8 @@ class ReconcileIdpSchool implements ShouldBeUniqueUntilProcessing, ShouldQueue
             return;
         }
 
-        $toRefresh = $tenant->run(
-            fn (): array => $groups->reconcileSchool($tenant, $this->provider, $this->alreadyRefreshed),
+        $tenant->run(
+            fn () => $groups->reconcileSchool($tenant, $this->provider),
         );
-
-        foreach ($toRefresh as $groupId) {
-            RefreshIdpGroup::dispatch($this->tenantId, $this->provider, $groupId);
-        }
     }
 }

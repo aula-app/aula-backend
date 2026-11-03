@@ -21,6 +21,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
+use function Illuminate\Support\now;
+
 /**
  * Processes one captured identity-provider webhook.
  *
@@ -118,11 +120,13 @@ class ProcessIdpWebhookEvent implements ShouldQueue
     private function dispatchFollowUps(SyncOutcome $outcome, Tenant $tenant, string $provider): void
     {
         foreach ($outcome->groupsToRefresh as $groupId) {
-            RefreshIdpGroup::dispatch((string) $tenant->id, $provider, $groupId);
+            RefreshIdpGroup::dispatch((string) $tenant->id, $provider, $groupId)
+                ->delay(now()->plus(seconds: 2));
         }
 
         if ($outcome->reconcileSchool) {
-            ReconcileIdpSchool::dispatch((string) $tenant->id, $provider, $outcome->groupsToRefresh);
+            ReconcileIdpSchool::dispatch((string) $tenant->id, $provider)
+                ->delay(now()->plus(seconds: 10));
         }
     }
 

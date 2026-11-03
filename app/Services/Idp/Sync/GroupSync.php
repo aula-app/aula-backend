@@ -40,18 +40,19 @@ final class GroupSync
 
     public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
     {
-        // The action is not trusted: deliveries can arrive out of order, so
-        // the read-back decides.
-        return $this->syncGroup($event->entityId, $tenant, $provider);
+        $groupId = $event->entityId;
+        return $this->syncGroup($groupId, $tenant, $provider);
     }
 
     /**
      * Refresh the room from upstream, or archive it when the group is gone.
      *
+     * Because events can come out of order, we don't look at event data, but
+     * always use the idp directory as the source of the truth.
+     *
      * `/groups/{id}` answers 404 both for a group unshared from the app and,
-     * presumably, for a school deleted or disconnected from it. Only the first
-     * may archive, so a missing group archives only while the school itself
-     * still answers.
+     * presumably, for a school deleted or disconnected from it. We want to archive
+     * the room only when a group is unshared, and skip updating the room when the school is gone.
      */
     public function syncGroup(string $groupId, Tenant $tenant, string $provider): SyncOutcome
     {
@@ -70,7 +71,7 @@ final class GroupSync
 
         return $this->rooms->archiveRoom($groupId)
             ? SyncOutcome::processed()
-            : SyncOutcome::skipped('group_not_found_upstream');
+            : SyncOutcome::skipped('idp_group_not_found_in_aula');
     }
 
     /**
@@ -81,7 +82,7 @@ final class GroupSync
      * An inactive group archives the room. Returns false when the group is
      * gone upstream.
      */
-    public function refreshGroup(string $groupId, Tenant $tenant, string $provider): bool
+    private function refreshGroup(string $groupId, Tenant $tenant, string $provider): bool
     {
         $group = $this->providers->directory($provider)->group($groupId);
 
@@ -95,7 +96,8 @@ final class GroupSync
             return true;
         }
 
-        // The room comes first, so importMember() below enrols each new member.
+        // The room is upserted first, and importMember() below enrols each new member.
+        /** @var array{id: int, hash_id: string} **/
         $room = $this->rooms->upsertRoom($group->id, $group->name);
 
         $local = LegacyUser::whereIn('idp_user_id', $group->memberIds())
@@ -116,10 +118,11 @@ final class GroupSync
         $this->syncMembers($room, $group->members, $provider);
 
         if ($imported > 0) {
-            Log::info('IdP: imported group members aula did not hold', [
+            Log::info("IdP: imported [{$imported}] new users from [{$provider}] based on group refresh", [
                 'room_id' => $room['id'],
                 'idp_group_id' => $group->id,
                 'imported' => $imported,
+                'provider' => $provider
             ]);
         }
 
@@ -135,43 +138,46 @@ final class GroupSync
      *
      * Skipped when the school itself is not visible: a school disconnected
      * from the app lists no groups, which must not archive every room.
-     *
-     * @param  list<string>  $alreadyRefreshed  provider group ids the same event already refreshes
-     * @return list<string> listed groups without an active room, for the caller to refresh
      */
-    public function reconcileSchool(Tenant $tenant, string $provider, array $alreadyRefreshed = []): array
+    public function reconcileSchool(Tenant $tenant, string $provider): void
     {
+        $schoolId = (string) $tenant->idp_school_id;
         if (! $this->schoolVisible($tenant, $provider)) {
-            Log::warning('IdP: school not visible, skipping group reconcile', [
-                'tenant' => $tenant->instance_code,
-                'idp_school_id' => (string) $tenant->idp_school_id,
-            ]);
+            Log::warning('IdP: school not visible, skipping group reconcile');
 
-            return [];
+            return;
         }
 
-        $listed = array_map(
-            fn (IdpGroup $group): string => $group->id,
-            $this->providers->directory($provider)->groups((string) $tenant->idp_school_id),
-        );
+        $directory = $this->providers->directory($provider);
+        $directoryIdpGroupIds = array_map(fn (IdpGroup $group): string => $group->id, $directory->groups($schoolId));
 
-        $active = DB::table('au_rooms')
+        $activeIdpGroupIds = DB::table('au_rooms')
             ->whereNotNull('idp_group_id')
             ->where('status', '!=', RoomEnrolment::STATUS_ARCHIVED)
             ->pluck('idp_group_id')
             ->map(fn ($id): string => (string) $id)
             ->all();
 
-        foreach (array_diff($active, $listed) as $groupId) {
+        $toArchive = array_diff($activeIdpGroupIds, $directoryIdpGroupIds);
+        foreach ($toArchive as $groupId) {
             $this->rooms->archiveRoom($groupId);
 
             Log::info('IdP: archived a room whose group is no longer listed', [
-                'tenant' => $tenant->instance_code,
                 'idp_group_id' => $groupId,
             ]);
         }
 
-        return array_values(array_diff($listed, $active, $alreadyRefreshed));
+        $toUnarchiveOrAdd = array_values(array_diff($directoryIdpGroupIds, $activeIdpGroupIds));
+        foreach ($toUnarchiveOrAdd as $groupId) {
+            $outcome = $this->syncGroup($groupId, $tenant, $provider);
+
+            if (! $outcome->wasProcessed) {
+                Log::info('IdP: group refresh changed nothing', [
+                    'idp_group_id' => $groupId,
+                    'reason' => $outcome->reason,
+                ]);
+            }
+        }
     }
 
     /**
@@ -187,7 +193,7 @@ final class GroupSync
     }
 
     /**
-     * Reconcile room membership, carrying each member's role across.
+     * Reconcile aula-Room membership with provider, map each member's role into aula-Userlevel.
      *
      * refreshGroup() imports missing members first, so every member normally
      * has a row here.
@@ -197,7 +203,8 @@ final class GroupSync
      */
     private function syncMembers(array $room, array $members, string $provider): void
     {
-        $localIds = LegacyUser::whereIn('idp_user_id', array_map(fn (IdpUser $m): string => $m->id, $members))
+        $membersIdpUserIds = array_map(fn (IdpUser $m): string => $m->id, $members);
+        $localIds = LegacyUser::whereIn('idp_user_id', $membersIdpUserIds)
             ->pluck('id', 'idp_user_id');
 
         $roles = [];
@@ -216,9 +223,10 @@ final class GroupSync
         }
 
         if ($missing > 0) {
-            Log::info('IdP: room has members aula does not hold yet', [
+            Log::info("IdP: room from [{$provider}] has [{$missing}] members that are missing from aula-Rooms", [
                 'room_id' => $room['id'],
                 'missing' => $missing,
+                'provider' => $provider,
             ]);
         }
 

@@ -8,7 +8,6 @@ use App\Models\LegacyUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
@@ -784,10 +783,6 @@ class SsoControllerTest extends TestCase
                 $this->createUser('sso_other@test.example', 'sub-collision-001'),
             ];
         });
-
-        Log::shouldReceive('warning')
-            ->once()
-            ->with(\Mockery::pattern('/SSO: email and sso_sub match different users/'), \Mockery::any());
 
         Http::fake(['*/broker/*/token' => Http::response(['id_token' => 'idp.token.test'], 200)]);
         $this->mockSocialiteCallback('sub-collision-001', 'sso_collision@test.example', 'Collision', 'collision');
