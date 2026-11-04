@@ -58,11 +58,10 @@ class CreateUserUseCase
         // - remove (unused?) columns o1, o2, o3?
         // - what to do about the call from addCSV?
         // - we ditch the non-encryption of about_me, realname, displayname, username, email
-
         // - add user to standard room
-        //    -> later
+        //   -> merge v2-rooms-roles first
         // - change password
-        //    -> persistence model
+        //    -> persistence model -> later? not part of crud?
         $legacyUser->save();
         // for unmanaged createdAt/created timestamp
         $legacyUser->refresh();
@@ -76,7 +75,6 @@ class CreateUserUseCase
 
         return DomainUserData::from($legacyUser);
     }
-
     // rooms, users, rel_rooms_users
     // 1. Receive Room HashId
     // 2. Fetch User
