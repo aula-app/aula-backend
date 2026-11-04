@@ -19,17 +19,19 @@ class CreateUserUseCase
         Gate::authorize(Gates::CreateUser);
 
         $legacyUser = new LegacyUser();
+
         $legacyUser->hash_id = Str::random(32);
-        $legacyUser->displayname = $userStoreData->displayName;
-        $legacyUser->realname = $userStoreData->realName;
+
+        // uniqueness of username + email handled by StoreUserData validation
         $legacyUser->username = $userStoreData->userName;
         $legacyUser->email = $userStoreData->email;
+
+        $legacyUser->displayname = $userStoreData->displayName;
+        $legacyUser->realname = $userStoreData->realName;
         $legacyUser->userlevel = $userStoreData->userLevel ?? UserLevel::Guest;
         $legacyUser->about_me = $userStoreData->aboutMe ?? '';
         $legacyUser->status = $userStoreData->status->value;
         // TODO functionality from legacy model User->addUser, including but not limited to:
-        // - check for username unique
-        //    -> here or at DB index (if index, check compat with v1)
         // - generate password
         //    -> in the usecase
         // - add user to standard room

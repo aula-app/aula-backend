@@ -9,6 +9,7 @@ use App\Data\User\Requests\UpdateUserData;
 use App\Enums\Gates;
 use App\Models\LegacyUser;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Database\Eloquent\Builder;
 
 class UpdateUserUseCase
 {
@@ -17,9 +18,23 @@ class UpdateUserUseCase
         /* TODO: DB::transaction */
         // Loaded before the check: the rule depends on the row's current
         // userlevel/status, not just on the id.
-        $legacyUser = LegacyUser::where('hash_id', $hashId)->firstOrFail();
+        $legacyUser = LegacyUser::where('hash_id', $hashId)->sole();
 
         Gate::authorize(Gates::UpdateUser, [$legacyUser, $userUpdateData]);
+
+        // check for collisions of email and username
+        if (LegacyUser::whereNot('hash_id', $hashId)
+            ->where(function (Builder $query) use ($userUpdateData) {
+                $query->where('username', $userUpdateData->userName);
+                if ($userUpdateData->email) {
+                    $query->orWhere('email', $userUpdateData->email);
+                }
+            })
+            ->exists()) {
+            // TODO i18n?
+            // TODO what to do here for security: leaking, timing, enumeration?
+            abort(400, 'Pick different e-mail and/or username');
+        }
 
         $legacyUser->displayname = $userUpdateData->displayName;
         $legacyUser->realname = $userUpdateData->realName;
