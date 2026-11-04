@@ -9,11 +9,17 @@ use App\Data\User\DomainUserData;
 use App\Enums\Gates;
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
+use App\Services\UserService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class CreateUserUseCase
 {
+    public function __construct(
+        protected UserService $userService,
+    ) {
+    }
+
     public function execute(StoreUserData $userStoreData): DomainUserData
     {
         Gate::authorize(Gates::CreateUser);
@@ -31,18 +37,32 @@ class CreateUserUseCase
         $legacyUser->userlevel = $userStoreData->userLevel ?? UserLevel::Guest;
         $legacyUser->about_me = $userStoreData->aboutMe ?? '';
         $legacyUser->status = $userStoreData->status->value;
+
+        $legacyUser->temp_pw = $legacyUser->email
+            ? $this->userService->generateTemporaryPassword()
+            : '';
+
+        $legacyUser->pw = \password_hash(
+            $this->userService->generateFirstPassword(),
+            PASSWORD_DEFAULT
+        );
+        $legacyUser->pw_changed = 0;
+
         // TODO functionality from legacy model User->addUser, including but not limited to:
-        // - generate password
-        //    -> in the usecase
         // - add user to standard room
         //    -> later
-        // - send email
-        //    -> usecase calls helper/interface for email
         // - change password
         //    -> persistence model
         $legacyUser->save();
         // for unmanaged createdAt/created timestamp
         $legacyUser->refresh();
+
+        if ($legacyUser->email) {
+            $this->userService->sendWelcomePassword(
+                $legacyUser->email,
+                $legacyUser
+            );
+        }
 
         return DomainUserData::from($legacyUser);
     }
