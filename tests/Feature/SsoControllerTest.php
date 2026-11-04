@@ -207,7 +207,7 @@ class SsoControllerTest extends TestCase
             config('app.mobile_url_scheme').'://oauth-login/',
             (string) $response->headers->get('Location'),
         );
-        Queue::assertPushedTimes(UserSyncJob::class, 1);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     /**
@@ -353,7 +353,7 @@ class SsoControllerTest extends TestCase
             $this->assertEquals('sso_new@test.example', $user->email);
             $this->assertEquals(UserLevel::User, $user->userlevel);
         });
-        Queue::assertPushedTimes(UserSyncJob::class, 1);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     public function test_callback_with_email_match_no_sub_redirects_to_link_flow(): void
@@ -440,7 +440,7 @@ class SsoControllerTest extends TestCase
         });
 
         $this->assertRedirectAuthenticatesUser($response, $existing);
-        Queue::assertPushedTimes(UserSyncJob::class, 1);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     public function test_callback_inactive_user_redirects_to_account_inactive_error(): void
@@ -531,7 +531,7 @@ class SsoControllerTest extends TestCase
             $this->assertNotNull($user);
             $this->assertEquals('sso_unverified_allowed@test.example', $user->email);
         });
-        Queue::assertPushedTimes(UserSyncJob::class, 1);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     public function test_callback_allows_missing_email_verified_claim_when_tenant_disables_requirement(): void
@@ -551,7 +551,7 @@ class SsoControllerTest extends TestCase
 
         $response->assertRedirect();
         $this->assertStringContainsString('/oauth-login/', $response->headers->get('Location'));
-        Queue::assertPushedTimes(UserSyncJob::class, 1);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     public function test_callback_still_rejects_id_token_invalid_when_email_verified_requirement_is_disabled(): void
@@ -806,7 +806,7 @@ class SsoControllerTest extends TestCase
         // Should authenticate as the sso_sub user, not the email user
         $payload = $this->assertRedirectAuthenticatesUser($response, $subUser);
         $this->assertNotEquals($emailUser->hash_id, $payload->user_hash);
-        Queue::assertPushedTimes(UserSyncJob::class, 1);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     // =========================================================
@@ -996,7 +996,7 @@ class SsoControllerTest extends TestCase
             $this->assertNotNull($user);
             $this->assertNull($user->idp_user_id);
         });
-        Queue::assertPushedTimes(UserSyncJob::class, 1);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     // =========================================================

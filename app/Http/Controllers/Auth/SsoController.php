@@ -397,7 +397,9 @@ class SsoController extends Controller
         $this->recordIdpUserId($user, $laravelSocialiteUser, $callbackTenant);
         $user->save();
 
-        tenancy()->central(fn () => UserSyncJob::dispatch((string) $callbackTenant->id, (string) $callbackTenant->sso_provider, (string) $user->idp_user_id));
+        if ($this->syncsOnLogin($user, $callbackTenant)) {
+            tenancy()->central(fn () => UserSyncJob::dispatch((string) $callbackTenant->id, (string) $callbackTenant->sso_provider, (string) $user->idp_user_id));
+        }
 
         $token = $user->createToken("sso_token_{$callbackTenant->sso_provider}")->accessToken;
 
@@ -1425,6 +1427,22 @@ class SsoController extends Controller
     protected function usesIdpDirectory(Tenant $tenant): bool
     {
         return $tenant->usesIdpDirectory();
+    }
+
+    /**
+     * Whether this login queues a UserSyncJob for the account.
+     *
+     * Only a directory-backed tenant whose school import has completed. Before
+     * that, bootstrapIdpTenant() has just queued ImportSchoolForTenant and the
+     * sync would import the same rooms beside it. A tenant with no directory
+     * has nothing to read from, and an account without an idp_user_id cannot
+     * be looked up.
+     */
+    protected function syncsOnLogin(LegacyUser $user, Tenant $tenant): bool
+    {
+        return $this->usesIdpDirectory($tenant)
+            && is_string($user->idp_user_id) && $user->idp_user_id !== ''
+            && $tenant->idp_import_status === SchoolImport::STATUS_COMPLETED;
     }
 
     protected function stateSecret(): string

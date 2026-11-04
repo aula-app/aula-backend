@@ -301,6 +301,9 @@ class IdpBootstrapTest extends TestCase
             ImportSchoolForTenant::class,
             fn (ImportSchoolForTenant $job): bool => $job->tenantId === self::$testTenant->id,
         );
+        // The import brings the account and its rooms in; a sync beside it
+        // would write the same rows.
+        Queue::assertNotPushed(UserSyncJob::class);
 
         // Written before the dispatch, so ImportStatusController never reports
         // ready while the job is still waiting in the queue.
