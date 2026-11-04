@@ -35,15 +35,13 @@ class CrudUserTest extends TestCase
 
     private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
 
-    private LegacyUser $adminUser;
-
     protected function setUp(): void
     {
         parent::setUp();
         $this->ensureTestTenantExists();
 
-        $this->adminUser = $this->createDistinctUser(UserLevel::Admin, UserStatus::Active);
-        Passport::actingAs($this->adminUser);
+        $adminUser = $this->createDistinctUser(UserLevel::Admin, UserStatus::Active);
+        Passport::actingAs($adminUser);
 
         $this->withHeaders([ ...self::TENANT_HEADERS ]);
     }
@@ -104,7 +102,7 @@ class CrudUserTest extends TestCase
         //   )->assertOk();
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
         Passport::actingAs($nonAdminUser);
-        $res = $this->getJson(
+        $this->getJson(
             '/api/v2/users',
         )
             ->assertForbidden();
@@ -263,6 +261,7 @@ class CrudUserTest extends TestCase
         )
             ->assertCreated()
             ->assertJsonMissingPath('id')
+            ->assertJsonMissingPath('roomLevel')
             ->assertJson(self::NEW_USER_DATA);
         $newUserDecoded = $result->decodeResponseJson();
         $this->assertIsString($newUserDecoded['createdAt']);
@@ -404,6 +403,12 @@ class CrudUserTest extends TestCase
             ->assertOk();
         $this->deleteJson('/api/v2/users/'.$newUserPublicId2, [])
             ->assertOk();
+        $this->assertEquals(
+            0,
+            DB::table('au_users_basedata')
+                ->whereIn('hash_id', [$newUserPublicId1, $newUserPublicId2])
+                ->count()
+        );
     }
 
     public function test_create_validation()

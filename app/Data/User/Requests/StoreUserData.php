@@ -7,6 +7,8 @@ namespace App\Data\User\Requests;
 use DateTimeImmutable;
 use App\Data\User\AbstractUserData;
 use App\Enums\UserLevel;
+use Illuminate\Database\Eloquent\Collection;
+use Spatie\LaravelData\Attributes\Hidden;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Max;
@@ -49,4 +51,7 @@ class StoreUserData extends AbstractUserData
 
     #[Rule('missing')]
     public readonly null|DateTimeImmutable $updatedAt;
+
+    #[Hidden]
+    public readonly null $pivot;
 }
