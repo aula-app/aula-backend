@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserLevel;
 use App\Jobs\ImportSchoolForTenant;
+use App\Jobs\ReconcileIdpSchool;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\DirectoryException;
@@ -28,6 +29,8 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\User as LaravelSocialiteUser;
 use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
+
+use function Illuminate\Support\now;
 
 class SsoController extends Controller
 {
@@ -392,8 +395,10 @@ class SsoController extends Controller
         $user->sso_id_token = $idToken;
         $user->sso_refresh_token = $laravelSocialiteUser->refreshToken;
         $this->recordIdpUserId($user, $laravelSocialiteUser, $callbackTenant);
-
         $user->save();
+
+        ReconcileIdpSchool::dispatch((string) $callbackTenant->id, (string) $callbackTenant->sso_provider)
+            ->delay(now()->plus(seconds: 10));
 
         $token = $user->createToken("sso_token_{$callbackTenant->sso_provider}")->accessToken;
 
