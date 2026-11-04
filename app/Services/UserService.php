@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\LegacyUser;
 use Illuminate\Support\Facades\DB;
 use App\Mail\UserCreatedWelcomePassword;
+use App\Models\Tenant;
 
 class UserService
 {
@@ -19,7 +20,7 @@ class UserService
     private const int FIRST_PASSWORD_LENGTH = 8;
     private const int TEMPORARY_PASSWORD_LENGTH = 8;
 
-    private function generatePassword($length)
+    private function generatePassword($length): string
     {
         $retry = 0;
         $max = mb_strlen(self::ALLOWED_PASSWORD_CHARS, '8bit') - 1;
@@ -34,18 +35,18 @@ class UserService
         return $pass;
     }
 
-    public function generateTemporaryPassword()
+    public function generateTemporaryPassword(): string
     {
         return $this->generatePassword(self::TEMPORARY_PASSWORD_LENGTH);
     }
 
-    public function generateFirstPassword()
+    public function generateFirstPassword(): string
     {
         // TODO: does this need to do something with passport?
         return $this->generatePassword(self::FIRST_PASSWORD_LENGTH);
     }
 
-    public function getPasswordChangeLink(LegacyUser $legacyUser)
+    public function getPasswordChangeLink(LegacyUser $legacyUser): string
     {
         $secret = '';
         do {
@@ -57,15 +58,25 @@ class UserService
             'secret' => $secret
         ]);
 
+        /** @var Tenant|null $tenant */
+        $tenant = tenant();
+
+        // TODO is this necessary?
+        // or will a tenancy error surface much earlier anyway?
+        if (!$tenant) {
+            abort(500, "no tenant");
+        }
+
         // TODO properly use route once in v2
         return sprintf('%s/password/%s?code=%s',
             config('app.url'),
             $secret,
-            tenant()->instance_code
+            // tenant()->instance_code
+            $tenant->instance_code,
         );
     }
 
-    public function sendWelcomePassword(string $recipient, LegacyUser $legacyUser)
+    public function sendWelcomePassword(string $recipient, LegacyUser $legacyUser): void
     {
         // TODO cron & error handling
         $mailable = new UserCreatedWelcomePassword(
