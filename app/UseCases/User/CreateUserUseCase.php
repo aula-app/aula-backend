@@ -9,6 +9,8 @@ use App\Data\User\DomainUserData;
 use App\Enums\Gates;
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
+use App\Models\LegacyRoom;
+use App\Relations\RoomMember;
 use App\Services\UserService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -58,13 +60,20 @@ class CreateUserUseCase
         // - remove (unused?) columns o1, o2, o3?
         // - what to do about the call from addCSV?
         // - we ditch the non-encryption of about_me, realname, displayname, username, email
-        // - add user to standard room
-        //   -> merge v2-rooms-roles first
         // - change password
         //    -> persistence model -> later? not part of crud?
         $legacyUser->save();
         // for unmanaged createdAt/created timestamp
         $legacyUser->refresh();
+
+        // TODO do we even allow (or rather, prevent) more than one room of type 1?
+        $standardRoom = LegacyRoom::where('type', 1)->sole();
+        $standardRoom->users()->attachOrFail(
+            $legacyUser->id,
+            ['room_user_level' => RoomMember::DEFAULT_ROOM_USER_LEVEL]
+        );
+        $legacyUser->updateRolesJson();
+        $legacyUser->save();
 
         if ($legacyUser->email) {
             $this->userService->sendWelcomePassword(
@@ -75,9 +84,4 @@ class CreateUserUseCase
 
         return DomainUserData::from($legacyUser);
     }
-    // rooms, users, rel_rooms_users
-    // 1. Receive Room HashId
-    // 2. Fetch User
-    // 3. Update User.roles <- {room: hash_id, role: 20}
-    // 4. Insert au_rel_rooms_users (room.id, user.id)
 }
