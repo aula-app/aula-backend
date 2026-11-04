@@ -43,6 +43,9 @@ class UpdateUserUseCase
         $legacyUser->userlevel = $userUpdateData->userLevel;
         $legacyUser->status = $userUpdateData->status;
         $legacyUser->about_me = $userUpdateData->aboutMe;
+
+        $legacyUser->updater_id = auth()->id();
+
         $legacyUser->save();
         /* / DB::transaction */
         // for unmanaged last_update/updatedAt timestamp

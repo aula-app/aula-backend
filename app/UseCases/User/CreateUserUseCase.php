@@ -48,6 +48,9 @@ class CreateUserUseCase
         );
         $legacyUser->pw_changed = 0;
 
+        // TODO? remove creator_id, which seems unused/confused.
+        $legacyUser->updater_id = auth()->id();
+
         // TODO functionality from legacy model User->addUser, including but not limited to:
         // - add user to standard room
         //    -> later
