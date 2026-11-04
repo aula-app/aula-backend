@@ -20,6 +20,7 @@ class CreateUserUseCase
     ) {
     }
 
+    // TODO optionalize more params in the DTO for SSO; also in UpdateUserData
     public function execute(StoreUserData $userStoreData): DomainUserData
     {
         Gate::authorize(Gates::CreateUser);
@@ -52,6 +53,12 @@ class CreateUserUseCase
         $legacyUser->updater_id = auth()->id();
 
         // TODO functionality from legacy model User->addUser, including but not limited to:
+        // - add user to standard room - merge rooms-roles
+        // - what to do about syslog->addSystemEvent? use laravel logger? use legacy?
+        // - remove (unused?) columns o1, o2, o3?
+        // - what to do about the call from addCSV?
+        // - we ditch the non-encryption of about_me, realname, displayname, username, email
+
         // - add user to standard room
         //    -> later
         // - change password
