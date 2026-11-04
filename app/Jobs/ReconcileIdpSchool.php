@@ -17,8 +17,8 @@ use Illuminate\Queue\SerializesModels;
  * Converges a tenant's rooms on its school's group list.
  *
  * Archives rooms whose group is no longer listed and queues a RefreshIdpGroup
- * for each listed group without an active room. Dispatched by
- * ProcessIdpWebhookEvent after every person event.
+ * for each listed group without an active room. Dispatched by UserSync after
+ * every person event and every login sync.
  */
 class ReconcileIdpSchool implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {

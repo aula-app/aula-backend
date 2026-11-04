@@ -21,7 +21,7 @@ Eduplaces specification: <https://developer.eduplaces.de/idm/webhooks>.
 2. instance code sent to the school
 3. first SSO login                  → claims that admin row
 4. the whole school is imported     → rooms + users, on the queue
-5. every later login                → account already exists, nothing created
+5. every later login                → account already exists; it is re-read from the directory on the queue
 ```
 
 Step 3 triggers step 4, and it fires exactly once: `bootstrapIdpTenant()` runs
@@ -157,30 +157,37 @@ The event's `action` is not trusted, since deliveries can arrive out of
 order: every event reads the entity back and the read-back decides.
 
 **person**: found upstream, the row converges through
-`SchoolImport::importUser()`, the same call the import makes, then we fire
-`ReconcileIdpSchool` event so all the groups of the school are checked for
-existence or archival. If gone upstream (404), the row gets `status=ARCHIVED`,
-and if upstream group is missing from aula, it is created.
+`SchoolImport::importUser()`, the same call the import makes, then one
+`RefreshIdpGroup` per group of the person and one `ReconcileIdpSchool` are
+queued. Gone upstream (404), the row gets `status = 3`, leaves every
+directory-sourced room, and only the `ReconcileIdpSchool` is queued. Both are
+delayed by a few seconds so a burst of events collapses into one run each.
 
 Eduplaces sends no group events in practice (none seen on staging for sharing
-or unsharing group via Eduplaces). We are told IServ group create/delete would
-send webhooks, but this needs to be tested when we share "whole school" data
-on Eduplaces.
-
-so groups are kept current from
-person events:
+or unsharing a group via Eduplaces). IServ is said to send group create and
+delete webhooks; not verified until a whole school is shared on Eduplaces. So
+groups are kept current from person events and logins:
 
 - `RefreshIdpGroup` reads `/groups/{id}` and converges the room: name, status,
   members. A member without a local row is created from the member entry
   (`SchoolImport::importMember()`); existing rows are not touched by it.
 - `ReconcileIdpSchool` reads the school's group list. A room whose group is no
-  longer listed is archived; a listed group without an active room is
-  refreshed. Skipped when the school itself returns 404, so a disconnected
-  school does not archive every room.
+  longer listed is archived; a listed group without an active room gets a
+  `RefreshIdpGroup` queued, which creates or reactivates it. Skipped when the
+  school itself returns 404, so a disconnected school does not archive every
+  room.
 
 Both jobs are unique until processing (keyed by tenant, and tenant + group):
 a dispatch while one is queued is dropped, and a change arriving mid-run still
 queues a new one. Locks use the central cache (`cache_locks`).
+
+**login**: every SSO login on an imported directory tenant queues a
+`UserSyncJob` for the account, which runs the same person sync as a `person`
+event: the row converges, then the person's groups and the school's group
+list are re-read. The job is unique until processing per account and delayed
+by ten seconds, so repeated logins collapse into one run. Nothing is queued
+while `idp_import_status` is not `completed`, for a tenant without a
+directory, or for an account without an `idp_user_id`.
 
 A group rename reaches aula only through an event for a member of that group.
 

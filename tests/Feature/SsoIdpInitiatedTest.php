@@ -336,7 +336,8 @@ class SsoIdpInitiatedTest extends TestCase
         Queue::assertPushed(UserSyncJob::class, 1);
         Queue::assertPushed(UserSyncJob::class, fn (UserSyncJob $job): bool => $job->tenantId === self::$testTenant->id
             && $job->provider === self::EDUPLACES_IDP_ALIAS
-            && $job->userId === 'eduplaces-person-synced');
+            && $job->userId === 'eduplaces-person-synced'
+            && $job->delay !== null);
     }
 
     public function test_callback_queues_no_user_sync_while_the_school_import_is_pending(): void

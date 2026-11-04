@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Idp\Sync;
 
+use App\Jobs\RefreshIdpGroup;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
-use App\Services\Idp\Dto\IdpEvent;
 use App\Services\Idp\Dto\IdpGroup;
 use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
@@ -127,7 +127,8 @@ final class GroupSync
      *
      * Eduplaces sends no group events, so a group added to the sync, emptied
      * or deleted upstream surfaces only here. An active room whose group is no
-     * longer listed is archived.
+     * longer listed is archived; a listed group without an active room gets a
+     * RefreshIdpGroup queued.
      *
      * Skipped when the school itself is not visible: a school disconnected
      * from the app lists no groups, which must not archive every room.
@@ -160,17 +161,15 @@ final class GroupSync
             ]);
         }
 
-        $toUnarchiveOrAdd = array_values(array_diff($directoryIdpGroupIds, $activeIdpGroupIds));
-        foreach ($toUnarchiveOrAdd as $groupId) {
-            $outcome = $this->handle($tenant, $provider, $groupId);
+        $toRefresh = array_values(array_diff($directoryIdpGroupIds, $activeIdpGroupIds));
 
-            if (! $outcome->wasProcessed) {
-                Log::info('IdP: group refresh changed nothing', [
-                    'idp_group_id' => $groupId,
-                    'reason' => $outcome->reason,
-                ]);
+        // RefreshIdpGroup is unique per group, so one the person event already
+        // queued is not duplicated, and one group failing retries only itself.
+        tenancy()->central(function () use ($toRefresh, $tenant, $provider) {
+            foreach ($toRefresh as $groupId) {
+                RefreshIdpGroup::dispatch((string) $tenant->id, $provider, $groupId);
             }
-        }
+        });
     }
 
     /**

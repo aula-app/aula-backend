@@ -20,7 +20,9 @@ use Illuminate\Support\Facades\Log;
  * and members, importing members aula does not hold. A group gone upstream
  * archives the room, unless the school itself has stopped answering.
  *
- * Dispatched by ProcessIdpWebhookEvent for every group of a person event.
+ * Dispatched by UserSync for every group of a person, after a webhook or a
+ * login, and by GroupSync::reconcileSchool() for listed groups without an
+ * active room.
  */
 class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {

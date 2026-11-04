@@ -36,6 +36,9 @@ class SsoController extends Controller
 {
     private const int LINK_INTENT_TTL_MINUTES = 10;
 
+    /** Logins inside this window collapse into one UserSyncJob. */
+    private const int LOGIN_SYNC_DELAY_SECONDS = 10;
+
     /**
      * Sentinel instance_code in the signed state. callback() then resolves the
      * tenant from the id_token `school` claim instead of from the state.
@@ -398,7 +401,8 @@ class SsoController extends Controller
         $user->save();
 
         if ($this->syncsOnLogin($user, $callbackTenant)) {
-            tenancy()->central(fn () => UserSyncJob::dispatch((string) $callbackTenant->id, (string) $callbackTenant->sso_provider, (string) $user->idp_user_id));
+            tenancy()->central(fn () => UserSyncJob::dispatch((string) $callbackTenant->id, (string) $callbackTenant->sso_provider, (string) $user->idp_user_id)
+                ->delay(now()->plus(seconds: self::LOGIN_SYNC_DELAY_SECONDS)));
         }
 
         $token = $user->createToken("sso_token_{$callbackTenant->sso_provider}")->accessToken;
