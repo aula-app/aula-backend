@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserLevel;
 use App\Jobs\ImportSchoolForTenant;
-use App\Jobs\ReconcileIdpSchool;
+use App\Jobs\UserSyncJob;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\DirectoryException;
@@ -397,8 +397,7 @@ class SsoController extends Controller
         $this->recordIdpUserId($user, $laravelSocialiteUser, $callbackTenant);
         $user->save();
 
-        ReconcileIdpSchool::dispatch((string) $callbackTenant->id, (string) $callbackTenant->sso_provider)
-            ->delay(now()->plus(seconds: 10));
+        tenancy()->central(fn () => UserSyncJob::dispatch((string) $callbackTenant->id, (string) $callbackTenant->sso_provider, (string) $user->idp_user_id));
 
         $token = $user->createToken("sso_token_{$callbackTenant->sso_provider}")->accessToken;
 

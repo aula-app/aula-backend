@@ -61,7 +61,7 @@ class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
             return;
         }
 
-        $outcome = $tenant->run(fn (): SyncOutcome => $groupSync->syncGroup($this->groupId, $tenant, $this->provider));
+        $outcome = $tenant->run(fn (): SyncOutcome => $groupSync->handle($tenant, $this->provider, $this->groupId));
 
         if (! $outcome->wasProcessed) {
             Log::info('IdP: group refresh changed nothing', [

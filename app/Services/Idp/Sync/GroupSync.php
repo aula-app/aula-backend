@@ -38,12 +38,6 @@ final class GroupSync
     ) {
     }
 
-    public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
-    {
-        $groupId = $event->entityId;
-        return $this->syncGroup($groupId, $tenant, $provider);
-    }
-
     /**
      * Refresh the room from upstream, or archive it when the group is gone.
      *
@@ -54,17 +48,16 @@ final class GroupSync
      * presumably, for a school deleted or disconnected from it. We want to archive
      * the room only when a group is unshared, and skip updating the room when the school is gone.
      */
-    public function syncGroup(string $groupId, Tenant $tenant, string $provider): SyncOutcome
+    public function handle(Tenant $tenant, string $provider, string $groupId): SyncOutcome
     {
+        Log::withContext(['idp_group_id' => $groupId]);
+
         if ($this->refreshGroup($groupId, $tenant, $provider)) {
             return SyncOutcome::processed();
         }
 
         if (! $this->schoolVisible($tenant, $provider)) {
-            Log::warning('IdP: school not visible, not archiving the room of a missing group', [
-                'tenant' => $tenant->instance_code,
-                'idp_group_id' => $groupId,
-            ]);
+            Log::warning('IdP: school not visible, not archiving the room of a missing group');
 
             return SyncOutcome::skipped('school_not_visible');
         }
@@ -169,7 +162,7 @@ final class GroupSync
 
         $toUnarchiveOrAdd = array_values(array_diff($directoryIdpGroupIds, $activeIdpGroupIds));
         foreach ($toUnarchiveOrAdd as $groupId) {
-            $outcome = $this->syncGroup($groupId, $tenant, $provider);
+            $outcome = $this->handle($tenant, $provider, $groupId);
 
             if (! $outcome->wasProcessed) {
                 Log::info('IdP: group refresh changed nothing', [

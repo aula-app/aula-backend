@@ -79,6 +79,8 @@ class ProcessIdpWebhookEvent implements ShouldQueue
         if (($tenant = $this->resolveTenant($event, $record)) === null) {
             return;
         }
+        $record->tenant_id = $tenant->id;
+        $record->save();
         tenancy()->initialize($tenant);
 
         $provider = $record->provider;
@@ -92,8 +94,8 @@ class ProcessIdpWebhookEvent implements ShouldQueue
 
         try {
             $outcome = match ($event->entityType) {
-                IdpEvent::ENTITY_USER => $userSync->handle($event, $tenant, $provider),
-                IdpEvent::ENTITY_GROUP => $groupSync->handle($event, $tenant, $provider),
+                IdpEvent::ENTITY_USER => $userSync->handle($tenant, $provider, $event->entityId),
+                IdpEvent::ENTITY_GROUP => $groupSync->handle($tenant, $provider, $event->entityId),
                 IdpEvent::ENTITY_SCHOOL => $schoolSync->handle($event, $tenant, $provider),
                 default => SyncOutcome::skipped('entity_type_unhandled'),
             };
@@ -102,32 +104,20 @@ class ProcessIdpWebhookEvent implements ShouldQueue
         }
 
         if ($outcome->wasProcessed) {
-            $record->markProcessed($tenant->id);
-            $this->dispatchFollowUps($outcome, $tenant, $provider);
-            Log::info('IdP webhook: processed', [
-                'event_id' => $record->id,
-                'provider' => $provider,
-                'entity_type' => $event->entityType,
-                'action' => $event->action,
-                'tenant' => $tenant->instance_code,
-            ]);
+            $record->markProcessed();
         } else {
-            $record->tenant_id = $tenant->id;
             $record->markSkipped((string) $outcome->reason);
-        }
-    }
-
-    private function dispatchFollowUps(SyncOutcome $outcome, Tenant $tenant, string $provider): void
-    {
-        foreach ($outcome->groupsToRefresh as $groupId) {
-            RefreshIdpGroup::dispatch((string) $tenant->id, $provider, $groupId)
-                ->delay(now()->plus(seconds: 2));
+            Log::withContext(['reason' => $outcome->reason]);
         }
 
-        if ($outcome->reconcileSchool) {
-            ReconcileIdpSchool::dispatch((string) $tenant->id, $provider)
-                ->delay(now()->plus(seconds: 10));
-        }
+        Log::info('IdP webhook: executed', [
+            'tenant' => $tenant->instance_code,
+            'provider' => $provider,
+            'event_id' => $record->id,
+            'entity_type' => $event->entityType,
+            'entity_id' => $event->entityId,
+            'action' => $event->action,
+        ]);
     }
 
     public function failed(Throwable $e): void

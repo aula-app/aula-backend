@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Idp\Sync;
 
 use App\Enums\UserStatus;
+use App\Jobs\ReconcileIdpSchool;
+use App\Jobs\RefreshIdpGroup;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpEvent;
@@ -12,6 +14,8 @@ use App\Services\Idp\IdpProviders;
 use App\Services\Idp\RoomEnrolment;
 use App\Services\Idp\SchoolImport;
 use Illuminate\Support\Facades\Log;
+
+use function Illuminate\Support\now;
 
 /**
  * Applies a user event to the tenant database.
@@ -34,24 +38,50 @@ final class UserSync
         private readonly IdpProviders $providers,
         private readonly SchoolImport $import,
         private readonly RoomEnrolment $rooms,
-    ) {}
+    ) {
+    }
 
-    public function handle(IdpEvent $event, Tenant $tenant, string $provider): SyncOutcome
+    public function handle(Tenant $tenant, string $provider, string $userId): SyncOutcome
+    {
+        Log::withContext(['idp_user_id' => $userId]);
+
+        $outcome = $this->syncUser($userId, $tenant, $provider);
+
+        if (! $outcome->wasProcessed) {
+            Log::info('IdP: user sync job changed nothing', [
+                'reason' => $outcome->reason,
+            ]);
+        }
+
+        tenancy()->central(function () use ($outcome, $tenant, $provider) {
+            foreach ($outcome->groupsToRefresh as $groupId) {
+                RefreshIdpGroup::dispatch((string) $tenant->id, $provider, $groupId)
+                    ->delay(now()->plus(seconds: 2));
+            }
+
+            ReconcileIdpSchool::dispatch((string) $tenant->id, $provider)
+                ->delay(now()->plus(seconds: 10));
+        });
+
+        return $outcome;
+    }
+
+    public function syncUser(string $userId, Tenant $tenant, string $provider): SyncOutcome
     {
         // The action is not trusted: deliveries can arrive out of order, so
         // the read-back decides. Gone upstream archives, present converges.
-        $person = $this->providers->directory($provider)->user($event->entityId);
+        $person = $this->providers->directory($provider)->user($userId);
 
         if ($person === null) {
-            return $this->archive($event->entityId);
+            return $this->archive($userId);
         }
 
-        $this->import->importUser($tenant, $provider, $person);
+        $user = $this->import->importUser($tenant, $provider, $person);
 
         // Eduplaces reports membership changes as person events and sends no
         // group events, so the person's groups and the school's group list
         // are re-read in follow-up jobs.
-        return SyncOutcome::processed(groupsToRefresh: $person->groupIds(), reconcileSchool: true);
+        return SyncOutcome::processed(groupsToRefresh: $person->groupIds());
     }
 
     private function archive(string $userId): SyncOutcome

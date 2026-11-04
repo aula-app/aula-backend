@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\UserStatus;
+use App\Jobs\UserSyncJob;
 use App\Models\LegacyUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
 use Tests\Concerns\CreatesTestTenant;
@@ -62,6 +64,7 @@ class SsoIdpInitiatedTest extends TestCase
         Cache::flush();
         self::$testTenant->run(fn () => Cache::flush());
         $this->fakeJwksEndpoint();
+        Queue::fake([UserSyncJob::class]);
     }
 
     protected function tearDown(): void
@@ -404,7 +407,7 @@ class SsoIdpInitiatedTest extends TestCase
     private function seedDirectoryProvisionedUser(string $personId, ?string $password = null, ?string $ssoSub = null): int
     {
         return (int) self::$testTenant->run(function () use ($personId, $password, $ssoSub) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->idp_user_id = $personId;
             $user->username = 'pre.'.substr(md5($personId), 0, 8);
             $user->displayname = 'Pre Provisioned';

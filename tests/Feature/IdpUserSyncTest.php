@@ -665,18 +665,6 @@ class IdpUserSyncTest extends TestCase
         Queue::assertPushed(ReconcileIdpSchool::class, 1);
     }
 
-    public function test_queues_nothing_for_a_delete(): void
-    {
-        $this->seedLocalUser(self::PERSON, 'Leaving');
-        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
-
-        $this->idmVanished[] = self::PERSON;
-        $this->process($this->event('delete'));
-
-        Queue::assertNotPushed(RefreshIdpGroup::class);
-        Queue::assertNotPushed(ReconcileIdpSchool::class);
-    }
-
     public function test_does_not_queue_duplicates_while_one_is_pending(): void
     {
         Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
