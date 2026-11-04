@@ -36,8 +36,6 @@ class CrudUserTest extends TestCase
     private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
 
     private LegacyUser $adminUser;
-    private string $adminJwt;
-    private array $adminHeaders;
 
     protected function setUp(): void
     {
@@ -95,15 +93,6 @@ class CrudUserTest extends TestCase
         ];
     }
 
-    private function jwtForUser(LegacyUser $user): string
-    {
-        Passport::actingAs($user);
-        return '';
-        /* return self::$testTenant->run( */
-        /*     fn () => app(\App\Services\LegacyJwtService::class)->generateToken($user) */
-        /* ) ?? ''; */
-    }
-
     public function test_authz_nonadmin()
     {
         // Note: we can't sanity check by get'ing as admin here first,
@@ -114,14 +103,14 @@ class CrudUserTest extends TestCase
         //     $this->adminHeaders
         //   )->assertOk();
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        $this->jwtForUser($nonAdminUser);
-        $this->getJson(
+        Passport::actingAs($nonAdminUser);
+        $res = $this->getJson(
             '/api/v2/users',
         )
             ->assertForbidden();
         $this->postJson(
             '/api/v2/users',
-            self::NEW_USER_DATA,
+            [...self::NEW_USER_DATA, 'userName' => 'aula_testuser_unique1']
         )
             ->assertForbidden();
     }
@@ -129,7 +118,7 @@ class CrudUserTest extends TestCase
     public function test_authz_early_validation()
     {
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        $this->jwtForUser($nonAdminUser);
+        Passport::actingAs($nonAdminUser);
         $this->postJson(
             '/api/v2/users'
         )
@@ -148,7 +137,7 @@ class CrudUserTest extends TestCase
         $user = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
         $otherUser = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
         $this->assertNotEquals($user->hash_id, $otherUser->hash_id);
-        $jwt = $this->jwtForUser($user);
+        Passport::actingAs($user);
         $this->getJson(
             "/api/v2/users/{$user->hash_id}",
         )
@@ -162,7 +151,7 @@ class CrudUserTest extends TestCase
     public function test_authz_self_update_cannot_escalate_userlevel()
     {
         $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        $this->jwtForUser($user);
+        Passport::actingAs($user);
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
@@ -179,7 +168,7 @@ class CrudUserTest extends TestCase
     public function test_authz_self_update_cannot_change_status()
     {
         $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        $this->jwtForUser($user);
+        Passport::actingAs($user);
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
@@ -196,7 +185,7 @@ class CrudUserTest extends TestCase
     public function test_authz_self_update_allows_own_profile_fields()
     {
         $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        $this->jwtForUser($user);
+        Passport::actingAs($user);
 
         $this->putJson(
             "/api/v2/users/{$user->hash_id}",
@@ -257,7 +246,7 @@ class CrudUserTest extends TestCase
             /* $this->refreshApplication(); */
             /* parent::setUp(); */
             $inActiveUser = $this->createDistinctUser(UserLevel::Admin, $userStatus);
-            $this->jwtForUser($inActiveUser);
+            Passport::actingAs($inActiveUser);
             $this->getJson('/api/v2/users')
                 ->assertForbidden();
         }
@@ -265,9 +254,12 @@ class CrudUserTest extends TestCase
 
     public function test_create()
     {
+        self::$testTenant->run(function () {
+            LegacyUser::where('username', self::NEW_USER_DATA['userName'])->delete();
+        });
         $result = $this->post(
             '/api/v2/users',
-            self::NEW_USER_DATA,
+            self::NEW_USER_DATA
         )
             ->assertCreated()
             ->assertJsonMissingPath('id')
@@ -282,12 +274,17 @@ class CrudUserTest extends TestCase
 
     public function test_create_optional()
     {
+        $data = [...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE];
+        $data['userName'] = 'aula_testuser2';
+        self::$testTenant->run(function () use ($data) {
+            LegacyUser::where('username', $data['userName'])->delete();
+        });
         $result = $this->post(
             '/api/v2/users',
-            [...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE],
+            $data
         )
             ->assertCreated()
-            ->assertJson(self::USER_DATA_UPDATE);
+            ->assertJson($data);
         $newUserPublicId = $result->decodeResponseJson()['publicId'];
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserPublicId);
         return $newUserPublicId;
@@ -312,7 +309,7 @@ class CrudUserTest extends TestCase
     {
         $this->getJson('/api/v2/users/'.$newUserPublicId)
             ->assertOk()
-            ->assertJson([...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE]);
+            ->assertJson([...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE, 'userName' => 'aula_testuser2']);
     }
 
     #[Depends('test_create')]
@@ -333,7 +330,8 @@ class CrudUserTest extends TestCase
         $changedUserData = [
             ...self::NEW_USER_DATA,
             ...self::USER_DATA_UPDATE,
-            ...['realName' => 'Changed Name'],
+            'email' => 'e2e_distinct_updated@aula.de', // avoid collision
+            'realName' => 'Changed Name',
         ];
 
         $result = $this->putJson(
@@ -383,7 +381,7 @@ class CrudUserTest extends TestCase
     public function test_authz_delete_admin_only($newUserPublicId1)
     {
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        $nonAdminJwt = $this->jwtForUser($nonAdminUser);
+        Passport::actingAs($nonAdminUser);
         // non admin tries do delete other
         $this->deleteJson(
             '/api/v2/users/'.$newUserPublicId1,
@@ -500,15 +498,13 @@ class CrudUserTest extends TestCase
         $user = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
         $otherUser = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
         $this->assertNotEquals($user->hash_id, $otherUser->hash_id);
-        $jwt = $this->jwtForUser($user);
+        Passport::actingAs($user);
         $this->getJson(
-            "/api/v2/users/{$user->hash_id}/export",
-            ['Authorization' => "Bearer {$jwt}"]
+            "/api/v2/users/{$user->hash_id}/export"
         )
             ->assertOk();
         $this->getJson(
-            "/api/v2/users/{$otherUser->hash_id}/export",
-            ['Authorization' => "Bearer {$jwt}"]
+            "/api/v2/users/{$otherUser->hash_id}/export"
         )
             ->assertForbidden();
     }
