@@ -77,5 +77,19 @@ class AuthzServiceProvider extends ServiceProvider
         Gate::define(Gates::ExportUserGdprInfo, function (LegacyUser $user, string $publicId) {
             return $user->hash_id === $publicId;
         });
+
+        // only admins may CRUD Rooms and Members for now
+
+        Gate::define(Gates::ListRooms,  fn () => false);
+        Gate::define(Gates::CreateRoom, fn () => false);
+        Gate::define(Gates::DeleteRoom, fn () => false);
+        Gate::define(Gates::ShowRoom,   fn () => false);
+
+        Gate::define(Gates::PatchRoomMembership, fn () => false);
+
+        Gate::define(Gates::ListRoomMember,   fn () => false);
+        Gate::define(Gates::CreateRoomMember, fn () => false);
+        Gate::define(Gates::DeleteRoomMember, fn () => false);
+        Gate::define(Gates::ShowRoomMember,   fn () => false);
     }
 }
