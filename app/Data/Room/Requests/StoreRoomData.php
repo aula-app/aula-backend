@@ -27,10 +27,10 @@ class StoreRoomData extends AbstractRoomData
     public readonly string $descriptionInternal;
 
     #[Min(1)]
-    public readonly int $phaseDuration1;
+    public readonly int $phaseDurationVoting;
 
     #[Min(1)]
-    public readonly int $phaseDuration3;
+    public readonly int $phaseDurationDiscussion;
 
     #[Rule('missing')]
     public readonly null|DateTimeImmutable $createdAt;

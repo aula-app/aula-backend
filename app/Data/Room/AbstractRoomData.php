@@ -16,8 +16,8 @@ abstract class AbstractRoomData extends Data
     abstract public null|int $status { get; }
     abstract public null|string $descriptionPublic { get; }
     abstract public null|string $descriptionInternal { get; }
-    abstract public null|int $phaseDuration1 { get; }
-    abstract public null|int $phaseDuration3 { get; }
+    abstract public null|int $phaseDurationVoting { get; }
+    abstract public null|int $phaseDurationDiscussion { get; }
     abstract public null|DateTimeImmutable $createdAt { get; }
     abstract public null|DateTimeImmutable $updatedAt { get; }
 
@@ -27,8 +27,8 @@ abstract class AbstractRoomData extends Data
         null|int $status,
         null|string $descriptionPublic,
         null|string $descriptionInternal,
-        null|int $phaseDuration1,
-        null|int $phaseDuration3,
+        null|int $phaseDurationVoting,
+        null|int $phaseDurationDiscussion,
         null|DateTimeImmutable $createdAt,
         null|DateTimeImmutable $updatedAt,
     ) {
@@ -37,8 +37,8 @@ abstract class AbstractRoomData extends Data
         $this->status = $status;
         $this->descriptionPublic = $descriptionPublic;
         $this->descriptionInternal = $descriptionInternal;
-        $this->phaseDuration1 = $phaseDuration1;
-        $this->phaseDuration3 = $phaseDuration3;
+        $this->phaseDurationVoting = $phaseDurationVoting;
+        $this->phaseDurationDiscussion = $phaseDurationDiscussion;
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
     }

@@ -24,8 +24,8 @@ class CreateRoomUseCase
         $legacyRoom->status = $storeRoomData->status;
         $legacyRoom->description_public = $storeRoomData->descriptionPublic;
         $legacyRoom->description_internal = $storeRoomData->descriptionInternal;
-        $legacyRoom->phase_duration_1 = $storeRoomData->phaseDuration1;
-        $legacyRoom->phase_duration_3 = $storeRoomData->phaseDuration3;
+        $legacyRoom->phase_duration_1 = $storeRoomData->phaseDurationVoting;
+        $legacyRoom->phase_duration_3 = $storeRoomData->phaseDurationDiscussion;
         $legacyRoom->save();
         // let createdAt update
         $legacyRoom->refresh();

@@ -22,8 +22,8 @@ class UpdateRoomUseCase
         $legacyRoom->status = $userUpdateData->status;
         $legacyRoom->description_public = $userUpdateData->descriptionPublic;
         $legacyRoom->description_internal = $userUpdateData->descriptionInternal;
-        $legacyRoom->phase_duration_1 = $userUpdateData->phaseDuration1;
-        $legacyRoom->phase_duration_3 = $userUpdateData->phaseDuration3;
+        $legacyRoom->phase_duration_1 = $userUpdateData->phaseDurationVoting;
+        $legacyRoom->phase_duration_3 = $userUpdateData->phaseDurationDiscussion;
 
         $legacyRoom->save();
         $legacyRoom->refresh();

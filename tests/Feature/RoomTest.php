@@ -25,8 +25,8 @@ class RoomTest extends TestCase
         'status' => 1,
         'descriptionPublic' => 'Public test description',
         'descriptionInternal' => 'Internal test description',
-        'phaseDuration1' => 14,
-        'phaseDuration3' => 14,
+        'phaseDurationVoting' => 14,
+        'phaseDurationDiscussion' => 14,
     ];
 
     private const array UPDATE_ROOM_DATA = [
@@ -34,8 +34,8 @@ class RoomTest extends TestCase
         'status' => 1,
         'descriptionPublic' => 'Public test description changed',
         'descriptionInternal' => 'Internal test description changed',
-        'phaseDuration1' => 15,
-        'phaseDuration3' => 15,
+        'phaseDurationVoting' => 15,
+        'phaseDurationDiscussion' => 15,
     ];
 
     protected function setUp(): void
@@ -105,7 +105,7 @@ class RoomTest extends TestCase
             '/api/v2/rooms',
             []
         )
-            ->assertInvalid(['name', 'status', 'descriptionPublic', 'descriptionInternal', 'phaseDuration1', 'phaseDuration3'])
+            ->assertInvalid(['name', 'status', 'descriptionPublic', 'descriptionInternal', 'phaseDurationVoting', 'phaseDurationDiscussion'])
             ->assertUnprocessable();
     }
 
@@ -126,10 +126,10 @@ class RoomTest extends TestCase
             ['status' => 'a'],
             ['descriptionPublic' => ''],
             ['descriptionPublic' => null],
-            ['phaseDuration1' => ''],
-            ['phaseDuration1' => -1],
-            ['phaseDuration1' => 0],
-            ['phaseDuration3' => ''],
+            ['phaseDurationVoting' => ''],
+            ['phaseDurationVoting' => -1],
+            ['phaseDurationVoting' => 0],
+            ['phaseDurationDiscussion' => ''],
         ] as $kv) {
             $this->postJson('/api/v2/rooms', [...self::NEW_ROOM_DATA, ...$kv])
                 ->assertInvalid(array_key_first($kv))
@@ -162,7 +162,7 @@ class RoomTest extends TestCase
             "/api/v2/rooms/$newRoomPublicId",
             []
         )
-            ->assertInvalid(['name', 'status', 'descriptionPublic', 'descriptionInternal', 'phaseDuration1', 'phaseDuration3'])
+            ->assertInvalid(['name', 'status', 'descriptionPublic', 'descriptionInternal', 'phaseDurationVoting', 'phaseDurationDiscussion'])
             ->assertUnprocessable();
     }
 

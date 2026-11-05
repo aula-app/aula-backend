@@ -27,10 +27,10 @@ class DomainRoomData extends AbstractRoomData
     public readonly null|string $descriptionInternal;
 
     #[MapInputName('phase_duration_1')]
-    public readonly null|int $phaseDuration1;
+    public readonly null|int $phaseDurationVoting;
 
     #[MapInputName('phase_duration_3')]
-    public readonly null|int $phaseDuration3;
+    public readonly null|int $phaseDurationDiscussion;
 
     #[MapInputName('created')]
     public readonly null|DateTimeImmutable $createdAt;
