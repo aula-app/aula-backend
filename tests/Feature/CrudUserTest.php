@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
+use App\Models\LegacyRoom;
 use App\Models\LegacyUser;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Passport\Passport;
@@ -14,6 +15,7 @@ use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Depends;
 use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CrudUserTest extends TestCase
 {
@@ -108,7 +110,7 @@ class CrudUserTest extends TestCase
             ->assertForbidden();
         $this->postJson(
             '/api/v2/users',
-            self::NEW_USER_DATA,
+            [...self::NEW_USER_DATA, 'userName' => 'aula_testuser_unique1']
         )
             ->assertForbidden();
     }
@@ -252,9 +254,27 @@ class CrudUserTest extends TestCase
 
     public function test_create()
     {
+        self::$testTenant->run(function () {
+            LegacyUser::where('username', self::NEW_USER_DATA['userName'])->delete();
+
+            // TODO put this somewhere
+            if (!LegacyRoom::where('type', 1)->exists()) {
+                $legacyRoom = new LegacyRoom();
+                $legacyRoom->hash_id = Str::random(32);
+                $legacyRoom->room_name = 'Schule (Test)';
+                $legacyRoom->type = 1;
+                $legacyRoom->status = 1;
+                $legacyRoom->description_public = 'Test';
+                $legacyRoom->description_internal = 'Test';
+                $legacyRoom->phase_duration_1 = 14;
+                $legacyRoom->phase_duration_3 = 14;
+                $legacyRoom->save();
+            }
+        });
+
         $result = $this->post(
             '/api/v2/users',
-            self::NEW_USER_DATA,
+            self::NEW_USER_DATA
         )
             ->assertCreated()
             ->assertJsonMissingPath('id')
@@ -268,14 +288,41 @@ class CrudUserTest extends TestCase
         return $newUserPublicId;
     }
 
+    #[Depends('test_create')]
+    public function test_create_standardroom_membership($newUserPublicId)
+    {
+        self::$testTenant->run(function () use ($newUserPublicId) {
+            // TODO: safe to assume there is only one?
+            $standardRoomId = LegacyRoom::where('type', 1)->sole()->value('hash_id');
+            $res = $this->getJson("/api/v2/rooms/{$standardRoomId}/membership")
+                ->assertOk()
+                ->assertJson([[
+                    "publicId" => $newUserPublicId,
+                    "userLevel" => 10,
+                    "roomLevel" => 20
+                ]]);
+            // test legacy json
+            $actualRolesJson = DB::table('au_users_basedata')->where('hash_id', $newUserPublicId)->get('roles')->value('roles');
+            $this->assertJsonStringEqualsJsonString(
+                json_encode([["role" => 20, "room" => $standardRoomId]]),
+                $actualRolesJson,
+            );
+        });
+    }
+
     public function test_create_optional()
     {
+        $data = [...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE];
+        $data['userName'] = 'aula_testuser2';
+        self::$testTenant->run(function () use ($data) {
+            LegacyUser::where('username', $data['userName'])->delete();
+        });
         $result = $this->post(
             '/api/v2/users',
-            [...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE],
+            $data
         )
             ->assertCreated()
-            ->assertJson(self::USER_DATA_UPDATE);
+            ->assertJson($data);
         $newUserPublicId = $result->decodeResponseJson()['publicId'];
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{32}$/', $newUserPublicId);
         return $newUserPublicId;
@@ -300,7 +347,7 @@ class CrudUserTest extends TestCase
     {
         $this->getJson('/api/v2/users/'.$newUserPublicId)
             ->assertOk()
-            ->assertJson([...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE]);
+            ->assertJson([...self::NEW_USER_DATA, ...self::USER_DATA_UPDATE, 'userName' => 'aula_testuser2']);
     }
 
     #[Depends('test_create')]
@@ -321,7 +368,8 @@ class CrudUserTest extends TestCase
         $changedUserData = [
             ...self::NEW_USER_DATA,
             ...self::USER_DATA_UPDATE,
-            ...['realName' => 'Changed Name'],
+            'email' => 'e2e_distinct_updated@aula.de', // avoid collision
+            'realName' => 'Changed Name',
         ];
 
         $result = $this->putJson(

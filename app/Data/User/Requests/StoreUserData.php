@@ -13,18 +13,22 @@ use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Rule;
-use App\Relations\RoomUser;
+use Spatie\LaravelData\Attributes\Validation\Unique;
 
 class StoreUserData extends AbstractUserData
 {
     #[Max(400)]
     public readonly null|string $displayName;
+
     #[Max(400)]
+    #[Unique('au_users_basedata', 'username')]
     public readonly string $userName;
+
     #[Max(400)]
     public readonly null|string $realName;
 
     #[Email]
+    #[Unique('au_users_basedata', 'email')]
     public readonly null|string $email;
 
     // unexpectedly, this works without #[WithCast]
