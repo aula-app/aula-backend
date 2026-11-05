@@ -75,28 +75,24 @@ class SendEmailHandler extends CommandHandler
     $email_body = str_replace("<CODE>", $this->db->code, $email_body);
 
     $mail = $this->smtp->send($email, $headers, $email_body);
-    if ($mail != true && (bool) (preg_match('/fail|err|reject|refuse/', $mail->message))) {
-      return (new ResponseBuilder())->error(1, $mail);
-    } else {
-      return (new ResponseBuilder())->success($mail);
+    if (PEAR::isError($mail)) {
+      error_log("[{$this->db->code}] sendEmail command {$command['id']} failed: " . $mail->getMessage());
+      return (new ResponseBuilder())->error(1, $mail->getMessage());
     }
+    return (new ResponseBuilder())->success(true);
   }
 
   protected function isValid(mixed $command): bool
   {
-    [
-      $emailType,
-      $email,
-      $realname,
-      $username,
-      $secret
-    ] = explode(";", $command['parameters']);
-    // @TODO: nikola - make better validation
+    $parts = explode(";", $command['parameters'] ?? '');
+    if (count($parts) !== 5) {
+      return false;
+    }
+    [$emailType, $email, , $username, $secret] = $parts;
     return
-      (bool) preg_match('/^userCreated|userForgotPassword$/', $emailType) &&
-      (bool) preg_match('/^\w+$/', $realname) &&
-      (bool) preg_match('/^\w+$/', $secret) &&
-      (bool) preg_match('/^\w+$/', $email) &&
-      (bool) preg_match('/^\w+$/', $username);
+      in_array($emailType, ['userCreated', 'userForgotPassword'], true) &&
+      filter_var($email, FILTER_VALIDATE_EMAIL) !== false &&
+      (bool) preg_match('/^[0-9a-f]+$/', $secret) &&
+      strlen($username) > 0;
   }
 }

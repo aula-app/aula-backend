@@ -223,6 +223,19 @@ class IdpBootstrapTest extends TestCase
         ])->assertOk()->assertJsonPath('ready', false)->assertJsonPath('status', null);
     }
 
+    public function test_the_import_status_endpoint_does_not_block_a_tenant_with_sso_off(): void
+    {
+        // sso_provider defaults to eduplaces in Filament even when SSO stays off;
+        // no SSO login will ever start the import, so there is nothing to wait for.
+        Tenant::where('id', self::$testTenant->id)->update(['sso_enabled' => false]);
+
+        $this->actAsSeededAdmin();
+
+        $this->getJson('/api/v2/auth/idp/import-status', [
+            'aula-instance-code' => 'TEST001',
+        ])->assertOk()->assertJsonPath('ready', true)->assertJsonPath('status', null);
+    }
+
     /**
      * A declined bootstrap writes no idp_import_status and no later login
      * retries it, so waiting on one would hold every user on the setup screen.

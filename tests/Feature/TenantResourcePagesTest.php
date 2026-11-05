@@ -93,6 +93,37 @@ class TenantResourcePagesTest extends TestCase
         ], $received);
     }
 
+    public function test_create_drops_the_default_provider_when_sso_is_off(): void
+    {
+        $received = null;
+
+        $mock = Mockery::mock(CreateTenantUseCase::class);
+        $mock->shouldReceive('execute')
+            ->once()
+            ->withArgs(function (...$args) use (&$received): bool {
+                $received = $args;
+
+                return true;
+            })
+            ->andReturn(new Tenant);
+        app()->instance(CreateTenantUseCase::class, $mock);
+
+        $page = new CreateTenant;
+        (new \ReflectionMethod($page, 'handleRecordCreation'))->invoke($page, [
+            'name' => 'Password School',
+            'instance_code' => 'PWD01',
+            'admin1_username' => 'admin1',
+            'admin1_email' => 'admin1@pwd01.example',
+            'admin2_username' => 'admin2',
+            'admin2_email' => 'admin2@pwd01.example',
+            'sso_enabled' => false,
+            'sso_provider' => 'eduplaces',
+        ]);
+
+        $this->assertFalse($received[13]); // ssoEnabled
+        $this->assertNull($received[14]);  // ssoProvider
+    }
+
     public function test_release_action_shows_the_new_setup_link_and_hides_itself(): void
     {
         $this->ensureTestTenantExists();

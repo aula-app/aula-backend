@@ -49,7 +49,9 @@ class CreateTenant extends CreateRecord
             contactInfo: $this->optionalString($data, 'contact_info'),
             schoolTypeId: isset($data['school_type_id']) ? (int) $data['school_type_id'] : null,
             ssoEnabled: $this->optionalBool($data, 'sso_enabled'),
-            ssoProvider: $this->optionalString($data, 'sso_provider'),
+            // The field defaults to eduplaces; keep it only when SSO is on, or a
+            // password-only tenant reads as directory-synced.
+            ssoProvider: ($data['sso_enabled'] ?? false) ? $this->optionalString($data, 'sso_provider') : null,
             ssoForceLogout: $this->optionalBool($data, 'sso_force_logout'),
             ssoRequired: $this->optionalBool($data, 'sso_required'),
             ssoRequireEmailVerified: $this->optionalBool($data, 'sso_require_email_verified'),
