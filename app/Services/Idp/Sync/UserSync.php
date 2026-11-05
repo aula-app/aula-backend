@@ -9,7 +9,6 @@ use App\Jobs\ReconcileIdpSchool;
 use App\Jobs\RefreshIdpGroup;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
-use App\Services\Idp\Dto\IdpEvent;
 use App\Services\Idp\IdpProviders;
 use App\Services\Idp\RoomEnrolment;
 use App\Services\Idp\SchoolImport;
@@ -34,6 +33,13 @@ use function Illuminate\Support\now;
  */
 final class UserSync
 {
+    /**
+     * UserSync dispatches RefreshIdpGroup and ReconcileIdpSchool. In order to reduce
+     * repetition of those jobs, they are dispatched with a delay, so that any
+     * duplicate dispatches within that delay are ignored.
+     */
+    public const int CASCADED_SYNC_DELAY_SECONDS = 10;
+
     public function __construct(
         private readonly IdpProviders $providers,
         private readonly SchoolImport $import,
@@ -56,11 +62,11 @@ final class UserSync
         tenancy()->central(function () use ($outcome, $tenant, $provider) {
             foreach ($outcome->groupsToRefresh as $groupId) {
                 RefreshIdpGroup::dispatch((string) $tenant->id, $provider, $groupId)
-                    ->delay(now()->plus(seconds: 2));
+                    ->delay(now()->plus(seconds: self::CASCADED_SYNC_DELAY_SECONDS));
             }
 
             ReconcileIdpSchool::dispatch((string) $tenant->id, $provider)
-                ->delay(now()->plus(seconds: 10));
+                ->delay(now()->plus(seconds: self::CASCADED_SYNC_DELAY_SECONDS));
         });
 
         return $outcome;

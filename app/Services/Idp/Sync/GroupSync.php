@@ -163,8 +163,9 @@ final class GroupSync
 
         $toRefresh = array_values(array_diff($directoryIdpGroupIds, $activeIdpGroupIds));
 
-        // RefreshIdpGroup is unique per group, so one the person event already
-        // queued is not duplicated, and one group failing retries only itself.
+        // RefreshIdpGroup is unique per Group, so the event that the UserSync queued (based on
+        // IdP Person update event) is not duplicated. If some RefreshIdpGroup job fails, it
+        // will retry itself.
         tenancy()->central(function () use ($toRefresh, $tenant, $provider) {
             foreach ($toRefresh as $groupId) {
                 RefreshIdpGroup::dispatch((string) $tenant->id, $provider, $groupId);
