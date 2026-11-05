@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ImportSchoolForTenant;
+use App\Jobs\UserSyncJob;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\SchoolImport;
@@ -94,6 +95,7 @@ class IdpBootstrapTest extends TestCase
         self::$testTenant->run(fn () => Cache::flush());
         $this->cleanTenant();
         $this->seedTenantAdmin();
+        Queue::fake([UserSyncJob::class]);
     }
 
     protected function tearDown(): void
@@ -260,7 +262,7 @@ class IdpBootstrapTest extends TestCase
         // The seeded admin of a school in use is a real account, so the first
         // SSO login must not claim it even with idp_migration_status left null.
         self::$testTenant->run(function () {
-            $pupil = new LegacyUser;
+            $pupil = new LegacyUser();
             $pupil->username = 'existing.pupil';
             $pupil->displayname = 'Existing Pupil';
             $pupil->status = UserStatus::Active;
@@ -312,6 +314,9 @@ class IdpBootstrapTest extends TestCase
             ImportSchoolForTenant::class,
             fn (ImportSchoolForTenant $job): bool => $job->tenantId === self::$testTenant->id,
         );
+        // The import brings the account and its rooms in; a sync beside it
+        // would write the same rows.
+        Queue::assertNotPushed(UserSyncJob::class);
 
         // Written before the dispatch, so ImportStatusController never reports
         // ready while the job is still waiting in the queue.
@@ -557,7 +562,7 @@ class IdpBootstrapTest extends TestCase
     private function seedTenantAdmin(): void
     {
         self::$testTenant->run(function () {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = self::ADMIN_USERNAME;
             $user->displayname = 'Tenant Admin';
             $user->email = 'bootstrap_admin@test.example';

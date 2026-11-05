@@ -5,7 +5,7 @@ stays in step afterwards.
 
 Nothing in this flow is specific to one vendor. Each IdP is represented by a block in
 `config/idp.php` plus two implemented interfaces: `IdentityDirectory` and
-`WebhookAdapter`. No migrations, no routes (except webhooks), and no foreseeable 
+`WebhookAdapter`. No migrations, no routes (except webhooks), and no foreseeable
 change to `SchoolImport` or the syncs. Eduplaces is currently the only implementation
 and is used for the examples.
 
@@ -21,7 +21,7 @@ Eduplaces specification: <https://developer.eduplaces.de/idm/webhooks>.
 2. instance code sent to the school
 3. first SSO login                  → claims that admin row
 4. the whole school is imported     → rooms + users, on the queue
-5. every later login                → account already exists, nothing created
+5. every later login                → account already exists; it is re-read from the directory on the queue
 ```
 
 Step 3 triggers step 4, and it fires exactly once: `bootstrapIdpTenant()` runs
@@ -86,8 +86,9 @@ Role mapping, from `services.eduplaces.role_userlevels`:
 | `STUDENT`      | 20          | 20              |
 | anything else  | 20          | 20              |
 
-Account-wide rank and per-room rank come from the same map, so a teacher cannot
-end up privileged in one and not the other.
+Both are applied once: `userlevel` when the account is created, the per-room
+`role` when the user joins the room. A later role change in Eduplaces changes
+neither, so ranks set inside aula are kept.
 
 ## Names
 
@@ -96,7 +97,7 @@ What an endpoint returns depends on the app's entitlements:
 | Endpoint                          | Carries                                  |
 |-----------------------------------|------------------------------------------|
 | `/schools/{id}/people`, `/people/{id}` | `name` (`firstFull`/`firstCall`/`last`), `status`, `role`, `groups`; deleted and unsynced people are left out |
-| `/groups/{id}`                    | `members`, read only when a group webhook arrives |
+| `/groups/{id}`                    | `members` (`id`, `name`, `role`), read on every group refresh |
 
 Every read goes through `/people`: the import, the merge proposal and the
 tenant scan read `/schools/{id}/groups` for the group list and
@@ -152,16 +153,54 @@ the queue moves the retries to aula (`tries = 5`, backoff 10s/1m/5m/15m).
 
 ### What each event does
 
-**person**: `create` and `update` converge the row through
-`SchoolImport::importUser()`, the same call the import makes, so both paths
-write identical rows including room membership and roles. `delete` sets
-`status = 3` and leaves every directory-sourced room. `restore` sets
-`status = 1`.
+The event's `action` is not trusted, since deliveries can arrive out of
+order: every event reads the entity back and the read-back decides.
 
-**group**: `create` and `update` upsert the room and reconcile its members.
-`delete` archives the room and keeps the membership rows so a restore is clean.
-A member with no local row is skipped rather than created, since that member's
-own person event creates it.
+**person**: found upstream, the row converges through
+`SchoolImport::importUser()`, the same call the import makes, then one
+`RefreshIdpGroup` per group of the person and one `ReconcileIdpSchool` are
+queued. Gone upstream (404), the row gets `status = 3`, leaves every
+directory-sourced room, and only the `ReconcileIdpSchool` is queued. Both are
+delayed by a few seconds so a burst of events collapses into one run each.
+
+Eduplaces sends no group events in practice (none seen on staging for sharing
+or unsharing a group via Eduplaces). IServ is said to send group create and
+delete webhooks; not verified until a whole school is shared on Eduplaces. So
+groups are kept current from person events and logins:
+
+- `RefreshIdpGroup` reads `/groups/{id}` and converges the room: name, status,
+  members. A member without a local row is created from the member entry
+  (`SchoolImport::importMember()`); existing rows are not touched by it.
+- `ReconcileIdpSchool` reads the school's group list. A room whose group is no
+  longer listed is archived; a listed group without an active room gets a
+  `RefreshIdpGroup` queued, which creates or reactivates it. Skipped when the
+  school itself returns 404, so a disconnected school does not archive every
+  room.
+
+Both jobs are unique until processing (keyed by tenant, and tenant + group):
+a dispatch while one is queued is dropped, and a change arriving mid-run still
+queues a new one. Locks use the central cache (`cache_locks`).
+
+**login**: every SSO login on an imported directory tenant queues a
+`UserSyncJob` for the account, which runs the same person sync as a `person`
+event: the row converges, then the person's groups and the school's group
+list are re-read. The job is unique until processing per account and delayed
+by ten seconds, so repeated logins collapse into one run. Nothing is queued
+while `idp_import_status` is not `completed`, for a tenant without a
+directory, or for an account without an `idp_user_id`.
+
+A group rename reaches aula only through an event for a member of that group.
+
+**group**: found and active upstream, the room is refreshed as above. Gone
+upstream or inactive, the room is archived. Memberships and `roles` entries
+stay, as for a room archived inside aula; the refresh after a restore
+reconciles them against the group's member list.
+
+A missing group archives only while `/schools/{id}` still answers. A 404 on
+`/groups/{id}` cannot tell a group unshared from the app apart from a school
+deleted or disconnected from it, and the second must not archive every room.
+What a disconnected school actually returns has not been verified against
+Eduplaces; a non-404 error throws and the job retries, which archives nothing.
 
 **school**: updates `tenants.name`. Address, location, official id and schooling
 level are read and logged but not stored. `delete` is **not** honoured: dropping
@@ -178,7 +217,7 @@ the centralDB table `tenants` by schoolId received from the IdP.
 - Rooms without an `idp_group_id`: the school room and anything created inside
   aula.
 - Users without an `idp_user_id` are never unenrolled by a sync.
-- Admin-level accounts are never demoted by role mapping.
+- `userlevel` after account creation, and a per-room `role` once set.
 - Nothing is hard-deleted; legacy tables reference user rows.
 
 ## Replays and ordering

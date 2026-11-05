@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserLevel;
 use App\Jobs\ImportSchoolForTenant;
+use App\Jobs\UserSyncJob;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\DirectoryException;
@@ -29,9 +30,14 @@ use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\User as LaravelSocialiteUser;
 use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
 
+use function Illuminate\Support\now;
+
 class SsoController extends Controller
 {
     private const int LINK_INTENT_TTL_MINUTES = 10;
+
+    /** Logins inside this window collapse into one UserSyncJob. */
+    private const int LOGIN_SYNC_DELAY_SECONDS = 10;
 
     /**
      * Sentinel instance_code in the signed state. callback() then resolves the
@@ -392,8 +398,12 @@ class SsoController extends Controller
         $user->sso_id_token = $idToken;
         $user->sso_refresh_token = $laravelSocialiteUser->refreshToken;
         $this->recordIdpUserId($user, $laravelSocialiteUser, $callbackTenant);
-
         $user->save();
+
+        if ($this->syncsOnLogin($user, $callbackTenant)) {
+            tenancy()->central(fn () => UserSyncJob::dispatch((string) $callbackTenant->id, (string) $callbackTenant->sso_provider, (string) $user->idp_user_id)
+                ->delay(now()->plus(seconds: self::LOGIN_SYNC_DELAY_SECONDS)));
+        }
 
         $token = $user->createToken("sso_token_{$callbackTenant->sso_provider}")->accessToken;
 
@@ -1421,6 +1431,22 @@ class SsoController extends Controller
     protected function usesIdpDirectory(Tenant $tenant): bool
     {
         return $tenant->usesIdpDirectory();
+    }
+
+    /**
+     * Whether this login queues a UserSyncJob for the account.
+     *
+     * Only a directory-backed tenant whose school import has completed. Before
+     * that, bootstrapIdpTenant() has just queued ImportSchoolForTenant and the
+     * sync would import the same rooms beside it. A tenant with no directory
+     * has nothing to read from, and an account without an idp_user_id cannot
+     * be looked up.
+     */
+    protected function syncsOnLogin(LegacyUser $user, Tenant $tenant): bool
+    {
+        return $this->usesIdpDirectory($tenant)
+            && is_string($user->idp_user_id) && $user->idp_user_id !== ''
+            && $tenant->idp_import_status === SchoolImport::STATUS_COMPLETED;
     }
 
     protected function stateSecret(): string
