@@ -7,6 +7,9 @@ namespace App\Data\Room\Requests;
 use Spatie\LaravelData\Data;
 use App\Data\Room\Requests\RoomMembershipData;
 
+/**
+ * Adds and/or removes several users (hence batch) to/from a room's members
+ */
 class BatchRoomMembershipData extends Data
 {
     // TODO: validate actual ids, not strings?

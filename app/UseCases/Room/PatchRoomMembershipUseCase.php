@@ -12,6 +12,9 @@ use App\Enums\Gates;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * Patches (http verb) one room's membership with a batch of added/removed users (or their level's changed)
+ */
 class PatchRoomMembershipUseCase
 {
     public function execute(string $roomPublicId, BatchRoomMembershipData $batchRoomMembershipData): DomainRoomData
