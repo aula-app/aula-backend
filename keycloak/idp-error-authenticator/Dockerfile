@@ -1,4 +1,5 @@
-# Self-contained build of a Keycloak image with the Aula IdP-error authenticator baked in.
+# Self-contained build of a Keycloak image with the Aula IdP-error authenticator and the
+# aula login theme baked in.
 #
 # Stage 1 compiles the provider jar from source (no local JDK/Maven needed — only Docker).
 # Stage 2 bakes it into Keycloak and pre-builds the server.
@@ -20,6 +21,9 @@ RUN mvn -B -q clean package
 FROM quay.io/keycloak/keycloak:26.6.1
 COPY --chown=keycloak:keycloak --chmod=644 --from=build \
   /build/target/aula-idp-error-authenticator.jar /opt/keycloak/providers/
+
+# Login theme in aula's look, selected per realm (RUNBOOK 3B).
+COPY --chown=keycloak:keycloak themes/ /opt/keycloak/themes/
 
 # Augment the server at build time so the container starts pre-built and immutable.
 # Bake the build-time options that match the runtime env (KC_DB, KC_HTTP_RELATIVE_PATH)
