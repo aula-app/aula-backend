@@ -17,8 +17,8 @@ use Illuminate\Queue\SerializesModels;
  * Converges a tenant's rooms on its school's group list.
  *
  * Archives rooms whose group is no longer listed and queues a RefreshIdpGroup
- * for each listed group without an active room. Dispatched by
- * ProcessIdpWebhookEvent after every person event.
+ * for each listed group without an active room. Dispatched by UserSync after
+ * every person event and every login sync.
  */
 class ReconcileIdpSchool implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
@@ -35,13 +35,9 @@ class ReconcileIdpSchool implements ShouldBeUniqueUntilProcessing, ShouldQueue
     /** Lock lifetime if the job is lost before it is processed. */
     public int $uniqueFor = 3600;
 
-    /**
-     * @param  list<string>  $alreadyRefreshed  group ids the same event already queued a refresh for
-     */
     public function __construct(
         public readonly string $tenantId,
         public readonly string $provider,
-        public readonly array $alreadyRefreshed = [],
     ) {}
 
     /**
@@ -62,12 +58,8 @@ class ReconcileIdpSchool implements ShouldBeUniqueUntilProcessing, ShouldQueue
             return;
         }
 
-        $toRefresh = $tenant->run(
-            fn (): array => $groups->reconcileSchool($tenant, $this->provider, $this->alreadyRefreshed),
+        $tenant->run(
+            fn () => $groups->reconcileSchool($tenant, $this->provider),
         );
-
-        foreach ($toRefresh as $groupId) {
-            RefreshIdpGroup::dispatch($this->tenantId, $this->provider, $groupId);
-        }
     }
 }

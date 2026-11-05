@@ -20,8 +20,9 @@ use Illuminate\Support\Facades\Log;
  * and members, importing members aula does not hold. A group gone upstream
  * archives the room, unless the school itself has stopped answering.
  *
- * Dispatched by ProcessIdpWebhookEvent for every group of a person event and
- * by ReconcileIdpSchool for listed groups without an active room.
+ * Dispatched by UserSync for every group of a person, after a webhook or a
+ * login, and by GroupSync::reconcileSchool() for listed groups without an
+ * active room.
  */
 class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
@@ -54,7 +55,7 @@ class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
         return $this->tenantId.':'.$this->groupId;
     }
 
-    public function handle(GroupSync $groups): void
+    public function handle(GroupSync $groupSync): void
     {
         $tenant = Tenant::find($this->tenantId);
 
@@ -62,7 +63,7 @@ class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
             return;
         }
 
-        $outcome = $tenant->run(fn (): SyncOutcome => $groups->syncGroup($this->groupId, $tenant, $this->provider));
+        $outcome = $tenant->run(fn (): SyncOutcome => $groupSync->handle($tenant, $this->provider, $this->groupId));
 
         if (! $outcome->wasProcessed) {
             Log::info('IdP: group refresh changed nothing', [

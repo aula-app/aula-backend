@@ -52,11 +52,10 @@ class IdpWebhookEvent extends Model
         'processed_at' => 'datetime',
     ];
 
-    public function markProcessed(?string $tenantId = null): void
+    public function markProcessed(): void
     {
         $this->forceFill([
             'status' => self::STATUS_PROCESSED,
-            'tenant_id' => $tenantId ?? $this->tenant_id,
             'error' => null,
             'processed_at' => now(),
         ])->save();

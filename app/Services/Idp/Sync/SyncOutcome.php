@@ -20,15 +20,14 @@ final readonly class SyncOutcome
         public bool $wasProcessed,
         public ?string $reason = null,
         public array $groupsToRefresh = [],
-        public bool $reconcileSchool = false,
     ) {}
 
     /**
      * @param  list<string>  $groupsToRefresh
      */
-    public static function processed(array $groupsToRefresh = [], bool $reconcileSchool = false): self
+    public static function processed(array $groupsToRefresh = []): self
     {
-        return new self(true, null, $groupsToRefresh, $reconcileSchool);
+        return new self(true, null, $groupsToRefresh);
     }
 
     public static function skipped(string $reason): self

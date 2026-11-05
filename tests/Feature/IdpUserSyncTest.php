@@ -8,6 +8,7 @@ use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
 use App\Jobs\ReconcileIdpSchool;
 use App\Jobs\RefreshIdpGroup;
+use App\Jobs\UserSyncJob;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
@@ -563,6 +564,7 @@ class IdpUserSyncTest extends TestCase
     // School-wide group reconcile
     // =========================================================
 
+    // @TODO: nikola - what is this test actually verifying? the name is confusing, and the assertion is pretty basic
     public function test_creates_rooms_for_listed_groups_no_person_names(): void
     {
         $this->schoolVisible = true;
@@ -661,10 +663,10 @@ class IdpUserSyncTest extends TestCase
             && $job->tenantId === self::$testTenant->id
             && $job->provider === 'eduplaces');
         Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job) => $job->groupId === 'group-b');
-        Queue::assertPushed(ReconcileIdpSchool::class, fn (ReconcileIdpSchool $job) => $job->alreadyRefreshed === ['group-a', 'group-b']);
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
     }
 
-    public function test_queues_nothing_for_a_delete(): void
+    public function test_queues_only_a_school_reconcile_for_a_delete(): void
     {
         $this->seedLocalUser(self::PERSON, 'Leaving');
         Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
@@ -673,7 +675,19 @@ class IdpUserSyncTest extends TestCase
         $this->process($this->event('delete'));
 
         Queue::assertNotPushed(RefreshIdpGroup::class);
-        Queue::assertNotPushed(ReconcileIdpSchool::class);
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
+    }
+
+    public function test_the_reconcile_queues_a_refresh_for_a_listed_group_without_a_room(): void
+    {
+        Queue::fake([RefreshIdpGroup::class]);
+        $this->schoolVisible = true;
+        $this->setGroup('group-unqueued', 'Neue Gruppe', []);
+
+        $this->app->call([new ReconcileIdpSchool((string) self::$testTenant->id, 'eduplaces'), 'handle']);
+
+        Queue::assertPushed(RefreshIdpGroup::class, 1);
+        Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job): bool => $job->groupId === 'group-unqueued');
     }
 
     public function test_does_not_queue_duplicates_while_one_is_pending(): void
@@ -715,6 +729,38 @@ class IdpUserSyncTest extends TestCase
         $writes = $this->recordTenantWrites(fn () => $this->process($this->event('update', properties: ['name'])));
 
         $this->assertSame([], $writes);
+    }
+
+    // =========================================================
+    // UserSyncJob, the login path
+    // =========================================================
+
+    public function test_the_login_job_converges_the_account_and_queues_the_follow_ups(): void
+    {
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Login'],
+            'groups' => [['id' => 'group-login', 'name' => 'Klasse 5a']],
+        ]);
+
+        $this->app->call([new UserSyncJob((string) self::$testTenant->id, 'eduplaces', self::PERSON), 'handle']);
+
+        $this->assertSame(UserStatus::Active, $this->syncedUser()?->status);
+        Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job): bool => $job->groupId === 'group-login'
+            && $job->tenantId === (string) self::$testTenant->id);
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
+    }
+
+    public function test_the_login_job_does_nothing_for_an_unknown_tenant(): void
+    {
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Nobody']]);
+
+        $this->app->call([new UserSyncJob('no-such-tenant', 'eduplaces', self::PERSON), 'handle']);
+
+        $this->assertNull($this->syncedUser());
+        Queue::assertNothingPushed();
     }
 
     // =========================================================
