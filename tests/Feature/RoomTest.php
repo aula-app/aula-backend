@@ -8,6 +8,8 @@ use App\Enums\UserLevel;
 use App\Enums\UserStatus;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Depends;
+use Tests\Concerns\CreatesTestRoom;
+use Tests\Concerns\CreatesTestUsers;
 use Tests\TestCase;
 use Tests\Concerns\CreatesTestTenant;
 use App\Models\LegacyUser;
@@ -17,6 +19,8 @@ use Illuminate\Support\Facades\DB;
 class RoomTest extends TestCase
 {
     use CreatesTestTenant;
+    use CreatesTestRoom;
+    use CreatesTestUsers;
 
     private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
 
@@ -42,7 +46,10 @@ class RoomTest extends TestCase
     {
         parent::setUp();
         $this->ensureTestTenantExists();
+        $this->ensureTestUsersExist();
+        $this->ensureTestRoomExists();
 
+        // TODO move to trait
         $adminUser = $this->createDistinctUser(UserLevel::Admin, UserStatus::Active);
         Passport::actingAs($adminUser);
 
@@ -51,26 +58,6 @@ class RoomTest extends TestCase
         ]);
     }
 
-    private function createDistinctUser(UserLevel $userLevel, UserStatus $userStatus): LegacyUser
-    {
-        return self::$testTenant->run(function () use ($userLevel, $userStatus) {
-            $email = 'e2e_distinct_' . bin2hex(random_bytes(8)) . '@aula.de';
-            $user = new LegacyUser();
-            $user->email         = $email;
-            $user->displayname   = 'Distinct';
-            $user->realname      = 'Distinct User';
-            $user->about_me      = 'About me.';
-            $user->sso_sub       = null;
-            $user->status        = $userStatus;
-            $user->username      = $email;
-            $user->hash_id       = md5($email);
-            $user->userlevel     = $userLevel;
-            $user->roles         = json_encode([]);
-            $user->refresh_token = false;
-            $user->save();
-            return $user;
-        });
-    }
     private function jwtForUser(LegacyUser $user): string
     {
         Passport::actingAs($user);
@@ -137,11 +124,11 @@ class RoomTest extends TestCase
         }
     }
 
-    #[Depends('test_create_room')]
-    public function test_update_room($newRoomPublicId)
+    public function test_update_room()
     {
+        $roomId = self::$testRoom->hash_id;
         $result = $this->putJson(
-            "/api/v2/rooms/$newRoomPublicId",
+            "/api/v2/rooms/{$roomId}",
             self::UPDATE_ROOM_DATA,
         )
             ->assertOk()
@@ -152,25 +139,23 @@ class RoomTest extends TestCase
         $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedRoom['updatedAt']));
         $this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $updatedRoom['createdAt']));
         $this->assertGreaterThanOrEqual($updatedRoom['createdAt'], $updatedRoom['updatedAt']);
-        return $newRoomPublicId;
     }
 
-    #[Depends('test_create_room')]
-    public function test_update_room_required($newRoomPublicId)
+    public function test_update_room_required()
     {
+        $roomId = self::$testRoom->hash_id;
         $this->putJson(
-            "/api/v2/rooms/$newRoomPublicId",
+            "/api/v2/rooms/$roomId",
             []
         )
             ->assertInvalid(['name', 'status', 'descriptionPublic', 'descriptionInternal', 'phaseDurationVoting', 'phaseDurationDiscussion'])
             ->assertUnprocessable();
     }
 
-    #[Depends('test_create_room')]
-    public function test_create_update_room_authz($newRoomPublicId)
+    public function test_create_update_room_authz()
     {
-        $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        Passport::actingAs($nonAdminUser);
+        Passport::actingAs(self::$testUserNonAdmin);
+        $roomId = self::$testRoom->hash_id;
         $this->getJson('/api/v2/rooms')
             ->assertForbidden();
         $this->postJson(
@@ -178,40 +163,40 @@ class RoomTest extends TestCase
             self::NEW_ROOM_DATA,
         )->assertForbidden();
         $this->putJson(
-            "/api/v2/rooms/$newRoomPublicId",
+            "/api/v2/rooms/$roomId",
             self::UPDATE_ROOM_DATA,
         )->assertForbidden();
     }
 
-    #[Depends('test_create_room')]
-    public function test_index_read_delete_room_authz($newRoomPublicId)
+    public function test_index_read_delete_room_authz()
     {
-        $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        Passport::actingAs($nonAdminUser);
+        Passport::actingAs(self::$testUserNonAdmin);
+        $roomId = self::$testRoom->hash_id;
         $this->getJson("/api/v2/rooms")
             ->assertForbidden();
-        $this->getJson("/api/v2/rooms/$newRoomPublicId")
+        $this->getJson("/api/v2/rooms/$roomId")
             ->assertForbidden();
-        $this->deleteJson("/api/v2/rooms/$newRoomPublicId")
+        $this->deleteJson("/api/v2/rooms/$roomId")
             ->assertForbidden();
     }
 
-    #[Depends('test_create_room')]
-    public function test_index_room($newRoomPublicId)
+    public function test_index_room()
     {
         $allRooms = $this->getJson("/api/v2/rooms")
             ->assertOk()
             ->json();
         $allRoomPublicIds = array_column($allRooms, 'publicId');
-        $this->assertContains($newRoomPublicId, $allRoomPublicIds);
+        $this->assertContains(self::$testRoom->hash_id, $allRoomPublicIds);
     }
 
-    #[Depends('test_update_room')]
-    public function test_show_room($newRoomPublicId)
+    public function test_show_room()
     {
-        $this->getJson("/api/v2/rooms/$newRoomPublicId")
+        // clean it up
+        $this->ensureTestRoomExists();
+        $roomId = self::$testRoom->hash_id;
+        $this->getJson("/api/v2/rooms/$roomId")
             ->assertOk()
-            ->assertJson(self::UPDATE_ROOM_DATA);
+            ->assertJson(self::NEW_ROOM_DATA);
     }
 
     public function test_bad_show()
@@ -238,23 +223,22 @@ class RoomTest extends TestCase
         )->assertNotFound();
     }
 
-    #[Depends('test_create_room')]
-    public function test_room_membership_authz($newRoomPublicId)
+    public function test_room_membership_authz()
     {
-        $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        Passport::actingAs($nonAdminUser);
+        Passport::actingAs(self::$testUserNonAdmin);
+        $roomId = self::$testRoom->hash_id;
         $this->getJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership"
+            "/api/v2/rooms/{$roomId}/membership"
         )->assertForbidden();
         $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            [["add" => [["userPublicId" => $nonAdminUser->hash_id, "level" => 10]]]]
+            "/api/v2/rooms/{$roomId}/membership",
+            [["add" => [["userPublicId" => self::$testUserNonAdmin->hash_id, "level" => 10]]]]
         )->assertForbidden();
     }
 
-    #[Depends('test_create_room')]
-    public function test_room_membership_batch_validation($newRoomPublicId)
+    public function test_room_membership_batch_validation()
     {
+        $roomId = self::$testRoom->hash_id;
         foreach([
             [["add" => ["nonempty"]], ["add.0"]],
             [["add" => [["nonempty"]]], ["add.0.userPublicId"]],
@@ -263,7 +247,7 @@ class RoomTest extends TestCase
             [["add" => [["userPublicId" => "foo", "level" => 10], ["level" => 10]]], ["add.1.userPublicId"]],
         ] as $kv) {
             $this->patchJson(
-                "/api/v2/rooms/{$newRoomPublicId}/membership",
+                "/api/v2/rooms/{$roomId}/membership",
                 $kv[0],
             )
                 ->assertInvalid($kv[1])
