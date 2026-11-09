@@ -166,7 +166,8 @@ class RoomTest extends TestCase
             ->assertUnprocessable();
     }
 
-    public function test_create_update_room_authz()
+    #[Depends('test_create_room')]
+    public function test_create_update_room_authz($newRoomPublicId)
     {
         $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
         Passport::actingAs($nonAdminUser);
@@ -175,6 +176,10 @@ class RoomTest extends TestCase
         $this->postJson(
             '/api/v2/rooms',
             self::NEW_ROOM_DATA,
+        )->assertForbidden();
+        $this->putJson(
+            "/api/v2/rooms/$newRoomPublicId",
+            self::UPDATE_ROOM_DATA,
         )->assertForbidden();
     }
 
@@ -224,6 +229,20 @@ class RoomTest extends TestCase
     {
         $this->patchJson('/api/v2/rooms/'.$newRoomPublicId, [])
             ->assertMethodNotAllowed();
+    }
+
+    #[Depends('test_create_room')]
+    public function test_room_membership_authz($newRoomPublicId)
+    {
+        $nonAdminUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
+        Passport::actingAs($nonAdminUser);
+        $this->getJson(
+            "/api/v2/rooms/{$newRoomPublicId}/membership"
+        )->assertForbidden();
+        $this->patchJson(
+            "/api/v2/rooms/{$newRoomPublicId}/membership",
+            [["add" => [["userPublicId" => $nonAdminUser->hash_id, "level" => 10]]]]
+        )->assertForbidden();
     }
 
     #[Depends('test_create_room')]

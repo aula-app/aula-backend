@@ -84,12 +84,9 @@ class AuthzServiceProvider extends ServiceProvider
         Gate::define(Gates::CreateRoom, fn () => false);
         Gate::define(Gates::DeleteRoom, fn () => false);
         Gate::define(Gates::ShowRoom,   fn () => false);
+        Gate::define(Gates::UpdateRoom, fn () => false);
 
+        Gate::define(Gates::ListRoomMembership,  fn () => false);
         Gate::define(Gates::PatchRoomMembership, fn () => false);
-
-        Gate::define(Gates::ListRoomMember,   fn () => false);
-        Gate::define(Gates::CreateRoomMember, fn () => false);
-        Gate::define(Gates::DeleteRoomMember, fn () => false);
-        Gate::define(Gates::ShowRoomMember,   fn () => false);
     }
 }

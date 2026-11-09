@@ -23,9 +23,4 @@ enum Gates
 
     case ListRoomMembership;
     case PatchRoomMembership;
-
-    case ListRoomMember;
-    case CreateRoomMember;
-    case ShowRoomMember;
-    case DeleteRoomMember;
 }
