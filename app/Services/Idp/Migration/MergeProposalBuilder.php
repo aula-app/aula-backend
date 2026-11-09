@@ -22,6 +22,10 @@ use RuntimeException;
  * would hand one account, and everything written in it, to another person, so
  * an admin confirms the rows and MergeProposalApplier acts on them.
  *
+ * A directory entry whose id an aula row already carries is settled and is
+ * left out on both sides: listed as unmatched it would read as a new account,
+ * and SchoolImport converges onto the linked row regardless.
+ *
  * Requires initialised tenancy.
  */
 final class MergeProposalBuilder
@@ -92,6 +96,9 @@ final class MergeProposalBuilder
      */
     private function proposeRooms(array $groups): array
     {
+        $linked = $this->linkedIds(DB::table('au_rooms')->whereNotNull('idp_group_id')->pluck('idp_group_id')->all());
+        $groups = array_values(array_filter($groups, fn (IdpGroup $group): bool => ! isset($linked[$group->id])));
+
         $local = [];
 
         foreach (DB::table('au_rooms')->whereNull('idp_group_id')->get(['id', 'room_name']) as $room) {
@@ -120,6 +127,9 @@ final class MergeProposalBuilder
      */
     private function proposeUsers(array $users): array
     {
+        $linked = $this->linkedIds(LegacyUser::whereNotNull('idp_user_id')->pluck('idp_user_id')->all());
+        $users = array_values(array_filter($users, fn (IdpUser $user): bool => ! isset($linked[$user->id])));
+
         $local = LegacyUser::whereNull('idp_user_id')
             ->get(['id', 'realname', 'displayname'])
             ->map(fn (LegacyUser $user): array => [
@@ -149,6 +159,25 @@ final class MergeProposalBuilder
         }
 
         return $this->propose(self::KIND_USER, $provider, $local);
+    }
+
+    /**
+     * Directory ids aula rows already carry, as a lookup set.
+     *
+     * @param  array<array-key, mixed>  $ids
+     * @return array<string, true>
+     */
+    private function linkedIds(array $ids): array
+    {
+        $linked = [];
+
+        foreach ($ids as $id) {
+            if (is_string($id) && $id !== '') {
+                $linked[$id] = true;
+            }
+        }
+
+        return $linked;
     }
 
     /**
