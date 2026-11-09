@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use App\Relations\RoomMember;
 
 /**
- * Appease psalm
+ * Legacy Room model
  * @see App\Models\LegacyUser
  * @property-read Pivot|RoomMember $pivot
  */
