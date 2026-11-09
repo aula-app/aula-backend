@@ -43,7 +43,7 @@ class PatchRoomMembershipUseCase
                 $idsAndPivots = [];
 
                 foreach ($batchRoomMembershipData->add as $roomMemberShipData) {
-                    $legacyUser = LegacyUser::where('hash_id', $roomMemberShipData->publicId)->sole(['id']);
+                    $legacyUser = LegacyUser::where('hash_id', $roomMemberShipData->userPublicId)->sole(['id']);
                     $affectedLegacyUsers[] = $legacyUser;
                     $idsAndPivots[$legacyUser->id] = $roomMemberShipData->toArray();
                 }

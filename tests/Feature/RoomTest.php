@@ -231,10 +231,10 @@ class RoomTest extends TestCase
     {
         foreach([
             [["add" => ["nonempty"]], ["add.0"]],
-            [["add" => [["nonempty"]]], ["add.0.publicId"]],
-            [["add" => [["publicId" => "foo"]]], ["add.0.level"]],
-            [["add" => [["publicId" => "foo", "level" => 666]]], ["add.0.level"]],
-            [["add" => [["publicId" => "foo", "level" => 10], ["level" => 10]]], ["add.1.publicId"]],
+            [["add" => [["nonempty"]]], ["add.0.userPublicId"]],
+            [["add" => [["userPublicId" => "foo"]]], ["add.0.level"]],
+            [["add" => [["userPublicId" => "foo", "level" => 666]]], ["add.0.level"]],
+            [["add" => [["userPublicId" => "foo", "level" => 10], ["level" => 10]]], ["add.1.userPublicId"]],
         ] as $kv) {
             $this->patchJson(
                 "/api/v2/rooms/{$newRoomPublicId}/membership",
@@ -260,8 +260,8 @@ class RoomTest extends TestCase
             "/api/v2/rooms/{$newRoomPublicId}/membership",
             [
                 "add" => [
-                    ["publicId" => $newUserPublicId1, "level" => 10],
-                    ["publicId" => $newUserPublicId2, "level" => 20],
+                    ["userPublicId" => $newUserPublicId1, "level" => 10],
+                    ["userPublicId" => $newUserPublicId2, "level" => 20],
                 ]
             ]
         )->assertOk();
@@ -281,7 +281,7 @@ class RoomTest extends TestCase
             "/api/v2/rooms/{$newRoomPublicId}/membership",
             [
                 "add" => [
-                    ["publicId" => $newUserPublicId1, "level" => 30],
+                    ["userPublicId" => $newUserPublicId1, "level" => 30],
                 ]
             ]
         )->assertOk();
@@ -295,7 +295,7 @@ class RoomTest extends TestCase
             "/api/v2/rooms/{$newRoomPublicId}/membership",
             [
                 "add" => [
-                    ["publicId" => "not_found", "level" => 10],
+                    ["userPublicId" => "not_found", "level" => 10],
                 ],
                 "remove" => [
                     [$newUserPublicId1]
@@ -332,7 +332,7 @@ class RoomTest extends TestCase
     {
         $this->patchJson(
             "/api/v2/rooms/{$newRoomPublicId}/membership",
-            ["add" => [["publicId" => "badid", "level" => 10]]],
+            ["add" => [["userPublicId" => "badid", "level" => 10]]],
         )->assertNotFound();
         $this->patchJson(
             "/api/v2/rooms/{$newRoomPublicId}/membership",
@@ -368,7 +368,7 @@ class RoomTest extends TestCase
             "/api/v2/rooms/{$newRoomPublicId1}/membership",
             [
                 "add" => [
-                    ["publicId" => $newUserPublicId, "level" => 10],
+                    ["userPublicId" => $newUserPublicId, "level" => 10],
                 ]
             ]
         )->assertOk();
@@ -383,7 +383,7 @@ class RoomTest extends TestCase
             "/api/v2/rooms/{$newRoomPublicId2}/membership",
             [
                 "add" => [
-                    ["publicId" => $newUserPublicId, "level" => 20],
+                    ["userPublicId" => $newUserPublicId, "level" => 20],
                 ]
             ]
         )->assertOk();
@@ -401,7 +401,7 @@ class RoomTest extends TestCase
             "/api/v2/rooms/{$newRoomPublicId1}/membership",
             [
                 "add" => [
-                    ["publicId" => $newUserPublicId, "level" => 30],
+                    ["userPublicId" => $newUserPublicId, "level" => 30],
                 ]
             ]
         )->assertOk();

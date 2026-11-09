@@ -13,7 +13,7 @@ class RoomMembershipData extends Data
 {
     public function __construct(
         #[Hidden]
-        public readonly string $publicId,
+        public readonly string $userPublicId,
 
         #[MapOutputName('room_user_level')]
         public readonly RoomUserLevel $level,
