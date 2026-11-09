@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace App\Data\User\Requests;
 
-use DateTimeImmutable;
 use App\Data\User\AbstractUserData;
 use App\Enums\UserLevel;
-use Illuminate\Database\Eloquent\Collection;
-use Spatie\LaravelData\Attributes\Hidden;
-use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Rule;
-use App\Relations\RoomUser;
+use Spatie\LaravelData\Attributes\Hidden;
+use DateTimeImmutable;
 
 class StoreUserData extends AbstractUserData
 {
     #[Max(400)]
     public readonly null|string $displayName;
+
     #[Max(400)]
     public readonly string $userName;
+
     #[Max(400)]
     public readonly null|string $realName;
 

@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace App\Data\User;
 
-use DateTimeImmutable;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Relations\Pivot;
-use Spatie\LaravelData\Attributes\Hidden;
-use Spatie\LaravelData\Data;
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
-use App\Relations\RoomUser;
+use Illuminate\Database\Eloquent\Relations\Pivot;
+use Spatie\LaravelData\Data;
+use DateTimeImmutable;
 
 abstract class AbstractUserData extends Data
 {
