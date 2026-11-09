@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace App\UseCases\Room;
 
-use App\Data\User\DomainUserData;
 use App\Data\User\DomainUserDataWithRoomLevel;
 use App\Models\LegacyRoom;
-use App\Models\LegacyUser;
-use App\Data\Room\DomainRoomData;
 use App\Enums\Gates;
 use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelData\DataCollection;

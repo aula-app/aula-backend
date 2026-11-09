@@ -231,6 +231,13 @@ class RoomTest extends TestCase
             ->assertMethodNotAllowed();
     }
 
+    public function test_room_membership_notfound()
+    {
+        $this->getJson(
+            "/api/v2/rooms/0123456789abcdef0123456789abcdef/membership"
+        )->assertNotFound();
+    }
+
     #[Depends('test_create_room')]
     public function test_room_membership_authz($newRoomPublicId)
     {
