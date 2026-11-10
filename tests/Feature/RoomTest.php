@@ -94,6 +94,8 @@ class RoomTest extends TestCase
             ['status' => null],
             ['status' => ''],
             ['status' => 'a'],
+            ['status' => -1],
+            ['status' => 4],
             ['descriptionPublic' => ''],
             ['descriptionPublic' => null],
             ['phaseDurationVoting' => ''],

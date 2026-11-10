@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace App\Data\Room;
 
-use DateTimeImmutable;
+use App\Enums\RoomStatus;
 use Spatie\LaravelData\Data;
+use DateTimeImmutable;
 
 abstract class AbstractRoomData extends Data
 {
     abstract public null|string $publicId { get; }
     abstract public null|string $name { get; }
-    // TODO: make RoomStatus. currently:
-    // 0=inactive, 1=active, 2=suspended, 3=archived
-    abstract public null|int $status { get; }
+    abstract public null|RoomStatus $status { get; }
     abstract public null|string $descriptionPublic { get; }
     abstract public null|string $descriptionInternal { get; }
     abstract public null|int $phaseDurationVoting { get; }
@@ -24,7 +23,7 @@ abstract class AbstractRoomData extends Data
     public function __construct(
         null|string $publicId,
         null|string $name,
-        null|int $status,
+        null|RoomStatus $status,
         null|string $descriptionPublic,
         null|string $descriptionInternal,
         null|int $phaseDurationVoting,

@@ -20,7 +20,7 @@ class CreateRoomUseCase
         $legacyRoom = new LegacyRoom();
         $legacyRoom->hash_id = Str::random(32);
         $legacyRoom->room_name = $storeRoomData->name;
-        $legacyRoom->status = $storeRoomData->status;
+        $legacyRoom->status = $storeRoomData->status->value;
         $legacyRoom->description_public = $storeRoomData->descriptionPublic;
         $legacyRoom->description_internal = $storeRoomData->descriptionInternal;
         $legacyRoom->phase_duration_1 = $storeRoomData->phaseDurationVoting;

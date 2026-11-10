@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Data\Room\Requests;
 
-use DateTimeImmutable;
 use App\Data\Room\AbstractRoomData;
+use App\Enums\RoomStatus;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Rule;
+use DateTimeImmutable;
 
 class StoreRoomData extends AbstractRoomData
 {
@@ -18,7 +19,7 @@ class StoreRoomData extends AbstractRoomData
     #[Max(1024)]
     public readonly string $name;
 
-    public readonly int $status;
+    public readonly RoomStatus $status;
 
     public readonly string $descriptionPublic;
 

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Data\Room;
 
-use DateTimeImmutable;
 use App\Data\Room\AbstractRoomData;
+use App\Enums\RoomStatus;
 use Spatie\LaravelData\Attributes\MapInputName;
+use DateTimeImmutable;
 
 class DomainRoomData extends AbstractRoomData
 {
@@ -16,7 +17,7 @@ class DomainRoomData extends AbstractRoomData
     #[MapInputName('room_name')]
     public readonly null|string $name;
 
-    public readonly null|int $status;
+    public readonly null|RoomStatus $status;
 
     #[MapInputName('description_public')]
     public readonly null|string $descriptionPublic;
