@@ -177,12 +177,39 @@ class IdpMergeProposalTest extends TestCase
         $this->assertSame($roomId, (int) $row->local_id);
     }
 
-    public function test_it_ignores_accounts_that_are_already_linked(): void
+    public function test_a_linked_person_is_left_out_of_the_proposal(): void
     {
-        // A row that already carries an idp_user_id is skipped, or the proposal
-        // would offer to merge it with itself.
+        // An aula row carrying an idp_user_id already belongs to that directory
+        // person. Neither side is proposed: listing the person as unmatched
+        // reads as "new account", and approving that would import a second row
+        // beside the linked one.
+        $localId = (int) self::$testTenant->run(function () {
+            $user = new LegacyUser;
+            $user->username = 'proposal.linked';
+            $user->displayname = 'Schon Verknuepft';
+            $user->realname = 'Schon Verknuepft';
+            $user->idp_user_id = 'p-linked';
+            $user->status = UserStatus::Active;
+            $user->userlevel = 50;
+            $user->hash_id = md5('proposal.linked');
+            $user->save();
+
+            return $user->id;
+        });
+
+        $this->idmUsers = [$this->person('p-linked', 'Schon', 'Verknuepft')];
+
+        $counts = $this->build();
+
+        $this->assertNull($this->findCandidate('p-linked'));
+        $this->assertNull($this->candidateForLocal($localId));
+        $this->assertSame(0, array_sum($counts));
+    }
+
+    public function test_a_linked_person_hides_no_one_else(): void
+    {
         self::$testTenant->run(function () {
-            $user = new LegacyUser();
+            $user = new LegacyUser;
             $user->username = 'proposal.linked';
             $user->displayname = 'Schon Verknuepft';
             $user->realname = 'Schon Verknuepft';
@@ -192,12 +219,31 @@ class IdpMergeProposalTest extends TestCase
             $user->hash_id = md5('proposal.linked');
             $user->save();
         });
+        $localId = $this->seedAulaUser('Noch Offen');
 
-        $this->idmUsers = [$this->person('p-linked', 'Schon', 'Verknuepft')];
+        $this->idmUsers = [
+            $this->person('p-linked', 'Schon', 'Verknuepft'),
+            $this->person('p-open', 'Noch', 'Offen'),
+        ];
 
         $this->build();
 
-        $this->assertNull($this->candidateForIdp('p-linked')->local_id);
+        $this->assertNull($this->findCandidate('p-linked'));
+        $this->assertSame($localId, (int) $this->candidateForIdp('p-open')->local_id);
+    }
+
+    public function test_a_linked_room_is_left_out_of_the_proposal(): void
+    {
+        $roomId = (int) self::$testTenant->run(fn () => DB::table('au_rooms')->insertGetId([
+            'room_name' => 'Klasse 5a', 'status' => 1, 'type' => 0,
+            'hash_id' => md5('proposal.room.linked'), 'idp_group_id' => 'g-linked',
+        ]));
+        $this->idmGroups = [['id' => 'g-linked', 'name' => 'Klasse 5a']];
+
+        $this->build();
+
+        $this->assertNull($this->findCandidate('g-linked'));
+        $this->assertNull($this->candidateForLocal($roomId, MergeProposalBuilder::KIND_ROOM));
     }
 
     public function test_it_stores_the_groups_a_directory_user_belongs_to(): void
@@ -243,10 +289,14 @@ class IdpMergeProposalTest extends TestCase
     // Helpers
     // =========================================================
 
-    private function build(): void
+    /**
+     * @return array<string, int>
+     */
+    private function build(): array
     {
         $tenant = self::$testTenant->fresh();
-        $tenant->run(fn () => app(MergeProposalBuilder::class)->build($tenant));
+
+        return $tenant->run(fn () => app(MergeProposalBuilder::class)->build($tenant));
     }
 
     /**
@@ -276,17 +326,21 @@ class IdpMergeProposalTest extends TestCase
         );
     }
 
-    private function candidateForLocal(int $localId): ?object
+    private function candidateForLocal(int $localId, string $kind = MergeProposalBuilder::KIND_USER): ?object
     {
         return self::$testTenant->run(
-            fn () => DB::table('idp_merge_candidates')->where('local_id', $localId)->whereNull('idp_id')->first(),
+            fn () => DB::table('idp_merge_candidates')
+                ->where('kind', $kind)
+                ->where('local_id', $localId)
+                ->whereNull('idp_id')
+                ->first(),
         );
     }
 
     private function seedAulaUser(string $realname): int
     {
         return (int) self::$testTenant->run(function () use ($realname) {
-            $user = new LegacyUser();
+            $user = new LegacyUser;
             $user->username = 'proposal.'.md5($realname.microtime(true));
             $user->displayname = $realname;
             $user->realname = $realname;
