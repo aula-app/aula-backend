@@ -11,7 +11,9 @@ trait CreatesTestUsers
 {
     use CreatesTestTenant;
 
+    private static ?LegacyUser $testUserAdmin = null;
     private static ?LegacyUser $testUserNonAdmin = null;
+    private static ?LegacyUser $testUserModerator= null;
 
     public function createDistinctUser(UserLevel $userLevel, UserStatus $userStatus): LegacyUser
     {
@@ -39,6 +41,21 @@ trait CreatesTestUsers
         $this->ensureTestTenantExists();
 
         self::$testTenant->run(function () {
+            self::$testUserAdmin = LegacyUser::where('hash_id', md5('test_admin'))->first()
+                ?? new LegacyUser();
+            self::$testUserAdmin->username = 'test_admin';
+            self::$testUserAdmin->email = 'e2e_test_admin@aula.de';
+            self::$testUserAdmin->displayname = 'Test Admin';
+            self::$testUserAdmin->realname = 'Test Admin';
+            self::$testUserAdmin->about_me = 'About me.';
+            self::$testUserAdmin->sso_sub = null;
+            self::$testUserAdmin->status = UserStatus::Active;
+            self::$testUserAdmin->hash_id = md5('test_admin');
+            self::$testUserAdmin->userlevel = UserLevel::Admin;
+            self::$testUserAdmin->roles = json_encode([]);
+            self::$testUserAdmin->refresh_token = false;
+            self::$testUserAdmin->save();
+
             self::$testUserNonAdmin = LegacyUser::where('hash_id', md5('test_nonadmin'))->first()
                 ?? new LegacyUser();
             self::$testUserNonAdmin->username = 'test_nonadmin';
@@ -53,6 +70,21 @@ trait CreatesTestUsers
             self::$testUserNonAdmin->roles = json_encode([]);
             self::$testUserNonAdmin->refresh_token = false;
             self::$testUserNonAdmin->save();
+
+            self::$testUserModerator = LegacyUser::where('hash_id', md5('test_moderator'))->first()
+                ?? new LegacyUser();
+            self::$testUserModerator->username = 'test_moderator';
+            self::$testUserModerator->email = 'e2e_test_moderator@aula.de';
+            self::$testUserModerator->displayname = 'Test Moderator';
+            self::$testUserModerator->realname = 'Test Moderator';
+            self::$testUserModerator->about_me = 'About me.';
+            self::$testUserModerator->sso_sub = null;
+            self::$testUserModerator->status = UserStatus::Active;
+            self::$testUserModerator->hash_id = md5('test_moderator');
+            self::$testUserModerator->userlevel = UserLevel::Moderator;
+            self::$testUserModerator->roles = json_encode([]);
+            self::$testUserModerator->refresh_token = false;
+            self::$testUserModerator->save();
         });
     }
 }

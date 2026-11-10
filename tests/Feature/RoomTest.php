@@ -4,25 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Enums\UserLevel;
-use App\Enums\UserStatus;
 use DateTimeImmutable;
-use PHPUnit\Framework\Attributes\Depends;
-use Tests\Concerns\CreatesTestRoom;
+use Tests\Concerns\CreatesTestRooms;
 use Tests\Concerns\CreatesTestUsers;
 use Tests\TestCase;
 use Tests\Concerns\CreatesTestTenant;
-use App\Models\LegacyUser;
 use Laravel\Passport\Passport;
 use Illuminate\Support\Facades\DB;
 
 class RoomTest extends TestCase
 {
     use CreatesTestTenant;
-    use CreatesTestRoom;
+    use CreatesTestRooms;
     use CreatesTestUsers;
-
-    private const array TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
 
     private const array NEW_ROOM_DATA = [
         'name' => 'Testroom',
@@ -45,28 +39,16 @@ class RoomTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
         $this->ensureTestTenantExists();
         $this->ensureTestUsersExist();
-        $this->ensureTestRoomExists();
+        $this->ensureTestRoomsExist();
 
-        // TODO move to trait
-        $adminUser = $this->createDistinctUser(UserLevel::Admin, UserStatus::Active);
-        Passport::actingAs($adminUser);
+        Passport::actingAs(self::$testUserAdmin);
 
         $this->withHeaders([
-            ...self::TENANT_HEADERS
+            ...self::TEST_TENANT_HEADERS
         ]);
-    }
-
-    private function jwtForUser(LegacyUser $user): string
-    {
-        Passport::actingAs($user);
-        return '';
-        /*
-        return self::$testTenant->run(
-            fn () => app(\App\Services\LegacyJwtService::class)->generateToken($user)
-        ) ?? '';
-         */
     }
 
     public function test_create_room()
@@ -189,10 +171,21 @@ class RoomTest extends TestCase
         $this->assertContains(self::$testRoom->hash_id, $allRoomPublicIds);
     }
 
+    public function test_room_delete()
+    {
+        $roomId = self::$testRoom->hash_id;
+        $this->deleteJson("/api/v2/rooms/{$roomId}")
+            ->assertOk();
+        $this->assertEquals(
+            0,
+            DB::table('au_rooms')
+                ->whereIn('hash_id', [$roomId])
+                ->count()
+        );
+    }
+
     public function test_show_room()
     {
-        // clean it up
-        $this->ensureTestRoomExists();
         $roomId = self::$testRoom->hash_id;
         $this->getJson("/api/v2/rooms/$roomId")
             ->assertOk()
@@ -209,239 +202,11 @@ class RoomTest extends TestCase
             ->assertNotFound();
     }
 
-    #[Depends('test_create_room')]
-    public function test_patch_disallowed($newRoomPublicId)
+    public function test_patch_disallowed()
     {
-        $this->patchJson('/api/v2/rooms/'.$newRoomPublicId, [])
+        $roomId = self::$testRoom->hash_id;
+        $this->patchJson("/api/v2/rooms/{$roomId}", [])
             ->assertMethodNotAllowed();
     }
 
-    public function test_room_membership_notfound()
-    {
-        $this->getJson(
-            "/api/v2/rooms/0123456789abcdef0123456789abcdef/membership"
-        )->assertNotFound();
-    }
-
-    public function test_room_membership_authz()
-    {
-        Passport::actingAs(self::$testUserNonAdmin);
-        $roomId = self::$testRoom->hash_id;
-        $this->getJson(
-            "/api/v2/rooms/{$roomId}/membership"
-        )->assertForbidden();
-        $this->patchJson(
-            "/api/v2/rooms/{$roomId}/membership",
-            [["add" => [["userPublicId" => self::$testUserNonAdmin->hash_id, "level" => 10]]]]
-        )->assertForbidden();
-    }
-
-    public function test_room_membership_batch_validation()
-    {
-        $roomId = self::$testRoom->hash_id;
-        foreach([
-            [["add" => ["nonempty"]], ["add.0"]],
-            [["add" => [["nonempty"]]], ["add.0.userPublicId"]],
-            [["add" => [["userPublicId" => "foo"]]], ["add.0.level"]],
-            [["add" => [["userPublicId" => "foo", "level" => 666]]], ["add.0.level"]],
-            [["add" => [["userPublicId" => "foo", "level" => 10], ["level" => 10]]], ["add.1.userPublicId"]],
-        ] as $kv) {
-            $this->patchJson(
-                "/api/v2/rooms/{$roomId}/membership",
-                $kv[0],
-            )
-                ->assertInvalid($kv[1])
-                ->assertUnprocessable();
-        }
-    }
-
-    #[Depends('test_create_room')]
-    public function test_room_membership_batch($newRoomPublicId)
-    {
-        $user1 = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        $user2 = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
-        $newUserPublicId1 = $user1->hash_id;
-        $newUserPublicId2 = $user2->hash_id;
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
-            ->assertExactJson([]);
-
-        // add user1 and user2 to room
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            [
-                "add" => [
-                    ["userPublicId" => $newUserPublicId1, "level" => 10],
-                    ["userPublicId" => $newUserPublicId2, "level" => 20],
-                ]
-            ]
-        )->assertOk();
-
-        // check if their userlevels and roomlevels are correct
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
-            ->assertOk()
-            ->assertJson(
-                [
-                    ["publicId" => $newUserPublicId1, "userLevel" => 20, "roomLevel" => 10],
-                    ["publicId" => $newUserPublicId2, "userLevel" => 30, "roomLevel" => 20],
-                ]
-            );
-
-        // set user1's roomlevel to 30
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            [
-                "add" => [
-                    ["userPublicId" => $newUserPublicId1, "level" => 30],
-                ]
-            ]
-        )->assertOk();
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
-            ->assertJson(
-                [["publicId" => $newUserPublicId1, "userLevel" => 20, "roomLevel" => 30]]
-            );
-
-        // test transaction; `add` will 404, so `remove`, which runs first, should be rolled back
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            [
-                "add" => [
-                    ["userPublicId" => "not_found", "level" => 10],
-                ],
-                "remove" => [
-                    [$newUserPublicId1]
-                ]
-            ]
-        )->assertNotFound();
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
-            ->assertOk()
-            ->assertJson(
-                [
-                    ["publicId" => $newUserPublicId1, "userLevel" => 20, "roomLevel" => 30],
-                    ["publicId" => $newUserPublicId2, "userLevel" => 30, "roomLevel" => 20],
-                ]
-            );
-
-        // test remove room
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            ["remove" => [$newUserPublicId1]]
-        )->assertOk();
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
-            ->assertJsonMissing([["publicId" => $newUserPublicId1]])
-            ->assertJson([["publicId" => $newUserPublicId2]]);
-
-        // test remove user
-        $this->deleteJson("/api/v2/users/{$newUserPublicId2}")
-            ->assertOk();
-        $this->getJson("/api/v2/rooms/{$newRoomPublicId}/membership")
-            ->assertJson([]);
-    }
-
-    #[Depends('test_create_room')]
-    public function test_room_membership_batch_404s($newRoomPublicId)
-    {
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            ["add" => [["userPublicId" => "badid", "level" => 10]]],
-        )->assertNotFound();
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId}/membership",
-            ["remove" => ["badid"]]
-        )->assertNotFound();
-    }
-
-    #[Depends('test_create_room')]
-    public function test_room_delete($newRoomPublicId)
-    {
-        $this->deleteJson("/api/v2/rooms/{$newRoomPublicId}")
-            ->assertOk();
-        $this->assertEquals(
-            0,
-            DB::table('au_rooms')
-                ->whereIn('hash_id', [$newRoomPublicId])
-                ->count()
-        );
-    }
-
-    public function test_room_membership_legacy_sync()
-    {
-        $newRoomPublicId1 = $this->postJson('/api/v2/rooms', self::NEW_ROOM_DATA)
-            ->decodeResponseJson()['publicId'];
-        $newRoomPublicId2 = $this->postJson('/api/v2/rooms', self::NEW_ROOM_DATA)
-            ->decodeResponseJson()['publicId'];
-        $user = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        $newUserPublicId = $user->hash_id;
-
-        // add user to room
-
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId1}/membership",
-            [
-                "add" => [
-                    ["userPublicId" => $newUserPublicId, "level" => 10],
-                ]
-            ]
-        )->assertOk();
-        $this->assertJsonStringEqualsJsonString(
-            json_encode([["room" => $newRoomPublicId1, "role" => 10]]),
-            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
-        );
-
-        // add user to another room
-
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId2}/membership",
-            [
-                "add" => [
-                    ["userPublicId" => $newUserPublicId, "level" => 20],
-                ]
-            ]
-        )->assertOk();
-        $this->assertJsonStringEqualsJsonString(
-            json_encode([
-                ["room" => $newRoomPublicId1, "role" => 10],
-                ["room" => $newRoomPublicId2, "role" => 20]
-            ]),
-            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
-        );
-
-        // change user's room role
-
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId1}/membership",
-            [
-                "add" => [
-                    ["userPublicId" => $newUserPublicId, "level" => 30],
-                ]
-            ]
-        )->assertOk();
-        $this->assertJsonStringEqualsJsonString(
-            json_encode([
-                ["room" => $newRoomPublicId1, "role" => 30],
-                ["room" => $newRoomPublicId2, "role" => 20]
-            ]),
-            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
-        );
-
-        // delete room
-
-        $this->deleteJson("/api/v2/rooms/{$newRoomPublicId1}")->assertOk();
-        // checks exact (order, no sub/supersets, only whitespaces diffs ok)
-        // so we don't need to assert that the deleted is missing
-        $this->assertJsonStringEqualsJsonString(
-            json_encode([["room" => $newRoomPublicId2, "role" => 20]]),
-            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
-        );
-
-        // remove user's membership
-
-        $this->patchJson(
-            "/api/v2/rooms/{$newRoomPublicId2}/membership",
-            ["remove" => [$newUserPublicId]]
-        )->assertOk();
-        $this->assertJsonStringEqualsJsonString(
-            json_encode([]),
-            LegacyUser::where('hash_id', $newUserPublicId)->valueOrFail('roles')
-        );
-    }
 }

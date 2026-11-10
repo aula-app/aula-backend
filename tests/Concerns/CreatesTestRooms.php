@@ -5,13 +5,14 @@ namespace Tests\Concerns;
 use App\Models\LegacyRoom;
 use Tests\Concerns\CreatesTestTenant;
 
-trait CreatesTestRoom
+trait CreatesTestRooms
 {
     use CreatesTestTenant;
 
     private static ?LegacyRoom $testRoom = null;
+    private static ?LegacyRoom $testRoom2 = null;
 
-    protected function ensureTestRoomExists(): void
+    protected function ensureTestRoomsExist(): void
     {
         $this->ensureTestTenantExists();
 
@@ -26,6 +27,17 @@ trait CreatesTestRoom
             self::$testRoom->phase_duration_1 = 14;
             self::$testRoom->phase_duration_3 = 14;
             self::$testRoom->save();
+
+            self::$testRoom2 = LegacyRoom::where('hash_id', md5('Testroom2'))->first()
+                ?? new LegacyRoom();
+            self::$testRoom2->room_name = 'Testroom 2';
+            self::$testRoom2->hash_id = md5('Testroom2');
+            self::$testRoom2->status = 1;
+            self::$testRoom2->description_public = 'Public test description';
+            self::$testRoom2->description_internal = 'Internal test description';
+            self::$testRoom2->phase_duration_1 = 14;
+            self::$testRoom2->phase_duration_3 = 14;
+            self::$testRoom2->save();
         });
     }
 }
