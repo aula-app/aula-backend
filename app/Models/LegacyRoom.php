@@ -34,6 +34,6 @@ class LegacyRoom extends Model
         return $this
             ->belongsToMany(LegacyUser::class, 'au_rel_rooms_users', 'room_id', 'user_id')
             ->using(RoomMember::class)
-            ->withPivot('room_user_level');
+            ->withPivot('room_member_role');
     }
 }

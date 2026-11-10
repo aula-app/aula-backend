@@ -2114,12 +2114,12 @@ class User
       // but both upserts will just merge
       $this->db->query(
         'INSERT INTO ' . $this->db->au_rel_rooms_users .
-        ' (room_id, user_id, room_user_level) VALUES (:room_id, :user_id, :room_user_level)' .
-        'ON DUPLICATE KEY UPDATE room_id=:room_id, user_id=:user_id, room_user_level=:room_user_level'
+        ' (room_id, user_id, room_member_role) VALUES (:room_id, :user_id, :room_member_role)' .
+        'ON DUPLICATE KEY UPDATE room_id=:room_id, user_id=:user_id, room_member_role=:room_member_role'
       );
       $this->db->bind(':user_id', $user_id);
       $this->db->bind(':room_id', $room_id);
-      $this->db->bind(':room_user_level', $role);
+      $this->db->bind(':room_member_role', $role);
       $this->db->execute();
 
       if ($use_transaction) {
@@ -2250,7 +2250,7 @@ class User
        because at this point the row does not exist any more!
     $this->db->query(
       'UPDATE ' . $this->db->au_rel_rooms_users .
-      ' SET room_user_level=0 WHERE user_id=:user_id AND room_id=:room_id'
+      ' SET room_member_role=0 WHERE user_id=:user_id AND room_id=:room_id'
     );
     $this->db->bind(':user_id', $user_id);
     $this->db->bind(':room_id', $room_id);
@@ -2270,12 +2270,12 @@ class User
       $room_id = $this->converters->checkRoomId($room_hash);
       $this->db->query(
         'INSERT INTO ' . $this->db->au_rel_rooms_users .
-        ' (room_id, user_id, room_user_level) VALUES (:room_id, :user_id, :room_user_level)' .
-        'ON DUPLICATE KEY UPDATE room_id=:room_id, user_id=:user_id, room_user_level=:room_user_level'
+        ' (room_id, user_id, room_member_role) VALUES (:room_id, :user_id, :room_member_role)' .
+        'ON DUPLICATE KEY UPDATE room_id=:room_id, user_id=:user_id, room_member_role=:room_member_role'
       );
       $this->db->bind(':user_id', $user_id);
       $this->db->bind(':room_id', $room_id);
-      $this->db->bind(':room_user_level', $role);
+      $this->db->bind(':room_member_role', $role);
       $this->db->execute();
     }
     */

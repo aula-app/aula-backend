@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Data\RoomMembership\Requests;
 
 use App\Data\RoomMembership\AbstractRoomMemberData;
-use App\Enums\RoomUserLevel;
+use App\Enums\RoomMemberRole;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\MapOutputName;
@@ -22,6 +22,5 @@ class StoreRoomMemberData extends AbstractRoomMemberData
     #[Hidden]
     public readonly null|string $userPublicId;
 
-    #[MapOutputName('room_user_level')]
-    public readonly RoomUserLevel $roomUserLevel;
+    public readonly RoomMemberRole $roomMemberRole;
 }

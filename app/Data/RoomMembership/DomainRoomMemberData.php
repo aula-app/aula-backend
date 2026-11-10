@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Data\RoomMembership;
 
-use App\Enums\RoomUserLevel;
+use App\Enums\RoomMemberRole;
 
 class DomainRoomMemberData extends AbstractRoomMemberData
 {
@@ -12,6 +12,6 @@ class DomainRoomMemberData extends AbstractRoomMemberData
 
     public readonly string $userPublicId;
 
-    public readonly RoomUserLevel $roomUserLevel;
+    public readonly RoomMemberRole $roomMemberRole;
 
 }

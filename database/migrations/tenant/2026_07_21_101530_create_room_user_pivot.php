@@ -14,8 +14,8 @@ return new class extends Migration
     {
         $created = false;
         Schema::table('au_rel_rooms_users', function (Blueprint $table) use (&$created) {
-            if (! Schema::hasColumn('au_rel_rooms_users', 'room_user_level')) {
-                $table->integer('room_user_level')->default(0);
+            if (! Schema::hasColumn('au_rel_rooms_users', 'room_member_role')) {
+                $table->integer('room_member_role')->default(0);
                 $created = true;
             }
             // TODO foreign restrictions?
@@ -45,7 +45,7 @@ return new class extends Migration
                             'user_id' => $userId,
                             'room_id' => $roomIds[$userRole->room],
                         ])
-                        ->update(['room_user_level' => $userRole->role]);
+                        ->update(['room_member_role' => $userRole->role]);
                     $totalAffected += $affected;
                     $message = "Updated [{$affected}] au_rel_rooms_users for user '$userId' room '{$roomIds[$userRole->room]}' with role '{$userRole->role}'\n";
                     Log::debug($message, ['tenant' => tenant('instance_code'), 'count' => $affected]);
@@ -69,7 +69,7 @@ return new class extends Migration
     {
         /* Schema::dropIfExists('room_user'); */
         Schema::table('au_rel_rooms_users', function (Blueprint $table) {
-            $table->dropColumn('room_user_level');
+            $table->dropColumn('room_member_role');
         });
     }
 };

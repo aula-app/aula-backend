@@ -32,6 +32,12 @@ class RoomMembershipTest extends TestCase
         ]);
     }
 
+    protected function assertArrayEqualsJsonStringWithoutOrder(array $expected, string $actual)
+    {
+        $decodedActual = json_decode($actual, associative: true);
+        return $this->assertEqualsCanonicalizing($expected, $decodedActual);
+    }
+
     public function test_room_membership_notfound()
     {
         $this->getJson(
@@ -58,9 +64,9 @@ class RoomMembershipTest extends TestCase
         foreach([
             [["add" => ["nonempty"]], ["add.0"]],
             [["add" => [["nonempty"]]], ["add.0.userPublicId"]],
-            [["add" => [["userPublicId" => "foo"]]], ["add.0.level"]],
-            [["add" => [["userPublicId" => "foo", "level" => 666]]], ["add.0.level"]],
-            [["add" => [["userPublicId" => "foo", "level" => 10], ["level" => 10]]], ["add.1.userPublicId"]],
+            [["add" => [["userPublicId" => "foo"]]], ["add.0.roomMemberRole"]],
+            [["add" => [["userPublicId" => "foo", "roomMemberRole" => 666]]], ["add.0.roomMemberRole"]],
+            [["add" => [["userPublicId" => "foo", "roomMemberRole" => 10], ["roomMemberRole" => 10]]], ["add.1.userPublicId"]],
         ] as $kv) {
             $this->patchJson(
                 "/api/v2/rooms/{$roomId}/membership",
@@ -86,8 +92,8 @@ class RoomMembershipTest extends TestCase
             "/api/v2/rooms/{$roomId}/membership",
             [
                 "add" => [
-                    ["userPublicId" => $testUserPublicId, "level" => 10],
-                    ["userPublicId" => $testModeratorPublicId, "level" => 20],
+                    ["userPublicId" => $testUserPublicId, "roomMemberRole" => 10],
+                    ["userPublicId" => $testModeratorPublicId, "roomMemberRole" => 20],
                 ]
             ]
         )->assertOk();
@@ -97,8 +103,8 @@ class RoomMembershipTest extends TestCase
             ->assertOk()
             ->assertJson(
                 [
-                    ["publicId" => $testUserPublicId, "userLevel" => 20, "roomLevel" => 10],
-                    ["publicId" => $testModeratorPublicId, "userLevel" => 30, "roomLevel" => 20],
+                    ["publicId" => $testUserPublicId, "userLevel" => 20, "roomMemberRole" => 10],
+                    ["publicId" => $testModeratorPublicId, "userLevel" => 30, "roomMemberRole" => 20],
                 ]
             );
 
@@ -107,13 +113,13 @@ class RoomMembershipTest extends TestCase
             "/api/v2/rooms/{$roomId}/membership",
             [
                 "add" => [
-                    ["userPublicId" => $testUserPublicId, "level" => 30],
+                    ["userPublicId" => $testUserPublicId, "roomMemberRole" => 30],
                 ]
             ]
         )->assertOk();
         $this->getJson("/api/v2/rooms/{$roomId}/membership")
             ->assertJson(
-                [["publicId" => $testUserPublicId, "userLevel" => 20, "roomLevel" => 30]]
+                [["publicId" => $testUserPublicId, "userLevel" => 20, "roomMemberRole" => 30]]
             );
 
         // test transaction; `add` will 404, so `remove`, which runs first, should be rolled back
@@ -121,7 +127,7 @@ class RoomMembershipTest extends TestCase
             "/api/v2/rooms/{$roomId}/membership",
             [
                 "add" => [
-                    ["userPublicId" => "not_found", "level" => 10],
+                    ["userPublicId" => "not_found", "roomMemberRole" => 10],
                 ],
                 "remove" => [
                     [$testUserPublicId]
@@ -132,8 +138,8 @@ class RoomMembershipTest extends TestCase
             ->assertOk()
             ->assertJson(
                 [
-                    ["publicId" => $testUserPublicId, "userLevel" => 20, "roomLevel" => 30],
-                    ["publicId" => $testModeratorPublicId, "userLevel" => 30, "roomLevel" => 20],
+                    ["publicId" => $testUserPublicId, "userLevel" => 20, "roomMemberRole" => 30],
+                    ["publicId" => $testModeratorPublicId, "userLevel" => 30, "roomMemberRole" => 20],
                 ]
             );
 
@@ -158,7 +164,7 @@ class RoomMembershipTest extends TestCase
         $roomId = self::$testRoom->hash_id;
         $this->patchJson(
             "/api/v2/rooms/{$roomId}/membership",
-            ["add" => [["userPublicId" => "badid", "level" => 10]]],
+            ["add" => [["userPublicId" => "badid", "roomMemberRole" => 10]]],
         )->assertNotFound();
         $this->patchJson(
             "/api/v2/rooms/{$roomId}/membership",
@@ -178,7 +184,7 @@ class RoomMembershipTest extends TestCase
             "/api/v2/rooms/{$roomId1}/membership",
             [
                 "add" => [
-                    ["userPublicId" => $userId, "level" => 10],
+                    ["userPublicId" => $userId, "roomMemberRole" => 10],
                 ]
             ]
         )->assertOk();
@@ -193,15 +199,15 @@ class RoomMembershipTest extends TestCase
             "/api/v2/rooms/{$roomId2}/membership",
             [
                 "add" => [
-                    ["userPublicId" => $userId, "level" => 20],
+                    ["userPublicId" => $userId, "roomMemberRole" => 20],
                 ]
             ]
         )->assertOk();
-        $this->assertJsonStringEqualsJsonString(
-            json_encode([
+        $this->assertArrayEqualsJsonStringWithoutOrder(
+            [
                 ["room" => $roomId1, "role" => 10],
                 ["room" => $roomId2, "role" => 20]
-            ]),
+            ],
             LegacyUser::where('hash_id', $userId)->valueOrFail('roles')
         );
 
@@ -211,15 +217,15 @@ class RoomMembershipTest extends TestCase
             "/api/v2/rooms/{$roomId1}/membership",
             [
                 "add" => [
-                    ["userPublicId" => $userId, "level" => 30],
+                    ["userPublicId" => $userId, "roomMemberRole" => 30],
                 ]
             ]
         )->assertOk();
-        $this->assertJsonStringEqualsJsonString(
-            json_encode([
+        $this->assertArrayEqualsJsonStringWithoutOrder(
+            [
                 ["room" => $roomId1, "role" => 30],
                 ["room" => $roomId2, "role" => 20]
-            ]),
+            ],
             LegacyUser::where('hash_id', $userId)->valueOrFail('roles')
         );
 

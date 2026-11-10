@@ -66,7 +66,7 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
 
     public function rooms(): BelongsToMany
     {
-        return $this->belongsToMany(LegacyRoom::class, 'au_rel_rooms_users', 'user_id', 'room_id')->using(RoomMember::class)->withPivot('room_user_level');
+        return $this->belongsToMany(LegacyRoom::class, 'au_rel_rooms_users', 'user_id', 'room_id')->using(RoomMember::class)->withPivot('room_member_role');
     }
 
     /**
@@ -221,7 +221,7 @@ class LegacyUser extends Model implements Authenticatable, OAuthenticatable
     {
         $legacyRoles = $this->rooms->map(fn($r) => [
             "room" => $r->hash_id,
-            "role" => $r->pivot->room_user_level,
+            "role" => $r->pivot->room_member_role,
         ]);
         $this->roles = json_encode($legacyRoles);
     }

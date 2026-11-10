@@ -2,12 +2,12 @@
 
 namespace App\Relations;
 
-use App\Enums\RoomUserLevel;
+use App\Enums\RoomMemberRole;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class RoomMember extends Pivot
 {
     protected $casts = [
-        'room_user_level' => RoomUserLevel::class,
+        'room_member_role' => RoomMemberRole::class,
     ];
 }

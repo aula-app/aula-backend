@@ -4,6 +4,7 @@ namespace Tests\Concerns;
 
 use App\Models\LegacyRoom;
 use Tests\Concerns\CreatesTestTenant;
+use Illuminate\Support\Facades\DB;
 
 trait CreatesTestRooms
 {
@@ -27,6 +28,8 @@ trait CreatesTestRooms
             self::$testRoom->phase_duration_1 = 14;
             self::$testRoom->phase_duration_3 = 14;
             self::$testRoom->save();
+            // would probably also have to update users' roles json to be super clean...
+            DB::table('au_rel_rooms_users')->where('room_id', self::$testRoom->id)->delete();
 
             self::$testRoom2 = LegacyRoom::where('hash_id', md5('Testroom2'))->first()
                 ?? new LegacyRoom();
@@ -38,6 +41,7 @@ trait CreatesTestRooms
             self::$testRoom2->phase_duration_1 = 14;
             self::$testRoom2->phase_duration_3 = 14;
             self::$testRoom2->save();
+            DB::table('au_rel_rooms_users')->where('room_id', self::$testRoom2->id)->delete();
         });
     }
 }

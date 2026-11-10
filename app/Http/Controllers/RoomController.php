@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use App\Data\Room\DomainRoomData;
 use App\Data\Room\Requests\StoreRoomData;
 use App\Data\Room\Requests\UpdateRoomData;
-use App\Data\User\DomainUserDataWithRoomLevel;
+use App\Data\User\DomainUserDataWithRoomMemberRole;
 use App\UseCases\Room\CreateRoomUseCase;
 use App\UseCases\Room\DeleteRoomUseCase;
 use App\UseCases\Room\ListRoomsUseCase;
@@ -61,7 +61,7 @@ class RoomController extends Controller
 
     /**
      * @param string $room
-     * @return DataCollection<array-key, DomainUserDataWithRoomLevel>
+     * @return DataCollection<array-key, DomainUserDataWithRoomMemberRole>
      */
     public function indexMembership(string $room): DataCollection
     {

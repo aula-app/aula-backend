@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum RoomUserLevel: int
+enum RoomMemberRole: int
 {
     // TODO
     case None = 0;
