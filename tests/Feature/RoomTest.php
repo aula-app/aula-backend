@@ -134,30 +134,32 @@ class RoomTest extends TestCase
             ->assertUnprocessable();
     }
 
-    public function test_create_update_room_authz()
+    public function test_room_crud_authz()
     {
         Passport::actingAs(self::$testUserNonAdmin);
         $roomId = self::$testRoom->hash_id;
+
+        // index
         $this->getJson('/api/v2/rooms')
             ->assertForbidden();
+
+        // create
         $this->postJson(
             '/api/v2/rooms',
             self::NEW_ROOM_DATA,
         )->assertForbidden();
+
+        // read
+        $this->getJson("/api/v2/rooms/$roomId")
+            ->assertForbidden();
+
+        // update
         $this->putJson(
             "/api/v2/rooms/$roomId",
             self::UPDATE_ROOM_DATA,
         )->assertForbidden();
-    }
 
-    public function test_index_read_delete_room_authz()
-    {
-        Passport::actingAs(self::$testUserNonAdmin);
-        $roomId = self::$testRoom->hash_id;
-        $this->getJson("/api/v2/rooms")
-            ->assertForbidden();
-        $this->getJson("/api/v2/rooms/$roomId")
-            ->assertForbidden();
+        // delete
         $this->deleteJson("/api/v2/rooms/$roomId")
             ->assertForbidden();
     }
