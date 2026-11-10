@@ -97,7 +97,7 @@ final class MergeProposalBuilder
     private function proposeRooms(array $groups): array
     {
         $linked = $this->linkedIds(DB::table('au_rooms')->whereNotNull('idp_group_id')->pluck('idp_group_id')->all());
-        $groups = array_values(array_filter($groups, fn (IdpGroup $group): bool => ! isset($linked[$group->id])));
+        $groupsWithoutLink = array_values(array_filter($groups, fn (IdpGroup $group): bool => ! isset($linked[$group->id])));
 
         $local = [];
 
@@ -112,7 +112,7 @@ final class MergeProposalBuilder
                 'keys' => NameKey::keys([$group->name]),
                 'name_kind' => self::NAME_REAL,
             ],
-            $groups,
+            $groupsWithoutLink,
         );
 
         return $this->propose(self::KIND_ROOM, $provider, array_map(
@@ -128,7 +128,7 @@ final class MergeProposalBuilder
     private function proposeUsers(array $users): array
     {
         $linked = $this->linkedIds(LegacyUser::whereNotNull('idp_user_id')->pluck('idp_user_id')->all());
-        $users = array_values(array_filter($users, fn (IdpUser $user): bool => ! isset($linked[$user->id])));
+        $usersWithoutLink = array_values(array_filter($users, fn (IdpUser $user): bool => ! isset($linked[$user->id])));
 
         $local = LegacyUser::whereNull('idp_user_id')
             ->get(['id', 'realname', 'displayname'])
@@ -141,7 +141,7 @@ final class MergeProposalBuilder
 
         $provider = [];
 
-        foreach ($users as $user) {
+        foreach ($usersWithoutLink as $user) {
             $real = $user->realName();
 
             $provider[] = [
