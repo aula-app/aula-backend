@@ -6,7 +6,6 @@ namespace App\Data\Room\Requests;
 
 use DateTimeImmutable;
 use App\Data\Room\AbstractRoomData;
-use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Rule;

@@ -7,7 +7,6 @@ namespace App\Data\Room;
 use DateTimeImmutable;
 use App\Data\Room\AbstractRoomData;
 use Spatie\LaravelData\Attributes\MapInputName;
-use Spatie\LaravelData\Attributes\MapOutputName;
 
 class DomainRoomData extends AbstractRoomData
 {
