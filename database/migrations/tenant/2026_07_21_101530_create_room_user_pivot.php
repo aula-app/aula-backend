@@ -18,6 +18,7 @@ return new class extends Migration
                 $table->integer('room_member_role')->default(0);
                 $created = true;
             }
+
             // TODO foreign restrictions?
         });
         if ($created) {
@@ -67,7 +68,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        /* Schema::dropIfExists('room_user'); */
         Schema::table('au_rel_rooms_users', function (Blueprint $table) {
             $table->dropColumn('room_member_role');
         });

@@ -12,7 +12,6 @@ use App\Relations\RoomMember;
 
 /**
  * Legacy Room model
- * @see App\Models\LegacyUser
  * @property-read Pivot|RoomMember $pivot
  */
 class LegacyRoom extends Model

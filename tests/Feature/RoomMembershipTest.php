@@ -80,8 +80,6 @@ class RoomMembershipTest extends TestCase
     public function test_room_membership_batch()
     {
         $roomId = self::$testRoom->hash_id;
-        // $user1 = $this->createDistinctUser(UserLevel::User, UserStatus::Active);
-        // $user2 = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
         $testUserPublicId = self::$testUserNonAdmin->hash_id;
         $testModeratorPublicId = self::$testUserModerator->hash_id;
         $this->getJson("/api/v2/rooms/{$roomId}/membership")

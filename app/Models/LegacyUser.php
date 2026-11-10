@@ -18,7 +18,7 @@ use Laravel\Passport\HasApiTokens;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 /**
- * Appease psalm https://github.com/psalm/psalm-plugin-laravel/issues/641
+ * Legacy User model
  * @property-read Pivot $pivot
  */
 class LegacyUser extends Model implements Authenticatable, OAuthenticatable

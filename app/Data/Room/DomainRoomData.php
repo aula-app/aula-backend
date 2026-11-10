@@ -21,7 +21,6 @@ class DomainRoomData extends AbstractRoomData
     #[MapInputName('description_public')]
     public readonly null|string $descriptionPublic;
 
-    // TODO: when/for whom is this visible?
     #[MapInputName('description_internal')]
     public readonly null|string $descriptionInternal;
 
