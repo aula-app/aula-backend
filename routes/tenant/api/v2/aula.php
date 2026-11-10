@@ -26,6 +26,6 @@ Route::put('rooms/{room}', [RoomController::class, 'update'])
 
 Route::patch('rooms/{room}/membership', [RoomController::class, 'patchMembership'])
     ->name('rooms.patch.membership');
-// TODO: check if response with roomLevel embedded makes sense
+
 Route::get('rooms/{room}/membership', [RoomController::class, 'indexMembership'])
     ->name('rooms.index.membership');
