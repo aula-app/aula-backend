@@ -86,6 +86,7 @@ class RoomTest extends TestCase
             ['createdAt' => ''],
             ['publicId' => ''],
             ['publicId' => null],
+            ['publicId' => '0123456789abcdef0123456789abcdef'],
             ['updatedAt' => ''],
             ['name' => null],
             ['name' => ''],

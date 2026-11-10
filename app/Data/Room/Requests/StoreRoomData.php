@@ -13,8 +13,6 @@ use Spatie\LaravelData\Attributes\Validation\Rule;
 class StoreRoomData extends AbstractRoomData
 {
     #[Rule('missing')]
-    // TODO #[MapInputName('public_id')]
-    // TODO see if this validates (i.e. ?publicId=foo not allowed)
     public readonly null|string $publicId;
 
     #[Max(1024)]
