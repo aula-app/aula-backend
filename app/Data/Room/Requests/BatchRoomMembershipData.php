@@ -12,7 +12,6 @@ use App\Data\Room\Requests\RoomMembershipData;
  */
 class BatchRoomMembershipData extends Data
 {
-    // TODO: validate actual ids, not strings?
     /**
      * @param null|array<int, RoomMembershipData> $add
      * @param null|array<int, string> $remove
