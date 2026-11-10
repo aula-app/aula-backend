@@ -44,4 +44,14 @@ trait CreatesTestRooms
             DB::table('au_rel_rooms_users')->where('room_id', self::$testRoom2->id)->delete();
         });
     }
+
+    protected function tearDownTestRooms(): void
+    {
+        self::$testTenant->run(function () {
+            LegacyRoom::whereIn(
+                'hash_id',
+                [md5('Testroom'), md5('Testroom2')]
+            )->delete();
+        });
+    }
 }

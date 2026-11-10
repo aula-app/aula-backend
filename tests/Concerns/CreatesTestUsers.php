@@ -89,4 +89,14 @@ trait CreatesTestUsers
             self::$testUserModerator->save();
         });
     }
+
+    protected function tearDownTestUsers(): void
+    {
+        self::$testTenant->run(function () {
+            LegacyUser::whereIn(
+                'username',
+                ['test_admin', 'test_nonadmin', 'test_moderator']
+            )->delete();
+        });
+    }
 }

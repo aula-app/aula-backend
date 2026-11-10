@@ -32,6 +32,13 @@ class RoomMembershipTest extends TestCase
         ]);
     }
 
+    protected function tearDown(): void
+    {
+        $this->tearDownTestUsers();
+        $this->tearDownTestRooms();
+        parent::tearDown();
+    }
+
     protected function assertArrayEqualsJsonStringWithoutOrder(array $expected, string $actual)
     {
         $decodedActual = json_decode($actual, associative: true);
@@ -247,5 +254,12 @@ class RoomMembershipTest extends TestCase
             json_encode([]),
             LegacyUser::where('hash_id', $userId)->valueOrFail('roles')
         );
+    }
+
+    public function test_patch_disallowed()
+    {
+        $roomId = self::$testRoom->hash_id;
+        $this->patchJson("/api/v2/rooms/{$roomId}", [])
+            ->assertMethodNotAllowed();
     }
 }

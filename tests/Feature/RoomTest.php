@@ -51,6 +51,13 @@ class RoomTest extends TestCase
         ]);
     }
 
+    protected function tearDown(): void
+    {
+        $this->tearDownTestUsers();
+        $this->tearDownTestRooms();
+        parent::tearDown();
+    }
+
     public function test_create_room()
     {
         $result = $this->postJson(
