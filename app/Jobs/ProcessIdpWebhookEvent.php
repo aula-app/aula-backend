@@ -66,7 +66,7 @@ class ProcessIdpWebhookEvent implements ShouldQueue
         $maxJobRuntime = array_sum($this->backoff) + count($this->backoff) * 60;
         return [
             // ensure no two workers are picking up the same event at the same time
-            (new WithoutOverlapping($this->eventId))->expireAfter($maxJobRuntime)
+            (new WithoutOverlapping((string) $this->eventId))->expireAfter($maxJobRuntime)
         ];
     }
 
