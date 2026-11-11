@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\UseCases\User;
 
 use App\Models\LegacyUser;
+use App\Relations\RoomMember;
 use Illuminate\Support\Facades\Gate;
+use DB;
 use App\Enums\Gates;
 
 class DeleteUserUseCase
@@ -14,7 +16,11 @@ class DeleteUserUseCase
     {
         Gate::authorize(Gates::DeleteUser, $publicId);
 
-        LegacyUser::where('hash_id', $publicId)->firstOrFail()->deleteOrFail();
+        $legacyUser = LegacyUser::where('hash_id', $publicId)->sole(['id']);
+        DB::transaction(function () use ($legacyUser) {
+            DB::table('au_rel_rooms_users')->where('user_id', $legacyUser->id)->delete();
+            $legacyUser->deleteOrFail();
+        });
 
         // TODO functionality from legacy model User->deleteUser, including but not limited to:
         // - remove user's delegations
@@ -23,7 +29,6 @@ class DeleteUserUseCase
         //   - comments
         //   - messages
         //   - group relations
-        //   - room relations
         //   - likes associations
         //   - votes associations
     }

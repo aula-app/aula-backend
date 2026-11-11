@@ -65,6 +65,7 @@ class SsoUserService
             'created' => now(),
             'last_update' => now(),
             'updater_id' => 0,
+            'room_member_role' => 20,
         ]);
 
         /** @var list<array{role?: int, room?: string}> $roles */

@@ -129,7 +129,7 @@ class SsoUserServiceTest extends TestCase
                 DB::table('au_rooms')->insert([
                     'room_name' => 'Schule',
                     'description_internal' => null,
-                    'hash_id' => Str::random(30),
+                    'hash_id' => Str::random(32),
                     'status' => 1,
                     'type' => 1,
                 ]);
