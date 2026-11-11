@@ -28,6 +28,7 @@ services:
       DB_PORT: 3306
       CENTRAL_DB_HOST: mariadb-test
       CENTRAL_DB_PORT: 3306
+      OTEL_SDK_DISABLED: true
     depends_on:
       mariadb-test:
         condition: service_healthy

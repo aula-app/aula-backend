@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\UserStatus;
+use App\Jobs\UserSyncJob;
 use App\Models\LegacyUser;
+use App\Services\Idp\SchoolImport;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
 use Tests\Concerns\CreatesTestTenant;
@@ -49,6 +52,7 @@ class SsoIdpInitiatedTest extends TestCase
             'sso_force_logout' => false,
             'sso_require_email_verified' => false,
             'idp_school_id' => self::EDUPLACES_SCHOOL,
+            'idp_import_status' => null,
         ]);
 
         config([
@@ -62,6 +66,7 @@ class SsoIdpInitiatedTest extends TestCase
         Cache::flush();
         self::$testTenant->run(fn () => Cache::flush());
         $this->fakeJwksEndpoint();
+        Queue::fake([UserSyncJob::class]);
     }
 
     protected function tearDown(): void
@@ -313,6 +318,44 @@ class SsoIdpInitiatedTest extends TestCase
         });
     }
 
+    // =========================================================
+    // Login-triggered directory sync
+    // =========================================================
+
+    public function test_callback_queues_a_user_sync_once_the_school_is_imported(): void
+    {
+        self::$testTenant->update(['idp_import_status' => SchoolImport::STATUS_COMPLETED]);
+        $this->seedDirectoryProvisionedUser('eduplaces-person-synced');
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-synced', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-synced', 'idp_synced@test.example', 'Synced', 'synced');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        Queue::assertPushed(UserSyncJob::class, 1);
+        Queue::assertPushed(UserSyncJob::class, fn (UserSyncJob $job): bool => $job->tenantId === self::$testTenant->id
+            && $job->provider === self::EDUPLACES_IDP_ALIAS
+            && $job->userId === 'eduplaces-person-synced'
+            && $job->delay !== null);
+    }
+
+    public function test_callback_queues_no_user_sync_while_the_school_import_is_pending(): void
+    {
+        // ImportSchoolForTenant is still bringing the school in; a sync beside
+        // it would import the same rooms.
+        self::$testTenant->update(['idp_import_status' => SchoolImport::STATUS_PENDING]);
+        $this->seedDirectoryProvisionedUser('eduplaces-person-waiting');
+
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-person-waiting', 'school' => self::EDUPLACES_SCHOOL, 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-waiting', 'idp_waiting@test.example', 'Waiting', 'waiting');
+
+        $state = $this->buildIdpInitiatedState();
+        $this->get("/api/v2/auth/sso/callback?state={$state}")->assertRedirect();
+
+        Queue::assertNotPushed(UserSyncJob::class);
+    }
+
     public function test_adoption_matches_on_person_id_rather_than_email(): void
     {
         // The seeded row has no email and the id_token carries one that matches
@@ -404,7 +447,7 @@ class SsoIdpInitiatedTest extends TestCase
     private function seedDirectoryProvisionedUser(string $personId, ?string $password = null, ?string $ssoSub = null): int
     {
         return (int) self::$testTenant->run(function () use ($personId, $password, $ssoSub) {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->idp_user_id = $personId;
             $user->username = 'pre.'.substr(md5($personId), 0, 8);
             $user->displayname = 'Pre Provisioned';

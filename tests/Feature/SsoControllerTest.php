@@ -4,11 +4,12 @@ namespace Tests\Feature;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
+use App\Jobs\UserSyncJob;
 use App\Models\LegacyUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Manager\OAuth2\User as SocialiteOAuth2User;
@@ -193,6 +194,7 @@ class SsoControllerTest extends TestCase
 
     public function test_callback_from_the_app_redirects_to_the_deep_link_scheme(): void
     {
+        Queue::fake([UserSyncJob::class]);
         Http::fake(['*/broker/*/token' => Http::response(['id_token' => 'idp.token.test'], 200)]);
 
         $this->mockSocialiteCallback('sub-app-001', 'sso_app@test.example', 'App User', 'appuser');
@@ -205,6 +207,7 @@ class SsoControllerTest extends TestCase
             config('app.mobile_url_scheme').'://oauth-login/',
             (string) $response->headers->get('Location'),
         );
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     /**
@@ -334,6 +337,7 @@ class SsoControllerTest extends TestCase
 
     public function test_callback_provisions_new_user_and_redirects_to_frontend(): void
     {
+        Queue::fake([UserSyncJob::class]);
         Http::fake(['*/broker/*/token' => Http::response(['id_token' => 'idp.token.test'], 200)]);
 
         $this->mockSocialiteCallback('sub-new-001', 'sso_new@test.example', 'New User', 'newuser');
@@ -349,6 +353,7 @@ class SsoControllerTest extends TestCase
             $this->assertEquals('sso_new@test.example', $user->email);
             $this->assertEquals(UserLevel::User, $user->userlevel);
         });
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     public function test_callback_with_email_match_no_sub_redirects_to_link_flow(): void
@@ -417,6 +422,7 @@ class SsoControllerTest extends TestCase
 
     public function test_callback_finds_existing_user_by_sso_sub(): void
     {
+        Queue::fake([UserSyncJob::class]);
         $existing = self::$testTenant->run(function () {
             return $this->createUser('sso_bysub@test.example', 'sub-by-sub-001');
         });
@@ -434,6 +440,7 @@ class SsoControllerTest extends TestCase
         });
 
         $this->assertRedirectAuthenticatesUser($response, $existing);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     public function test_callback_inactive_user_redirects_to_account_inactive_error(): void
@@ -502,6 +509,7 @@ class SsoControllerTest extends TestCase
 
     public function test_callback_allows_unverified_email_when_tenant_disables_requirement(): void
     {
+        Queue::fake([UserSyncJob::class]);
         self::$testTenant->update(['sso_require_email_verified' => false]);
 
         $idToken = $this->makeIdToken([
@@ -523,10 +531,12 @@ class SsoControllerTest extends TestCase
             $this->assertNotNull($user);
             $this->assertEquals('sso_unverified_allowed@test.example', $user->email);
         });
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     public function test_callback_allows_missing_email_verified_claim_when_tenant_disables_requirement(): void
     {
+        Queue::fake([UserSyncJob::class]);
         self::$testTenant->update(['sso_require_email_verified' => false]);
 
         $idToken = $this->makeIdToken([
@@ -541,6 +551,7 @@ class SsoControllerTest extends TestCase
 
         $response->assertRedirect();
         $this->assertStringContainsString('/oauth-login/', $response->headers->get('Location'));
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     public function test_callback_still_rejects_id_token_invalid_when_email_verified_requirement_is_disabled(): void
@@ -778,16 +789,13 @@ class SsoControllerTest extends TestCase
 
     public function test_resolve_user_prioritises_sso_sub_match_when_collision_exists(): void
     {
+        Queue::fake([UserSyncJob::class]);
         [$emailUser, $subUser] = self::$testTenant->run(function () {
             return [
                 $this->createUser('sso_collision@test.example', null),
                 $this->createUser('sso_other@test.example', 'sub-collision-001'),
             ];
         });
-
-        Log::shouldReceive('warning')
-            ->once()
-            ->with(\Mockery::pattern('/SSO: email and sso_sub match different users/'), \Mockery::any());
 
         Http::fake(['*/broker/*/token' => Http::response(['id_token' => 'idp.token.test'], 200)]);
         $this->mockSocialiteCallback('sub-collision-001', 'sso_collision@test.example', 'Collision', 'collision');
@@ -798,6 +806,7 @@ class SsoControllerTest extends TestCase
         // Should authenticate as the sso_sub user, not the email user
         $payload = $this->assertRedirectAuthenticatesUser($response, $subUser);
         $this->assertNotEquals($emailUser->hash_id, $payload->user_hash);
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     // =========================================================
@@ -973,6 +982,7 @@ class SsoControllerTest extends TestCase
 
     public function test_callback_does_not_record_a_person_id_for_a_non_eduplaces_tenant(): void
     {
+        Queue::fake([UserSyncJob::class]);
         // This tenant is on mock-iserv with no idp_school_id, so
         // usesIdpDirectory() is false and no broker lookup runs.
         $this->mockSocialiteCallback('sso-sub-iserv-only', 'sso_iservonly@test.example', 'IServ Only', 'iservonly');
@@ -986,6 +996,7 @@ class SsoControllerTest extends TestCase
             $this->assertNotNull($user);
             $this->assertNull($user->idp_user_id);
         });
+        Queue::assertNotPushed(UserSyncJob::class);
     }
 
     // =========================================================

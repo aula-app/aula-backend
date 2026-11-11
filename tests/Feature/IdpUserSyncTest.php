@@ -6,6 +6,9 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ProcessIdpWebhookEvent;
+use App\Jobs\ReconcileIdpSchool;
+use App\Jobs\RefreshIdpGroup;
+use App\Jobs\UserSyncJob;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
@@ -14,6 +17,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -37,6 +41,12 @@ class IdpUserSyncTest extends TestCase
 
     /** @var list<string> listed at the school, but 404 on individual lookup */
     private array $idmVanished = [];
+
+    /** @var array<string, array<string, mixed>> the groups the IDM stand-in holds, with members */
+    private array $idmGroups = [];
+
+    /** Off by default: `/schools/{id}` 404s and the school-wide group reconcile is skipped. */
+    private bool $schoolVisible = false;
 
     protected function setUp(): void
     {
@@ -71,6 +81,8 @@ class IdpUserSyncTest extends TestCase
 
         $this->idmPeople = [];
         $this->idmVanished = [];
+        $this->idmGroups = [];
+        $this->schoolVisible = false;
         $this->fakeIdm();
     }
 
@@ -172,7 +184,68 @@ class IdpUserSyncTest extends TestCase
 
         $this->assertSame($originalId, $user->id, 'the same row should have been updated');
         $this->assertSame('Maxine Mustermann', $user->displayname);
-        $this->assertSame(40, $user->userlevel->value);
+    }
+
+    public function test_keeps_the_userlevel_when_the_role_changes_upstream(): void
+    {
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Promoted']]);
+        $this->process($this->event('create'));
+        $this->assertSame(20, $this->syncedUser()->userlevel->value);
+
+        $this->setPerson(['role' => 'TEACHER', 'name' => ['last' => 'Promoted']]);
+        $this->process($this->event('update', properties: ['role']));
+
+        // userlevel is set from the role once, on creation; aula owns it after.
+        $this->assertSame(20, $this->syncedUser()->userlevel->value);
+    }
+
+    public function test_keeps_a_userlevel_changed_inside_aula(): void
+    {
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Moderator']]);
+        $this->process($this->event('create'));
+
+        self::$testTenant->run(fn () => LegacyUser::where('idp_user_id', self::PERSON)->update(['userlevel' => 45]));
+
+        $this->process($this->event('update', properties: ['name']));
+
+        $this->assertSame(45, $this->syncedUser()->userlevel->value);
+    }
+
+    public function test_a_role_change_upstream_keeps_room_roles(): void
+    {
+        $roomId = $this->seedLocalRoom('group-known', 'Klasse 5a');
+        $groups = [['id' => 'group-known', 'name' => 'Klasse 5a']];
+
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Promoted'], 'groups' => $groups]);
+        $this->setGroup('group-known', 'Klasse 5a', [['id' => self::PERSON, 'role' => 'STUDENT']]);
+        $this->process($this->event('update', properties: ['groups']));
+        $this->assertSame(20, $this->roomRole(self::PERSON, $roomId));
+
+        $this->setPerson(['role' => 'TEACHER', 'name' => ['last' => 'Promoted'], 'groups' => $groups]);
+        $this->setGroup('group-known', 'Klasse 5a', [['id' => self::PERSON, 'role' => 'TEACHER']]);
+        $this->process($this->event('update', properties: ['role']));
+
+        $this->assertSame(20, $this->roomRole(self::PERSON, $roomId));
+        $this->assertSame(20, $this->syncedUser()->userlevel->value);
+    }
+
+    public function test_keeps_a_room_role_set_inside_aula(): void
+    {
+        $roomId = $this->seedLocalRoom('group-known', 'Klasse 5a');
+        $groups = [['id' => 'group-known', 'name' => 'Klasse 5a']];
+
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Moderated'], 'groups' => $groups]);
+        $this->setGroup('group-known', 'Klasse 5a', [['id' => self::PERSON, 'role' => 'STUDENT']]);
+        $this->process($this->event('update', properties: ['groups']));
+
+        self::$testTenant->run(function () use ($roomId) {
+            $hashId = DB::table('au_rooms')->where('id', $roomId)->value('hash_id');
+            LegacyUser::where('idp_user_id', self::PERSON)->update(['roles' => json_encode([['role' => 30, 'room' => $hashId]])]);
+        });
+
+        $this->process($this->event('update', properties: ['name']));
+
+        $this->assertSame(30, $this->roomRole(self::PERSON, $roomId));
     }
 
     public function test_archives_a_user_the_idm_reports_as_inactive(): void
@@ -216,6 +289,7 @@ class IdpUserSyncTest extends TestCase
         $this->process($this->event('create'));
         $userId = $this->syncedUser()->id;
 
+        $this->idmVanished[] = self::PERSON;
         $this->process($this->event('delete'));
 
         $user = $this->syncedUser();
@@ -227,42 +301,68 @@ class IdpUserSyncTest extends TestCase
         $this->assertSame(UserStatus::Archived, $user->status);
     }
 
-    public function test_delete_does_not_call_the_idm(): void
+    public function test_a_late_delete_does_not_archive_a_person_active_upstream(): void
     {
-        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Departed']]);
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Stays']]);
         $this->process($this->event('create'));
 
-        Http::fake();
+        // The delete is stale: upstream still reports the person.
         $this->process($this->event('delete'));
 
-        // No read-back on ACTION_DELETE: the payload carries all UserSync
-        // needs.
-        Http::assertNothingSent();
+        $this->assertSame(UserStatus::Active, $this->syncedUser()->status);
     }
 
     public function test_restore_reactivates_an_archived_user(): void
     {
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Returner']]);
         $this->process($this->event('create'));
+        $this->idmVanished[] = self::PERSON;
         $this->process($this->event('delete'));
 
-        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Returner']]);
+        $this->idmVanished = [];
         $this->process($this->event('restore'));
 
         $this->assertSame(UserStatus::Active, $this->syncedUser()->status);
     }
 
+    public function test_a_late_restore_does_not_reactivate_a_person_deleted_upstream(): void
+    {
+        // Upstream: deleted, restored, deleted. Delivered: delete, delete, restore.
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Flapping']]);
+        $this->process($this->event('create'));
+        $this->idmVanished[] = self::PERSON;
+
+        $this->process($this->event('delete'));
+        $this->process($this->event('delete'));
+        $this->process($this->event('restore'));
+
+        $this->assertSame(UserStatus::Archived, $this->syncedUser()->status);
+    }
+
+    public function test_a_restore_does_not_override_an_inactive_read_back(): void
+    {
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Inactive']]);
+        $this->process($this->event('create'));
+
+        $this->setPerson(['role' => 'STUDENT', 'status' => 'INACTIVE', 'name' => ['last' => 'Inactive']]);
+        $this->process($this->event('restore'));
+
+        $this->assertSame(UserStatus::Archived, $this->syncedUser()->status);
+    }
+
     public function test_deleting_a_person_we_never_had_is_a_skip_not_a_failure(): void
     {
-        // The event resolves to a tenant, but no row carries this
-        // idp_user_id, so there is nothing to archive.
+        // The event resolves to a tenant, but the person is gone upstream and
+        // no row carries this idp_user_id, so there is nothing to archive.
         $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Neverwas']]);
+        $this->idmVanished[] = self::PERSON;
 
         $event = $this->event('delete');
         $this->process($event);
 
         $this->assertSame(IdpWebhookEvent::STATUS_SKIPPED, $event->fresh()->status);
-        $this->assertSame('user_not_local', $event->fresh()->error);
+        $this->assertSame('user_not_found_upstream', $event->fresh()->error);
+        $this->assertNull($this->syncedUser());
     }
 
     // =========================================================
@@ -278,6 +378,8 @@ class IdpUserSyncTest extends TestCase
             'name' => ['last' => 'Grouped'],
             'groups' => [['id' => 'group-known', 'name' => 'Klasse 5a']],
         ]);
+
+        $this->setGroup('group-known', 'Klasse 5a', [['id' => self::PERSON, 'role' => 'STUDENT', 'name' => ['last' => 'Grouped']]]);
 
         $this->process($this->event('update', properties: ['groups']));
 
@@ -307,6 +409,129 @@ class IdpUserSyncTest extends TestCase
         });
     }
 
+    public function test_creates_the_room_for_a_group_aula_does_not_have_yet(): void
+    {
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['firstFull' => 'New', 'last' => 'Member'],
+            'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
+        ]);
+        $this->setGroup('group-new', 'Aula Group', [
+            ['id' => self::PERSON, 'role' => 'STUDENT'],
+        ]);
+
+        $this->process($this->event('update', properties: ['groups']));
+
+        self::$testTenant->run(function () {
+            $room = DB::table('au_rooms')->where('idp_group_id', 'group-new')->first();
+            $this->assertNotNull($room);
+            $this->assertSame('Aula Group', $room->room_name);
+
+            $user = LegacyUser::where('idp_user_id', self::PERSON)->firstOrFail();
+            $this->assertSame(1, DB::table('au_rel_rooms_users')
+                ->where('user_id', $user->id)->where('room_id', $room->id)->count());
+        });
+    }
+
+    public function test_imports_every_member_of_a_newly_created_room(): void
+    {
+        $this->seedLocalUser('person-already-local', 'Local');
+
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Trigger'],
+            'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
+        ]);
+        $this->setPerson([
+            'role' => 'TEACHER',
+            'name' => ['firstFull' => 'Not', 'last' => 'Imported'],
+            'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
+        ], 'person-not-local');
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Local'],
+            'groups' => [['id' => 'group-new', 'name' => 'Aula Group']],
+        ], 'person-already-local');
+        $this->setGroup('group-new', 'Aula Group', [
+            ['id' => self::PERSON, 'role' => 'STUDENT', 'name' => ['last' => 'Trigger']],
+            ['id' => 'person-not-local', 'role' => 'TEACHER', 'name' => ['firstFull' => 'Not', 'last' => 'Imported']],
+            ['id' => 'person-already-local', 'role' => 'STUDENT', 'name' => ['last' => 'Local']],
+        ]);
+
+        $this->process($this->event('update', properties: ['groups']));
+
+        self::$testTenant->run(function () {
+            $roomId = DB::table('au_rooms')->where('idp_group_id', 'group-new')->value('id');
+
+            $members = DB::table('au_rel_rooms_users')
+                ->join('au_users_basedata', 'au_users_basedata.id', '=', 'au_rel_rooms_users.user_id')
+                ->where('room_id', $roomId)
+                ->pluck('au_users_basedata.idp_user_id')
+                ->sort()->values()->all();
+
+            $this->assertSame(['person-already-local', 'person-not-local', self::PERSON], $members);
+
+            $imported = LegacyUser::where('idp_user_id', 'person-not-local')->firstOrFail();
+            $this->assertSame('Not Imported', $imported->realname);
+            $this->assertSame(40, $imported->userlevel->value);
+        });
+
+        Http::assertNotSent(fn (Request $request) => str_ends_with($request->url(), '/people/person-not-local'));
+    }
+
+    public function test_refreshes_every_group_of_the_person_on_any_update(): void
+    {
+        $roomId = $this->seedLocalRoom('group-known', 'Klasse 5a');
+
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Pinger'],
+            'groups' => [['id' => 'group-known', 'name' => 'Klasse 6a']],
+        ]);
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Classmate'],
+            'groups' => [['id' => 'group-known', 'name' => 'Klasse 6a']],
+        ], 'person-classmate');
+        $this->setGroup('group-known', 'Klasse 6a', [
+            ['id' => self::PERSON, 'role' => 'STUDENT'],
+            ['id' => 'person-classmate', 'role' => 'STUDENT'],
+        ]);
+
+        // Not a groups change: any person event refreshes the person's groups.
+        $this->process($this->event('update', properties: ['name']));
+
+        self::$testTenant->run(function () use ($roomId) {
+            $this->assertSame('Klasse 6a', DB::table('au_rooms')->where('id', $roomId)->value('room_name'));
+
+            $members = DB::table('au_rel_rooms_users')
+                ->join('au_users_basedata', 'au_users_basedata.id', '=', 'au_rel_rooms_users.user_id')
+                ->where('room_id', $roomId)
+                ->pluck('au_users_basedata.idp_user_id')
+                ->sort()->values()->all();
+
+            $this->assertSame(['person-classmate', self::PERSON], $members);
+        });
+    }
+
+    public function test_still_syncs_the_user_when_the_new_group_is_gone_upstream(): void
+    {
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Orphan'],
+            'groups' => [['id' => 'group-gone', 'name' => 'Gone']],
+        ]);
+
+        $event = $this->event('update', properties: ['groups']);
+        $this->process($event);
+
+        $this->assertSame(IdpWebhookEvent::STATUS_PROCESSED, $event->fresh()->status);
+        $this->assertNotNull($this->syncedUser());
+        self::$testTenant->run(fn () => $this->assertFalse(
+            DB::table('au_rooms')->where('idp_group_id', 'group-gone')->exists(),
+        ));
+    }
+
     public function test_leaves_aula_native_group_memberships_alone(): void
     {
         // A room created inside aula carries no idp_group_id, so
@@ -333,6 +558,209 @@ class IdpUserSyncTest extends TestCase
             $this->assertSame(1, DB::table('au_rel_rooms_users')
                 ->where('user_id', $user->id)->where('room_id', $nativeRoomId)->count());
         });
+    }
+
+    // =========================================================
+    // School-wide group reconcile
+    // =========================================================
+
+    // @TODO: nikola - what is this test actually verifying? the name is confusing, and the assertion is pretty basic
+    public function test_creates_rooms_for_listed_groups_no_person_names(): void
+    {
+        $this->schoolVisible = true;
+        $this->setGroup('group-empty', 'Leere Gruppe', []);
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Unrelated'], 'groups' => []]);
+
+        $this->process($this->event('update', properties: ['name']));
+
+        self::$testTenant->run(fn () => $this->assertSame(
+            'Leere Gruppe',
+            DB::table('au_rooms')->where('idp_group_id', 'group-empty')->where('status', 1)->value('room_name'),
+        ));
+    }
+
+    public function test_archives_rooms_for_groups_no_longer_listed_and_keeps_their_members(): void
+    {
+        $roomId = $this->seedLocalRoom('group-deleted', 'Gelöscht');
+        $this->seedLocalUser('person-left-behind', 'Behind');
+        $this->schoolVisible = true;
+
+        self::$testTenant->run(function () use ($roomId) {
+            $userId = LegacyUser::where('idp_user_id', 'person-left-behind')->value('id');
+            $hashId = DB::table('au_rooms')->where('id', $roomId)->value('hash_id');
+
+            DB::table('au_rel_rooms_users')->insert(['room_id' => $roomId, 'user_id' => $userId, 'status' => 1, 'updater_id' => 0]);
+            DB::table('au_users_basedata')->where('id', $userId)->update(['roles' => json_encode([['role' => 20, 'room' => $hashId]])]);
+        });
+
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Trigger'], 'groups' => []]);
+        $this->process($this->event('update', properties: ['groups']));
+
+        self::$testTenant->run(function () use ($roomId) {
+            $room = DB::table('au_rooms')->where('id', $roomId)->first();
+            $userId = LegacyUser::where('idp_user_id', 'person-left-behind')->value('id');
+
+            $this->assertSame(3, (int) $room->status);
+            $this->assertSame(1, DB::table('au_rel_rooms_users')->where('room_id', $roomId)->where('user_id', $userId)->count());
+            $this->assertStringContainsString(
+                (string) $room->hash_id,
+                (string) DB::table('au_users_basedata')->where('id', $userId)->value('roles'),
+            );
+        });
+    }
+
+    public function test_reactivates_an_archived_room_whose_group_is_listed_again(): void
+    {
+        $this->schoolVisible = true;
+        $roomId = $this->seedLocalRoom('group-back', 'Zurück');
+        self::$testTenant->run(fn () => DB::table('au_rooms')->where('id', $roomId)->update(['status' => 3]));
+
+        $this->setGroup('group-back', 'Zurück', []);
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Trigger'], 'groups' => []]);
+        $this->process($this->event('update', properties: ['name']));
+
+        self::$testTenant->run(fn () => $this->assertSame(
+            1,
+            (int) DB::table('au_rooms')->where('id', $roomId)->value('status'),
+        ));
+    }
+
+    public function test_archives_nothing_when_the_school_is_not_visible(): void
+    {
+        // A school disconnected from the app lists no groups. That must not
+        // read as "every group was deleted".
+        $roomId = $this->seedLocalRoom('group-kept', 'Bleibt');
+
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Trigger'], 'groups' => []]);
+        $this->process($this->event('update', properties: ['name']));
+
+        self::$testTenant->run(fn () => $this->assertSame(
+            1,
+            (int) DB::table('au_rooms')->where('id', $roomId)->value('status'),
+        ));
+    }
+
+    // =========================================================
+    // Follow-up jobs and write economy
+    // =========================================================
+
+    public function test_queues_a_refresh_per_group_and_one_school_reconcile(): void
+    {
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Queued'],
+            'groups' => [['id' => 'group-a', 'name' => 'A'], ['id' => 'group-b', 'name' => 'B']],
+        ]);
+
+        $event = $this->event('update', properties: ['name']);
+        $this->process($event);
+
+        $this->assertSame(IdpWebhookEvent::STATUS_PROCESSED, $event->fresh()->status);
+        Queue::assertPushed(RefreshIdpGroup::class, 2);
+        Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job) => $job->groupId === 'group-a'
+            && $job->tenantId === self::$testTenant->id
+            && $job->provider === 'eduplaces');
+        Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job) => $job->groupId === 'group-b');
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
+    }
+
+    public function test_queues_only_a_school_reconcile_for_a_delete(): void
+    {
+        $this->seedLocalUser(self::PERSON, 'Leaving');
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+
+        $this->idmVanished[] = self::PERSON;
+        $this->process($this->event('delete'));
+
+        Queue::assertNotPushed(RefreshIdpGroup::class);
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
+    }
+
+    public function test_the_reconcile_queues_a_refresh_for_a_listed_group_without_a_room(): void
+    {
+        Queue::fake([RefreshIdpGroup::class]);
+        $this->schoolVisible = true;
+        $this->setGroup('group-unqueued', 'Neue Gruppe', []);
+
+        $this->app->call([new ReconcileIdpSchool((string) self::$testTenant->id, 'eduplaces'), 'handle']);
+
+        Queue::assertPushed(RefreshIdpGroup::class, 1);
+        Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job): bool => $job->groupId === 'group-unqueued');
+    }
+
+    public function test_does_not_queue_duplicates_while_one_is_pending(): void
+    {
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+        $groups = [['id' => 'group-shared', 'name' => 'Klasse 5a']];
+
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'First']], self::PERSON);
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Second'], 'groups' => $groups], 'person-second');
+        $this->idmPeople[self::PERSON]['groups'] = $groups;
+
+        $this->process($this->event('update', properties: ['groups']));
+        $this->process($this->event('update', 'person-second', ['groups']));
+
+        Queue::assertPushed(RefreshIdpGroup::class, 1);
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
+    }
+
+    public function test_an_unchanged_person_and_group_write_nothing(): void
+    {
+        $this->schoolVisible = true;
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Steady'],
+            'groups' => [['id' => 'group-steady', 'name' => 'Klasse 5a']],
+        ]);
+        $this->setPerson([
+            'role' => 'TEACHER',
+            'name' => ['last' => 'Colleague'],
+            'groups' => [['id' => 'group-steady', 'name' => 'Klasse 5a']],
+        ], 'person-colleague');
+        $this->setGroup('group-steady', 'Klasse 5a', [
+            ['id' => self::PERSON, 'role' => 'STUDENT', 'name' => ['last' => 'Steady']],
+            ['id' => 'person-colleague', 'role' => 'TEACHER', 'name' => ['last' => 'Colleague']],
+        ]);
+
+        $this->process($this->event('update', properties: ['groups']));
+
+        $writes = $this->recordTenantWrites(fn () => $this->process($this->event('update', properties: ['name'])));
+
+        $this->assertSame([], $writes);
+    }
+
+    // =========================================================
+    // UserSyncJob, the login path
+    // =========================================================
+
+    public function test_the_login_job_converges_the_account_and_queues_the_follow_ups(): void
+    {
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+        $this->setPerson([
+            'role' => 'STUDENT',
+            'name' => ['last' => 'Login'],
+            'groups' => [['id' => 'group-login', 'name' => 'Klasse 5a']],
+        ]);
+
+        $this->app->call([new UserSyncJob((string) self::$testTenant->id, 'eduplaces', self::PERSON), 'handle']);
+
+        $this->assertSame(UserStatus::Active, $this->syncedUser()?->status);
+        Queue::assertPushed(RefreshIdpGroup::class, fn (RefreshIdpGroup $job): bool => $job->groupId === 'group-login'
+            && $job->tenantId === (string) self::$testTenant->id);
+        Queue::assertPushed(ReconcileIdpSchool::class, 1);
+    }
+
+    public function test_the_login_job_does_nothing_for_an_unknown_tenant(): void
+    {
+        Queue::fake([RefreshIdpGroup::class, ReconcileIdpSchool::class]);
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => 'Nobody']]);
+
+        $this->app->call([new UserSyncJob('no-such-tenant', 'eduplaces', self::PERSON), 'handle']);
+
+        $this->assertNull($this->syncedUser());
+        Queue::assertNothingPushed();
     }
 
     // =========================================================
@@ -433,8 +861,16 @@ class IdpUserSyncTest extends TestCase
                 (bool) preg_match('#/schools/[^/]+/people$#', $path) => Http::response(
                     array_values($this->idmPeople),
                 ),
-                (bool) preg_match('#/schools/[^/]+/groups$#', $path) => Http::response([]),
+                (bool) preg_match('#/schools/[^/]+/groups$#', $path) => Http::response($this->schoolVisible
+                    ? array_values(array_map(fn (array $g): array => ['id' => $g['id'], 'name' => $g['name']], $this->idmGroups))
+                    : []),
+                (bool) preg_match('#/schools/([^/]+)$#', $path, $m) => $this->schoolVisible
+                    ? Http::response(['id' => urldecode($m[1]), 'name' => 'Schule'])
+                    : Http::response(status: 404),
                 (bool) preg_match('#/people/([^/]+)$#', $path, $m) => $this->personResponse(urldecode($m[1])),
+                (bool) preg_match('#/groups/([^/]+)$#', $path, $m) => isset($this->idmGroups[urldecode($m[1])])
+                    ? Http::response($this->idmGroups[urldecode($m[1])])
+                    : Http::response(status: 404),
                 default => Http::response(status: 404),
             };
         });
@@ -462,6 +898,58 @@ class IdpUserSyncTest extends TestCase
         return self::$testTenant->run(
             fn () => LegacyUser::where('idp_user_id', $personId)->first(),
         );
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $members
+     */
+    private function setGroup(string $groupId, string $name, array $members): void
+    {
+        $this->idmGroups[$groupId] = ['id' => $groupId, 'name' => $name, 'status' => 'ACTIVE', 'members' => $members];
+    }
+
+    private function seedLocalUser(string $personId, string $lastName): void
+    {
+        $this->setPerson(['role' => 'STUDENT', 'name' => ['last' => $lastName]], $personId);
+        $this->process($this->event('create', $personId));
+    }
+
+    /**
+     * Inserts, updates and deletes against the membership, user and room
+     * tables while $callback runs.
+     *
+     * @return list<string>
+     */
+    private function recordTenantWrites(callable $callback): array
+    {
+        $writes = [];
+
+        DB::listen(function ($query) use (&$writes) {
+            if (preg_match('/^\s*(insert|update|delete)\b/i', $query->sql) === 1
+                && preg_match('/`?(au_rel_rooms_users|au_users_basedata|au_rooms)`?/', $query->sql) === 1) {
+                $writes[] = $query->sql;
+            }
+        });
+
+        $callback();
+
+        return $writes;
+    }
+
+    private function roomRole(string $personId, int $roomId): ?int
+    {
+        return self::$testTenant->run(function () use ($personId, $roomId) {
+            $hashId = DB::table('au_rooms')->where('id', $roomId)->value('hash_id');
+            $roles = LegacyUser::where('idp_user_id', $personId)->value('roles');
+
+            foreach (json_decode((string) $roles, true) ?: [] as $entry) {
+                if (($entry['room'] ?? null) === $hashId) {
+                    return (int) $entry['role'];
+                }
+            }
+
+            return null;
+        });
     }
 
     private function seedLocalRoom(?string $eduplacesId, string $name): int

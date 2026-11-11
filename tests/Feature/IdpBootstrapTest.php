@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserStatus;
 use App\Jobs\ImportSchoolForTenant;
+use App\Jobs\UserSyncJob;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\SchoolImport;
@@ -94,6 +95,7 @@ class IdpBootstrapTest extends TestCase
         self::$testTenant->run(fn () => Cache::flush());
         $this->cleanTenant();
         $this->seedTenantAdmin();
+        Queue::fake([UserSyncJob::class]);
     }
 
     protected function tearDown(): void
@@ -223,6 +225,19 @@ class IdpBootstrapTest extends TestCase
         ])->assertOk()->assertJsonPath('ready', false)->assertJsonPath('status', null);
     }
 
+    public function test_the_import_status_endpoint_does_not_block_a_tenant_with_sso_off(): void
+    {
+        // sso_provider defaults to eduplaces in Filament even when SSO stays off;
+        // no SSO login will ever start the import, so there is nothing to wait for.
+        Tenant::where('id', self::$testTenant->id)->update(['sso_enabled' => false]);
+
+        $this->actAsSeededAdmin();
+
+        $this->getJson('/api/v2/auth/idp/import-status', [
+            'aula-instance-code' => 'TEST001',
+        ])->assertOk()->assertJsonPath('ready', true)->assertJsonPath('status', null);
+    }
+
     /**
      * A declined bootstrap writes no idp_import_status and no later login
      * retries it, so waiting on one would hold every user on the setup screen.
@@ -247,7 +262,7 @@ class IdpBootstrapTest extends TestCase
         // The seeded admin of a school in use is a real account, so the first
         // SSO login must not claim it even with idp_migration_status left null.
         self::$testTenant->run(function () {
-            $pupil = new LegacyUser;
+            $pupil = new LegacyUser();
             $pupil->username = 'existing.pupil';
             $pupil->displayname = 'Existing Pupil';
             $pupil->status = UserStatus::Active;
@@ -299,6 +314,9 @@ class IdpBootstrapTest extends TestCase
             ImportSchoolForTenant::class,
             fn (ImportSchoolForTenant $job): bool => $job->tenantId === self::$testTenant->id,
         );
+        // The import brings the account and its rooms in; a sync beside it
+        // would write the same rows.
+        Queue::assertNotPushed(UserSyncJob::class);
 
         // Written before the dispatch, so ImportStatusController never reports
         // ready while the job is still waiting in the queue.
@@ -544,7 +562,7 @@ class IdpBootstrapTest extends TestCase
     private function seedTenantAdmin(): void
     {
         self::$testTenant->run(function () {
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = self::ADMIN_USERNAME;
             $user->displayname = 'Tenant Admin';
             $user->email = 'bootstrap_admin@test.example';

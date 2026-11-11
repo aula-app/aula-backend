@@ -74,10 +74,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
      *
      * Keyed on `sso_provider`, the alias Keycloak brokers under, so it is true
      * from tenant creation. `idp_school_id` is unknown until the first login
-     * reports it, so it cannot be what identifies a synced tenant.
+     * reports it, so it cannot be what identifies a synced tenant. A tenant
+     * with SSO off never sees the first login that starts the import, so it
+     * syncs from nothing whatever `sso_provider` holds.
      */
     public function usesIdpDirectory(): bool
     {
+        if (! $this->sso_enabled) {
+            return false;
+        }
+
         return $this->idp_school_id !== null
             || app(IdpProviders::class)->isConfigured($this->sso_provider);
     }

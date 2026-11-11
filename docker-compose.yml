@@ -28,6 +28,7 @@ services:
       - ./routes:/opt/laravel/routes
       - ./database:/opt/laravel/database
       - ./bootstrap:/opt/laravel/bootstrap
+      - ./tests:/opt/laravel/tests
       # dockerized and cli/artisan (with require-dev) seem to need separate caches
       - type: tmpfs
         target: /opt/laravel/bootstrap/cache

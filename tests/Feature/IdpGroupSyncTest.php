@@ -9,6 +9,8 @@ use App\Jobs\ProcessIdpWebhookEvent;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Services\Idp\Dto\IdpEvent;
+use App\Services\Idp\RoomEnrolment;
+use App\Services\Idp\RoomRoleNotWritten;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -34,6 +36,11 @@ class IdpGroupSyncTest extends TestCase
     /** @var array<string, array<string, mixed>> */
     private array $idmGroups = [];
 
+    /** @var array<string, array<string, mixed>> */
+    private array $idmPeople = [];
+
+    private bool $schoolVisible = true;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -57,6 +64,8 @@ class IdpGroupSyncTest extends TestCase
         $this->cleanTenant();
 
         $this->idmGroups = [];
+        $this->idmPeople = [];
+        $this->schoolVisible = true;
         $this->fakeIdm();
     }
 
@@ -116,6 +125,23 @@ class IdpGroupSyncTest extends TestCase
         $this->assertSame(20, $this->roleFor($studentId, (string) $room->hash_id));
     }
 
+    public function test_a_member_role_change_upstream_keeps_the_room_role(): void
+    {
+        $userId = $this->seedUser('person-promoted');
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-promoted', 'role' => 'STUDENT', 'name' => ['last' => 'Promoted']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-promoted', 'role' => 'TEACHER', 'name' => ['last' => 'Promoted']],
+        ]]);
+        $this->process($this->event('update', ['name']));
+
+        $this->assertSame(20, $this->roleFor($userId, (string) $this->room()->hash_id));
+    }
+
     public function test_unenrols_a_member_the_idm_dropped(): void
     {
         $stays = $this->seedUser('person-stays');
@@ -158,17 +184,38 @@ class IdpGroupSyncTest extends TestCase
         $this->assertMembership((int) $room->id, $native, 1);
     }
 
-    public function test_skips_members_aula_does_not_hold_yet(): void
+    public function test_imports_members_aula_does_not_hold_yet(): void
     {
         $this->setGroup(['name' => 'Klasse 5a', 'members' => [
-            ['id' => 'person-unknown', 'role' => 'STUDENT', 'name' => ['last' => 'Unknown']],
+            ['id' => 'person-unknown', 'role' => 'TEACHER', 'name' => ['firstFull' => 'Ute', 'last' => 'Unknown']],
         ]]);
 
         $this->process($this->event('create'));
 
-        $this->assertSame(0, self::$testTenant->run(
-            fn () => LegacyUser::where('idp_user_id', 'person-unknown')->count(),
-        ));
+        $user = self::$testTenant->run(fn () => LegacyUser::where('idp_user_id', 'person-unknown')->first());
+
+        $this->assertNotNull($user);
+        $this->assertSame('Ute Unknown', $user->realname);
+        $this->assertSame(40, $user->userlevel->value);
+        $this->assertMembership((int) $this->room()->id, (int) $user->id, 1);
+        $this->assertSame(40, $this->roleFor((int) $user->id, (string) $this->room()->hash_id));
+        // Built from the group's member list, without a per-member lookup.
+        Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '/people/'));
+    }
+
+    public function test_leaves_existing_members_untouched_by_the_thinner_member_payload(): void
+    {
+        $userId = $this->seedUser('person-known');
+        self::$testTenant->run(fn () => LegacyUser::where('id', $userId)->update(['realname' => 'Kept Name', 'status' => 3]));
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-known', 'role' => 'TEACHER', 'name' => ['last' => 'Other']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $user = self::$testTenant->run(fn () => LegacyUser::find($userId));
+        $this->assertSame('Kept Name', $user->realname);
+        $this->assertSame(3, $user->status->value);
     }
 
     public function test_delete_archives_the_room(): void
@@ -176,20 +223,193 @@ class IdpGroupSyncTest extends TestCase
         $this->setGroup(['name' => 'Klasse 5a']);
         $this->process($this->event('create'));
 
+        unset($this->idmGroups[self::GROUP]);
         $this->process($this->event('delete'));
 
         $this->assertSame(3, (int) $this->room()->status);
+    }
+
+    public function test_a_missing_group_does_not_archive_when_the_school_is_not_visible(): void
+    {
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+
+        // Every read 404s: the school was deleted or disconnected from the
+        // app, not this one group unshared.
+        unset($this->idmGroups[self::GROUP]);
+        $this->schoolVisible = false;
+        $event = $this->event('delete');
+        $this->process($event);
+
+        $this->assertSame(1, (int) $this->room()->status);
+        $this->assertSame(IdpWebhookEvent::STATUS_SKIPPED, $event->fresh()->status);
+    }
+
+    public function test_a_late_delete_does_not_archive_a_group_active_upstream(): void
+    {
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+
+        // The delete is stale: upstream still reports the group.
+        $this->process($this->event('delete'));
+
+        $this->assertSame(1, (int) $this->room()->status);
+    }
+
+    public function test_a_late_restore_does_not_reactivate_a_group_deleted_upstream(): void
+    {
+        // Upstream: deleted, restored, deleted. Delivered: delete, delete, restore.
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+        unset($this->idmGroups[self::GROUP]);
+
+        $this->process($this->event('delete'));
+        $this->process($this->event('delete'));
+        $this->process($this->event('restore'));
+
+        $this->assertSame(3, (int) $this->room()->status);
+    }
+
+    public function test_a_restore_does_not_override_an_inactive_read_back(): void
+    {
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+
+        $this->setGroup(['name' => 'Klasse 5a', 'status' => 'INACTIVE']);
+        $this->process($this->event('restore'));
+
+        $this->assertSame(3, (int) $this->room()->status);
+    }
+
+    public function test_an_inactive_group_is_archived_like_a_deleted_one(): void
+    {
+        $memberId = $this->seedUser('person-member');
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-member', 'role' => 'STUDENT', 'name' => ['last' => 'Member']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $this->setGroup(['name' => 'Klasse 5a', 'status' => 'INACTIVE', 'members' => [
+            ['id' => 'person-member', 'role' => 'STUDENT', 'name' => ['last' => 'Member']],
+        ]]);
+        $this->process($this->event('update', ['status']));
+
+        $this->assertSame(3, (int) $this->room()->status);
+        $this->assertMembership((int) $this->room()->id, $memberId, 1);
+    }
+
+    public function test_delete_keeps_memberships_and_roles(): void
+    {
+        $teacherId = $this->seedUser('person-teacher');
+        $studentId = $this->seedUser('person-student');
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-teacher', 'role' => 'TEACHER', 'name' => ['last' => 'Schuster']],
+            ['id' => 'person-student', 'role' => 'STUDENT', 'name' => ['last' => 'Becker']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $room = $this->room();
+        $native = $this->seedUser(null);
+
+        self::$testTenant->run(function () use ($room, $native) {
+            DB::table('au_rel_rooms_users')->insert([
+                'room_id' => $room->id, 'user_id' => $native, 'status' => 1, 'updater_id' => 0,
+            ]);
+            DB::table('au_users_basedata')->where('id', $native)->update([
+                'roles' => json_encode([['role' => 20, 'room' => $room->hash_id]]),
+            ]);
+        });
+
+        unset($this->idmGroups[self::GROUP]);
+        $this->process($this->event('delete'));
+
+        // Same as a room archived inside aula: nobody is removed.
+        $this->assertSame(3, (int) $this->room()->status);
+        $this->assertMembership((int) $room->id, $teacherId, 1);
+        $this->assertSame(40, $this->roleFor($teacherId, (string) $room->hash_id));
+        $this->assertMembership((int) $room->id, $studentId, 1);
+        $this->assertSame(20, $this->roleFor($studentId, (string) $room->hash_id));
+        $this->assertMembership((int) $room->id, $native, 1);
+        $this->assertSame(20, $this->roleFor($native, (string) $room->hash_id));
+    }
+
+    public function test_restore_reconciles_the_members_kept_through_the_archive(): void
+    {
+        $stayingId = $this->seedUser('person-staying');
+        $leavingId = $this->seedUser('person-leaving');
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-staying', 'role' => 'STUDENT', 'name' => ['last' => 'Bleibt']],
+            ['id' => 'person-leaving', 'role' => 'STUDENT', 'name' => ['last' => 'Geht']],
+        ]]);
+        $this->process($this->event('create'));
+        $room = $this->room();
+
+        unset($this->idmGroups[self::GROUP]);
+        $this->process($this->event('delete'));
+
+        // Restored upstream without one of its former members.
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-staying', 'role' => 'STUDENT', 'name' => ['last' => 'Bleibt']],
+        ]]);
+        $this->process($this->event('restore'));
+
+        $this->assertSame(1, (int) $this->room()->status);
+        $this->assertMembership((int) $room->id, $stayingId, 1);
+        $this->assertSame(20, $this->roleFor($stayingId, (string) $room->hash_id));
+        $this->assertMembership((int) $room->id, $leavingId, 0);
+        $this->assertNull($this->roleFor($leavingId, (string) $room->hash_id));
+    }
+
+    public function test_writing_a_role_for_a_missing_user_fails(): void
+    {
+        $this->setGroup(['name' => 'Klasse 5a']);
+        $this->process($this->event('create'));
+        $room = $this->room();
+
+        $missingUserId = (int) self::$testTenant->run(fn () => DB::table('au_users_basedata')->max('id')) + 1000;
+
+        $this->expectException(RoomRoleNotWritten::class);
+
+        self::$testTenant->run(fn () => app(RoomEnrolment::class)->enrol($missingUserId, (int) $room->id, (string) $room->hash_id, 20));
     }
 
     public function test_restore_reactivates_the_room(): void
     {
         $this->setGroup(['name' => 'Klasse 5a']);
         $this->process($this->event('create'));
+        unset($this->idmGroups[self::GROUP]);
         $this->process($this->event('delete'));
 
+        $this->setGroup(['name' => 'Klasse 5a']);
         $this->process($this->event('restore'));
 
         $this->assertSame(1, (int) $this->room()->status);
+    }
+
+    public function test_an_unchanged_group_writes_nothing(): void
+    {
+        $this->seedUser('person-teacher');
+        $this->seedUser('person-student');
+
+        $this->setGroup(['name' => 'Klasse 5a', 'members' => [
+            ['id' => 'person-teacher', 'role' => 'TEACHER', 'name' => ['last' => 'Schuster']],
+            ['id' => 'person-student', 'role' => 'STUDENT', 'name' => ['last' => 'Becker']],
+        ]]);
+        $this->process($this->event('create'));
+
+        $writes = [];
+        DB::listen(function ($query) use (&$writes) {
+            if (preg_match('/^\s*(insert|update|delete)\b/i', $query->sql) === 1
+                && preg_match('/`?(au_rel_rooms_users|au_users_basedata|au_rooms)`?/', $query->sql) === 1) {
+                $writes[] = $query->sql;
+            }
+        });
+
+        $this->process($this->event('update', ['name']));
+
+        $this->assertSame([], $writes);
     }
 
     public function test_applying_the_same_event_twice_does_not_duplicate(): void
@@ -251,7 +471,13 @@ class IdpGroupSyncTest extends TestCase
                         $this->idmGroups,
                     )),
                 ),
+                (bool) preg_match('#/schools/([^/]+)$#', $path, $m) => $this->schoolVisible
+                    ? Http::response(['id' => urldecode($m[1]), 'name' => 'Schule'])
+                    : Http::response(status: 404),
                 (bool) preg_match('#/groups/([^/]+)$#', $path, $m) => $this->groupResponse(urldecode($m[1])),
+                (bool) preg_match('#/people/([^/]+)$#', $path, $m) => isset($this->idmPeople[urldecode($m[1])])
+                    ? Http::response($this->idmPeople[urldecode($m[1])])
+                    : Http::response(status: 404),
                 default => Http::response(status: 404),
             };
         });
@@ -313,7 +539,9 @@ class IdpGroupSyncTest extends TestCase
     {
         self::$testTenant->run(function () {
             $roomIds = DB::table('au_rooms')->whereNotNull('idp_group_id')->pluck('id')->all();
-            $userIds = LegacyUser::where('username', 'like', 'roomtest.%')->pluck('id')->all();
+            $userIds = LegacyUser::where('username', 'like', 'roomtest.%')
+                ->orWhere('idp_user_id', 'like', 'person-%')
+                ->pluck('id')->all();
 
             if ($roomIds !== []) {
                 DB::table('au_rel_rooms_users')->whereIn('room_id', $roomIds)->delete();

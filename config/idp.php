@@ -45,8 +45,9 @@ return [
                 'user' => 'sub',
             ],
 
-            // Provider role to aula userlevel. RoleMap reads the same value for
-            // the per-room role, so the two cannot diverge.
+            // Provider role to aula userlevel and per-room role, applied once:
+            // on account creation and on joining a room. Later role changes
+            // upstream do not reach aula.
             'roles' => [
                 'TEACHER' => (int) env('EDUPLACES_USERLEVEL_TEACHER', 40),
                 'STUDENT' => (int) env('EDUPLACES_USERLEVEL_STUDENT', 20),
