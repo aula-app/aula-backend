@@ -7,13 +7,14 @@ namespace App\Console\Commands;
 use App\Models\Tenant;
 use App\Services\Idp\Migration\MergeProposalBuilder;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\Isolatable;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Runs MergeProposalBuilder and prints the idp_merge_candidates rows, the same
  * data MergeProposalController::index() serves.
  */
-class ProposeIdpMerge extends Command
+class ProposeIdpMerge extends Command implements Isolatable
 {
     protected $signature = 'idp:propose-merge
                             {instance_code : Instance code of the tenant}
