@@ -17,12 +17,8 @@ use Tests\TestCase;
  * Prerequisites:
  * - Database must be initialized with schema from legacy/init/aula_db_structure.sql
  * - A standard room (type=1) must exist
- *
- * Configuration:
- * - Set AULA_TEST_INSTANCE environment variable to specify the instance code (default: SINGLE)
- *   Example: AULA_TEST_INSTANCE=TEST01 php artisan test --filter=AddAllCSVTest
  */
-class AddAllCSVTest extends TestCase
+class AddAllCSVPestTest extends TestCase
 {
     use CreatesTestTenant;
     private $user;
@@ -39,7 +35,8 @@ class AddAllCSVTest extends TestCase
         $this->ensureTestTenantExists();
 
         // Get instance code from environment variable, default to 'SINGLE'
-        $this->instanceCode = env('AULA_TEST_INSTANCE', 'SINGLE');
+        // TODO move to CreatesTestTenant
+        $this->instanceCode = 'TEST001';
 
         // Load legacy classes
         $this->loadLegacyClasses();
