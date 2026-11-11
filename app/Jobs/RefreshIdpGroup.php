@@ -12,6 +12,7 @@ use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
@@ -53,6 +54,20 @@ class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
     public function uniqueId(): string
     {
         return $this->tenantId.':'.$this->groupId;
+    }
+
+    /**
+     * Get the middleware the job should pass through.
+     *
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        $maxJobRuntime = array_sum($this->backoff) + count($this->backoff) * 60;
+        return [
+            // ensure no two workers are picking up the same event at the same time
+            (new WithoutOverlapping($this->tenantId . $this->groupId))->expireAfter($maxJobRuntime)
+        ];
     }
 
     public function handle(GroupSync $groupSync): void
