@@ -63,9 +63,10 @@ class RefreshIdpGroup implements ShouldBeUniqueUntilProcessing, ShouldQueue
      */
     public function middleware(): array
     {
+        $maxJobRuntime = array_sum($this->backoff) + count($this->backoff) * 60;
         return [
             // ensure no two workers are picking up the same event at the same time
-            new WithoutOverlapping($this->tenantId . $this->groupId)->expireAfter(180)
+            (new WithoutOverlapping($this->tenantId . $this->groupId))->expireAfter($maxJobRuntime)
         ];
     }
 
