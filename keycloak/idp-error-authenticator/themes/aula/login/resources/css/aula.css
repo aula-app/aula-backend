@@ -1,0 +1,298 @@
+/* aula look and feel for the Keycloak login theme.
+   Tokens mirror aula-frontend src/theme/light.ts and tailwind-theme.css. */
+
+@font-face {
+  font-family: 'Vision';
+  src: url('../font/vision-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vision';
+  src: url('../font/vision-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --aula-green: hsl(134, 72%, 67%);
+  --aula-green-hover: hsl(134, 72%, 58%);
+  --aula-green-light: hsl(134, 72%, 94%);
+  --aula-navy: hsl(236, 42%, 22%);
+  --aula-navy-soft: hsl(236, 20%, 42%);
+  --aula-on-green: hsl(210, 15%, 12%);
+  --aula-blue-dark: hsl(210, 88%, 67%);
+  --aula-grey: hsl(0, 0%, 88%);
+  --aula-grey-light: hsl(0, 0%, 95%);
+  --aula-input-border: rgba(0, 0, 0, 0.45);
+  --aula-error-bg: hsl(0, 100%, 94%);
+  --aula-error-fg: hsl(0, 72%, 35%);
+  --aula-warning-bg: hsl(45, 100%, 90%);
+  --aula-warning-fg: hsl(35, 85%, 30%);
+  --aula-info-bg: hsl(204, 82%, 90%);
+  --aula-info-fg: hsl(204, 70%, 30%);
+  --aula-success-bg: hsl(134, 72%, 88%);
+  --aula-success-fg: hsl(134, 55%, 28%);
+  --aula-shadow: rgba(0, 0, 0, 0.05);
+  --aula-radius: 4px;
+  --aula-radius-card: 12px;
+  --aula-font: 'Vision', 'Tahoma', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --aula-font-heading: 'Tahoma', 'Vision', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* PatternFly tokens the stock templates read. */
+  --pf-v5-global--FontFamily--sans-serif: var(--aula-font);
+  --pf-v5-global--FontFamily--text: var(--aula-font);
+  --pf-v5-global--FontFamily--heading: var(--aula-font-heading);
+  --pf-v5-global--Color--100: var(--aula-navy);
+  --pf-v5-global--Color--200: var(--aula-navy-soft);
+  --pf-v5-global--primary-color--100: var(--aula-green);
+  --pf-v5-global--primary-color--200: var(--aula-green-hover);
+  --pf-v5-global--link--Color: var(--aula-navy);
+  --pf-v5-global--link--Color--hover: var(--aula-blue-dark);
+  --pf-v5-global--BorderRadius--sm: var(--aula-radius);
+  --pf-v5-global--BorderColor--100: var(--aula-grey);
+  --pf-v5-global--danger-color--100: var(--aula-error-fg);
+  --pf-v5-global--BackgroundColor--100: #fff;
+
+  --keycloak-card-top-color: var(--aula-green);
+  --keycloak-bg-logo-url: none;
+}
+
+/* Page */
+
+.login-pf body {
+  min-height: 100%;
+  background:
+    radial-gradient(60rem 28rem at 50% -8rem, var(--aula-green-light) 0%, transparent 70%),
+    #fff;
+  color: var(--aula-navy);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.pf-v5-c-login {
+  --pf-v5-c-login--BackgroundColor: transparent;
+  padding-inline: 1rem;
+}
+
+.pf-v5-c-login__container {
+  grid-template-columns: min(28rem, 100%);
+  row-gap: 1.5rem;
+}
+
+/* Header: the realm name becomes the aula logo. The text stays in the DOM for
+   assistive tech. */
+
+.pf-v5-c-login__header {
+  padding-block: 1.5rem 0;
+}
+
+#kc-header-wrapper {
+  width: min(13.75rem, 60vw);
+  aspect-ratio: 503 / 297;
+  margin: 0 auto;
+  background: url('../img/aula-logo.svg') center / contain no-repeat;
+  font-size: 0;
+  line-height: 0;
+  letter-spacing: 0;
+  text-transform: none;
+  color: transparent !important;
+}
+
+/* Card */
+
+.pf-v5-c-login__main {
+  border-radius: var(--aula-radius-card);
+  box-shadow:
+    0 12px 32px var(--aula-shadow),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.pf-v5-c-login__main-header {
+  border-top: 4px solid var(--aula-green);
+  padding-block-start: 1.75rem;
+}
+
+.pf-v5-c-login__main-header .pf-v5-c-title {
+  font-family: var(--aula-font-heading);
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.5;
+  color: var(--aula-navy);
+}
+
+.pf-v5-c-login__main-body {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.pf-v5-c-login__main-body .instruction {
+  margin-block-end: 1.25rem;
+}
+
+#traceId {
+  font-size: 0.875rem;
+  color: var(--aula-navy-soft);
+}
+
+/* Buttons: aula's contained button is green with dark text, the outlined one navy. */
+
+.pf-v5-c-button {
+  --pf-v5-c-button--BorderRadius: var(--aula-radius);
+  --pf-v5-c-button--FontWeight: 700;
+  --pf-v5-c-button--m-primary--Color: var(--aula-on-green);
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--aula-green);
+  --pf-v5-c-button--m-primary--hover--Color: var(--aula-on-green);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--aula-green-hover);
+  --pf-v5-c-button--m-primary--focus--Color: var(--aula-on-green);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--aula-green-hover);
+  --pf-v5-c-button--m-primary--active--Color: var(--aula-on-green);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--aula-green-hover);
+  --pf-v5-c-button--m-secondary--Color: var(--aula-navy);
+  --pf-v5-c-button--m-secondary--BorderColor: var(--aula-navy);
+  --pf-v5-c-button--m-secondary--hover--Color: var(--aula-navy);
+  --pf-v5-c-button--m-secondary--hover--BorderColor: var(--aula-navy);
+  --pf-v5-c-button--m-secondary--focus--Color: var(--aula-navy);
+  --pf-v5-c-button--m-secondary--focus--BorderColor: var(--aula-navy);
+  --pf-v5-c-button--m-secondary--active--Color: var(--aula-navy);
+  --pf-v5-c-button--m-secondary--active--BorderColor: var(--aula-navy);
+  --pf-v5-c-button--m-link--Color: var(--aula-navy);
+  --pf-v5-c-button--m-link--hover--Color: var(--aula-blue-dark);
+  transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:focus-visible {
+  box-shadow: 0 4px 12px rgba(101, 224, 127, 0.35);
+}
+
+.pf-v5-c-button.pf-m-secondary:hover {
+  background-color: var(--aula-grey-light);
+}
+
+/* The way out of an error or info page, styled like aula's outlined button. */
+
+#kc-info-message,
+#kc-logout-confirm #kc-info-message {
+  margin-block-start: 1.25rem;
+}
+
+#backToApplication,
+#kc-info-message a,
+#kc-error-message a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.375rem 1rem;
+  border: 1px solid var(--aula-navy);
+  border-radius: var(--aula-radius);
+  font-weight: 700;
+  color: var(--aula-navy);
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+#backToApplication:hover,
+#kc-info-message a:hover,
+#kc-error-message a:hover {
+  background-color: var(--aula-grey-light);
+  color: var(--aula-navy);
+}
+
+/* Alerts: aula uses the outlined variant, a tinted surface with a matching border. */
+
+.pf-v5-c-alert.pf-m-inline {
+  --pf-v5-c-alert--BorderTopWidth: 0;
+  --pf-v5-c-alert--BoxShadow: none;
+  --pf-v5-c-alert--GridTemplateColumns: max-content 1fr;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+}
+
+.pf-v5-c-alert.pf-m-danger {
+  --pf-v5-c-alert--BackgroundColor: var(--aula-error-bg);
+  --pf-v5-c-alert--m-danger__icon--Color: var(--aula-error-fg);
+  --pf-v5-c-alert--m-danger__title--Color: var(--aula-error-fg);
+  color: var(--aula-error-fg);
+}
+
+.pf-v5-c-alert.pf-m-warning {
+  --pf-v5-c-alert--BackgroundColor: var(--aula-warning-bg);
+  --pf-v5-c-alert--m-warning__icon--Color: var(--aula-warning-fg);
+  --pf-v5-c-alert--m-warning__title--Color: var(--aula-warning-fg);
+  color: var(--aula-warning-fg);
+}
+
+.pf-v5-c-alert.pf-m-info {
+  --pf-v5-c-alert--BackgroundColor: var(--aula-info-bg);
+  --pf-v5-c-alert--m-info__icon--Color: var(--aula-info-fg);
+  --pf-v5-c-alert--m-info__title--Color: var(--aula-info-fg);
+  color: var(--aula-info-fg);
+}
+
+.pf-v5-c-alert.pf-m-success {
+  --pf-v5-c-alert--BackgroundColor: var(--aula-success-bg);
+  --pf-v5-c-alert--m-success__icon--Color: var(--aula-success-fg);
+  --pf-v5-c-alert--m-success__title--Color: var(--aula-success-fg);
+  color: var(--aula-success-fg);
+}
+
+.pf-v5-c-alert__title {
+  font-weight: 400;
+}
+
+/* Form controls, for the realms that still show a password or language field. */
+
+.pf-v5-c-form-control {
+  --pf-v5-c-form-control--BorderRadius: var(--aula-radius);
+  --pf-v5-c-form-control--after--BorderColor: var(--aula-input-border);
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--aula-input-border);
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: var(--aula-navy);
+  --pf-v5-c-form-control--focus--after--BorderBottomColor: var(--aula-navy);
+  --pf-v5-c-form-control--after--BorderBottomWidth: 1px;
+  --pf-v5-c-form-control--focus--after--BorderBottomWidth: 2px;
+}
+
+.pf-v5-c-form__label-text {
+  font-weight: 700;
+  color: var(--aula-navy);
+}
+
+/* Focus: aula's double ring, visible on any surface. */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.pf-v5-c-button:focus-visible {
+  outline: 2px solid var(--aula-navy);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 575px) {
+  .pf-v5-c-login__header {
+    padding-block-start: 1rem;
+  }
+
+  #kc-header-wrapper {
+    width: 10rem;
+  }
+
+  .pf-v5-c-login__main-header .pf-v5-c-title {
+    font-size: 1.3125rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-v5-c-button,
+  #backToApplication,
+  #kc-info-message a,
+  #kc-error-message a {
+    transition: none;
+  }
+}
