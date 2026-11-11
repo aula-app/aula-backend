@@ -10,6 +10,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -40,6 +41,19 @@ class ImportSchoolForTenant implements ShouldQueue
     public function __construct(
         public readonly string $tenantId,
     ) {}
+
+    /**
+     * Get the middleware the job should pass through.
+     *
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [
+            // ensure no two workers are picking up the same event at the same time
+            new WithoutOverlapping($this->tenantId)->expireAfter(180)
+        ];
+    }
 
     public function handle(SchoolImport $import): void
     {
