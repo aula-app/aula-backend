@@ -107,7 +107,7 @@ class TopicPhaseStartTest extends TestCase
             "INSERT INTO {$this->db->au_rooms} (room_name, status, hash_id, created, last_update)
              VALUES (:name, 1, :hash, NOW(), NOW())"
         );
-        $stmt->execute([':name' => $this->testTag, ':hash' => $this->testTag]);
+        $stmt->execute([':name' => $this->testTag, ':hash' => md5($this->testTag)]);
         return (int) $this->db->lastInsertId();
     }
 

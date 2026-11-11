@@ -267,7 +267,7 @@ class ResetIdpTenantCommandTest extends TestCase
         return self::$testTenant->run(function (): array {
             $roomId = (int) DB::table('au_rooms')->insertGetId([
                 'room_name' => 'Klasse 5a', 'status' => 1, 'type' => 0,
-                'hash_id' => Str::random(64), 'idp_group_id' => 'group-reset-1',
+                'hash_id' => Str::random(32), 'idp_group_id' => 'group-reset-1',
             ]);
 
             $user = new LegacyUser();
