@@ -25,12 +25,13 @@ trait CreatesTestTenant
 
     protected function ensureTestTenantExists(): void
     {
-        // TODO this does not drop their DBs (or truncate them)
-        Tenant::whereLike('instance_code', 'TEST%')->delete();
+        if (self::$testTenant !== null) {
+            return;
+        }
 
-        self::$testTenant = Tenant::create(
+        self::$testTenant = Tenant::updateOrCreate(
+            ['instance_code' => 'TEST001'],
             [
-                'instance_code' => 'TEST001',
                 'name' => 'Test Tenant 001 (PHPUnit)',
                 'jwt_key' => self::TEST_JWT_KEY,
                 'api_base_url' => 'https://test001.example',
@@ -39,7 +40,6 @@ trait CreatesTestTenant
             ]
         );
 
-        // TODO: no need to migrate when we create fresh?
         Artisan::call('tenants:migrate', [
             '--tenants' => [self::$testTenant->id],
         ]);
