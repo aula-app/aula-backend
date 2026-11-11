@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\TemporaryPasswordsAction;
 use App\Filament\Resources\TenantResource\Pages;
 use App\Models\SchoolType;
 use App\Models\Tenant;
@@ -293,6 +294,7 @@ class TenantResource extends Resource
             ->filters([])
             ->actions([
                 EditAction::make(),
+                TemporaryPasswordsAction::make(),
             ])
             ->bulkActions([]);
     }

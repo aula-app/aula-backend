@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\TenantResource\Pages;
 
+use App\Filament\Actions\TemporaryPasswordsAction;
 use App\Filament\Resources\TenantResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -18,6 +19,7 @@ class EditTenant extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            TemporaryPasswordsAction::make(),
             Actions\DeleteAction::make(),
         ];
     }
