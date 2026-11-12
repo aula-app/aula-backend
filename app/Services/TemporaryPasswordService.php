@@ -20,13 +20,14 @@ use stdClass;
  * lists the same credentials instead of invalidating a list already handed out.
  *
  * @psalm-type Row = array{user_id: int, name: string, username: string, password: string, classes: string}
- * @psalm-type Sheet = array{room_id: ?int, room: string, is_class: bool, rows: list<Row>}
+ * @psalm-type RoomOverview = array{key: string, room: string, new: int, existing: int}
+ * @psalm-type Sheet = array{key: string, room_id: ?int, room: string, is_class: bool, rows: list<Row>}
  */
 class TemporaryPasswordService
 {
     public const string NO_ROOM_LABEL = 'Without room';
 
-    public const string NO_CLASS_LABEL = 'Without class';
+    public const string NO_ROOM_KEY = 'none';
 
     private const int PASSWORD_LENGTH = 8;
 
@@ -50,15 +51,44 @@ class TemporaryPasswordService
     }
 
     /**
-     * @return array{sheets: list<Sheet>, new: int, existing: int}
+     * The rooms a sheet can be made for, without changing anything.
+     *
+     * @return list<RoomOverview>
      */
-    public function issue(Tenant $tenant): array
+    public function overview(Tenant $tenant): array
     {
         return $tenant->run(function (): array {
+            $users = $this->eligibleUsers();
+            $passwords = $users
+                ->mapWithKeys(fn (stdClass $user): array => [(int) $user->id => (string) $user->temp_pw])
+                ->all();
+
+            return array_map(function (array $sheet): array {
+                $existing = count(array_filter($sheet['rows'], fn (array $row): bool => $row['password'] !== ''));
+
+                return [
+                    'key' => $sheet['key'],
+                    'room' => $sheet['room'],
+                    'new' => count($sheet['rows']) - $existing,
+                    'existing' => $existing,
+                ];
+            }, $this->sheets($users, $passwords));
+        });
+    }
+
+    /**
+     * Sets the missing passwords and returns the sheets. With a sheet key,
+     * only that room's users are touched and only its sheet is returned.
+     *
+     * @return array{sheets: list<Sheet>, new: int, existing: int}
+     */
+    public function issue(Tenant $tenant, ?string $sheetKey = null): array
+    {
+        return $tenant->run(function () use ($sheetKey): array {
             // Locked so a password chosen meanwhile is not overwritten, and
             // two runs cannot hand out different passwords for one user.
-            [$users, $passwords, $new] = DB::transaction(function (): array {
-                $users = $this->eligibleUsers(lock: true);
+            [$users, $passwords, $new] = DB::transaction(function () use ($sheetKey): array {
+                $users = $this->eligibleUsers(lock: true, sheetKey: $sheetKey);
                 $pending = $users->reject(fn (stdClass $user): bool => $this->holdsTemporaryPassword($user));
 
                 $passwords = $users
@@ -68,53 +98,17 @@ class TemporaryPasswordService
                 return [$users, array_replace($passwords, $this->assignPasswords($pending)), $pending->count()];
             });
 
+            $sheets = $this->sheets($users, $passwords);
+            if ($sheetKey !== null) {
+                $sheets = array_values(array_filter($sheets, fn (array $sheet): bool => $sheet['key'] === $sheetKey));
+            }
+
             return [
-                'sheets' => $this->sheets($users, $passwords),
+                'sheets' => $sheets,
                 'new' => $new,
                 'existing' => $users->count() - $new,
             ];
         });
-    }
-
-    /**
-     * The sheets worth printing: one per class, plus one for the users no
-     * class sheet covers. The other rooms repeat users the class sheets
-     * already list (the main room holds everyone).
-     *
-     * @param  list<Sheet>  $sheets
-     * @return list<Sheet>
-     */
-    public function handoutSheets(array $sheets): array
-    {
-        $classSheets = array_values(array_filter($sheets, fn (array $sheet): bool => $sheet['is_class']));
-        $covered = [];
-        foreach ($classSheets as $sheet) {
-            foreach ($sheet['rows'] as $row) {
-                $covered[$row['user_id']] = true;
-            }
-        }
-
-        $leftover = [];
-        foreach ($sheets as $sheet) {
-            foreach ($sheet['rows'] as $row) {
-                if (! isset($covered[$row['user_id']])) {
-                    $leftover[$row['user_id']] = $row;
-                }
-            }
-        }
-
-        if ($leftover === []) {
-            return $classSheets;
-        }
-
-        usort($leftover, fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
-
-        return [...$classSheets, [
-            'room_id' => null,
-            'room' => self::NO_CLASS_LABEL,
-            'is_class' => false,
-            'rows' => $leftover,
-        ]];
     }
 
     /**
@@ -126,10 +120,14 @@ class TemporaryPasswordService
      *
      * @return Collection<int, stdClass>
      */
-    private function eligibleUsers(bool $lock = false): Collection
+    private function eligibleUsers(bool $lock = false, ?string $sheetKey = null): Collection
     {
         return DB::table('au_users_basedata')
             ->when($lock, fn (Builder $query) => $query->lockForUpdate())
+            ->when($sheetKey === self::NO_ROOM_KEY, fn (Builder $query) => $query
+                ->whereNotExists(fn (Builder $sub) => $this->activeMembership($sub)))
+            ->when($sheetKey !== null && $sheetKey !== self::NO_ROOM_KEY, fn (Builder $query) => $query
+                ->whereExists(fn (Builder $sub) => $this->activeMembership($sub)->where('au_rooms.id', (int) $sheetKey)))
             ->where('status', UserStatus::Active->value)
             ->where('userlevel', UserLevel::User->value)
             ->whereNull('sso_sub')
@@ -147,6 +145,20 @@ class TemporaryPasswordService
             ->orderBy('realname')
             ->orderBy('id')
             ->get(['id', 'realname', 'displayname', 'username', 'temp_pw']);
+    }
+
+    /**
+     * Correlated subquery: the user's memberships in active rooms.
+     */
+    private function activeMembership(Builder $query): Builder
+    {
+        return $query
+            ->selectRaw('1')
+            ->from('au_rel_rooms_users')
+            ->join('au_rooms', 'au_rooms.id', '=', 'au_rel_rooms_users.room_id')
+            ->whereColumn('au_rel_rooms_users.user_id', 'au_users_basedata.id')
+            ->where('au_rel_rooms_users.status', 1)
+            ->where('au_rooms.status', self::ROOM_ACTIVE);
     }
 
     private function holdsTemporaryPassword(stdClass $user): bool
@@ -220,6 +232,7 @@ class TemporaryPasswordService
             }
 
             $sheets[] = [
+                'key' => (string) $room->id,
                 'room_id' => (int) $room->id,
                 'room' => (string) $room->room_name,
                 'is_class' => (int) $room->type === self::ROOM_TYPE_CLASS,
@@ -230,6 +243,7 @@ class TemporaryPasswordService
         $roomless = $users->whereNotIn('id', $memberships->pluck('user_id')->all());
         if ($roomless->isNotEmpty()) {
             $sheets[] = [
+                'key' => self::NO_ROOM_KEY,
                 'room_id' => null,
                 'room' => self::NO_ROOM_LABEL,
                 'is_class' => false,

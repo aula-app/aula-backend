@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 /**
- * Renders temporary-password sheets as one PDF, a page per sheet.
+ * Renders one room's temporary passwords as cut-out cards, eight to an A4
+ * page.
  *
  * @psalm-import-type Sheet from TemporaryPasswordService
  */
@@ -20,15 +21,15 @@ class TemporaryPasswordPdf
     private const string MEMORY_LIMIT = '1G';
 
     /**
-     * @param  list<Sheet>  $sheets
+     * @param  Sheet  $sheet
      */
-    public function render(Tenant $tenant, array $sheets): string
+    public function render(Tenant $tenant, array $sheet): string
     {
-        // dompdf needs roughly 190 MB for 1200 users.
+        // dompdf's memory use grows with the number of cards.
         $previousLimit = ini_set('memory_limit', self::MEMORY_LIMIT);
 
         try {
-            return $this->renderSheets($tenant, $sheets);
+            return $this->renderSheet($tenant, $sheet);
         } finally {
             if ($previousLimit !== false) {
                 ini_set('memory_limit', $previousLimit);
@@ -37,9 +38,9 @@ class TemporaryPasswordPdf
     }
 
     /**
-     * @param  list<Sheet>  $sheets
+     * @param  Sheet  $sheet
      */
-    private function renderSheets(Tenant $tenant, array $sheets): string
+    private function renderSheet(Tenant $tenant, array $sheet): string
     {
         $cacheDir = storage_path('framework/cache/dompdf');
         File::ensureDirectoryExists($cacheDir);
@@ -57,8 +58,7 @@ class TemporaryPasswordPdf
         $dompdf->setPaper('A4');
         $dompdf->loadHtml(view('pdf.temp-passwords', [
             'tenant' => $tenant,
-            'sheets' => $sheets,
-            'generatedAt' => now(),
+            'sheet' => $sheet,
         ])->render(), 'UTF-8');
         $dompdf->render();
 
