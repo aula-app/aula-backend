@@ -65,6 +65,9 @@ it('lists the rooms on the temporary passwords page', function () {
     $this->get(TenantResource::getUrl('temp-passwords', ['record' => $this->tenant]))
         ->assertOk()
         ->assertSee(TemporaryPasswordService::NO_ROOM_LABEL)
+        // The button must carry a call the browser can run.
+        ->assertSee('wire:click="downloadRoom(\'none\')"', false)
+        ->assertDontSee('@js', false)
         ->assertSee('Download all (ZIP)');
 });
 
