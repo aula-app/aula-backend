@@ -43,7 +43,7 @@
                                 <td class="px-3 py-4 sm:last-of-type:pe-6 text-end">
                                     <x-filament::button
                                         wire:click="downloadRoom(@js($room['key']))"
-                                        wire:confirm="{{ $this->confirmation($room['new']) }}"
+                                        :wire:confirm="$room['new'] > 0 ? $this->confirmation($room['new']) : null"
                                         wire:loading.attr="disabled"
                                         icon="heroicon-o-arrow-down-tray"
                                         color="gray"

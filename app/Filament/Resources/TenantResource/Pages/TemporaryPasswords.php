@@ -59,9 +59,10 @@ class TemporaryPasswords extends Page
                 ->label('Download all (ZIP)')
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->disabled(fn (): bool => $this->rooms() === [])
-                ->requiresConfirmation()
+                // Asked only when the download changes passwords.
+                ->requiresConfirmation(fn (): bool => $this->pendingCount() > 0)
                 ->modalHeading('Download all rooms')
-                ->modalDescription(fn (): string => $this->confirmation(array_sum(array_column($this->rooms(), 'new'))))
+                ->modalDescription(fn (): string => $this->confirmation($this->pendingCount()))
                 ->modalSubmitActionLabel('Download ZIP')
                 ->action(fn (): ?StreamedResponse => $this->downloadAll()),
         ];
@@ -86,9 +87,12 @@ class TemporaryPasswords extends Page
 
     public function confirmation(int $new): string
     {
-        return $new === 0
-            ? 'No password changes: every listed user already holds a temporary password.'
-            : "{$new} ".($new === 1 ? 'user gets' : 'users get').' a new temporary password. Their set-password links stop working.';
+        return "{$new} ".($new === 1 ? 'user gets' : 'users get').' a new temporary password. Their set-password links stop working.';
+    }
+
+    private function pendingCount(): int
+    {
+        return app(TemporaryPasswordService::class)->summary($this->tenant())['new'];
     }
 
     public function downloadRoom(string $sheetKey): ?StreamedResponse
