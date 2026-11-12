@@ -61,30 +61,72 @@ it('links the tenants table to the temporary passwords page', function () {
         );
 });
 
+function tempPasswordOf(Tenant $tenant): ?string
+{
+    return $tenant->run(fn () => LegacyUser::where('username', PANEL_TEST_USERNAME)->first()->temp_pw);
+}
+
+function roomAction(string $name): TestAction
+{
+    return TestAction::make($name)->table(TemporaryPasswordService::NO_ROOM_KEY);
+}
+
 it('lists the rooms on the temporary passwords page', function () {
     $this->get(TenantResource::getUrl('temp-passwords', ['record' => $this->tenant]))
         ->assertOk()
         ->assertSee(TemporaryPasswordService::NO_ROOM_LABEL)
-        // The button must carry a call the browser can run.
-        ->assertSee('wire:click="downloadRoom(\'none\')"', false)
-        ->assertDontSee('@js', false)
+        ->assertSee('Reset all passwords')
         ->assertSee('Download all (ZIP)');
 });
 
-it('downloads the pdf of one room', function () {
+it('offers no download for a room before its passwords are reset', function () {
     Livewire::test(TemporaryPasswords::class, ['record' => $this->tenant->getKey()])
-        ->call('downloadRoom', TemporaryPasswordService::NO_ROOM_KEY)
+        ->assertActionDisabled(roomAction(TemporaryPasswords::DOWNLOAD_ROOM))
+        ->assertActionEnabled(roomAction(TemporaryPasswords::RESET_ROOM));
+
+    expect(tempPasswordOf($this->tenant))->toBeEmpty();
+});
+
+it('resets the passwords of a room only after confirmation', function () {
+    Livewire::test(TemporaryPasswords::class, ['record' => $this->tenant->getKey()])
+        ->mountAction(roomAction(TemporaryPasswords::RESET_ROOM))
+        ->assertActionMounted(roomAction(TemporaryPasswords::RESET_ROOM));
+
+    expect(tempPasswordOf($this->tenant))->toBeEmpty();
+
+    Livewire::test(TemporaryPasswords::class, ['record' => $this->tenant->getKey()])
+        ->callAction(roomAction(TemporaryPasswords::RESET_ROOM))
+        ->assertHasNoErrors()
+        ->assertNoFileDownloaded();
+
+    expect(tempPasswordOf($this->tenant))->not->toBeEmpty();
+});
+
+it('downloads the pdf of a room without changing its passwords', function () {
+    app(TemporaryPasswordService::class)->issue($this->tenant, TemporaryPasswordService::NO_ROOM_KEY);
+    $before = tempPasswordOf($this->tenant);
+
+    Livewire::test(TemporaryPasswords::class, ['record' => $this->tenant->getKey()])
+        ->callAction(roomAction(TemporaryPasswords::DOWNLOAD_ROOM))
         ->assertHasNoErrors()
         ->assertFileDownloaded('without-room.pdf');
 
-    $this->tenant->run(function () {
-        expect(LegacyUser::where('username', PANEL_TEST_USERNAME)->first()->temp_pw)->not->toBeEmpty();
-    });
+    expect(tempPasswordOf($this->tenant))->toBe($before);
+});
+
+it('resets all rooms from the header', function () {
+    Livewire::test(TemporaryPasswords::class, ['record' => $this->tenant->getKey()])
+        ->callAction(TemporaryPasswords::RESET_ALL)
+        ->assertHasNoErrors();
+
+    expect(tempPasswordOf($this->tenant))->not->toBeEmpty();
 });
 
 it('downloads all rooms as a zip', function () {
+    app(TemporaryPasswordService::class)->issue($this->tenant);
+
     Livewire::test(TemporaryPasswords::class, ['record' => $this->tenant->getKey()])
-        ->callAction('downloadAll')
+        ->callAction(TemporaryPasswords::DOWNLOAD_ALL)
         ->assertHasNoErrors()
         ->assertFileDownloaded();
 })->skip(! class_exists(ZipArchive::class), 'ext-zip is not installed.');

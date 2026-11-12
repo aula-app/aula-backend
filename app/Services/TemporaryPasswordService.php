@@ -72,7 +72,27 @@ class TemporaryPasswordService
                     'new' => count($sheet['rows']) - $existing,
                     'existing' => $existing,
                 ];
-            }, $this->sheets($users, $passwords));
+            }, $this->buildSheets($users, $passwords));
+        });
+    }
+
+    /**
+     * The temporary passwords already set, by room, without changing
+     * anything. With a sheet key, only that room's sheet is returned.
+     *
+     * @return list<Sheet>
+     */
+    public function issued(Tenant $tenant, ?string $sheetKey = null): array
+    {
+        return $tenant->run(function () use ($sheetKey): array {
+            $users = $this->eligibleUsers(sheetKey: $sheetKey)
+                ->filter(fn (stdClass $user): bool => $this->holdsTemporaryPassword($user))
+                ->values();
+            $passwords = $users
+                ->mapWithKeys(fn (stdClass $user): array => [(int) $user->id => (string) $user->temp_pw])
+                ->all();
+
+            return $this->only($this->buildSheets($users, $passwords), $sheetKey);
         });
     }
 
@@ -98,13 +118,8 @@ class TemporaryPasswordService
                 return [$users, array_replace($passwords, $this->assignPasswords($pending)), $pending->count()];
             });
 
-            $sheets = $this->sheets($users, $passwords);
-            if ($sheetKey !== null) {
-                $sheets = array_values(array_filter($sheets, fn (array $sheet): bool => $sheet['key'] === $sheetKey));
-            }
-
             return [
-                'sheets' => $sheets,
+                'sheets' => $this->only($this->buildSheets($users, $passwords), $sheetKey),
                 'new' => $new,
                 'existing' => $users->count() - $new,
             ];
@@ -145,6 +160,19 @@ class TemporaryPasswordService
             ->orderBy('realname')
             ->orderBy('id')
             ->get(['id', 'realname', 'displayname', 'username', 'temp_pw']);
+    }
+
+    /**
+     * @param  list<Sheet>  $sheets
+     * @return list<Sheet>
+     */
+    private function only(array $sheets, ?string $sheetKey): array
+    {
+        if ($sheetKey === null) {
+            return $sheets;
+        }
+
+        return array_values(array_filter($sheets, fn (array $sheet): bool => $sheet['key'] === $sheetKey));
     }
 
     /**
@@ -206,7 +234,7 @@ class TemporaryPasswordService
      * @param  array<int, string>  $passwords
      * @return list<Sheet>
      */
-    private function sheets(Collection $users, array $passwords): array
+    private function buildSheets(Collection $users, array $passwords): array
     {
         $rooms = DB::table('au_rooms')
             ->where('status', self::ROOM_ACTIVE)

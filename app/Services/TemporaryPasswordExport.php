@@ -10,12 +10,12 @@ use RuntimeException;
 use ZipArchive;
 
 /**
- * Issues temporary passwords and packages them for download: one PDF for a
- * room, or a ZIP with the PDF of every room.
+ * Packages the temporary passwords already set for download: one PDF for a
+ * room, or a ZIP with the PDF of every room. Changes nothing.
  *
  * @psalm-import-type Sheet from TemporaryPasswordService
  *
- * @psalm-type Download = array{filename: string, mime: string, content: string, new: int, existing: int}
+ * @psalm-type Download = array{filename: string, mime: string, content: string}
  */
 class TemporaryPasswordExport
 {
@@ -25,12 +25,11 @@ class TemporaryPasswordExport
     ) {}
 
     /**
-     * @return ?Download null when the room has nobody to list
+     * @return ?Download null when no user of the room holds a temporary password
      */
     public function room(Tenant $tenant, string $sheetKey): ?array
     {
-        $result = $this->passwords->issue($tenant, $sheetKey);
-        $sheet = $result['sheets'][0] ?? null;
+        $sheet = $this->passwords->issued($tenant, $sheetKey)[0] ?? null;
 
         if ($sheet === null) {
             return null;
@@ -40,24 +39,22 @@ class TemporaryPasswordExport
             'filename' => $this->pdfName($sheet),
             'mime' => 'application/pdf',
             'content' => $this->pdf->render($tenant, $sheet),
-            'new' => $result['new'],
-            'existing' => $result['existing'],
         ];
     }
 
     /**
-     * @return ?Download null when the tenant has nobody to list
+     * @return ?Download null when no user of the tenant holds a temporary password
      */
     public function all(Tenant $tenant): ?array
     {
-        $result = $this->passwords->issue($tenant);
+        $sheets = $this->passwords->issued($tenant);
 
-        if ($result['sheets'] === []) {
+        if ($sheets === []) {
             return null;
         }
 
         $files = [];
-        foreach ($result['sheets'] as $sheet) {
+        foreach ($sheets as $sheet) {
             $files[$this->pdfName($sheet)] = $this->pdf->render($tenant, $sheet);
         }
 
@@ -65,8 +62,6 @@ class TemporaryPasswordExport
             'filename' => 'temp-passwords-'.Str::slug((string) $tenant->instance_code).'-'.now()->format('Y-m-d_His').'.zip',
             'mime' => 'application/zip',
             'content' => $this->zip($files),
-            'new' => $result['new'],
-            'existing' => $result['existing'],
         ];
     }
 

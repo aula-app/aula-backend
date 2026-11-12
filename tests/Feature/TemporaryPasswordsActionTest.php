@@ -15,8 +15,8 @@ use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
 /**
- * Covers what the manager panel's temporary-passwords page downloads: the
- * per-room sheets, their PDF, and the ZIP of all rooms.
+ * Covers what the manager panel's temporary-passwords page does: resetting
+ * per room, and rendering the passwords already set as PDF and ZIP.
  */
 class TemporaryPasswordsActionTest extends TestCase
 {
@@ -140,21 +140,48 @@ class TemporaryPasswordsActionTest extends TestCase
         $this->assertSame(2, preg_match_all('#/Type\s*/Page\b#', $pdf));
     }
 
+    public function test_listing_issued_passwords_changes_nothing(): void
+    {
+        $service = app(TemporaryPasswordService::class);
+
+        $this->assertSame([], $service->issued(self::$testTenant, (string) $this->classId));
+
+        self::$testTenant->run(function () {
+            $this->assertEmpty(LegacyUser::find($this->studentId)->temp_pw);
+        });
+    }
+
+    public function test_issued_passwords_are_listed_after_a_reset(): void
+    {
+        $service = app(TemporaryPasswordService::class);
+        $service->issue(self::$testTenant, (string) $this->classId);
+
+        $class = $service->issued(self::$testTenant, (string) $this->classId);
+        $main = $service->issued(self::$testTenant, (string) $this->mainId);
+
+        $this->assertSame([self::PREFIX.'student'], array_column($class[0]['rows'], 'username'));
+        // The main room only lists the user who has a password by now.
+        $this->assertSame([self::PREFIX.'student'], array_column($main[0]['rows'], 'username'));
+    }
+
     public function test_a_room_export_is_a_pdf_named_after_the_room(): void
     {
+        app(TemporaryPasswordService::class)->issue(self::$testTenant, (string) $this->classId);
+
         $download = app(TemporaryPasswordExport::class)->room(self::$testTenant, (string) $this->classId);
 
         $this->assertSame("klasse-7c-{$this->classId}.pdf", $download['filename']);
         $this->assertSame('application/pdf', $download['mime']);
         $this->assertStringStartsWith('%PDF-', $download['content']);
-        $this->assertSame(1, $download['new']);
     }
 
-    public function test_a_room_with_nobody_to_list_exports_nothing(): void
+    public function test_an_export_sets_no_passwords(): void
     {
-        $empty = $this->seedRoom('Leer', type: 0);
+        $this->assertNull(app(TemporaryPasswordExport::class)->room(self::$testTenant, (string) $this->classId));
 
-        $this->assertNull(app(TemporaryPasswordExport::class)->room(self::$testTenant, (string) $empty));
+        self::$testTenant->run(function () {
+            $this->assertEmpty(LegacyUser::find($this->studentId)->temp_pw);
+        });
     }
 
     public function test_the_zip_holds_one_pdf_per_room(): void
@@ -162,6 +189,8 @@ class TemporaryPasswordsActionTest extends TestCase
         if (! class_exists(\ZipArchive::class)) {
             $this->markTestSkipped('ext-zip is not installed.');
         }
+
+        app(TemporaryPasswordService::class)->issue(self::$testTenant);
 
         $download = app(TemporaryPasswordExport::class)->all(self::$testTenant);
 
