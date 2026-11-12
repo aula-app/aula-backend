@@ -6,18 +6,17 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SchoolTypeResource\Pages;
 use App\Models\SchoolType;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
+use Filament\Resources\Resource;
 use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
-use Filament\Actions\EditAction;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 /**
- * @extends Resource<SchoolType, ResourceConfiguration>
+ * @extends resource<SchoolType, ResourceConfiguration>
  */
 final class SchoolTypeResource extends Resource
 {

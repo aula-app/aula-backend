@@ -12,7 +12,6 @@ use App\Services\TenantsService;
 use Filament\Actions\Action as FormAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -305,6 +304,7 @@ class TenantResource extends Resource
             'index' => Pages\ListTenants::route('/'),
             'create' => Pages\CreateTenant::route('/create'),
             'edit' => Pages\EditTenant::route('/{record}/edit'),
+            'temp-passwords' => Pages\TemporaryPasswords::route('/{record}/temp-passwords'),
         ];
     }
 

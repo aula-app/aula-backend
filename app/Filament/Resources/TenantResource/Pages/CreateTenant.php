@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\TenantResource\Pages;
 
 use App\Filament\Resources\TenantResource;
+use App\Models\Tenant;
 use App\Services\TenantsService;
 use App\UseCases\CreateTenantUseCase;
 use Filament\Actions\Action;
@@ -12,7 +13,7 @@ use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @extends CreateRecord<\App\Models\Tenant>
+ * @extends CreateRecord<Tenant>
  */
 class CreateTenant extends CreateRecord
 {
