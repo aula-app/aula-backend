@@ -31,8 +31,8 @@ make prepare-legacy-local
 
 cp .env.example .env
 # and edit .env
-# TODO
 # for use with mariadb from docker compose, set DB_PORT=3307
+# TODO: edit APP_URL and MANAGER_URL to localhost
 
 composer install
 TODO
