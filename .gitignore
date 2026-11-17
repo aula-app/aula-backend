@@ -22,9 +22,7 @@ _ide_helper.php
 /public/manager/css
 /public/manager/fonts
 /public/manager/js
-/storage/*.key
-/storage/pail
-/storage/tenant_*
+/storage
 /vendor
 Homestead.json
 Homestead.yaml

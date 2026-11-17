@@ -10,7 +10,8 @@ php artisan clear-compiled
 mkdir -p storage/app/private storage/app/public \
   storage/framework/cache storage/framework/sessions \
   storage/framework/testing storage/framework/views
-chown -R www-data:www-data ./storage
+chgrp -Rv www-data ./storage
+chmod -Rv g+w ./storage
 
 echo "🔑 Checking app key for encryption (sessions, JWT, app-level encryption)..."
 if ! grep -q '^APP_KEY=' .env || grep -q '^APP_KEY=$' .env; then

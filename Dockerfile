@@ -38,7 +38,6 @@ COPY composer.json composer.lock ./
 # no --no-dev, we need dev to run tests
 # TODO: or mirror frontend container: volumify vendor, install on the fly
 RUN composer install --no-interaction --no-scripts --optimize-autoloader
-
 ARG DOCKER_TAG
 ENV APP_VERSION=$DOCKER_TAG
 
@@ -47,4 +46,7 @@ COPY . .
 # Reown by www-data and make sure setgid bit is on for storage, so
 #   any new folders created in ./storage will inherit the group www-data
 RUN chown -R www-data:www-data ./ \
+    && mkdir -p storage/app/private storage/app/public \
+      storage/framework/cache storage/framework/sessions \
+      storage/framework/testing storage/framework/views \
     && chmod -R u=rwx,g=rws,o=rx ./storage

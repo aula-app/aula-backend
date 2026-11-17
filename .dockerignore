@@ -15,7 +15,7 @@ info.php
 /vendor/
 /bootstrap/cache/*.php
 
-/storage/oauth-*.key
+/storage
 
 **/docker-local/
 **/docker-compose.*
