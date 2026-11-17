@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 echo "[*] Preparing the runtime environment for the docker application..."
 
 mkdir -p ./config && \
@@ -8,12 +10,17 @@ mkdir -p ./config && \
   echo -n '{"success":false,"error":"API_NOT_FOUND"}' > ./errors/404.json
 
 if [[ "$APP_ENV" == "local" ]]; then
+  if [ ! -f ./config/base_config.php ] ; then
+    echo ./config/base_config not found
+    exit 1
+  fi
+
   # add our local user to apache run group so we can live edit files
   TARGET_USER_NAME=$(ls -l ./config/base_config.php | awk '{ print $3 }')
   usermod -aG $APACHE_RUN_GROUP $TARGET_USER_NAME
   chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./errors
   chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./files
-  chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./config/oauth-public.key
+  #chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./config/oauth-public.key
 else
   # set up directory structure in the container
   chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./
