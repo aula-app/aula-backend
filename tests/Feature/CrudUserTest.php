@@ -377,6 +377,44 @@ class CrudUserTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_update_validation_sso()
+    {
+        $ssoUser = $this->createDistinctUser(UserLevel::Moderator, UserStatus::Active);
+        $ssoUser = self::$testTenant->run(function () use ($ssoUser) {
+            $ssoUser->sso_sub = "not_null_".$ssoUser->hash_id;
+            $ssoUser->save();
+            $data = [
+                "displayName" => $ssoUser->displayname,
+                "userName" => $ssoUser->username,
+                "realName" => $ssoUser->realname,
+                "status" => $ssoUser->status,
+                "userLevel" => $ssoUser->userlevel,
+                "email" => $ssoUser->email,
+                "aboutMe" => $ssoUser->about_me,
+            ];
+            $this->putJson(
+                '/api/v2/users/'.$ssoUser->hash_id,
+                $data
+            )
+                ->assertOk();
+            $this->putJson(
+                '/api/v2/users/'.$ssoUser->hash_id,
+                [...$data, "userName" => "changed"]
+            )
+                ->assertBadRequest();
+            $this->putJson(
+                '/api/v2/users/'.$ssoUser->hash_id,
+                [...$data, "realName" => "changed"]
+            )
+                ->assertBadRequest();
+            $this->putJson(
+                '/api/v2/users/'.$ssoUser->hash_id,
+                [...$data, "email" => "changed@aula.de"]
+            )
+                ->assertBadRequest();
+        });
+    }
+
     #[Depends('test_create')]
     public function test_authz_delete_admin_only($newUserPublicId1)
     {
