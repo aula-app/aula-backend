@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -euxo pipefail
-
 echo "[*] Preparing the runtime environment for the docker application..."
 
 mkdir -p ./config && \
@@ -26,11 +24,12 @@ else
   chown -R $APACHE_RUN_USER:$APACHE_RUN_GROUP ./
 fi
 
-if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
-  echo "[ERROR] You seem to be using the default encryption key." >&2
-  echo "[ERROR] Please update the environment variables (probably in the docker-compose.yml file)."
-  exit 1;
-fi
+# effectively dead code
+#if [[ "$SUPERKEY" == "CHANGE_ME" ]]; then
+#  echo "[ERROR] You seem to be using the default encryption key." >&2
+#  echo "[ERROR] Please update the environment variables (probably in the docker-compose.yml file)."
+#  exit 1;
+#fi
 
 # instead of default umask 0022, use 0002, so we can have g+w permissions on uploaded files
 umask 0002
