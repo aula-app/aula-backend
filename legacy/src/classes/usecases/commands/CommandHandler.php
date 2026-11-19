@@ -28,7 +28,7 @@ abstract class CommandHandler
     try {
       $validationResult = $this->isValid($command);
       if ($validationResult != true) {
-        error_log("Command validation FAILED for command {$id}");
+        error_log("[{$this->db->code}] Command validation FAILED for command {$id}");
         $this->commandModel->setCommandStatus($id, CommandStatus::VALIDATION_FAILED->value);
         $this->commandModel->setActiveStatus($id, 0);
         return;
@@ -44,14 +44,19 @@ abstract class CommandHandler
       if ($returnValue['error_code'] == 0) {
         $this->commandModel->setCommandStatus($id, CommandStatus::SUCCESS->value);
         $this->commandModel->setActiveStatus($id, 0);
-      } else {
-        error_log("Command execution FAILED " . json_encode($returnValue));
+      } elseif ($returnValue['error_code'] == 1) {
         $this->commandModel->setCommandStatus($id, CommandStatus::EXECUTION_FAILURE->value);
+        error_log("[{$this->db->code}] Command execution FAILED(retry) " . json_encode($returnValue));
+        $this->commandModel->backoffCommand($command);
+      } else {
+        $this->commandModel->setCommandStatus($id, CommandStatus::EXECUTION_FAILURE->value);
+        error_log("[{$this->db->code}] Command execution FAILED(drop) " . json_encode($returnValue));
         $this->commandModel->setActiveStatus($id, 0);
       }
     } catch (Exception $err) {
-      error_log("Command execution ERROR " . $err->getMessage());
+      error_log("[{$this->db->code}] Command execution EXCEPTION " . $err->getMessage());
       $this->commandModel->setCommandStatus($id, CommandStatus::EXECUTION_EXCEPTION->value);
+      $this->commandModel->backoffCommand($command);
     }
   }
 
