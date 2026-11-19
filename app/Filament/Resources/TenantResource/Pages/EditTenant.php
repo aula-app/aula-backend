@@ -13,7 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
 /**
- * @extends EditRecord<Tenant>
+ * @extends EditRecord<\App\Models\Tenant>
  */
 class EditTenant extends EditRecord
 {
@@ -56,8 +56,8 @@ class EditTenant extends EditRecord
      */
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['admin1_username_manual'] = ! empty($data['admin1_username'] ?? null);
-        $data['admin2_username_manual'] = ! empty($data['admin2_username'] ?? null);
+        $data['admin1_username_manual'] = !empty($data['admin1_username'] ?? null);
+        $data['admin2_username_manual'] = !empty($data['admin2_username'] ?? null);
 
         return $data;
     }

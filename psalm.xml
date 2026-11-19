@@ -25,6 +25,11 @@
     </ignoreFiles>
   </projectFiles>
 
+  <!-- ZipArchive for analysis on a PHP without ext-zip (the CI psalm image) -->
+  <stubs>
+    <file name="vendor/vimeo/psalm/stubs/extensions/zip.phpstub"/>
+  </stubs>
+
   <plugins>
     <pluginClass class="Psalm\LaravelPlugin\Plugin"/>
   </plugins>

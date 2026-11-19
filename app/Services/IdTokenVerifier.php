@@ -9,9 +9,7 @@ use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Throwable;
@@ -32,7 +30,6 @@ use Throwable;
 final class IdTokenVerifier
 {
     private const int JWKS_TTL_SECONDS = 3600;
-
     /**
      * Default clock-skew tolerance in seconds. 5 minutes matches the conservative
      * end of common OIDC defaults (Auth0/Okta/Cognito range from 60 to 300 seconds)
@@ -47,7 +44,7 @@ final class IdTokenVerifier
     public function verify(string $idToken): array
     {
         $header = $this->parseHeader($idToken);
-        $keys = $this->keysForKid($header['kid']);
+        $keys   = $this->keysForKid($header['kid']);
 
         JWT::$leeway = (int) config('services.keycloak.clock_skew_seconds', self::DEFAULT_CLOCK_SKEW_SECONDS);
 
@@ -79,9 +76,9 @@ final class IdTokenVerifier
             throw new IdTokenVerificationException('malformed');
         }
 
-        $parts = explode('.', $idToken);
+        $parts   = explode('.', $idToken);
         $decoded = $this->base64UrlDecode($parts[0]);
-        $header = $decoded === '' ? null : json_decode($decoded, true);
+        $header  = $decoded === '' ? null : json_decode($decoded, true);
 
         if (! is_array($header) || empty($header['kid']) || ! is_string($header['kid'])) {
             throw new IdTokenVerificationException('malformed');
@@ -91,7 +88,7 @@ final class IdTokenVerifier
     }
 
     /**
-     * @return array<string, Key>
+     * @return array<string, \Firebase\JWT\Key>
      */
     private function keysForKid(string $kid): array
     {
@@ -113,7 +110,7 @@ final class IdTokenVerifier
 
     /**
      * @param  array<string, mixed>  $jwks
-     * @return array<string, Key>
+     * @return array<string, \Firebase\JWT\Key>
      */
     private function parseKeySet(array $jwks): array
     {
@@ -134,7 +131,7 @@ final class IdTokenVerifier
         }
 
         return Cache::remember($this->jwksCacheKey(), self::JWKS_TTL_SECONDS, function (): array {
-            /** @var Response $response */
+            /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::get($this->jwksUrl());
 
             if (! $response->ok()) {
@@ -167,7 +164,7 @@ final class IdTokenVerifier
     private function verifyAudience(array $claims): void
     {
         $clientId = $this->clientId();
-        $aud = $claims['aud'] ?? null;
+        $aud      = $claims['aud'] ?? null;
 
         $ok = is_string($aud)
             ? $aud === $clientId
@@ -194,17 +191,17 @@ final class IdTokenVerifier
 
     private function expectedIssuer(): string
     {
-        return rtrim((string) config('services.keycloak.base_url'), '/').'/realms/'.$this->realm();
+        return rtrim((string) config('services.keycloak.base_url'), '/') . '/realms/' . $this->realm();
     }
 
     private function jwksUrl(): string
     {
-        return rtrim((string) config('services.keycloak.base_url'), '/').'/realms/'.$this->realm().'/protocol/openid-connect/certs';
+        return rtrim((string) config('services.keycloak.base_url'), '/') . '/realms/' . $this->realm() . '/protocol/openid-connect/certs';
     }
 
     private function jwksCacheKey(): string
     {
-        return 'oidc_jwks:'.$this->realm();
+        return 'oidc_jwks:' . $this->realm();
     }
 
     private function realm(): string
