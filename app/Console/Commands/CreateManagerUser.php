@@ -6,9 +6,10 @@ namespace App\Console\Commands;
 
 use App\Models\Manager\AulaManagerUser;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\Isolatable;
 use Illuminate\Support\Facades\Hash;
 
-class CreateManagerUser extends Command
+class CreateManagerUser extends Command implements Isolatable
 {
     protected $signature = 'manager:create-user';
 

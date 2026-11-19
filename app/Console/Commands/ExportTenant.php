@@ -6,10 +6,11 @@ namespace App\Console\Commands;
 
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\Isolatable;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 
-class ExportTenant extends Command
+class ExportTenant extends Command implements Isolatable
 {
     protected $signature = 'tenant:export
                             {--code= : Instance code of the tenant to export}

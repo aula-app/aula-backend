@@ -8,8 +8,9 @@ use App\Models\Tenant;
 use App\Services\TenantsService;
 use App\UseCases\CreateTenantUseCase;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\Isolatable;
 
-class CreateTenant extends Command
+class CreateTenant extends Command implements Isolatable
 {
     protected $signature = 'tenant:create
                             {--name= : Tenant name (skips interactive prompt)}

@@ -7,10 +7,11 @@ namespace App\Console\Commands;
 use App\Enums\UserLevel;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\Isolatable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class AddUserToTenant extends Command
+class AddUserToTenant extends Command implements Isolatable
 {
     protected $signature = 'tenant:add-user';
 

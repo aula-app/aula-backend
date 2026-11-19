@@ -8,6 +8,7 @@ use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\Isolatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * Deletes only what SchoolImport created. An account that predates the import
  * is kept, with `sso_sub` and `idp_user_id` cleared.
  */
-class ResetIdpTenant extends Command
+class ResetIdpTenant extends Command implements Isolatable
 {
     protected $signature = 'idp:reset-tenant
                             {instance_code : Instance code of the tenant to reset}
