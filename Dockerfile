@@ -1,4 +1,4 @@
-FROM php:8.4.27-fpm-alpine
+FROM php:8.4.28-fpm-alpine
 WORKDIR /opt/laravel
 EXPOSE 80
 
