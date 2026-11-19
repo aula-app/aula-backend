@@ -108,8 +108,8 @@ class InstanceConfig
       $code = null;
     }
 
-    // check if provided code is alphanumeric(5) // could also be "SINGLE", so length 6 is allowed
-    if ($code === null || !((bool) preg_match('/^[0-9a-zA-Z]{5}$|^SINGLE$/', $code))) {
+    // check if provided code is alphanumeric(5), "SINGLE" or "TEST00N", so lengths 6+7 are allowed
+    if ($code === null || !((bool) preg_match('/^[0-9a-zA-Z]{5}$|^SINGLE$|^TEST[0-9]{3}$/', $code))) {
       throw new RuntimeException("Please provide a valid aula-instance-code header");
     }
 

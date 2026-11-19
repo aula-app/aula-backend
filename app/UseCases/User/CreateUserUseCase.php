@@ -9,42 +9,72 @@ use App\Data\User\DomainUserData;
 use App\Enums\Gates;
 use App\Enums\UserLevel;
 use App\Models\LegacyUser;
+use App\Services\UserService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class CreateUserUseCase
 {
+    public function __construct(
+        protected UserService $userService,
+    ) {
+    }
+
+    // TODO optionalize more params in the DTO for SSO; also in UpdateUserData
     public function execute(StoreUserData $userStoreData): DomainUserData
     {
         Gate::authorize(Gates::CreateUser);
 
         $legacyUser = new LegacyUser();
+
         $legacyUser->hash_id = Str::random(32);
-        $legacyUser->displayname = $userStoreData->displayName;
-        $legacyUser->realname = $userStoreData->realName;
+
+        // uniqueness of username + email handled by StoreUserData validation
         $legacyUser->username = $userStoreData->userName;
         $legacyUser->email = $userStoreData->email;
+
+        $legacyUser->displayname = $userStoreData->displayName;
+        $legacyUser->realname = $userStoreData->realName;
         $legacyUser->userlevel = $userStoreData->userLevel ?? UserLevel::Guest;
         $legacyUser->about_me = $userStoreData->aboutMe ?? '';
         $legacyUser->status = $userStoreData->status->value;
+
+        $legacyUser->temp_pw = $legacyUser->email
+            ? $this->userService->generateTemporaryPassword()
+            : '';
+
+        $legacyUser->pw = \password_hash(
+            $this->userService->generateFirstPassword(),
+            PASSWORD_DEFAULT
+        );
+        $legacyUser->pw_changed = 0;
+
+        // TODO? remove creator_id, which seems unused/confused.
+        $legacyUser->updater_id = auth()->id();
+
         // TODO functionality from legacy model User->addUser, including but not limited to:
-        // - check for username unique
-        //    -> here or at DB index (if index, check compat with v1)
-        // - generate password
-        //    -> in the usecase
+        // - add user to standard room - merge rooms-roles
+        // - what to do about syslog->addSystemEvent? use laravel logger? use legacy?
+        // - remove (unused?) columns o1, o2, o3?
+        // - what to do about the call from addCSV?
+        // - we ditch the non-encryption of about_me, realname, displayname, username, email
         // - add user to standard room
-        //    -> later
-        // - send email
-        //    -> usecase calls helper/interface for email
+        //   -> merge v2-rooms-roles first
         // - change password
-        //    -> persistence model
+        //    -> persistence model -> later? not part of crud?
         $legacyUser->save();
         // for unmanaged createdAt/created timestamp
         $legacyUser->refresh();
 
+        if ($legacyUser->email) {
+            $this->userService->sendWelcomePassword(
+                $legacyUser->email,
+                $legacyUser
+            );
+        }
+
         return DomainUserData::from($legacyUser);
     }
-
     // rooms, users, rel_rooms_users
     // 1. Receive Room HashId
     // 2. Fetch User
