@@ -55,8 +55,8 @@ class TenantStatisticsService
                         fn () => DB::table($tableName)->count()
                     );
                 } catch (Throwable $e) {
-                    Log::warning("Failed to count {$tableName} for tenant {$tenant->instance_code}", [
-                        'tenant_id' => $tenant->id,
+                    Log::warning("Failed to count '{$tableName}' for tenant '{$tenant->instance_code}'", [
+                        'tenant' => $tenant->instance_code,
                         'table' => $tableName,
                         'error' => $e->getMessage(),
                     ]);

@@ -15,15 +15,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     use HasDatabase;
 
     public const string IDP_MIGRATION_FLAGGED = 'flagged';
-
     public const string IDP_MIGRATION_CONNECTED = 'connected';
-
     public const string IDP_MIGRATION_REVIEWING = 'reviewing';
-
     public const string IDP_MIGRATION_IMPORTING = 'importing';
-
     public const string IDP_MIGRATION_LINKING = 'linking';
-
     public const string IDP_MIGRATION_COMPLETED = 'completed';
 
     public static function getCustomColumns(): array
@@ -79,10 +74,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
      *
      * Keyed on `sso_provider`, the alias Keycloak brokers under, so it is true
      * from tenant creation. `idp_school_id` is unknown until the first login
-     * reports it, so it cannot be what identifies a synced tenant.
+     * reports it, so it cannot be what identifies a synced tenant. A tenant
+     * with SSO off never sees the first login that starts the import, so it
+     * syncs from nothing whatever `sso_provider` holds.
      */
     public function usesIdpDirectory(): bool
     {
+        if (! $this->sso_enabled) {
+            return false;
+        }
+
         return $this->idp_school_id !== null
             || app(IdpProviders::class)->isConfigured($this->sso_provider);
     }

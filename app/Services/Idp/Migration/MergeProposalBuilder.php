@@ -7,6 +7,7 @@ namespace App\Services\Idp\Migration;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Dto\IdpGroup;
+use App\Services\Idp\Dto\IdpGroupRef;
 use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,10 @@ use RuntimeException;
  * is changed here. Names are all the two sides share, and a wrong name match
  * would hand one account, and everything written in it, to another person, so
  * an admin confirms the rows and MergeProposalApplier acts on them.
+ *
+ * A directory entry whose id an aula row already carries is settled and is
+ * left out on both sides: listed as unmatched it would read as a new account,
+ * and SchoolImport converges onto the linked row regardless.
  *
  * Requires initialised tenancy.
  */
@@ -67,7 +72,7 @@ final class MergeProposalBuilder
         $directory = $this->providers->directory($provider);
 
         $groups = $directory->groups($schoolId);
-        $users = $this->mergeGroupMembers($directory->users($schoolId), $groups);
+        $users = $directory->users($schoolId);
 
         DB::table('idp_merge_candidates')->truncate();
 
@@ -86,43 +91,14 @@ final class MergeProposalBuilder
     }
 
     /**
-     * Fold IdpGroup member lists into the user list.
-     *
-     * A directory can expose real names on group members while the user listing
-     * carries a pseudonym, and can list a group member the user listing omits,
-     * so a proposal built from either list alone is short of names and rows.
-     *
-     * @param  list<IdpUser>  $users
-     * @param  list<IdpGroup>  $groups
-     * @return list<IdpUser>
-     */
-    private function mergeGroupMembers(array $users, array $groups): array
-    {
-        $merged = [];
-
-        foreach ($groups as $group) {
-            foreach ($group->members as $member) {
-                $merged[$member->id] = isset($merged[$member->id])
-                    ? $merged[$member->id]->mergedWith($member)
-                    : $member;
-            }
-        }
-
-        foreach ($users as $user) {
-            $merged[$user->id] = isset($merged[$user->id])
-                ? $merged[$user->id]->mergedWith($user)
-                : $user;
-        }
-
-        return array_values($merged);
-    }
-
-    /**
      * @param  list<IdpGroup>  $groups
      * @return array<string, int>
      */
     private function proposeRooms(array $groups): array
     {
+        $linked = $this->linkedIds(DB::table('au_rooms')->whereNotNull('idp_group_id')->pluck('idp_group_id')->all());
+        $groupsWithoutLink = array_values(array_filter($groups, fn (IdpGroup $group): bool => ! isset($linked[$group->id])));
+
         $local = [];
 
         foreach (DB::table('au_rooms')->whereNull('idp_group_id')->get(['id', 'room_name']) as $room) {
@@ -136,7 +112,7 @@ final class MergeProposalBuilder
                 'keys' => NameKey::keys([$group->name]),
                 'name_kind' => self::NAME_REAL,
             ],
-            $groups,
+            $groupsWithoutLink,
         );
 
         return $this->propose(self::KIND_ROOM, $provider, array_map(
@@ -151,6 +127,9 @@ final class MergeProposalBuilder
      */
     private function proposeUsers(array $users): array
     {
+        $linked = $this->linkedIds(LegacyUser::whereNotNull('idp_user_id')->pluck('idp_user_id')->all());
+        $usersWithoutLink = array_values(array_filter($users, fn (IdpUser $user): bool => ! isset($linked[$user->id])));
+
         $local = LegacyUser::whereNull('idp_user_id')
             ->get(['id', 'realname', 'displayname'])
             ->map(fn (LegacyUser $user): array => [
@@ -162,7 +141,7 @@ final class MergeProposalBuilder
 
         $provider = [];
 
-        foreach ($users as $user) {
+        foreach ($usersWithoutLink as $user) {
             $real = $user->realName();
 
             $provider[] = [
@@ -172,10 +151,33 @@ final class MergeProposalBuilder
                 // idp_name_kind records why.
                 'keys' => $real === null ? [] : NameKey::keys([$real, $user->name->display()]),
                 'name_kind' => $real === null ? self::NAME_PSEUDONYM : self::NAME_REAL,
+                'groups' => array_map(
+                    fn (IdpGroupRef $group): array => ['id' => $group->id, 'name' => $group->name],
+                    $user->groups,
+                ),
             ];
         }
 
         return $this->propose(self::KIND_USER, $provider, $local);
+    }
+
+    /**
+     * Directory ids aula rows already carry, as a lookup set.
+     *
+     * @param  array<array-key, mixed>  $ids
+     * @return array<string, true>
+     */
+    private function linkedIds(array $ids): array
+    {
+        $linked = [];
+
+        foreach ($ids as $id) {
+            if (is_string($id) && $id !== '') {
+                $linked[$id] = true;
+            }
+        }
+
+        return $linked;
     }
 
     /**
@@ -186,7 +188,7 @@ final class MergeProposalBuilder
      * so is one aula row being the only match for two directory entries, since
      * applying both would merge two people into one account.
      *
-     * @param  list<array{id: string, name: string, keys: list<string>, name_kind: string}>  $provider
+     * @param  list<array{id: string, name: string, keys: list<string>, name_kind: string, groups?: list<array{id: string, name: string}>}>  $provider
      * @param  list<array{id: int, name: string, keys: list<string>}>  $local
      * @return array<string, int>
      */
@@ -247,6 +249,7 @@ final class MergeProposalBuilder
                 'idp_id' => $row['id'],
                 'idp_name' => $row['name'],
                 'idp_name_kind' => $row['name_kind'],
+                'idp_groups' => isset($row['groups']) ? json_encode($row['groups']) : null,
                 'local_id' => $outcome === self::OUTCOME_NONE ? null : ($local[$localIndex]['id'] ?? null),
                 'local_name' => $outcome === self::OUTCOME_NONE ? null : ($local[$localIndex]['name'] ?? null),
                 'outcome' => $outcome,
@@ -270,6 +273,7 @@ final class MergeProposalBuilder
                 'idp_id' => null,
                 'idp_name' => null,
                 'idp_name_kind' => null,
+                'idp_groups' => null,
                 'local_id' => $row['id'],
                 'local_name' => $row['name'],
                 'outcome' => self::OUTCOME_NONE,

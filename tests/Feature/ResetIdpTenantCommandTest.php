@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\UserStatus;
-use App\Models\IdpDirectoryEntry;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
 
@@ -235,22 +235,6 @@ class ResetIdpTenantCommandTest extends TestCase
         });
     }
 
-    public function test_it_clears_the_directory_index_for_that_tenant_only(): void
-    {
-        $this->seedImportedSchool();
-
-        IdpDirectoryEntry::create([
-            'provider' => 'eduplaces', 'entity_type' => IdpDirectoryEntry::TYPE_USER,
-            'idp_id' => 'person-elsewhere', 'tenant_id' => 'some-other-tenant',
-        ]);
-
-        $this->artisan('idp:reset-tenant', ['instance_code' => 'TEST001', '--force' => true]);
-
-        $this->assertSame(0, IdpDirectoryEntry::where('tenant_id', self::$testTenant->id)->count());
-        // idp_directory rows belonging to another tenant are left alone.
-        $this->assertSame(1, IdpDirectoryEntry::where('tenant_id', 'some-other-tenant')->count());
-    }
-
     public function test_it_does_nothing_without_confirmation(): void
     {
         [, $importedId] = $this->seedImportedSchool();
@@ -281,13 +265,12 @@ class ResetIdpTenantCommandTest extends TestCase
     private function seedImportedSchool(): array
     {
         return self::$testTenant->run(function (): array {
-            $hash = md5('imported-room'.microtime(true));
             $roomId = (int) DB::table('au_rooms')->insertGetId([
                 'room_name' => 'Klasse 5a', 'status' => 1, 'type' => 0,
-                'hash_id' => $hash, 'idp_group_id' => 'group-reset-1',
+                'hash_id' => Str::random(64), 'idp_group_id' => 'group-reset-1',
             ]);
 
-            $user = new LegacyUser;
+            $user = new LegacyUser();
             $user->username = 'reset.imported.'.random_int(1000, 999999);
             $user->displayname = $user->username;
             $user->idp_user_id = 'person-reset-1';
@@ -298,11 +281,6 @@ class ResetIdpTenantCommandTest extends TestCase
 
             DB::table('au_rel_rooms_users')->insert([
                 'room_id' => $roomId, 'user_id' => $user->id, 'status' => 1, 'updater_id' => 0,
-            ]);
-
-            IdpDirectoryEntry::create([
-                'provider' => 'eduplaces', 'entity_type' => IdpDirectoryEntry::TYPE_USER,
-                'idp_id' => 'person-reset-1', 'tenant_id' => self::$testTenant->id,
             ]);
 
             return [$roomId, (int) $user->id];
@@ -349,7 +327,5 @@ class ResetIdpTenantCommandTest extends TestCase
                 DB::table('au_rooms')->whereIn('id', $roomIds)->delete();
             }
         });
-
-        IdpDirectoryEntry::query()->delete();
     }
 }

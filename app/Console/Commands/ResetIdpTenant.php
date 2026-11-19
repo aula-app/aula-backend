@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\IdpDirectoryEntry;
 use App\Models\IdpWebhookEvent;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
@@ -45,7 +44,6 @@ class ResetIdpTenant extends Command
             ['users the import created (will be deleted)', $summary['imported_users']],
             ['rooms the import created (will be deleted)', $summary['imported_rooms']],
             ['other users (kept, provider identity cleared)', $summary['other_users']],
-            ['directory index entries', $summary['directory']],
             ['captured webhook events', $summary['events']],
         ]);
         $this->line('School: '.($tenant->idp_school_id ?? '(none)').'   import status: '.($tenant->idp_import_status ?? '(none)'));
@@ -97,8 +95,7 @@ class ResetIdpTenant extends Command
         ]);
 
         return $counts + [
-            'directory' => IdpDirectoryEntry::where('tenant_id', $tenant->id)->count(),
-            'events' => IdpWebhookEvent::where('tenant_id', $tenant->id)->count(),
+            'events' => IdpWebhookEvent::where('tenant_id', $tenant->id)->count()
         ];
     }
 
@@ -181,10 +178,8 @@ class ResetIdpTenant extends Command
             'idp_import_finished_at' => null,
         ]);
 
-        IdpDirectoryEntry::where('tenant_id', $tenant->id)->delete();
-
         // Events with a null tenant_id are left alone: they may belong to a
-        // school another installation hosts.
+        // school that is hosted by another aula backend.
         IdpWebhookEvent::where('tenant_id', $tenant->id)->delete();
     }
 }

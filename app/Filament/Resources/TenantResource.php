@@ -201,6 +201,7 @@ class TenantResource extends Resource
                     TextInput::make('sso_provider')
                         ->label('IdP alias in Keycloak')
                         ->helperText('Optional. The Keycloak identity-provider alias for this school (used as kc_idp_hint). Leave empty to land on the realm login page.')
+                        ->default(config('services.eduplaces.idp_alias'))
                         ->maxLength(64),
 
                     Toggle::make('sso_force_logout')
@@ -239,7 +240,7 @@ class TenantResource extends Resource
 
                     Toggle::make('sso_require_email_verified')
                         ->label('Require verified email from IdP')
-                        ->helperText('When on (default), reject SSO logins whose id_token does not assert email_verified=true. Turn off only when the IdP is trusted to control all email addresses (e.g., school-issued addresses with no self-registration).')
+                        ->helperText('When on, reject SSO logins whose id_token does not assert email_verified=true. Turn off only when the IdP is trusted to control all email addresses (e.g., school-issued addresses with no self-registration).')
                         ->default(false),
                 ]),
         ]);

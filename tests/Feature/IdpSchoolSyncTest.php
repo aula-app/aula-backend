@@ -25,9 +25,7 @@ class IdpSchoolSyncTest extends TestCase
     use CreatesTestTenant;
 
     private const string API_URL = 'https://api.eduplaces.test';
-
     private const string AUTH_URL = 'https://auth.eduplaces.test';
-
     private const string SCHOOL = 'school-sync-1';
 
     /** @var array<string, mixed>|null */
@@ -40,6 +38,7 @@ class IdpSchoolSyncTest extends TestCase
         parent::setUp();
         $this->ensureTestTenantExists();
         self::$testTenant->refresh();
+        Tenant::where('name', 'Rival Gymnasium')->where('instance_code', '!=', 'TEST001')->delete();
 
         $this->originalName = (string) self::$testTenant->name;
         self::$testTenant->update(['idp_school_id' => self::SCHOOL, 'sso_provider' => 'eduplaces']);
@@ -66,6 +65,7 @@ class IdpSchoolSyncTest extends TestCase
             'idp_school_id' => null,
             'name' => $this->originalName,
         ]);
+        Cache::flush();
         parent::tearDown();
     }
 

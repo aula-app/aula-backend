@@ -329,7 +329,6 @@ class IdpAccountClaimTest extends TestCase
                 'access_token' => 'idm-token', 'token_type' => 'bearer', 'expires_in' => 3599,
             ]),
             "*/people/{$personId}" => Http::response($person),
-            "*/users/{$personId}" => Http::response($person),
         ]);
     }
 

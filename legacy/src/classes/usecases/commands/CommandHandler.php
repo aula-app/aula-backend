@@ -28,7 +28,10 @@ abstract class CommandHandler
     try {
       $validationResult = $this->isValid($command);
       if ($validationResult != true) {
+        error_log("Command validation FAILED for command {$id}");
         $this->commandModel->setCommandStatus($id, CommandStatus::VALIDATION_FAILED->value);
+        $this->commandModel->setActiveStatus($id, 0);
+        return;
       }
 
       // @TODO: nikola - use db transaction with SELECT .. FOR UPDATE for isolation

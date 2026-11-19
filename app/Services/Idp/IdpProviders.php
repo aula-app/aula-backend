@@ -51,8 +51,7 @@ final class IdpProviders
     }
 
     /**
-     * Every configured alias, for TenantResolver and for reading a claim under
-     * each provider's name for it.
+     * Every configured alias, for reading a claim under each provider's name for it.
      *
      * @return list<string>
      */

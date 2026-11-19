@@ -55,11 +55,10 @@ class IdpDatabaseCacheTest extends TestCase
                 'access_token' => 'token', 'token_type' => 'bearer', 'expires_in' => 3599,
             ]),
             self::API_URL.'/idm/ep/v1/people/*' => Http::response(['id' => 'person-1', 'name' => ['last' => 'Cache']]),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::response(['id' => 'person-1', 'status' => 'ACTIVE']),
         ]);
 
         $person = self::$testTenant->run(
-            fn () => (app(EduplacesDirectory::class))->personOrUser('person-1')
+            fn () => (app(EduplacesDirectory::class))->user('person-1')
         );
 
         $this->assertNotNull($person);
@@ -73,18 +72,17 @@ class IdpDatabaseCacheTest extends TestCase
                 'access_token' => 'token', 'token_type' => 'bearer', 'expires_in' => 3599,
             ]),
             self::API_URL.'/idm/ep/v1/people/*' => Http::response(['id' => 'person-1', 'name' => []]),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::response(['id' => 'person-1']),
         ]);
 
         self::$testTenant->run(function () {
-            (app(EduplacesDirectory::class))->personOrUser('person-1');
+            (app(EduplacesDirectory::class))->user('person-1');
             // A fresh instance, so $accessToken is null and the token has to
             // come back through the cache without unwinding tenancy.
-            (app(EduplacesDirectory::class))->personOrUser('person-1');
+            (app(EduplacesDirectory::class))->user('person-1');
         });
 
-        // One token request, and each lookup reads both `/people` and `/users`.
-        Http::assertSentCount(5);
+        // One token request, then one `/people` read per lookup.
+        Http::assertSentCount(3);
     }
 
     public function test_writing_the_token_cache_does_not_break_the_tenant_connection(): void
@@ -94,11 +92,10 @@ class IdpDatabaseCacheTest extends TestCase
                 'access_token' => 'token', 'token_type' => 'bearer', 'expires_in' => 3599,
             ]),
             self::API_URL.'/idm/ep/v1/people/*' => Http::response(['id' => 'person-1', 'name' => []]),
-            self::API_URL.'/idm/ep/v1/users/*' => Http::response(['id' => 'person-1']),
         ]);
 
         $stillUsable = self::$testTenant->run(function () {
-            (app(EduplacesDirectory::class))->personOrUser('person-1');
+            (app(EduplacesDirectory::class))->user('person-1');
 
             // The import writes to tenant tables after its first API call, so
             // the `tenant` connection has to survive the cache read.

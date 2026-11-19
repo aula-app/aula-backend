@@ -22,7 +22,6 @@ class LegacyJwtCompatTest extends TestCase
     use CreatesTestTenant;
 
     private const COMPAT_ROUTE = '/api/v2/auth/idp/import-status';
-
     private const PASSPORT_ONLY_ROUTE = '/api/v2/users';
 
     protected function setUp(): void

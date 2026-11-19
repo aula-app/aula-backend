@@ -16,10 +16,6 @@ return [
     | from. A tenant selects one by `tenants.sso_provider`, which is also the
     | Keycloak IdP alias, so a tenant's login and its directory always agree.
     |
-    | Adding a provider is a block here plus two classes, an IdentityDirectory
-    | and a WebhookAdapter. No migrations, no routes, and no change to
-    | SchoolImport, TenantResolver or the syncs.
-    |
     */
 
     'providers' => [
@@ -38,7 +34,7 @@ return [
             'scopes' => array_filter(array_map('trim', explode(' ', (string) env(
                 'EDUPLACES_IDM_SCOPES',
                 'urn:eduplaces:idm:v1:schools:read urn:eduplaces:idm:v1:groups:read '
-                .'urn:eduplaces:idm:v1:users:read',
+                .'urn:eduplaces:idm:v1:people:read',
             )))),
 
             'webhook_secret' => env('EDUPLACES_WEBHOOK_SECRET'),
@@ -49,8 +45,9 @@ return [
                 'user' => 'sub',
             ],
 
-            // Provider role to aula userlevel. RoleMap reads the same value for
-            // the per-room role, so the two cannot diverge.
+            // Provider role to aula userlevel and per-room role, applied once:
+            // on account creation and on joining a room. Later role changes
+            // upstream do not reach aula.
             'roles' => [
                 'TEACHER' => (int) env('EDUPLACES_USERLEVEL_TEACHER', 40),
                 'STUDENT' => (int) env('EDUPLACES_USERLEVEL_STUDENT', 20),
