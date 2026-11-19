@@ -120,7 +120,7 @@ class IdeaQuorumArchivedUsersTest extends TestCase
         $this->exec(
             "INSERT INTO {$this->db->au_rooms} (room_name, status, hash_id, created, last_update)
              VALUES (?, 1, ?, NOW(), NOW())",
-            [$this->tag, $this->tag]
+            [$this->tag, md5($this->tag)]
         );
 
         return (int) $this->db->lastInsertId();
@@ -144,7 +144,7 @@ class IdeaQuorumArchivedUsersTest extends TestCase
     // Room member with voting role 20 in this room, room membership active.
     private function insertRoomMember(string $suffix, int $status): int
     {
-        $roles = json_encode([['room' => $this->tag, 'role' => 20]]);
+        $roles = json_encode([['room' => md5($this->tag), 'role' => 20]]);
         $id = $this->insertUser($suffix, $status, 20, $roles);
         $this->exec(
             "INSERT INTO {$this->db->au_rel_rooms_users} (room_id, user_id, status, created, last_update)

@@ -14,4 +14,13 @@ enum Gates
 
     case ListMergeProposals;
     case ExportUserGdprInfo;
+
+    case ListRooms;
+    case CreateRoom;
+    case ShowRoom;
+    case UpdateRoom;
+    case DeleteRoom;
+
+    case ListRoomMembership;
+    case PatchRoomMembership;
 }

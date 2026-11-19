@@ -12,6 +12,7 @@ use App\UseCases\Idp\MergeProposalFilter;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Laravel\Passport\Passport;
 use Tests\Concerns\CreatesTestTenant;
 use Tests\TestCase;
@@ -300,7 +301,8 @@ class ListMergeProposalsUseCaseTest extends TestCase
             'room_name' => $name,
             'status' => $status,
             'type' => 0,
-            'hash_id' => self::PREFIX.md5($name.microtime(true)),
+            'hash_id' => self::PREFIX.Str::random(32 - strlen(self::PREFIX)),
+            // self::PREFIX.md5($name.microtime(true)),
         ]));
     }
 
