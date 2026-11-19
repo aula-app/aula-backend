@@ -76,8 +76,22 @@ class SendEmailHandler extends CommandHandler
 
     $mail = $this->smtp->send($email, $headers, $email_body);
     if (PEAR::isError($mail)) {
-      error_log("[{$this->db->code}] sendEmail command {$command['id']} failed: " . $mail->getMessage());
-      return (new ResponseBuilder())->error(1, $mail->getMessage());
+      $errorMessage = $mail->getMessage();
+      error_log("[{$this->db->code}] sendEmail command {$command['id']} failed: {$errorMessage}");
+
+      if (
+        (bool) preg_match('/SMTP: Invalid response code received from server \(code: 450/', $errorMessage)
+          || (bool) preg_match('/Recipient address rejected: Max [0-9]+ messages per hour/', $errorMessage)
+      ) {
+        // the error is retryable
+        return (new ResponseBuilder())->error(1, $mail->getMessage());
+      } elseif ((bool) preg_match('/Recipient address rejected: Domain not found/', $errorMessage)) {
+        // the error is terminal (not retryable)
+        return (new ResponseBuilder())->error(2, $mail->getMessage());
+      } else {
+        // if it's unknown error message, better to retry than to give up immediately
+        return (new ResponseBuilder())->error(1, $mail->getMessage());
+      }
     }
     return (new ResponseBuilder())->success(true);
   }
