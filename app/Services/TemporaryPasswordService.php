@@ -6,7 +6,9 @@ namespace App\Services;
 
 use App\Enums\UserLevel;
 use App\Enums\UserStatus;
+use App\Models\LegacyUser;
 use App\Models\Tenant;
+use Illuminate\Database\Eloquent\Builder as UserQuery;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +47,7 @@ class TemporaryPasswordService
     public function summary(Tenant $tenant): array
     {
         $users = $tenant->run(fn (): Collection => $this->eligibleUsers());
-        $existing = $users->filter(fn (stdClass $user): bool => $this->holdsTemporaryPassword($user))->count();
+        $existing = $users->filter(fn (LegacyUser $user): bool => $this->holdsTemporaryPassword($user))->count();
 
         return ['new' => $users->count() - $existing, 'existing' => $existing];
     }
@@ -60,7 +62,7 @@ class TemporaryPasswordService
         return $tenant->run(function (): array {
             $users = $this->eligibleUsers();
             $passwords = $users
-                ->mapWithKeys(fn (stdClass $user): array => [(int) $user->id => (string) $user->temp_pw])
+                ->mapWithKeys(fn (LegacyUser $user): array => [(int) $user->id => (string) $user->temp_pw])
                 ->all();
 
             return array_map(function (array $sheet): array {
@@ -86,10 +88,10 @@ class TemporaryPasswordService
     {
         return $tenant->run(function () use ($sheetKey): array {
             $users = $this->eligibleUsers(sheetKey: $sheetKey)
-                ->filter(fn (stdClass $user): bool => $this->holdsTemporaryPassword($user))
+                ->filter(fn (LegacyUser $user): bool => $this->holdsTemporaryPassword($user))
                 ->values();
             $passwords = $users
-                ->mapWithKeys(fn (stdClass $user): array => [(int) $user->id => (string) $user->temp_pw])
+                ->mapWithKeys(fn (LegacyUser $user): array => [(int) $user->id => (string) $user->temp_pw])
                 ->all();
 
             return $this->only($this->buildSheets($users, $passwords), $sheetKey);
@@ -109,10 +111,10 @@ class TemporaryPasswordService
             // two runs cannot hand out different passwords for one user.
             [$users, $passwords, $new] = DB::transaction(function () use ($sheetKey): array {
                 $users = $this->eligibleUsers(lock: true, sheetKey: $sheetKey);
-                $pending = $users->reject(fn (stdClass $user): bool => $this->holdsTemporaryPassword($user));
+                $pending = $users->reject(fn (LegacyUser $user): bool => $this->holdsTemporaryPassword($user));
 
                 $passwords = $users
-                    ->mapWithKeys(fn (stdClass $user): array => [(int) $user->id => (string) $user->temp_pw])
+                    ->mapWithKeys(fn (LegacyUser $user): array => [(int) $user->id => (string) $user->temp_pw])
                     ->all();
 
                 return [$users, array_replace($passwords, $this->assignPasswords($pending)), $pending->count()];
@@ -133,25 +135,25 @@ class TemporaryPasswordService
      *
      * `pw_changed` is not consulted: the legacy code never sets it.
      *
-     * @return Collection<int, stdClass>
+     * @return Collection<int, LegacyUser>
      */
     private function eligibleUsers(bool $lock = false, ?string $sheetKey = null): Collection
     {
-        return DB::table('au_users_basedata')
-            ->when($lock, fn (Builder $query) => $query->lockForUpdate())
-            ->when($sheetKey === self::NO_ROOM_KEY, fn (Builder $query) => $query
+        return LegacyUser::query()
+            ->when($lock, fn (UserQuery $query) => $query->lockForUpdate())
+            ->when($sheetKey === self::NO_ROOM_KEY, fn (UserQuery $query) => $query
                 ->whereNotExists(fn (Builder $sub) => $this->activeMembership($sub)))
-            ->when($sheetKey !== null && $sheetKey !== self::NO_ROOM_KEY, fn (Builder $query) => $query
+            ->when($sheetKey !== null && $sheetKey !== self::NO_ROOM_KEY, fn (UserQuery $query) => $query
                 ->whereExists(fn (Builder $sub) => $this->activeMembership($sub)->where('au_rooms.id', (int) $sheetKey)))
-            ->where('status', UserStatus::Active->value)
-            ->where('userlevel', UserLevel::User->value)
+            ->where('status', UserStatus::Active)
+            ->where('userlevel', UserLevel::User)
             ->whereNull('sso_sub')
-            ->where(fn (Builder $query) => $query
-                ->where(fn (Builder $q) => $q->whereNotNull('temp_pw')->where('temp_pw', '!=', ''))
-                ->orWhere(fn (Builder $q) => $q->whereNull('pw')->orWhere('pw', ''))
+            ->where(fn (UserQuery $query) => $query
+                ->where(fn (UserQuery $q) => $q->whereNotNull('temp_pw')->where('temp_pw', '!=', ''))
+                ->orWhere(fn (UserQuery $q) => $q->whereNull('pw')->orWhere('pw', ''))
                 // Adding a single user by email stores the hash of an empty
                 // password, so `pw` is set although the user never chose one.
-                ->orWhere(fn (Builder $q) => $q
+                ->orWhere(fn (UserQuery $q) => $q
                     ->whereNull('last_login')
                     ->whereExists(fn (Builder $sub) => $sub
                         ->selectRaw('1')
@@ -189,7 +191,7 @@ class TemporaryPasswordService
             ->where('au_rooms.status', self::ROOM_ACTIVE);
     }
 
-    private function holdsTemporaryPassword(stdClass $user): bool
+    private function holdsTemporaryPassword(LegacyUser $user): bool
     {
         return (string) $user->temp_pw !== '';
     }
@@ -200,23 +202,22 @@ class TemporaryPasswordService
      * cleared, and `refresh_token` makes an open session renew its JWT.
      * Runs inside the caller's transaction.
      *
-     * @param  Collection<int, stdClass>  $users
+     * @param  Collection<int, LegacyUser>  $users
      * @return array<int, string> user id => temporary password
      */
     private function assignPasswords(Collection $users): array
     {
-        $passwords = $users
-            ->mapWithKeys(fn (stdClass $user): array => [(int) $user->id => $this->generatePassword()])
-            ->all();
-
-        foreach ($passwords as $userId => $password) {
-            DB::table('au_users_basedata')->where('id', $userId)->update([
+        $passwords = [];
+        foreach ($users as $user) {
+            $password = $this->generatePassword();
+            $user->forceFill([
                 'temp_pw' => $password,
                 'pw' => null,
                 'pw_changed' => 0,
                 'refresh_token' => true,
                 'last_update' => now(),
-            ]);
+            ])->save();
+            $passwords[(int) $user->id] = $password;
         }
 
         // The emailed set-password link would set `pw` without clearing
@@ -230,7 +231,7 @@ class TemporaryPasswordService
      * One sheet per active room with at least one listed user, then one for
      * the users in no active room.
      *
-     * @param  Collection<int, stdClass>  $users
+     * @param  Collection<int, LegacyUser>  $users
      * @param  array<int, string>  $passwords
      * @return list<Sheet>
      */
@@ -253,7 +254,7 @@ class TemporaryPasswordService
         $sheets = [];
         foreach ($rooms as $room) {
             $members = $memberships->where('room_id', $room->id)->pluck('user_id')->unique()
-                ->map(fn (mixed $id): stdClass => $usersById[$id]);
+                ->map(fn (mixed $id): LegacyUser => $usersById[$id]);
 
             if ($members->isEmpty()) {
                 continue;
@@ -283,7 +284,7 @@ class TemporaryPasswordService
     }
 
     /**
-     * @param  iterable<stdClass>  $members
+     * @param  iterable<LegacyUser>  $members
      * @param  array<int, string>  $passwords
      * @param  array<int, string>  $classNames
      * @return list<Row>
@@ -330,7 +331,7 @@ class TemporaryPasswordService
             ->all();
     }
 
-    private function fullName(stdClass $user): string
+    private function fullName(LegacyUser $user): string
     {
         return trim((string) ($user->realname ?: $user->displayname ?: $user->username));
     }
