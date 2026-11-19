@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\TenantResource\Pages;
 
+use App\Filament\Actions\TemporaryPasswordsAction;
 use App\Filament\Resources\TenantResource;
 use App\Models\Tenant;
 use App\UseCases\ReleaseIdpSchoolUseCase;
@@ -21,6 +22,7 @@ class EditTenant extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            TemporaryPasswordsAction::make(),
             Actions\Action::make('releaseIdpSchool')
                 ->label('Release from IdP school')
                 ->icon('heroicon-o-link-slash')

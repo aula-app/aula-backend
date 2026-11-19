@@ -50,6 +50,8 @@ docker compose up --build -d
 
 And initialize your first Tenant Instance from within the v2 container with `php artisan tenant:create`.
 
+To hand out login credentials for a whole school, `php artisan tenant:temp-passwords <instance_code>` gives every active regular user who never chose a password (not moderators, admins or SSO accounts) a random temporary password and writes one CSV per room (full name, username, temporary password, class) under `storage/app/temp-passwords/`. Users who already hold a temporary password keep it. The manager panel has a "Temporary passwords" page per tenant that lists the rooms. "Reset passwords" sets the temporary passwords, for one room or for all, after a confirmation. The downloads only print passwords already set, as cut-out cards: one PDF per room, or a ZIP with all of them.
+
 ## Legacy aula-backend code
 
 We're currently rewriting the API to use Laravel and be RESTful. New feature development using code in the `./legacy/` folder is stopped since 2025-11-15. Security patches and bugs are welcome. As parts of the system get refactored, and API clients updated, we will remove the related code from the legacy codebase.
