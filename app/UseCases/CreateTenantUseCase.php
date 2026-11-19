@@ -40,13 +40,14 @@ class CreateTenantUseCase
         ?string $idpMigrationStatus = null,
     ): Tenant {
         $jwtKey = Str::random(64);
-        $apiBaseUrl ??= config('app.url');
+        $apiBaseUrl ??= config('app.api_url');
+        $apiFrontendUrl = config('app.frontend_url');
         $admin1Secret = Str::random(64);
         $admin2Secret = Str::random(64);
 
         // When a password is pre-set, admins can log in immediately — no email setup needed.
-        $admin1InitPassUrl = $adminPassword === null ? $this->links->url($apiBaseUrl, $instanceCode, $admin1Secret) : null;
-        $admin2InitPassUrl = $adminPassword === null ? $this->links->url($apiBaseUrl, $instanceCode, $admin2Secret) : null;
+        $admin1InitPassUrl = $adminPassword === null ? $this->links->url($apiFrontendUrl, $instanceCode, $admin1Secret) : null;
+        $admin2InitPassUrl = $adminPassword === null ? $this->links->url($apiFrontendUrl, $instanceCode, $admin2Secret) : null;
 
         // A null optional leaves the column on its database default.
         $optional = array_filter([

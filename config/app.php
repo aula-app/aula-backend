@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
     'frontend_url' => env('APP_FRONTEND_URL', config('app.url', 'http://localhost:3000')),
+    // on non-dev staging/prod url==api_url
+    'api_url' => env('APP_API_URL', config('app.url', 'http://localhost:8080')),
     'version' => env('APP_VERSION', 'unknown'),
 
     /*

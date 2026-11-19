@@ -17,6 +17,7 @@
   <projectFiles>
     <directory name="."/>
     <ignoreFiles allowMissingFiles="true">
+      <directory name="db"/>
       <directory name="legacy"/>
       <directory name="vendor"/>
       <directory name="storage"/>

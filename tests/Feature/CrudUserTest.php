@@ -52,6 +52,7 @@ class CrudUserTest extends TestCase
 
     public static function tearDownAfterClass(): void
     {
+        // TODO just trash tenants
         self::$testTenant->run(function () {
             LegacyUser::whereLike('email', 'e2e_distinct_%@aula.de')->delete();
         });
