@@ -19,6 +19,8 @@ trait CreatesTestTenant
 {
     private const TEST_JWT_KEY = 'phpunit_test_jwt_key_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 
+    private const array TEST_TENANT_HEADERS = ['aula-instance-code' => 'TEST001'];
+
     private static ?Tenant $testTenant = null;
 
     private static ?Client $client = null;

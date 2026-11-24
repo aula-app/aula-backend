@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Data\User;
 
-use DateTimeImmutable;
 use App\Data\User\AbstractUserData;
 use App\Enums\UserLevel;
+use Illuminate\Database\Eloquent\Relations\Pivot;
+use Spatie\LaravelData\Attributes\Hidden;
 use Spatie\LaravelData\Attributes\MapInputName;
+use DateTimeImmutable;
 
 class DomainUserData extends AbstractUserData
 {
@@ -53,4 +55,7 @@ class DomainUserData extends AbstractUserData
     #[MapInputName('last_update')]
     // unlike created, this can still be null (at creation)
     public readonly DateTimeImmutable|null $updatedAt;
+
+    #[Hidden]
+    public readonly null|Pivot $pivot;
 }
