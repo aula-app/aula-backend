@@ -79,21 +79,25 @@ class SendEmailHandler extends CommandHandler
       $errorMessage = $mail->getMessage();
       error_log("[{$this->db->code}] sendEmail command {$command['id']} failed: {$errorMessage}");
 
-      if (
-        (bool) preg_match('/SMTP: Invalid response code received from server \(code: 450/', $errorMessage)
-          || (bool) preg_match('/Recipient address rejected: Max [0-9]+ messages per hour/', $errorMessage)
-      ) {
-        // the error is retryable
-        return (new ResponseBuilder())->error(1, $mail->getMessage());
-      } elseif ((bool) preg_match('/Recipient address rejected: Domain not found/', $errorMessage)) {
-        // the error is terminal (not retryable)
-        return (new ResponseBuilder())->error(2, $mail->getMessage());
-      } else {
-        // if it's unknown error message, better to retry than to give up immediately
-        return (new ResponseBuilder())->error(1, $mail->getMessage());
-      }
+      $isRetryable = $this->isRetryable($errorMessage);
+      return (new ResponseBuilder())->error($isRetryable ? 1 : 2, $errorMessage);
     }
+
     return (new ResponseBuilder())->success(true);
+  }
+
+  private function isRetryable(string $errorMessage): bool
+  {
+    // rate limit: retry, whatever code the server uses for it
+    if (preg_match('/Max [0-9]+ messages per hour/', $errorMessage)) {
+      return true;
+    }
+    // the error is terminal (not retryable)
+    if (preg_match('/Domain not found/', $errorMessage)) {
+      return false;
+    }
+    // anything unknown, better retry than risk the delivery
+    return true;
   }
 
   protected function isValid(mixed $command): bool
