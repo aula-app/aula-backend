@@ -30,7 +30,10 @@ class CommandDispatcher
     ];
   }
 
-  public function dispatch(mixed $command)
+  /**
+   * @param array<string,mixed> $command the command to be dispatched
+   */
+  public function dispatch(array $command)
   {
     $commandType = @$command['cmd_id'];
     if ($commandType === null) {
@@ -48,7 +51,7 @@ class CommandDispatcher
     return ($handler())->executeSafe($command);
   }
 
-  public function closeDb()
+  public function closeDb(): void
   {
     $this->db->close();
   }

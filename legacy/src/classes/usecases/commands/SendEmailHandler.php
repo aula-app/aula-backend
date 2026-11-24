@@ -26,7 +26,7 @@ class SendEmailHandler extends CommandHandler
     return $instance;
   }
 
-  protected function execute($command): mixed
+  protected function execute(array $command): mixed
   {
     $content = "text/html; charset=utf-8";
     $mime = "1.0";
@@ -100,7 +100,7 @@ class SendEmailHandler extends CommandHandler
     return true;
   }
 
-  protected function isValid(mixed $command): bool
+  protected function isValid(array $command): bool
   {
     $parts = explode(";", $command['parameters'] ?? '');
     if (count($parts) !== 5) {

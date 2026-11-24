@@ -18,7 +18,10 @@ abstract class CommandHandler
     $this->commandModel = new Command($db, $crypt, $syslog);
   }
 
-  public function executeSafe(mixed $command)
+  /**
+   * @param array $command to be executed
+   */
+  public function executeSafe(array $command)
   {
     if ($command === null || !is_array($command) || $command['id'] === null) {
       throw new RuntimeException("Bad Command");
@@ -60,6 +63,6 @@ abstract class CommandHandler
     }
   }
 
-  abstract protected function isValid(mixed $command): bool;
-  abstract protected function execute(mixed $command): mixed;
+  abstract protected function isValid(array $command): bool;
+  abstract protected function execute(array $command): mixed;
 }

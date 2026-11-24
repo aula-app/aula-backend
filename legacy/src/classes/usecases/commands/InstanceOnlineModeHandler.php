@@ -11,12 +11,12 @@ class InstanceOnlineModeHandler extends CommandHandler
     return $instance;
   }
 
-  protected function execute($command): mixed
+  protected function execute(array $command): mixed
   {
     return $this->settingsModel->setInstanceOnlineMode(intval($command['parameters']), 99);
   }
 
-  protected function isValid(mixed $command): bool
+  protected function isValid(array $command): bool
   {
     $newStatus = intval($command['parameters']);
     return $newStatus >= 0 && $newStatus <= 5;

@@ -48,12 +48,15 @@ class CommandSchedulerForInstance
     $this->commandDispatcherForInstance->closeDb();
   }
 
-  protected function getDueCommands()
+  /**
+  * @return array|null either array of pending commands or null on error fetching the due commands
+  **/
+  protected function getDueCommands(): array|null
   {
     $dueCommandsResult = $this->commandModelForInstance->getDueCommands();
     if ($dueCommandsResult === null || $dueCommandsResult['error_code'] != 0) {
       error_log("[{$this->code}] ERROR Due commands: " . json_encode($dueCommandsResult));
-      return;
+      return null;
     }
 
     $commands = $dueCommandsResult['data'];
