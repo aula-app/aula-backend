@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Enums\UserStatus;
 use App\Models\LegacyUser;
 use App\Models\Tenant;
+use App\Services\Idp\SchoolImport;
 use App\UseCases\ReleaseIdpSchoolUseCase;
 use Illuminate\Support\Facades\DB;
 use Tests\Concerns\CreatesTestTenant;
@@ -32,6 +33,13 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
             'idp_school_id' => 'school-release-test',
             'sso_provider' => 'eduplaces',
             'sso_required' => true,
+            'idp_migration_status' => Tenant::IDP_MIGRATION_COMPLETED,
+            'idp_import_status' => SchoolImport::STATUS_COMPLETED,
+            'idp_import_error' => 'stale',
+            'idp_import_rooms' => 3,
+            'idp_import_users' => 7,
+            'idp_import_started_at' => now(),
+            'idp_import_finished_at' => now(),
             'admin1_username' => self::ADMIN1,
             'admin2_username' => self::ADMIN2,
             'admin1_init_pass_url' => null,
@@ -46,6 +54,13 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
             'idp_school_id' => null,
             'sso_provider' => null,
             'sso_required' => false,
+            'idp_migration_status' => null,
+            'idp_import_status' => null,
+            'idp_import_error' => null,
+            'idp_import_rooms' => 0,
+            'idp_import_users' => 0,
+            'idp_import_started_at' => null,
+            'idp_import_finished_at' => null,
             'admin1_username' => 'phpunit_admin',
             'admin2_username' => null,
             'admin1_init_pass_url' => null,
@@ -114,6 +129,50 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
         $this->assertNull($row->idp_school_id);
     }
 
+    public function test_a_merged_tenant_goes_back_to_awaiting_its_connection(): void
+    {
+        $this->seedAdmins();
+
+        app(ReleaseIdpSchoolUseCase::class)->execute($this->tenant);
+
+        $row = $this->tenant->fresh();
+        $this->assertSame(Tenant::IDP_MIGRATION_FLAGGED, $row->idp_migration_status);
+        $this->assertNull($row->idp_import_status);
+        $this->assertNull($row->idp_import_error);
+        $this->assertSame(0, (int) $row->idp_import_rooms);
+        $this->assertSame(0, (int) $row->idp_import_users);
+        $this->assertNull($row->idp_import_started_at);
+        $this->assertNull($row->idp_import_finished_at);
+    }
+
+    public function test_a_tenant_that_never_migrated_is_flagged_too(): void
+    {
+        $this->seedAdmins();
+        $this->tenant->update(['idp_migration_status' => null]);
+
+        app(ReleaseIdpSchoolUseCase::class)->execute($this->tenant);
+
+        $this->assertSame(Tenant::IDP_MIGRATION_FLAGGED, $this->tenant->fresh()->idp_migration_status);
+    }
+
+    public function test_it_drops_the_merge_proposal_of_the_released_school(): void
+    {
+        $this->seedAdmins();
+        $this->tenant->run(fn () => DB::table('idp_merge_candidates')->insert([
+            'kind' => 'user',
+            'idp_id' => 'person-stale',
+            'idp_name' => 'Stale Person',
+            'idp_name_kind' => 'real',
+            'outcome' => 'none',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]));
+
+        app(ReleaseIdpSchoolUseCase::class)->execute($this->tenant);
+
+        $this->assertSame(0, $this->tenant->run(fn () => DB::table('idp_merge_candidates')->count()));
+    }
+
     /**
      * @return array{0: int, 1: int}
      */
@@ -132,7 +191,7 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
 
     private function seedUser(string $username, string $ssoSub, string $idpUserId): int
     {
-        $user = new LegacyUser();
+        $user = new LegacyUser;
         $user->username = $username;
         $user->displayname = $username;
         $user->email = "{$username}@test.example";
@@ -153,6 +212,7 @@ class ReleaseIdpSchoolUseCaseTest extends TestCase
             $ids = LegacyUser::where('username', 'like', 'release.%')->pluck('id');
             DB::table('au_change_password')->whereIn('user_id', $ids)->delete();
             LegacyUser::whereIn('id', $ids)->delete();
+            DB::table('idp_merge_candidates')->where('idp_id', 'person-stale')->delete();
         });
     }
 }

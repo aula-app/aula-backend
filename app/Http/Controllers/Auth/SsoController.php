@@ -973,10 +973,6 @@ class SsoController extends Controller
             return null;
         }
 
-        if ($this->learnSchoolId($tenant, $claims, $instanceCode) !== null) {
-            return null;
-        }
-
         $admin = $this->tenantAdmin($tenant);
 
         if ($admin === null) {
@@ -997,6 +993,12 @@ class SsoController extends Controller
                 'user_id' => $admin->id,
             ]);
 
+            return null;
+        }
+
+        // After every guard: learnSchoolId() writes idp_school_id, which a
+        // declined bootstrap must leave null for rejectForeignSchool().
+        if ($this->learnSchoolId($tenant, $claims, $instanceCode) !== null) {
             return null;
         }
 

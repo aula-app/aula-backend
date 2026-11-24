@@ -27,11 +27,12 @@ class EditTenant extends EditRecord
                 ->color('warning')
                 ->visible(fn (Tenant $record): bool => $record->idp_school_id !== null)
                 ->requiresConfirmation()
-                ->modalDescription(fn (Tenant $record): string => "Unlinks school {$record->idp_school_id} from this tenant so it can be connected to another tenant. SSO logins to this tenant stop. SSO required is switched off and the two admins get new password setup links, shown on this page afterwards. Imported users and rooms are kept.")
+                ->modalDescription(fn (Tenant $record): string => "Unlinks school {$record->idp_school_id} from this tenant so it can be connected to another tenant. SSO logins to this tenant stop. SSO required is switched off and the two admins get new password setup links, shown on this page afterwards. Imported users and rooms are kept. Connecting a school again goes through the merge in Configuration.")
                 ->action(function (Tenant $record, EditTenant $livewire): void {
                     app(ReleaseIdpSchoolUseCase::class)->execute($record);
                     $livewire->refreshFormData([
-                        'idp_school_id', 'sso_required', 'admin1_init_pass_url', 'admin2_init_pass_url',
+                        'idp_school_id', 'sso_required', 'idp_migration_status',
+                        'admin1_init_pass_url', 'admin2_init_pass_url',
                     ]);
                     Notification::make()->title('Tenant released from IdP school')->success()->send();
                 }),

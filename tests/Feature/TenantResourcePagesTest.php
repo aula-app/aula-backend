@@ -159,10 +159,13 @@ class TenantResourcePagesTest extends TestCase
                 });
         } finally {
             $this->cleanRelease($tenant);
+            // The action wrote through another instance.
+            $tenant->refresh();
             $tenant->update([
                 'idp_school_id' => null,
                 'sso_provider' => null,
                 'sso_required' => false,
+                'idp_migration_status' => null,
                 'admin1_username' => 'phpunit_admin',
                 'admin1_init_pass_url' => null,
             ]);

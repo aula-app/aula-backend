@@ -11,11 +11,14 @@ use Illuminate\Support\Facades\DB;
 /**
  * Unlinks a tenant from its IdP school and returns it to password login.
  *
- * SSO logins to a tenant without idp_school_id are refused and nothing sets it
- * again. Password login refuses a user with an sso_sub and every user on an
- * sso_required tenant, so admin1 and admin2 lose their provider identity and
- * get new password setup links, and sso_required is switched off. Imported
- * users and rooms are untouched.
+ * SSO logins to a tenant without idp_school_id are refused. Password login
+ * refuses a user with an sso_sub and every user on an sso_required tenant, so
+ * admin1 and admin2 lose their provider identity and get new password setup
+ * links, and sso_required is switched off. Imported users and rooms are
+ * untouched.
+ *
+ * idp_migration_status is set to IDP_MIGRATION_FLAGGED, so a school is
+ * connected again through connectIdentity() and not bootstrapIdpTenant().
  */
 class ReleaseIdpSchoolUseCase
 {
@@ -23,14 +26,26 @@ class ReleaseIdpSchoolUseCase
 
     public function execute(Tenant $tenant): void
     {
-        $urls = $tenant->run(fn (): array => [
-            'admin1_init_pass_url' => $this->reissue($tenant, $tenant->admin1_username),
-            'admin2_init_pass_url' => $this->reissue($tenant, $tenant->admin2_username),
-        ]);
+        $urls = $tenant->run(function () use ($tenant): array {
+            // Rows describe the released school.
+            DB::table('idp_merge_candidates')->truncate();
+
+            return [
+                'admin1_init_pass_url' => $this->reissue($tenant, $tenant->admin1_username),
+                'admin2_init_pass_url' => $this->reissue($tenant, $tenant->admin2_username),
+            ];
+        });
 
         $tenant->update([
             'idp_school_id' => null,
             'sso_required' => false,
+            'idp_migration_status' => Tenant::IDP_MIGRATION_FLAGGED,
+            'idp_import_status' => null,
+            'idp_import_error' => null,
+            'idp_import_rooms' => 0,
+            'idp_import_users' => 0,
+            'idp_import_started_at' => null,
+            'idp_import_finished_at' => null,
             ...$urls,
         ]);
     }
