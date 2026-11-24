@@ -333,7 +333,7 @@ class Command
     } else {
       $this->db->query("UPDATE {$this->db->au_commands} SET date_start = :new_date_start, last_update = NOW() WHERE id = :command_id");
       $this->db->bind(':new_date_start', $newDateStart->getTimestamp());
-      $this->db->bind(':id', $command->id);
+      $this->db->bind(':command_id', $command->id);
     }
 
     try {
