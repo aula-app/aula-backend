@@ -11,12 +11,12 @@ class DeactivateCommandHandler extends CommandHandler
     return $instance;
   }
 
-  protected function execute($command): mixed
+  protected function execute(array $command): mixed
   {
     return $this->commandModel->setActiveStatus(intval($command['parameters']), 0, 99);
   }
 
-  protected function isValid(mixed $command): bool
+  protected function isValid(array $command): bool
   {
     $newStatus = intval($command['parameters']);
     return $newStatus >= 0 && $newStatus <= 5;

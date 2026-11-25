@@ -320,6 +320,24 @@ class Command
     }
   }// end function
 
+  public function backoffCommand(mixed $command)
+  {
+    $now = new DateTimeImmutable('now');
+    $created = new DateTimeImmutable($command['created']);
+    $delay = max(1, $now->getTimestamp() - $created->getTimestamp());
+    $newDateStart = $now->modify('+' . (2 * $delay) . ' seconds');
+
+    if ($now->getTimestamp() - $created->getTimestamp() > 2 * 24 * 60 * 60) {
+      // stop if retrying over 2 days
+      return $this->setActiveStatus($command['id'], 0, 0);
+    } else {
+      $this->db->query("UPDATE {$this->db->au_commands} SET date_start = :new_date_start, last_update = NOW() WHERE id = :command_id");
+      $this->db->bind(':new_date_start', $newDateStart->getTimestamp());
+      $this->db->bind(':command_id', $command['id']);
+    }
+
+    $this->db->execute(); // do the query
+  }
 
   public function deleteCommand($command_id, $updater_id = 0)
   {
