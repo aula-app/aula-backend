@@ -188,6 +188,23 @@ class SsoIdpInitiatedTest extends TestCase
         $this->assertStringContainsString('sso_error=school_not_provisioned', $response->headers->get('Location'));
     }
 
+    /**
+     * A school's first launch has no tenant to land in. `via=eduplaces` is what
+     * makes the frontend restart SSO once the instance code is entered.
+     */
+    public function test_callback_marks_an_unprovisioned_school_as_an_eduplaces_launch(): void
+    {
+        $this->fakeBrokerUpstreamIdToken(['sub' => 'eduplaces-sub-stray', 'school' => 'school-uuid-unknown', 'iss' => self::EDUPLACES_AUTH]);
+        $this->mockSocialiteCallback('keycloak-sub-stray', 'idp_stray@test.example', 'S', 's');
+
+        $state = $this->buildIdpInitiatedState();
+        $response = $this->get("/api/v2/auth/sso/callback?state={$state}");
+
+        parse_str((string) parse_url((string) $response->headers->get('Location'), PHP_URL_QUERY), $query);
+        $this->assertSame('school_not_provisioned', $query['sso_error'] ?? null);
+        $this->assertSame('eduplaces', $query['via'] ?? null);
+    }
+
     public function test_callback_rejects_when_resolved_tenant_has_sso_disabled(): void
     {
         self::$testTenant->update(['sso_enabled' => false]);
