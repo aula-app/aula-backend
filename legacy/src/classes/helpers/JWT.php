@@ -141,7 +141,7 @@ class JWT
   function verifyRS256JWT($data_signed, $signature) {
     $signature = base64_url_decode($signature);
 
-    $publicKey = file_get_contents(__DIR__ . '/../../../config/oauth-public.key');
+    $publicKey = file_get_contents(__DIR__ . '/../../../storage/oauth-public.key');
     $publicKeyResource = openssl_pkey_get_public($publicKey);
     if (!$publicKeyResource) {
         return false;
