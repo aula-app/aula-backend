@@ -138,7 +138,7 @@ class SsoController extends Controller
         // Keycloak forwards `prompt` to the school's provider, where Eduplaces
         // answers it with a second school picker. A tenant with
         // sso_force_logout has no Keycloak session left after logout(), so the
-        // next login reaches the provider without it.
+        // next login reaches the provider without the `prompt` parameter.
         if ($request->boolean('force_login') && ! $tenant->sso_force_logout) {
             $params['prompt'] = 'login';
         }
