@@ -113,6 +113,32 @@ class SsoControllerTest extends TestCase
         $this->assertEquals('login', $capturedParams['prompt']);
     }
 
+    /**
+     * logout() has already ended the Keycloak session of such a tenant, so the
+     * prompt would only be forwarded to the school's provider.
+     */
+    public function test_initiate_sends_no_prompt_when_the_tenant_forces_logout(): void
+    {
+        self::$testTenant->update(['sso_force_logout' => true]);
+        $capturedParams = null;
+
+        $provider = \Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('with')->andReturnUsing(function (array $params) use (&$capturedParams, $provider) {
+            $capturedParams = $params;
+
+            return $provider;
+        });
+        $provider->shouldReceive('redirect')->andReturn(new RedirectResponse('https://sso.example'));
+
+        Socialite::shouldReceive('driver')->with('keycloak')->andReturn($provider);
+
+        $this->getJson('/api/v2/auth/sso/initiate?force_login=true', ['aula-instance-code' => self::INSTANCE_CODE]);
+
+        $this->assertIsArray($capturedParams);
+        $this->assertArrayNotHasKey('prompt', $capturedParams);
+    }
+
     // =========================================================
     // sso_enabled
     // =========================================================

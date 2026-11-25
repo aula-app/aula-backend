@@ -46,6 +46,11 @@ class SsoController extends Controller
     private const string IDP_INITIATED_EDUPLACES = '__IDP_INITIATED_EDUPLACES__';
 
     /**
+     * Value of `?via=` the frontend reads as an Eduplaces launch to resume.
+     */
+    private const string LAUNCH_VIA_EDUPLACES = 'eduplaces';
+
+    /**
      * Value of `?client=` on the initiate endpoints, and of `client` in the
      * signed state, marking a flow as started inside a native app.
      */
@@ -130,7 +135,11 @@ class SsoController extends Controller
         if ($idpHint) {
             $params['kc_idp_hint'] = $idpHint;
         }
-        if ($request->boolean('force_login')) {
+        // Keycloak forwards `prompt` to the school's provider, where Eduplaces
+        // answers it with a second school picker. A tenant with
+        // sso_force_logout has no Keycloak session left after logout(), so the
+        // next login reaches the provider without it.
+        if ($request->boolean('force_login') && ! $tenant->sso_force_logout) {
             $params['prompt'] = 'login';
         }
         if (($loginHint = (string) $request->query('login_hint', '')) !== '') {
@@ -781,7 +790,10 @@ class SsoController extends Controller
                 'idp_school_id' => $schoolId,
             ]);
 
-            return $this->frontendError('school_not_provisioned');
+            // The frontend asks for the instance code and, seeing `via`,
+            // restarts SSO through initiate(), where bootstrapIdpTenant()
+            // binds the school.
+            return $this->frontendError('school_not_provisioned', ['via' => self::LAUNCH_VIA_EDUPLACES]);
         }
 
         if (! $tenant->sso_enabled) {
