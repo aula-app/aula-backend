@@ -120,11 +120,52 @@ class ListMergeProposalsUseCaseTest extends TestCase
 
         // Archived rooms are proposed for merging too, so they are listed.
         $this->assertSame([
-            ['id' => $archived, 'name' => 'Klasse 4a'],
-            ['id' => $active, 'name' => 'Klasse 5a'],
+            ['id' => $archived, 'name' => 'Klasse 4a', 'status' => 3],
+            ['id' => $active, 'name' => 'Klasse 5a', 'status' => 1],
         ], $rows['p-rooms']['local_rooms']);
         $this->assertSame([], $rows['p-none']['local_rooms']);
         $this->assertSame([], $rows['p-nobody']['local_rooms']);
+    }
+
+    public function test_each_user_row_carries_the_aula_account_status(): void
+    {
+        $active = $this->seedUser('active', 20);
+        $archived = $this->seedUser('archived', 20, status: UserStatus::Archived);
+        $this->seedCandidate('user', 'p-active', $active);
+        $this->seedCandidate('user', 'p-archived', $archived);
+        $this->seedCandidate('user', 'p-nobody', null);
+        // Deleted since the proposal was built.
+        $this->seedCandidate('user', 'p-gone', 999999);
+
+        $this->actAsAdmin();
+
+        $rows = collect($this->list(new MergeProposalFilter)->items())->keyBy('idp_id');
+
+        $this->assertSame(UserStatus::Active->value, $rows['p-active']['local_status']);
+        $this->assertSame(UserStatus::Archived->value, $rows['p-archived']['local_status']);
+        $this->assertNull($rows['p-nobody']['local_status']);
+        $this->assertNull($rows['p-gone']['local_status']);
+    }
+
+    public function test_each_room_row_carries_the_aula_room_status(): void
+    {
+        $active = $this->seedRoom('Klasse 6a');
+        $archived = $this->seedRoom('Klasse 6a alt', status: 3);
+        // au_rooms.id and au_users_basedata.id share a number space: the
+        // status must come from the room, not from a user with the same id.
+        $this->seedCandidate('room', 'g-active', $active);
+        $this->seedCandidate('room', 'g-archived', $archived);
+        $this->seedCandidate('room', 'g-new', null);
+        $this->seedCandidate('room', 'g-gone', 999999);
+
+        $this->actAsAdmin();
+
+        $rows = collect($this->list(new MergeProposalFilter)->items())->keyBy('idp_id');
+
+        $this->assertSame(1, $rows['g-active']['local_status']);
+        $this->assertSame(3, $rows['g-archived']['local_status']);
+        $this->assertNull($rows['g-new']['local_status']);
+        $this->assertNull($rows['g-gone']['local_status']);
     }
 
     public function test_each_user_row_carries_its_stored_idp_groups(): void
@@ -238,7 +279,8 @@ class ListMergeProposalsUseCaseTest extends TestCase
             ->assertJsonPath('data.0.local_displayname', 'list_with_avatar')
             ->assertJsonPath('data.0.local_realname', 'Full Name')
             ->assertJsonPath('data.0.local_avatar', 'face.png')
-            ->assertJsonPath('data.0.local_rooms', [['id' => $roomId, 'name' => 'Klasse 5a']])
+            ->assertJsonPath('data.0.local_status', 1)
+            ->assertJsonPath('data.0.local_rooms', [['id' => $roomId, 'name' => 'Klasse 5a', 'status' => 1]])
             ->assertJsonPath('data.0.idp_groups', [['id' => 'g-room', 'name' => 'Room']]);
     }
 
@@ -326,11 +368,15 @@ class ListMergeProposalsUseCaseTest extends TestCase
         ]));
     }
 
-    private function seedUser(string $name, int $level, ?string $realname = null): int
-    {
+    private function seedUser(
+        string $name,
+        int $level,
+        ?string $realname = null,
+        UserStatus $status = UserStatus::Active,
+    ): int {
         $username = self::PREFIX.$name;
 
-        return (int) self::$testTenant->run(function () use ($username, $level, $realname) {
+        return (int) self::$testTenant->run(function () use ($username, $level, $realname, $status) {
             LegacyUser::where('username', $username)->delete();
 
             $user = new LegacyUser;
@@ -338,7 +384,7 @@ class ListMergeProposalsUseCaseTest extends TestCase
             $user->displayname = $username;
             $user->realname = $realname;
             $user->pw = password_hash('secret', PASSWORD_BCRYPT);
-            $user->status = UserStatus::Active;
+            $user->status = $status;
             $user->userlevel = $level;
             $user->hash_id = md5($username.microtime(true));
             $user->save();
