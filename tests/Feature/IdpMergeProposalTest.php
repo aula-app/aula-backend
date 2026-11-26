@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\Concerns\CreatesTestTenant;
+use Tests\Concerns\SeedsStandardRoom;
 use Tests\TestCase;
 
 /**
@@ -25,6 +26,7 @@ use Tests\TestCase;
 class IdpMergeProposalTest extends TestCase
 {
     use CreatesTestTenant;
+    use SeedsStandardRoom;
 
     private const string API_URL = 'https://api.eduplaces.test';
 
@@ -246,6 +248,26 @@ class IdpMergeProposalTest extends TestCase
         $this->assertNull($this->candidateForLocal($roomId, MergeProposalBuilder::KIND_ROOM));
     }
 
+    public function test_the_standard_room_is_never_proposed(): void
+    {
+        $standard = $this->standardRoom();
+        $this->idmGroups = [['id' => 'g-school', 'name' => mb_strtoupper($standard['name'])]];
+
+        $this->build();
+
+        $row = $this->candidateForIdp('g-school');
+
+        $this->assertSame(MergeProposalBuilder::OUTCOME_NONE, $row->outcome);
+        $this->assertNull($row->local_id);
+        $this->assertNull($row->decision);
+        $this->assertSame(0, self::$testTenant->run(
+            fn () => DB::table('idp_merge_candidates')
+                ->where('kind', MergeProposalBuilder::KIND_ROOM)
+                ->where('local_id', $standard['id'])
+                ->count(),
+        ));
+    }
+
     public function test_it_stores_the_groups_a_directory_user_belongs_to(): void
     {
         $aulaOnly = $this->seedAulaUser('Nur In Aula');
@@ -390,5 +412,7 @@ class IdpMergeProposalTest extends TestCase
             DB::table('au_rooms')->whereIn('room_name', ['Klasse 5a', 'Klasse 5A'])->delete();
             DB::table('idp_merge_candidates')->truncate();
         });
+
+        $this->removeSeededStandardRoom();
     }
 }

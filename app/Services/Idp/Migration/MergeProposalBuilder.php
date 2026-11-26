@@ -10,6 +10,7 @@ use App\Services\Idp\Dto\IdpGroup;
 use App\Services\Idp\Dto\IdpGroupRef;
 use App\Services\Idp\Dto\IdpUser;
 use App\Services\Idp\IdpProviders;
+use App\Services\Idp\RoomEnrolment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -25,6 +26,9 @@ use RuntimeException;
  * A directory entry whose id an aula row already carries is settled and is
  * left out on both sides: listed as unmatched it would read as a new account,
  * and SchoolImport converges onto the linked row regardless.
+ *
+ * The standard room is left out as well: it belongs to no directory group, so
+ * a group named like it is listed unmatched and imported as a room of its own.
  *
  * Requires initialised tenancy.
  */
@@ -101,7 +105,11 @@ final class MergeProposalBuilder
 
         $local = [];
 
-        foreach (DB::table('au_rooms')->whereNull('idp_group_id')->get(['id', 'room_name']) as $room) {
+        foreach (DB::table('au_rooms')->whereNull('idp_group_id')->get(['id', 'room_name', 'type']) as $room) {
+            if ((int) $room->type === RoomEnrolment::TYPE_STANDARD) {
+                continue;
+            }
+
             $local[] = ['id' => (int) $room->id, 'name' => (string) $room->room_name];
         }
 

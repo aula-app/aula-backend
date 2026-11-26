@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Passport\Passport;
 use Tests\Concerns\CreatesTestTenant;
+use Tests\Concerns\SeedsStandardRoom;
 use Tests\TestCase;
 
 /**
@@ -24,6 +25,7 @@ use Tests\TestCase;
 class IdpMergeApplyTest extends TestCase
 {
     use CreatesTestTenant;
+    use SeedsStandardRoom;
 
     private const string ADMIN = 'apply_admin';
 
@@ -220,6 +222,54 @@ class IdpMergeApplyTest extends TestCase
         });
     }
 
+    public function test_the_standard_room_cannot_be_picked_by_hand(): void
+    {
+        $standard = $this->standardRoom();
+        $candidateId = $this->seedCandidate('room', 'g1', null, null);
+
+        $this->postJson(
+            '/api/v2/auth/idp/merge-proposal/decisions',
+            ['decisions' => [['id' => $candidateId, 'decision' => 'merge', 'local_id' => $standard['id']]]],
+            $this->adminHeaders(),
+        )->assertStatus(422)->assertJsonPath('error', 'standard_room_not_mergeable');
+
+        self::$testTenant->run(function () use ($candidateId) {
+            $row = DB::table('idp_merge_candidates')->where('id', $candidateId)->first();
+
+            $this->assertNull($row->local_id);
+            $this->assertNull($row->decision);
+        });
+    }
+
+    public function test_a_user_sharing_the_standard_rooms_id_can_still_be_picked(): void
+    {
+        $standard = $this->standardRoom();
+        $candidateId = $this->seedCandidate('user', 'p1', null, null);
+
+        // local_id is a user id here, so the room with the same id is irrelevant.
+        $this->decide([['id' => $candidateId, 'decision' => 'merge', 'local_id' => $standard['id']]]);
+
+        self::$testTenant->run(function () use ($candidateId, $standard) {
+            $this->assertSame($standard['id'], (int) DB::table('idp_merge_candidates')
+                ->where('id', $candidateId)->value('local_id'));
+        });
+    }
+
+    public function test_it_refuses_a_proposal_that_merges_the_standard_room(): void
+    {
+        $standard = $this->standardRoom();
+        $candidateId = $this->seedCandidate('room', 'g1', $standard['id'], 'merge');
+
+        $this->postJson('/api/v2/auth/idp/merge-proposal/apply', [], $this->adminHeaders())
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'proposal_invalid')
+            ->assertJsonPath("problems.{$candidateId}", 'local_row_is_standard_room');
+
+        self::$testTenant->run(function () use ($standard) {
+            $this->assertNull(DB::table('au_rooms')->where('id', $standard['id'])->value('idp_group_id'));
+        });
+    }
+
     public function test_a_non_admin_can_neither_see_nor_apply_the_proposal(): void
     {
         $pupilId = $this->seedUser('apply_pupil', 20);
@@ -330,5 +380,7 @@ class IdpMergeApplyTest extends TestCase
 
             DB::table('idp_merge_candidates')->truncate();
         });
+
+        $this->removeSeededStandardRoom();
     }
 }

@@ -11,6 +11,7 @@ use App\Models\LegacyUser;
 use App\Models\Tenant;
 use App\Services\Idp\Migration\MergeProposalApplier;
 use App\Services\Idp\Migration\MergeProposalBuilder;
+use App\Services\Idp\RoomEnrolment;
 use App\Services\Idp\SchoolImport;
 use App\UseCases\Idp\ListMergeProposalsUseCase;
 use App\UseCases\Idp\MergeProposalFilter;
@@ -35,6 +36,7 @@ class MergeProposalController extends Controller
         private readonly MergeProposalBuilder $builder,
         private readonly MergeProposalApplier $applier,
         private readonly ListMergeProposalsUseCase $lister,
+        private readonly RoomEnrolment $rooms,
     ) {}
 
     /**
@@ -106,6 +108,10 @@ class MergeProposalController extends Controller
             'decisions.*.local_id' => 'nullable|integer',
         ]);
 
+        if ($this->pointsAtStandardRoom($data['decisions'])) {
+            return response()->json(['error' => 'standard_room_not_mergeable'], 422);
+        }
+
         DB::transaction(function () use ($data): void {
             foreach ($data['decisions'] as $decision) {
                 $this->recordDecision($decision);
@@ -175,6 +181,28 @@ class MergeProposalController extends Controller
             'not_yet_linked' => LegacyUser::whereNull('idp_user_id')->count(),
             'signed_in_at_least_once' => LegacyUser::whereNotNull('sso_sub')->count(),
         ]);
+    }
+
+    /**
+     * Whether any room decision picks the standard room as its local_id.
+     *
+     * @param  list<array{id: int, decision?: ?string, local_id?: ?int}>  $decisions
+     */
+    private function pointsAtStandardRoom(array $decisions): bool
+    {
+        foreach ($decisions as $decision) {
+            $localId = $decision['local_id'] ?? null;
+
+            if ($localId === null || ! $this->rooms->isStandardRoom((int) $localId)) {
+                continue;
+            }
+
+            if (IdpMergeCandidate::where('id', $decision['id'])->value('kind') === MergeProposalBuilder::KIND_ROOM) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

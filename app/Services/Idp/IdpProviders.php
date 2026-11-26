@@ -51,6 +51,16 @@ final class IdpProviders
     }
 
     /**
+     * The provider's name as users read it. Falls back to the alias.
+     */
+    public function label(string $provider): string
+    {
+        $label = $this->config($provider, 'label');
+
+        return is_string($label) && $label !== '' ? $label : ucfirst($provider);
+    }
+
+    /**
      * Every configured alias, for reading a claim under each provider's name for it.
      *
      * @return list<string>

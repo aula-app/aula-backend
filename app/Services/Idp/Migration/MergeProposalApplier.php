@@ -6,6 +6,7 @@ namespace App\Services\Idp\Migration;
 
 use App\Models\LegacyUser;
 use App\Models\Tenant;
+use App\Services\Idp\RoomEnrolment;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,6 +24,10 @@ use Illuminate\Support\Facades\Log;
  */
 final class MergeProposalApplier
 {
+    public function __construct(
+        private readonly RoomEnrolment $rooms,
+    ) {}
+
     /**
      * Reasons a proposal cannot be applied, keyed by idp_merge_candidates.id.
      *
@@ -52,6 +57,12 @@ final class MergeProposalApplier
             }
 
             $claimed[$key] = true;
+
+            if ($row->kind === MergeProposalBuilder::KIND_ROOM && $this->rooms->isStandardRoom((int) $row->local_id)) {
+                $problems[(int) $row->id] = 'local_row_is_standard_room';
+
+                continue;
+            }
 
             if (! $this->localRowIsFree($row)) {
                 $problems[(int) $row->id] = 'local_row_already_linked';
