@@ -21,6 +21,10 @@ return [
     'providers' => [
 
         'eduplaces' => [
+            // Shown to users, e.g. in the name of a room that would otherwise
+            // share the standard room's name.
+            'label' => 'Eduplaces',
+
             'directory' => EduplacesDirectory::class,
             'webhook' => EduplacesWebhookAdapter::class,
 

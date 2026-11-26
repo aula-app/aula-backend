@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\Concerns\CreatesTestTenant;
+use Tests\Concerns\SeedsStandardRoom;
 use Tests\TestCase;
 
 /**
@@ -24,6 +25,7 @@ use Tests\TestCase;
 class IdpSchoolImportTest extends TestCase
 {
     use CreatesTestTenant;
+    use SeedsStandardRoom;
 
     private const string API_URL = 'https://api.eduplaces.test';
 
@@ -257,6 +259,55 @@ class IdpSchoolImportTest extends TestCase
         });
     }
 
+    public function test_a_group_named_like_the_standard_room_becomes_its_own_room(): void
+    {
+        $standard = $this->standardRoom();
+        $this->idmGroups = [
+            ['id' => 'group-school', 'name' => mb_strtoupper($standard['name'])],
+            ['id' => 'group-5a', 'name' => 'Klasse 5a'],
+        ];
+
+        $this->import();
+        // A second run must not rename the room back.
+        $this->import();
+
+        self::$testTenant->run(function () use ($standard) {
+            $main = DB::table('au_rooms')->where('id', $standard['id'])->first();
+
+            $this->assertNull($main->idp_group_id);
+            $this->assertSame($standard['name'], $main->room_name);
+            $this->assertSame(1, (int) $main->type);
+
+            $imported = DB::table('au_rooms')->where('idp_group_id', 'group-school')->get();
+
+            $this->assertCount(1, $imported);
+            $this->assertSame(mb_strtoupper($standard['name']).' (Eduplaces)', $imported[0]->room_name);
+            $this->assertSame(0, (int) $imported[0]->type);
+            $this->assertSame('Klasse 5a', DB::table('au_rooms')->where('idp_group_id', 'group-5a')->value('room_name'));
+        });
+    }
+
+    public function test_a_standard_room_that_is_already_linked_keeps_its_name(): void
+    {
+        $standard = $this->standardRoom();
+        self::$testTenant->run(fn () => DB::table('au_rooms')
+            ->where('id', $standard['id'])->update(['idp_group_id' => 'group-school']));
+        $this->idmGroups = [['id' => 'group-school', 'name' => $standard['name']]];
+
+        try {
+            $this->import();
+
+            self::$testTenant->run(function () use ($standard) {
+                $this->assertSame($standard['name'], DB::table('au_rooms')->where('id', $standard['id'])->value('room_name'));
+                $this->assertSame(1, DB::table('au_rooms')->where('idp_group_id', 'group-school')->count());
+            });
+        } finally {
+            // cleanTenant() deletes every linked room, and this one may not be ours.
+            self::$testTenant->run(fn () => DB::table('au_rooms')
+                ->where('id', $standard['id'])->update(['idp_group_id' => null]));
+        }
+    }
+
     public function test_moving_a_student_between_classes_unenrols_them(): void
     {
         $this->seedSchool();
@@ -470,5 +521,7 @@ class IdpSchoolImportTest extends TestCase
                 LegacyUser::whereIn('id', $userIds)->delete();
             }
         });
+
+        $this->removeSeededStandardRoom();
     }
 }

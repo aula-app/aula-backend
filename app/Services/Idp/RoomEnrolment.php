@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Idp;
 
 use App\Services\Idp\Dto\IdpGroupRef;
+use App\Services\Idp\Migration\NameKey;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,8 +27,18 @@ final class RoomEnrolment
 
     public const int STATUS_ARCHIVED = 3;
 
+    /** `au_rooms.type` of the standard room every user of a school is in. */
+    public const int TYPE_STANDARD = 1;
+
+    public function __construct(
+        private readonly IdpProviders $providers,
+    ) {}
+
     /**
      * Create or update the room for a directory group.
+     *
+     * The standard room is never the room of a group: a group named like it
+     * gets a room of its own, told apart by the provider label.
      *
      * @return array{id: int, hash_id: string}
      */
@@ -35,9 +46,15 @@ final class RoomEnrolment
     {
         $existing = DB::table('au_rooms')
             ->where('idp_group_id', $idpGroupId)
-            ->first(['id', 'hash_id', 'room_name', 'status']);
+            ->first(['id', 'hash_id', 'room_name', 'status', 'type']);
 
         $status = $active ? self::STATUS_ACTIVE : self::STATUS_ARCHIVED;
+
+        // A standard room linked before it was kept out of the proposal keeps
+        // its name.
+        if ($existing === null || (int) $existing->type !== self::TYPE_STANDARD) {
+            $name = $this->roomName($name);
+        }
 
         if ($existing !== null) {
             if ($existing->room_name !== $name || (int) $existing->status !== $status) {
@@ -65,6 +82,28 @@ final class RoomEnrolment
         ]);
 
         return ['id' => $id, 'hash_id' => $hashId];
+    }
+
+    public function isStandardRoom(int $roomId): bool
+    {
+        return DB::table('au_rooms')->where('id', $roomId)->where('type', self::TYPE_STANDARD)->exists();
+    }
+
+    /**
+     * $name, with the provider label appended when NameKey cannot tell it from
+     * the standard room's name.
+     */
+    private function roomName(string $name): string
+    {
+        $key = NameKey::of($name);
+
+        foreach (DB::table('au_rooms')->where('type', self::TYPE_STANDARD)->pluck('room_name') as $standard) {
+            if ($key !== null && $key === NameKey::of((string) $standard)) {
+                return $name.' ('.$this->providers->label((string) tenant('sso_provider')).')';
+            }
+        }
+
+        return $name;
     }
 
     /**
