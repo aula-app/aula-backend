@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Gate;
  * User rows also carry the aula account's names, avatar and rooms, and the
  * stored idp_groups. local_name is the name the builder matched on.
  *
+ * local_status is the status of the aula user or room behind local_id, null
+ * when there is none. Each local_rooms entry carries its room's status.
+ *
  * Admin-only: the rows settle which account each directory identity ends up
  * on. Requires initialised tenancy.
  */
@@ -29,6 +32,7 @@ final class ListMergeProposalsUseCase
         'local_displayname' => null,
         'local_realname' => null,
         'local_avatar' => null,
+        'local_status' => null,
         'local_rooms' => [],
     ];
 
@@ -73,21 +77,27 @@ final class ListMergeProposalsUseCase
             ->paginate(perPage: $filter->perPage, page: $filter->page);
 
         $accounts = $this->accountsFor($page->items());
+        $roomStatuses = $this->roomStatusesFor($page->items());
 
         /** @var LengthAwarePaginator<int, array<string, mixed>> $rows */
-        $rows = $page->through(fn (IdpMergeCandidate $row): array => $this->present($row, $accounts));
+        $rows = $page->through(
+            fn (IdpMergeCandidate $row): array => $this->present($row, $accounts, $roomStatuses),
+        );
 
         return $rows;
     }
 
     /**
      * @param  array<int, array<string, mixed>>  $accounts
+     * @param  array<int, int>  $roomStatuses
      * @return array<string, mixed>
      */
-    private function present(IdpMergeCandidate $row, array $accounts): array
+    private function present(IdpMergeCandidate $row, array $accounts, array $roomStatuses): array
     {
         if ($row->kind !== MergeProposalBuilder::KIND_USER) {
-            return self::ROOM_ROW + $row->toArray();
+            $status = $row->local_id !== null ? ($roomStatuses[$row->local_id] ?? null) : null;
+
+            return ['local_status' => $status] + self::ROOM_ROW + $row->toArray();
         }
 
         $account = $row->local_id !== null
@@ -100,7 +110,7 @@ final class ListMergeProposalsUseCase
 
     /**
      * @param  list<IdpMergeCandidate>  $rows
-     * @return array<int, array{local_displayname: ?string, local_realname: ?string, local_avatar: ?string, local_rooms: list<array{id: int, name: string}>}>
+     * @return array<int, array{local_displayname: ?string, local_realname: ?string, local_avatar: ?string, local_status: ?int, local_rooms: list<array{id: int, name: string, status: int}>}>
      */
     private function accountsFor(array $rows): array
     {
@@ -120,11 +130,12 @@ final class ListMergeProposalsUseCase
         $rooms = $this->roomsFor($userIds);
         $accounts = [];
 
-        foreach (LegacyUser::whereIn('id', $userIds)->get(['id', 'displayname', 'realname']) as $user) {
+        foreach (LegacyUser::whereIn('id', $userIds)->get(['id', 'displayname', 'realname', 'status']) as $user) {
             $accounts[(int) $user->id] = [
                 'local_displayname' => $user->displayname,
                 'local_realname' => $user->realname,
                 'local_avatar' => $avatars[(int) $user->id] ?? null,
+                'local_status' => $user->status?->value,
                 'local_rooms' => $rooms[(int) $user->id] ?? [],
             ];
         }
@@ -137,7 +148,7 @@ final class ListMergeProposalsUseCase
      * those too. Membership status is ignored, as in legacy.
      *
      * @param  list<int>  $userIds
-     * @return array<int, list<array{id: int, name: string}>>
+     * @return array<int, list<array{id: int, name: string, status: int}>>
      */
     private function roomsFor(array $userIds): array
     {
@@ -145,15 +156,46 @@ final class ListMergeProposalsUseCase
             ->join('au_rooms', 'au_rooms.id', '=', 'au_rel_rooms_users.room_id')
             ->whereIn('au_rel_rooms_users.user_id', $userIds)
             ->orderBy('au_rooms.room_name')
-            ->get(['au_rel_rooms_users.user_id', 'au_rooms.id', 'au_rooms.room_name']);
+            ->get(['au_rel_rooms_users.user_id', 'au_rooms.id', 'au_rooms.room_name', 'au_rooms.status']);
 
         $rooms = [];
 
         foreach ($rows as $row) {
-            $rooms[(int) $row->user_id][] = ['id' => (int) $row->id, 'name' => (string) $row->room_name];
+            $rooms[(int) $row->user_id][] = [
+                'id' => (int) $row->id,
+                'name' => (string) $row->room_name,
+                'status' => (int) $row->status,
+            ];
         }
 
         return $rooms;
+    }
+
+    /**
+     * Room status by room id, for the room rows on the page.
+     *
+     * @param  list<IdpMergeCandidate>  $rows
+     * @return array<int, int>
+     */
+    private function roomStatusesFor(array $rows): array
+    {
+        $roomIds = [];
+
+        foreach ($rows as $row) {
+            if ($row->kind !== MergeProposalBuilder::KIND_USER && $row->local_id !== null) {
+                $roomIds[] = $row->local_id;
+            }
+        }
+
+        if ($roomIds === []) {
+            return [];
+        }
+
+        return DB::table('au_rooms')
+            ->whereIn('id', $roomIds)
+            ->pluck('status', 'id')
+            ->map(fn (mixed $status): int => (int) $status)
+            ->all();
     }
 
     /**
