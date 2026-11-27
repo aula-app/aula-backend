@@ -175,6 +175,35 @@ class IdpBootstrapTest extends TestCase
     }
 
     /**
+     * A tenant released from its school holds accounts and no sso_sub on the
+     * seeded admin. The declined bootstrap must not set idp_school_id on the
+     * way out, or the login goes on to be provisioned a second account.
+     */
+    public function test_a_declined_bootstrap_does_not_learn_the_school(): void
+    {
+        self::$testTenant->run(function () {
+            $user = new LegacyUser;
+            $user->username = 'already.here';
+            $user->displayname = 'Already Here';
+            $user->email = 'already.here@test.example';
+            $user->pw = '';
+            $user->idp_user_id = 'person-already-here';
+            $user->userlevel = 20;
+            $user->status = UserStatus::Active;
+            $user->hash_id = md5('already.here');
+            $user->save();
+        });
+
+        $this->login('kc-sub-principal', 'person-teacher');
+
+        $this->assertNull(self::$testTenant->fresh()->idp_school_id);
+
+        self::$testTenant->run(function () {
+            $this->assertNull(LegacyUser::where('sso_sub', 'kc-sub-principal')->first());
+        });
+    }
+
+    /**
      * An id_token with no `school` claim is refused: that claim is what
      * rejectForeignSchool() checks tenants.idp_school_id against.
      */
@@ -262,7 +291,7 @@ class IdpBootstrapTest extends TestCase
         // The seeded admin of a school in use is a real account, so the first
         // SSO login must not claim it even with idp_migration_status left null.
         self::$testTenant->run(function () {
-            $pupil = new LegacyUser();
+            $pupil = new LegacyUser;
             $pupil->username = 'existing.pupil';
             $pupil->displayname = 'Existing Pupil';
             $pupil->status = UserStatus::Active;
@@ -562,7 +591,7 @@ class IdpBootstrapTest extends TestCase
     private function seedTenantAdmin(): void
     {
         self::$testTenant->run(function () {
-            $user = new LegacyUser();
+            $user = new LegacyUser;
             $user->username = self::ADMIN_USERNAME;
             $user->displayname = 'Tenant Admin';
             $user->email = 'bootstrap_admin@test.example';
