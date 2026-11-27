@@ -6,11 +6,12 @@ namespace App\Console\Commands;
 
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\Isolatable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 
-class ImportTenant extends Command
+class ImportTenant extends Command implements Isolatable
 {
     protected $signature = 'tenant:import
                             {file : Path to the .tar.gz export file produced by tenant:export}

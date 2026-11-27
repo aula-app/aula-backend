@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 
 /**
@@ -39,6 +40,20 @@ class ReconcileIdpSchool implements ShouldBeUniqueUntilProcessing, ShouldQueue
         public readonly string $tenantId,
         public readonly string $provider,
     ) {}
+
+    /**
+     * Get the middleware the job should pass through.
+     *
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        $maxJobRuntime = array_sum($this->backoff) + count($this->backoff) * 60;
+        return [
+            // ensure no two workers are picking up the same event at the same time
+            (new WithoutOverlapping($this->tenantId))->expireAfter($maxJobRuntime)
+        ];
+    }
 
     /**
      * One pending reconcile per tenant: a dispatch while one is queued is
